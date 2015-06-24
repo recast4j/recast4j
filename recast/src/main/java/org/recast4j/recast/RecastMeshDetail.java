@@ -25,6 +25,10 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class RecastMeshDetail {
 
+	static int MAX_VERTS = 127;
+	static int MAX_TRIS = 255; // Max tris for delaunay is 2n-2-k (n=num verts, k=num hull verts).
+	static int MAX_VERTS_PER_EDGE = 32;
+
 	static int RC_UNSET_HEIGHT = 0xffff;
 	static int EV_UNDEF = -1;
 	static int EV_HULL = -2;
@@ -245,8 +249,8 @@ public class RecastMeshDetail {
 		return h;
 	}
 
-	private static int findEdge(List<Integer> edges, int nedges, int s, int t) {
-		for (int i = 0; i < nedges; i++) {
+	private static int findEdge(List<Integer> edges, int s, int t) {
+		for (int i = 0; i < edges.size() / 4; i++) {
 			int e = i * 4;
 			if ((edges.get(e + 0) == s && edges.get(e + 1) == t) || (edges.get(e + 0) == t && edges.get(e + 1) == s))
 				return i;
@@ -254,22 +258,18 @@ public class RecastMeshDetail {
 		return EV_UNDEF;
 	}
 
-	private static int addEdge(Context ctx, List<Integer> edges, int nedges, int maxEdges, int s, int t, int l, int r) {
-		if (nedges >= maxEdges) {
-			throw new RuntimeException("addEdge: Too many edges (" + nedges + "/" + maxEdges + ").");
+	private static void addEdge(Context ctx, List<Integer> edges, int maxEdges, int s, int t, int l, int r) {
+		if (edges.size() / 4 >= maxEdges) {
+			throw new RuntimeException("addEdge: Too many edges (" + edges.size() / 4 + "/" + maxEdges + ").");
 		}
 
 		// Add edge if not already in the triangulation.
-		int e = findEdge(edges, nedges, s, t);
+		int e = findEdge(edges, s, t);
 		if (e == EV_UNDEF) {
 			edges.add(s);
 			edges.add(t);
 			edges.add(l);
 			edges.add(r);
-			nedges++;
-			return nedges;
-		} else {
-			return EV_UNDEF;
 		}
 	}
 
@@ -292,12 +292,12 @@ public class RecastMeshDetail {
 		return false;
 	}
 
-	private static boolean overlapEdges(float[] pts, List<Integer> edges, int nedges, int s1, int t1) {
-		for (int i = 0; i < nedges; ++i) {
-			int s0 = i * 4 + 0;
-			int t0 = i * 4 + 1;
+	private static boolean overlapEdges(float[] pts, List<Integer> edges,  int s1, int t1) {
+		for (int i = 0; i < edges.size() / 4; ++i) {
+			int s0 = edges.get(i * 4 + 0);
+			int t0 = edges.get(i * 4 + 1);
 			// Same or connected edges do not overlap.
-			if (edges.get(s0) == s1 || edges.get(s0) == t1 || edges.get(t0) == s1 || edges.get(t0) == t1)
+			if (s0 == s1 || s0 == t1 || t0 == s1 || t0 == t1)
 				continue;
 			if (overlapSegSeg2d(pts, s0 * 3, t0 * 3, s1 * 3, t1 * 3))
 				return true;
@@ -305,7 +305,7 @@ public class RecastMeshDetail {
 		return false;
 	}
 
-	static int[] completeFacet(Context ctx, float[] pts, int npts, List<Integer> edges, int nedges, int maxEdges,
+	static int completeFacet(Context ctx, float[] pts, int npts, List<Integer> edges, int maxEdges,
 			int nfaces, int e) {
 		float EPS = 1e-5f;
 
@@ -321,7 +321,7 @@ public class RecastMeshDetail {
 			t = edges.get(edge + 0);
 		} else {
 			// Edge already completed.
-			return new int[] { nedges, nfaces };
+			return nfaces;
 		}
 
 		// Find best point on left of edge.
@@ -350,9 +350,9 @@ public class RecastMeshDetail {
 				} else {
 					// Inside epsilon circum circle, do extra tests to make sure the edge is valid.
 					// s-u and t-u cannot overlap with s-pt nor t-pt if they exists.
-					if (overlapEdges(pts, edges, nedges, s, u))
+					if (overlapEdges(pts, edges, s, u))
 						continue;
-					if (overlapEdges(pts, edges, nedges, t, u))
+					if (overlapEdges(pts, edges, t, u))
 						continue;
 					// Edge is valid.
 					pt = u;
@@ -367,16 +367,16 @@ public class RecastMeshDetail {
 			updateLeftFace(edges, e * 4, s, t, nfaces);
 
 			// Add new edge or update face info of old edge.
-			e = findEdge(edges, nedges, pt, s);
+			e = findEdge(edges, pt, s);
 			if (e == EV_UNDEF)
-				nedges = addEdge(ctx, edges, nedges, maxEdges, pt, s, nfaces, EV_UNDEF);
+				addEdge(ctx, edges, maxEdges, pt, s, nfaces, EV_UNDEF);
 			else
 				updateLeftFace(edges, e * 4, pt, s, nfaces);
 
 			// Add new edge or update face info of old edge.
-			e = findEdge(edges, nedges, t, pt);
+			e = findEdge(edges, t, pt);
 			if (e == EV_UNDEF)
-				nedges = addEdge(ctx, edges, nedges, maxEdges, t, pt, nfaces, EV_UNDEF);
+				addEdge(ctx, edges, maxEdges, t, pt, nfaces, EV_UNDEF);
 			else
 				updateLeftFace(edges, e * 4, t, pt, nfaces);
 
@@ -384,41 +384,31 @@ public class RecastMeshDetail {
 		} else {
 			updateLeftFace(edges, e * 4, s, t, EV_HULL);
 		}
-		return new int[] { nedges, nfaces };
+		return nfaces;
 	}
 
-	private static void delaunayHull(Context ctx, int npts, float[] pts, int nhull, int[] hull, List<Integer> tris,
-			List<Integer> edges) {
+	private static void delaunayHull(Context ctx, int npts, float[] pts, int nhull, int[] hull, List<Integer> tris) {
 		int nfaces = 0;
-		int nedges = 0;
 		int maxEdges = npts * 10;
-		edges.clear();
-		tris.clear();
-
+		List<Integer> edges = new ArrayList<>(64);
 		for (int i = 0, j = nhull - 1; i < nhull; j = i++)
-			nedges = addEdge(ctx, edges, nedges, maxEdges, hull[j], hull[i], EV_HULL, EV_UNDEF);
-
+			addEdge(ctx, edges, maxEdges, hull[j], hull[i], EV_HULL, EV_UNDEF);
 		int currentEdge = 0;
-		while (currentEdge < nedges) {
+		while (currentEdge < edges.size() / 4) {
 			if (edges.get(currentEdge * 4 + 2) == EV_UNDEF) {
-				int[] nenf = completeFacet(ctx, pts, npts, edges, nedges, maxEdges, nfaces, currentEdge);
-				nedges = nenf[0];
-				nfaces = nenf[1];
+				nfaces = completeFacet(ctx, pts, npts, edges, maxEdges, nfaces, currentEdge);
 			}
 			if (edges.get(currentEdge * 4 + 3) == EV_UNDEF) {
-				int[] nenf = completeFacet(ctx, pts, npts, edges, nedges, maxEdges, nfaces, currentEdge);
-				nedges = nenf[0];
-				nfaces = nenf[1];
+				nfaces = completeFacet(ctx, pts, npts, edges, maxEdges, nfaces, currentEdge);
 			}
 			currentEdge++;
 		}
-
 		// Create tris
 		tris.clear();
 		for (int i = 0; i < nfaces * 4; ++i)
 			tris.add(-1);
 
-		for (int i = 0; i < nedges; ++i) {
+		for (int i = 0; i < edges.size() / 4; ++i) {
 			int e = i * 4;
 			if (edges.get(e + 3) >= 0) {
 				// Left face
@@ -448,7 +438,7 @@ public class RecastMeshDetail {
 			int t = i * 4;
 			if (tris.get(t + 0) == -1 || tris.get(t + 1) == -1 || tris.get(t + 2) == -1) {
 				System.err.println("Dangling! " + tris.get(t) + " " + tris.get(t + 1) + "  " + tris.get(t + 2));
-				//				ctx.log(RC_LOG_WARNING, "delaunayHull: Removing dangling face %d [%d,%d,%d].", i, t[0],t[1],t[2]);
+				//ctx.log(RC_LOG_WARNING, "delaunayHull: Removing dangling face %d [%d,%d,%d].", i, t[0],t[1],t[2]);
 				tris.set(t + 0, tris.get(tris.size() - 4));
 				tris.set(t + 1, tris.get(tris.size() - 3));
 				tris.set(t + 2, tris.get(tris.size() - 2));
@@ -548,13 +538,11 @@ public class RecastMeshDetail {
 		return (((i * 0xd8163841) & 0xffff) / 65535.0f * 2.0f) - 1.0f;
 	}
 
-	static int MAX_VERTS = 127;
-	static int MAX_TRIS = 255; // Max tris for delaunay is 2n-2-k (n=num verts, k=num hull verts).
-	static int MAX_VERTS_PER_EDGE = 32;
-
 	static int buildPolyDetail(Context ctx, float[] in, int nin, float sampleDist, float sampleMaxError,
-			CompactHeightfield chf, HeightPatch hp, float[] verts, List<Integer> tris, List<Integer> edges,
-			List<Integer> samples) {
+			CompactHeightfield chf, HeightPatch hp, float[] verts, List<Integer> tris) {
+
+		List<Integer> samples = new ArrayList<>(512);
+
 		int nverts = 0;
 		float[] edge = new float[(MAX_VERTS_PER_EDGE + 1) * 3];
 		int[] hull = new int[MAX_VERTS];
@@ -565,8 +553,6 @@ public class RecastMeshDetail {
 		for (int i = 0; i < nin; ++i)
 			RecastVectors.copy(verts, i * 3, in, i * 3);
 		nverts = nin;
-
-		edges.clear();
 		tris.clear();
 
 		float cs = chf.cs;
@@ -760,7 +746,7 @@ public class RecastMeshDetail {
 
 				// Create new triangulation.
 				// TODO: Incremental add instead of full rebuild.
-				delaunayHull(ctx, nverts, verts, nhull, hull, tris, edges);
+				delaunayHull(ctx, nverts, verts, nhull, hull, tris);
 			}
 		}
 
@@ -895,11 +881,11 @@ public class RecastMeshDetail {
 	static final int RETRACT_SIZE = 256;
 
 	static void getHeightData(CompactHeightfield chf, int[] meshpolys, int poly, int npoly, int[] verts, int bs,
-			HeightPatch hp, List<Integer> stack, int region) {
+			HeightPatch hp, int region) {
 		// Note: Reads to the compact heightfield are offset by border size (bs)
 		// since border size offset is already removed from the polymesh vertices.
 
-		stack.clear();
+		List<Integer> stack = new ArrayList<>(512);
 		Arrays.fill(hp.data, 0, hp.width * hp.height, RC_UNSET_HEIGHT);
 
 		boolean empty = true;
@@ -1013,24 +999,21 @@ public class RecastMeshDetail {
 	/// See the #rcConfig documentation for more information on the configuration parameters.
 	///
 	/// @see rcAllocPolyMeshDetail, rcPolyMesh, rcCompactHeightfield, rcPolyMeshDetail, rcConfig
-	public static void buildPolyMeshDetail(Context ctx, PolyMesh mesh, CompactHeightfield chf, float sampleDist,
-			float sampleMaxError, PolyMeshDetail dmesh) {
+	public static PolyMeshDetail buildPolyMeshDetail(Context ctx, PolyMesh mesh, CompactHeightfield chf, float sampleDist,
+			float sampleMaxError) {
 
 		ctx.startTimer("BUILD_POLYMESHDETAIL");
-
 		if (mesh.nverts == 0 || mesh.npolys == 0)
-			return;
+			return null;
 
+		PolyMeshDetail dmesh = new PolyMeshDetail();
 		int nvp = mesh.nvp;
 		float cs = mesh.cs;
 		float ch = mesh.ch;
 		float[] orig = mesh.bmin;
 		int borderSize = mesh.borderSize;
 
-		List<Integer> edges = new ArrayList<>(64);
 		List<Integer> tris = new ArrayList<>(512);
-		List<Integer> stack = new ArrayList<>(512);
-		List<Integer> samples = new ArrayList<>(512);
 		float verts[] = new float[256 * 3];
 		HeightPatch hp = new HeightPatch();
 		int nPolyVerts = 0;
@@ -1100,11 +1083,10 @@ public class RecastMeshDetail {
 			hp.ymin = bounds[i * 4 + 2];
 			hp.width = bounds[i * 4 + 1] - bounds[i * 4 + 0];
 			hp.height = bounds[i * 4 + 3] - bounds[i * 4 + 2];
-			getHeightData(chf, mesh.polys, p, npoly, mesh.verts, borderSize, hp, stack, mesh.regs[i]);
+			getHeightData(chf, mesh.polys, p, npoly, mesh.verts, borderSize, hp, mesh.regs[i]);
 
 			// Build detail mesh.
-			int nverts = buildPolyDetail(ctx, poly, npoly, sampleDist, sampleMaxError, chf, hp, verts, tris, edges,
-					samples);
+			int nverts = buildPolyDetail(ctx, poly, npoly, sampleDist, sampleMaxError, chf, hp, verts, tris);
 
 			// Move detail verts to world space.
 			for (int j = 0; j < nverts; ++j) {
@@ -1165,6 +1147,7 @@ public class RecastMeshDetail {
 		}
 
 		ctx.stopTimer("BUILD_POLYMESHDETAIL");
+		return dmesh;
 
 	}
 

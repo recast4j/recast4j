@@ -46,12 +46,10 @@ public class Recast {
 	/// See the #rcConfig documentation for more information on the configuration parameters.
 	/// 
 	/// @see rcHeightfield, rcClearUnwalkableTriangles, rcRasterizeTriangles
-	static void markWalkableTriangles(Context ctx, float walkableSlopeAngle, float[] verts, int nv, int[] tris, int nt,
-			int[] areas) {
+	static int[] markWalkableTriangles(Context ctx, float walkableSlopeAngle, float[] verts, int nv, int[] tris, int nt) {
+		int[] areas = new int[nt];
 		float walkableThr = (float) Math.cos(walkableSlopeAngle / 180.0f * Math.PI);
-
 		float norm[] = new float[3];
-
 		for (int i = 0; i < nt; ++i) {
 			int tri = i * 3;
 			calcTriNormal(verts, tris[tri], tris[tri + 1], tris[tri + 2], norm);
@@ -59,6 +57,7 @@ public class Recast {
 			if (norm[1] > walkableThr)
 				areas[i] = RecastConstants.RC_WALKABLE_AREA;
 		}
+		return areas;
 	}
 
 	// TODO: Test!!
@@ -118,11 +117,11 @@ public class Recast {
 	///
 	/// @see rcAllocCompactHeightfield, rcHeightfield, rcCompactHeightfield, rcConfig
 
-	public static void buildCompactHeightfield(Context ctx, int walkableHeight, int walkableClimb, Heightfield hf,
-			CompactHeightfield chf) {
+	public static CompactHeightfield buildCompactHeightfield(Context ctx, int walkableHeight, int walkableClimb, Heightfield hf) {
 
 		ctx.startTimer("BUILD_COMPACTHEIGHTFIELD");
 
+		CompactHeightfield chf = new CompactHeightfield();
 		int w = hf.width;
 		int h = hf.height;
 		int spanCount = getHeightFieldSpanCount(ctx, hf);
@@ -224,5 +223,6 @@ public class Recast {
 					+ " (max: " + MAX_LAYERS + ")");
 		}
 		ctx.stopTimer("BUILD_COMPACTHEIGHTFIELD");
+		return chf;
 	}
 }

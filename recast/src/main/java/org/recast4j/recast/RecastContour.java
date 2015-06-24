@@ -674,12 +674,13 @@ public class RecastContour {
 	/// See the #rcConfig documentation for more information on the configuration parameters.
 	///
 	/// @see rcAllocContourSet, rcCompactHeightfield, rcContourSet, rcConfig
-	public static void buildContours(Context ctx, CompactHeightfield chf, float maxError, int maxEdgeLen,
-			ContourSet cset, int buildFlags) {
+	public static ContourSet buildContours(Context ctx, CompactHeightfield chf, float maxError, int maxEdgeLen,
+			int buildFlags) {
 
 		int w = chf.width;
 		int h = chf.height;
 		int borderSize = chf.borderSize;
+		ContourSet cset = new ContourSet();
 
 		ctx.startTimer("BUILD_CONTOURS");
 		RecastVectors.copy(cset.bmin, chf.bmin, 0);
@@ -870,5 +871,6 @@ public class RecastContour {
 			}
 		}
 		ctx.stopTimer("BUILD_CONTOURS");
+		return cset;
 	}
 }

@@ -163,9 +163,9 @@ public class RecastMesh {
 		return area2(verts, a, b, c) == 0;
 	}
 
-	//	Returns true iff ab properly intersects cd: they share
-	//	a point interior to both segments.  The properness of the
-	//	intersection is ensured by using strict leftness.
+	// Returns true iff ab properly intersects cd: they share
+	// a point interior to both segments. The properness of the
+	// intersection is ensured by using strict leftness.
 	private static boolean intersectProp(int[] verts, int a, int b, int c, int d) {
 		// Eliminate improper cases.
 		if (collinear(verts, a, b, c) || collinear(verts, a, b, d) || collinear(verts, c, d, a)
@@ -228,7 +228,7 @@ public class RecastMesh {
 		return true;
 	}
 
-	// Returns true iff the diagonal (i,j) is strictly internal to the 
+	// Returns true iff the diagonal (i,j) is strictly internal to the
 	// polygon P in the neighborhood of the i endpoint.
 	private static boolean inCone(int i, int j, int n, int[] verts, int[] indices) {
 		int pi = (indices[i] & 0x0fffffff) * 4;
@@ -325,10 +325,10 @@ public class RecastMesh {
 			if (mini == -1) {
 				// We might get here because the contour has overlapping segments, like this:
 				//
-				//  A o-o=====o---o B
-				//   /  |C   D|    \
-				//  o   o     o     o
-				//  :   :     :     :
+				// A o-o=====o---o B
+				// / |C D| \
+				// o o o o
+				// : : : :
 				// We'll try to recover by loosing up the inCone test a bit so that a diagonal
 				// like A-B or C-D can be found and we can continue.
 				minLen = -1;
@@ -827,12 +827,13 @@ public class RecastMesh {
 
 	/// @par
 	///
-	/// @note If the mesh data is to be used to construct a Detour navigation mesh, then the upper 
+	/// @note If the mesh data is to be used to construct a Detour navigation mesh, then the upper
 	/// limit must be retricted to <= #DT_VERTS_PER_POLYGON.
 	///
 	/// @see rcAllocPolyMesh, rcContourSet, rcPolyMesh, rcConfig
-	public static void buildPolyMesh(Context ctx, ContourSet cset, int nvp, PolyMesh mesh) {
+	public static PolyMesh buildPolyMesh(Context ctx, ContourSet cset, int nvp) {
 		ctx.startTimer("BUILD_POLYMESH");
+		PolyMesh mesh = new PolyMesh();
 		RecastVectors.copy(mesh.bmin, cset.bmin, 0);
 		RecastVectors.copy(mesh.bmax, cset.bmax, 0);
 		mesh.cs = cset.cs;
@@ -890,7 +891,7 @@ public class RecastMesh {
 			int ntris = triangulate(cont.nverts, cont.verts, indices, tris);
 			if (ntris <= 0) {
 				// Bad triangulation, should not happen.
-				ctx.warn("buildPolyMesh: Bad triangulation Contour " + i +".");
+				ctx.warn("buildPolyMesh: Bad triangulation Contour " + i + ".");
 				ntris = -ntris;
 			}
 
@@ -1041,6 +1042,7 @@ public class RecastMesh {
 		}
 
 		ctx.stopTimer("BUILD_POLYMESH");
+		return mesh;
 
 	}
 

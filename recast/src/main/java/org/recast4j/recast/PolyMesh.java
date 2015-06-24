@@ -20,8 +20,8 @@ package org.recast4j.recast;
 
 public class PolyMesh {
 
-	final float[] bmin = new float[3];
-	final float[] bmax = new float[3];
+	public final float[] bmin = new float[3];
+	public final float[] bmax = new float[3];
 	public float cs;
 	public float ch;
 	public int borderSize;

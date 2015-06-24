@@ -87,8 +87,11 @@ public class ObjImporter {
             throw new RuntimeException("Invalid number of face vertices: 3 coordinates expected, found "
                     + v.length);
         }
-        for (int i = 1; i < v.length; i++) {
-        	context.meshFaces.add(readFaceVertex(v[i], context));
+        for (int j = 0; j < v.length - 3; j++) {
+    		context.meshFaces.add(readFaceVertex(v[1], context));
+        	for (int i = 0; i < 2; i++) {
+        		context.meshFaces.add(readFaceVertex(v[2 + j + i], context));
+        	}
         }
     }
 
