@@ -22,8 +22,6 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.recast4j.detour.NavMeshQuery.FRand;
-import org.recast4j.detour.NavMeshQuery.RandomPointResult;
 import org.recast4j.recast.PolyMesh;
 import org.recast4j.recast.PolyMeshDetail;
 import org.recast4j.recast.RecastBuilder;

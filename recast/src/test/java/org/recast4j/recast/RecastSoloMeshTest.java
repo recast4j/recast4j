@@ -7,7 +7,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.recast4j.recast.RecastConstants.PartitionType;
 
-public class RecastTest {
+public class RecastSoloMeshTest {
 
 	private float m_cellSize;
 	private float m_cellHeight;
@@ -39,6 +39,15 @@ public class RecastTest {
 		m_detailSampleDist = 6.0f;
 		m_detailSampleMaxError = 1.0f;
 		m_partitionType = PartitionType.WATERSHED;
+	}
+
+	@Test
+	public void testPerformance() {
+		for (int i = 0; i < 10; i++) {
+			testBuild("dungeon.obj", PartitionType.WATERSHED, 52, 16, 15, 223, 118, 118, 512, 289);
+			testBuild("dungeon.obj", PartitionType.MONOTONE, 0, 17, 16, 210, 100, 100, 453, 264);
+			testBuild("dungeon.obj", PartitionType.LAYERS, 0, 5, 5, 203, 97, 97, 447, 268);
+		}
 	}
 
 	@Test
@@ -225,7 +234,7 @@ public class RecastTest {
 			RecastRegion.buildLayerRegions(m_ctx, m_chf, 0, m_cfg.minRegionArea);
 		}
 
-		Assert.assertEquals("maxDisatance", expDisatnce, m_chf.maxDistance);
+		Assert.assertEquals("maxDistance", expDisatnce, m_chf.maxDistance);
 		Assert.assertEquals("Regions", expRegions, m_chf.maxRegions);
 		//
 		// Step 5. Trace and simplify region contours.
@@ -257,12 +266,12 @@ public class RecastTest {
 		Assert.assertEquals("Mesh Detail Tris", expDetTRis, m_dmesh.ntris);
 		long time2 = System.nanoTime();
 		System.out.println(filename + " : " + partitionType + "  " + (time2 - time) / 1000000 + " ms" );
-		saveObj(m_dmesh);
+		saveObj(filename.substring(0, filename.lastIndexOf('.')) + "_" + partitionType + ".obj", m_dmesh);
 	}
 
-	private void saveObj(PolyMeshDetail m_dmesh) {
+	private void saveObj(String filename, PolyMeshDetail m_dmesh) {
 		try {
-			File file = new File("dungeon_nmesh.obj");
+			File file = new File(filename);
 			FileWriter fw = new FileWriter(file);
 			for (int v = 0; v < m_dmesh.nverts; v++) {
 				fw.write("v " + m_dmesh.verts[v * 3] + " " + m_dmesh.verts[v * 3 + 1] + " " + m_dmesh.verts[v * 3 + 2]

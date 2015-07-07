@@ -22,14 +22,14 @@ package org.recast4j.detour;
 /// @ingroup detour
 public class Poly {
 
-	final int index;
-	
 	/// The polygon is a standard convex polygon that is part of the surface of the mesh.
 	public static final int DT_POLYTYPE_GROUND = 0;
 
 	/// The polygon is an off-mesh connection consisting of two vertices.
 	public static final int DT_POLYTYPE_OFFMESH_CONNECTION = 1;
 
+	final int index;
+	
 	/// Index to first link in linked list. (Or #DT_NULL_LINK if there is no link.)
 	int firstLink;
 

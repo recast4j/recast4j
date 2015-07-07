@@ -592,8 +592,6 @@ public class NavMeshBuilder {
 			}
 		}
 
-		// *outData = data;
-		// *outDataSize = dataSize;
 		NavMeshData nmd = new NavMeshData();
 		nmd.header = header;
 		nmd.navVerts = navVerts;
