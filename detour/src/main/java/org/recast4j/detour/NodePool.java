@@ -45,6 +45,14 @@ public class NodePool {
 		return nodes;
 	}
 
+	Node findNode(long id) {
+		List<Node> nodes = m_map.get(id);
+		if (nodes != null && !nodes.isEmpty()) {
+			return nodes.get(0);
+		}
+		return null;
+	}
+
 	Node findNode(long id, int state) {
 		List<Node> nodes = m_map.get(id);
 		if (nodes != null) {

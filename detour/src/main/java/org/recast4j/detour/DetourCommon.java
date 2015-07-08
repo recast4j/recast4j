@@ -22,7 +22,21 @@ public class DetourCommon {
 
 	static float EPS = 1e-4f;
 
-	/// Performs a linear interpolation between two vectors. (@p v1 toward @p v2)
+	/// Performs a scaled vector addition. (@p v1 + (@p v2 * @p s))
+	/// @param[out] dest The result vector. [(x, y, z)]
+	/// @param[in] v1 The base vector. [(x, y, z)]
+	/// @param[in] v2 The vector to scale and add to @p v1. [(x, y, z)]
+	/// @param[in] s The amount to scale @p v2 by before adding to @p v1.
+	static float[] vMad(float[] v1, float[] v2, float s) {
+		float[] dest = new float[3];
+		dest[0] = v1[0] + v2[0] * s;
+		dest[1] = v1[1] + v2[1] * s;
+		dest[2] = v1[2] + v2[2] * s;
+		return dest;
+	}
+
+	/// Performs a linear interpolation between two vectors. (@p v1 toward @p
+	/// v2)
 	/// @param[out] dest The result vector. [(x, y, x)]
 	/// @param[in] v1 The starting vector.
 	/// @param[in] v2 The destination vector.
@@ -118,6 +132,17 @@ public class DetourCommon {
 		return (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
 	}
 
+	/// Returns the distance between two points.
+	/// @param[in] v1 A point. [(x, y, z)]
+	/// @param[in] v2 A point. [(x, y, z)]
+	/// @return The distance between the two points.
+	static float vDistSqr(float[] v1, float[] v2) {
+		float dx = v2[0] - v1[0];
+		float dy = v2[1] - v1[1];
+		float dz = v2[2] - v1[2];
+		return dx * dx + dy * dy + dz * dz;
+	}
+
 	static float sqr(float a) {
 		return a * a;
 	}
@@ -145,11 +170,21 @@ public class DetourCommon {
 	/// @param[in] v2 A point. [(x, y, z)]
 	/// @return The distance between the point on the xz-plane.
 	///
-	/// The vectors are projected onto the xz-plane, so the y-values are ignored.
-	static float vdist2D(VectorPtr v1, VectorPtr v2) {
+	/// The vectors are projected onto the xz-plane, so the y-values are
+	/// ignored.
+	static float vDist2D(VectorPtr v1, VectorPtr v2) {
 		float dx = v2.get(0) - v1.get(0);
 		float dz = v2.get(2) - v1.get(2);
 		return (float) Math.sqrt(dx * dx + dz * dz);
+	}
+
+	/// Normalizes the vector.
+	/// @param[in,out] v The vector to normalize. [(x, y, z)]
+	static void vNnormalize(float[] v) {
+		float d = (float) (1.0f / Math.sqrt(sqr(v[0]) + sqr(v[1]) + sqr(v[2])));
+		v[0] *= d;
+		v[1] *= d;
+		v[2] *= d;
 	}
 
 	/// Derives the dot product of two vectors on the xz-plane. (@p u . @p v)
@@ -157,16 +192,29 @@ public class DetourCommon {
 	/// @param[in] v A vector [(x, y, z)]
 	/// @return The dot product on the xz-plane.
 	///
-	/// The vectors are projected onto the xz-plane, so the y-values are ignored.
+	/// The vectors are projected onto the xz-plane, so the y-values are
+	/// ignored.
 	static float vDot2D(float[] u, float[] v) {
 		return u[0] * v[0] + u[2] * v[2];
+	}
+
+	/// Derives the xz-plane 2D perp product of the two vectors. (uz*vx - ux*vz)
+	/// @param[in] u The LHV vector [(x, y, z)]
+	/// @param[in] v The RHV vector [(x, y, z)]
+	/// @return The dot product on the xz-plane.
+	///
+	/// The vectors are projected onto the xz-plane, so the y-values are
+	/// ignored.
+	static float vPerp2D(float[] u, float[] v) {
+		return u[2] * v[0] - u[0] * v[2];
 	}
 
 	/// @}
 	/// @name Computational geometry helper functions.
 	/// @{
 
-	/// Derives the signed xz-plane area of the triangle ABC, or the relationship of line AB to point C.
+	/// Derives the signed xz-plane area of the triangle ABC, or the
+	/// relationship of line AB to point C.
 	/// @param[in] a Vertex A. [(x, y, z)]
 	/// @param[in] b Vertex B. [(x, y, z)]
 	/// @param[in] c Vertex C. [(x, y, z)]
@@ -252,7 +300,7 @@ public class DetourCommon {
 			return new Tupple2<>(true, h);
 		}
 
-		return new Tupple2<>(false, 0f);
+		return new Tupple2<>(false, null);
 	}
 
 	// Returns a random point in a convex polygon.
@@ -304,32 +352,57 @@ public class DetourCommon {
 		return v;
 	}
 
-	static Tupple2<Boolean, Float> closestHeightPointTriangle(float[] p, VectorPtr a, VectorPtr b, VectorPtr c) {
-		float[] v0 = vSub(c, a);
-		float[] v1 = vSub(b, a);
-		float[] v2 = vSub(new VectorPtr(p), a);
+	public static class IntersectResult {
+		boolean intersects;
+		float tmin;
+		float tmax = 1f;
+		int segMin = -1;
+		int segMax = -1;
+	}
 
-		float dot00 = vDot2D(v0, v0);
-		float dot01 = vDot2D(v0, v1);
-		float dot02 = vDot2D(v0, v2);
-		float dot11 = vDot2D(v1, v1);
-		float dot12 = vDot2D(v1, v2);
+	static IntersectResult intersectSegmentPoly2D(float[] p0, float[] p1, float[] verts, int nverts) {
 
-		// Compute barycentric coordinates
-		float invDenom = 1.0f / (dot00 * dot11 - dot01 * dot01);
-		float u = (dot11 * dot02 - dot01 * dot12) * invDenom;
-		float v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+		IntersectResult result = new IntersectResult();
+		float EPS = 0.00000001f;
+		float[] dir = vSub(p1, p0);
 
-		// The (sloppy) epsilon is needed to allow to get height of points which
-		// are interpolated along the edges of the triangles.
-
-		// If point lies inside the triangle, return interpolated ycoord.
-		if (u >= -EPS && v >= -EPS && (u + v) <= 1 + EPS) {
-			float h = a.get(1) + v0[1] * u + v1[1] * v;
-			return new Tupple2<Boolean, Float>(true, h);
+		VectorPtr p0v = new VectorPtr(p0);
+		for (int i = 0, j = nverts - 1; i < nverts; j = i++) {
+			VectorPtr vpj = new VectorPtr(verts, j * 3);
+			float[] edge = vSub(new VectorPtr(verts, i * 3), vpj);
+			float[] diff = vSub(p0v, vpj);
+			float n = vPerp2D(edge, diff);
+			float d = vPerp2D(dir, edge);
+			if (Math.abs(d) < EPS) {
+				// S is nearly parallel to this edge
+				if (n < 0)
+					return result;
+				else
+					continue;
+			}
+			float t = n / d;
+			if (d < 0) {
+				// segment S is entering across this edge
+				if (t > result.tmin) {
+					result.tmin = t;
+					result.segMin = j;
+					// S enters after leaving polygon
+					if (result.tmin > result.tmax)
+						return result;
+				}
+			} else {
+				// segment S is leaving across this edge
+				if (t < result.tmax) {
+					result.tmax = t;
+					result.segMax = j;
+					// S leaves before entering polygon
+					if (result.tmax < result.tmin)
+						return result;
+				}
+			}
 		}
-
-		return new Tupple2<>(false, null);
+		result.intersects = true;
+		return result;
 	}
 
 	static Tupple2<Float, Float> dtDistancePtSegSqr2D(float[] pt, float[] verts, int p, int q) {

@@ -18,6 +18,8 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
+import java.util.List;
+
 /// Defines a navigation mesh tile.
 /// @ingroup detour
 public class MeshTile {
@@ -25,11 +27,10 @@ public class MeshTile {
 
 	int salt; /// < Counter describing modifications to the tile.
 
-	int linksFreeList; /// < Index to the next free link.
 	MeshHeader header; /// < The tile header.
 	Poly[] polys; /// < The tile polygons. [Size: dtMeshHeader::polyCount]
 	float[] verts; /// < The tile vertices. [Size: dtMeshHeader::vertCount]
-	Link[] links; /// < The tile links. [Size: dtMeshHeader::maxLinkCount]
+	List<Link> links; /// < The tile links. [Size: dtMeshHeader::maxLinkCount]
 	PolyDetail[] detailMeshes; /// < The tile's detail sub-meshes. [Size: dtMeshHeader::detailMeshCount]
 
 	/// The detail mesh's unique vertices. [(x, y, z) * dtMeshHeader::detailVertCount]

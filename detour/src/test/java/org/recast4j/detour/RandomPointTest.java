@@ -106,15 +106,15 @@ public class RandomPointTest {
 		for (int i = 0; i < 1000; i++) {
 			RandomPointResult point = query.findRandomPoint(filter, f);
 			Assert.assertEquals(Status.SUCCSESS, point.status);
-			Tupple3<Status, MeshTile, Poly> tileAndPoly = navmesh.getTileAndPolyByRef(point.randomRef);
+			Tupple2<MeshTile,Poly> tileAndPoly = navmesh.getTileAndPolyByRef(point.randomRef);
 			float[] bmin = new float[2];
 			float[] bmax = new float[2];
-			for (int j = 0; j < tileAndPoly.third.vertCount; j++) {
-				int v = tileAndPoly.third.verts[j] * 3;
-				bmin[0] = j == 0 ? tileAndPoly.second.verts[v] : Math.min(bmin[0], tileAndPoly.second.verts[v]);
-				bmax[0] = j == 0 ? tileAndPoly.second.verts[v] : Math.max(bmax[0], tileAndPoly.second.verts[v]);
-				bmin[1] = j == 0 ? tileAndPoly.second.verts[v + 2] : Math.min(bmin[1], tileAndPoly.second.verts[v + 2]);
-				bmax[1] = j == 0 ? tileAndPoly.second.verts[v + 2] : Math.max(bmax[1], tileAndPoly.second.verts[v + 2]);
+			for (int j = 0; j < tileAndPoly.second.vertCount; j++) {
+				int v = tileAndPoly.second.verts[j] * 3;
+				bmin[0] = j == 0 ? tileAndPoly.first.verts[v] : Math.min(bmin[0], tileAndPoly.first.verts[v]);
+				bmax[0] = j == 0 ? tileAndPoly.first.verts[v] : Math.max(bmax[0], tileAndPoly.first.verts[v]);
+				bmin[1] = j == 0 ? tileAndPoly.first.verts[v + 2] : Math.min(bmin[1], tileAndPoly.first.verts[v + 2]);
+				bmax[1] = j == 0 ? tileAndPoly.first.verts[v + 2] : Math.max(bmax[1], tileAndPoly.first.verts[v + 2]);
 			}
 			Assert.assertTrue(point.randomPt[0] >= bmin[0]);
 			Assert.assertTrue(point.randomPt[0] <= bmax[0]);
@@ -131,15 +131,15 @@ public class RandomPointTest {
 		for (int i = 0; i < 1000; i++) {
 			point = query.findRandomPointAroundCircle(point.randomRef, point.randomPt, 5f, filter, f);
 			Assert.assertEquals(Status.SUCCSESS, point.status);
-			Tupple3<Status, MeshTile, Poly> tileAndPoly = navmesh.getTileAndPolyByRef(point.randomRef);
+			Tupple2<MeshTile, Poly> tileAndPoly = navmesh.getTileAndPolyByRef(point.randomRef);
 			float[] bmin = new float[2];
 			float[] bmax = new float[2];
-			for (int j = 0; j < tileAndPoly.third.vertCount; j++) {
-				int v = tileAndPoly.third.verts[j] * 3;
-				bmin[0] = j == 0 ? tileAndPoly.second.verts[v] : Math.min(bmin[0], tileAndPoly.second.verts[v]);
-				bmax[0] = j == 0 ? tileAndPoly.second.verts[v] : Math.max(bmax[0], tileAndPoly.second.verts[v]);
-				bmin[1] = j == 0 ? tileAndPoly.second.verts[v + 2] : Math.min(bmin[1], tileAndPoly.second.verts[v + 2]);
-				bmax[1] = j == 0 ? tileAndPoly.second.verts[v + 2] : Math.max(bmax[1], tileAndPoly.second.verts[v + 2]);
+			for (int j = 0; j < tileAndPoly.second.vertCount; j++) {
+				int v = tileAndPoly.second.verts[j] * 3;
+				bmin[0] = j == 0 ? tileAndPoly.first.verts[v] : Math.min(bmin[0], tileAndPoly.first.verts[v]);
+				bmax[0] = j == 0 ? tileAndPoly.first.verts[v] : Math.max(bmax[0], tileAndPoly.first.verts[v]);
+				bmin[1] = j == 0 ? tileAndPoly.first.verts[v + 2] : Math.min(bmin[1], tileAndPoly.first.verts[v + 2]);
+				bmax[1] = j == 0 ? tileAndPoly.first.verts[v + 2] : Math.max(bmax[1], tileAndPoly.first.verts[v + 2]);
 			}
 			Assert.assertTrue(point.randomPt[0] >= bmin[0]);
 			Assert.assertTrue(point.randomPt[0] <= bmax[0]);

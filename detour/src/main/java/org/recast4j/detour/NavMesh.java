@@ -154,10 +154,10 @@ public class NavMesh {
 	}
 
 	int allocLink(MeshTile tile) {
-		int link = tile.linksFreeList;
-		if (link != DT_NULL_LINK)
-			tile.linksFreeList = tile.links[link].next;
-		return link;
+		Link link = new Link();
+		link.next = DT_NULL_LINK;
+		tile.links.add(link);
+		return tile.links.size() - 1;
 	}
 
 	NavMeshParams m_params; /// < Current initialization params. TODO: do not store this info twice.
@@ -180,21 +180,21 @@ public class NavMesh {
 		return new int[] { tx, ty };
 	}
 
-	public Tupple3<Status, MeshTile, Poly> getTileAndPolyByRef(long ref) {
+	public Tupple2<MeshTile, Poly> getTileAndPolyByRef(long ref) {
 		if (ref == 0) {
-			return new Tupple3<>(Status.FAILURE, null, null);
+			throw new IllegalArgumentException("ref = 0");
 		}
 		int[] saltitip = decodePolyId(ref);
 		int salt = saltitip[0];
 		int it = saltitip[1];
 		int ip = saltitip[2];
 		if (it >= m_maxTiles)
-			return new Tupple3<>(Status.INVALID_PARAM, null, null);
+			throw new IllegalArgumentException("tile > m_maxTiles");
 		if (m_tiles[it].salt != salt || m_tiles[it].header == null)
-			return new Tupple3<>(Status.INVALID_PARAM, null, null);
+			throw new IllegalArgumentException("Invalid salt or header");
 		if (ip >= m_tiles[it].header.polyCount)
-			return new Tupple3<>(Status.INVALID_PARAM, null, null);
-		return new Tupple3<>(Status.SUCCSESS, m_tiles[it], m_tiles[it].polys[ip]);
+			throw new IllegalArgumentException("poly > polyCount");
+		return new Tupple2<>(m_tiles[it], m_tiles[it].polys[ip]);
 	}
 
 	/// @par
@@ -405,10 +405,7 @@ public class NavMesh {
 
 		tile.verts = data.navVerts;
 		tile.polys = data.navPolys;
-		tile.links = new Link[header.maxLinkCount];
-		for (int i = 0; i < header.maxLinkCount; i++) {
-			tile.links[i] = new Link();
-		}
+		tile.links = new ArrayList<>();
 		tile.detailMeshes = data.navDMeshes;
 		tile.detailVerts = data.navDVerts;
 		tile.detailTris = data.navDTris;
@@ -418,12 +415,6 @@ public class NavMesh {
 		// If there are no items in the bvtree, reset the tree pointer.
 		if (tile.bvTree != null && tile.bvTree.length == 0)
 			tile.bvTree = null;
-
-		// Build links freelist
-		tile.linksFreeList = 0;
-		tile.links[header.maxLinkCount - 1].next = NavMesh.DT_NULL_LINK;
-		for (int i = 0; i < header.maxLinkCount - 1; ++i)
-			tile.links[i].next = i + 1;
 
 		// Init tile.
 		tile.header = header;
@@ -479,16 +470,14 @@ public class NavMesh {
 					continue;
 
 				int idx = allocLink(tile);
-				if (idx != DT_NULL_LINK) {
-					Link link = tile.links[idx];
-					link.ref = base | (poly.neis[j] - 1);
-					link.edge = j;
-					link.side = 0xff;
-					link.bmin = link.bmax = 0;
-					// Add to linked list.
-					link.next = poly.firstLink;
-					poly.firstLink = idx;
-				}
+				Link link = tile.links.get(idx);
+				link.ref = base | (poly.neis[j] - 1);
+				link.edge = j;
+				link.side = 0xff;
+				link.bmin = link.bmax = 0;
+				// Add to linked list.
+				link.next = poly.firstLink;
+				poly.firstLink = idx;
 			}
 		}
 	}
@@ -524,39 +513,37 @@ public class NavMesh {
 				int nnei = connectedPolys.third;
 				for (int k = 0; k < nnei; ++k) {
 					int idx = allocLink(tile);
-					if (idx != DT_NULL_LINK) {
-						Link link = tile.links[idx];
-						link.ref = nei[k];
-						link.edge = j;
-						link.side = dir;
+					Link link = tile.links.get(idx);
+					link.ref = nei[k];
+					link.edge = j;
+					link.side = dir;
 
-						link.next = poly.firstLink;
-						poly.firstLink = idx;
+					link.next = poly.firstLink;
+					poly.firstLink = idx;
 
-						// Compress portal limits to a byte value.
-						if (dir == 0 || dir == 4) {
-							float tmin = (neia[k * 2 + 0] - tile.verts[va + 2])
-									/ (tile.verts[vb + 2] - tile.verts[va + 2]);
-							float tmax = (neia[k * 2 + 1] - tile.verts[va + 2])
-									/ (tile.verts[vb + 2] - tile.verts[va + 2]);
-							if (tmin > tmax) {
-								float temp = tmin;
-								tmin = tmax;
-								tmax = temp;
-							}
-							link.bmin = (int) (clamp(tmin, 0.0f, 1.0f) * 255.0f);
-							link.bmax = (int) (clamp(tmax, 0.0f, 1.0f) * 255.0f);
-						} else if (dir == 2 || dir == 6) {
-							float tmin = (neia[k * 2 + 0] - tile.verts[va]) / (tile.verts[vb] - tile.verts[va]);
-							float tmax = (neia[k * 2 + 1] - tile.verts[va]) / (tile.verts[vb] - tile.verts[va]);
-							if (tmin > tmax) {
-								float temp = tmin;
-								tmin = tmax;
-								tmax = temp;
-							}
-							link.bmin = (int) (clamp(tmin, 0.0f, 1.0f) * 255.0f);
-							link.bmax = (int) (clamp(tmax, 0.0f, 1.0f) * 255.0f);
+					// Compress portal limits to a byte value.
+					if (dir == 0 || dir == 4) {
+						float tmin = (neia[k * 2 + 0] - tile.verts[va + 2])
+								/ (tile.verts[vb + 2] - tile.verts[va + 2]);
+						float tmax = (neia[k * 2 + 1] - tile.verts[va + 2])
+								/ (tile.verts[vb + 2] - tile.verts[va + 2]);
+						if (tmin > tmax) {
+							float temp = tmin;
+							tmin = tmax;
+							tmax = temp;
 						}
+						link.bmin = (int) (clamp(tmin, 0.0f, 1.0f) * 255.0f);
+						link.bmax = (int) (clamp(tmax, 0.0f, 1.0f) * 255.0f);
+					} else if (dir == 2 || dir == 6) {
+						float tmin = (neia[k * 2 + 0] - tile.verts[va]) / (tile.verts[vb] - tile.verts[va]);
+						float tmax = (neia[k * 2 + 1] - tile.verts[va]) / (tile.verts[vb] - tile.verts[va]);
+						if (tmin > tmax) {
+							float temp = tmin;
+							tmin = tmax;
+							tmax = temp;
+						}
+						link.bmin = (int) (clamp(tmin, 0.0f, 1.0f) * 255.0f);
+						link.bmax = (int) (clamp(tmax, 0.0f, 1.0f) * 255.0f);
 					}
 				}
 			}
@@ -604,32 +591,28 @@ public class NavMesh {
 
 			// Link off-mesh connection to target poly.
 			int idx = allocLink(target);
-			if (idx != DT_NULL_LINK) {
-				Link link = target.links[idx];
-				link.ref = ref;
-				link.edge = 1;
-				link.side = oppositeSide;
-				link.bmin = link.bmax = 0;
-				// Add to linked list.
-				link.next = targetPoly.firstLink;
-				targetPoly.firstLink = idx;
-			}
+			Link link = target.links.get(idx);
+			link.ref = ref;
+			link.edge = 1;
+			link.side = oppositeSide;
+			link.bmin = link.bmax = 0;
+			// Add to linked list.
+			link.next = targetPoly.firstLink;
+			targetPoly.firstLink = idx;
 
 			// Link target poly to off-mesh connection.
 			if ((targetCon.flags & DT_OFFMESH_CON_BIDIR) != 0) {
 				int tidx = allocLink(tile);
-				if (tidx != DT_NULL_LINK) {
-					int landPolyIdx = decodePolyIdPoly(ref);
-					Poly landPoly = tile.polys[landPolyIdx];
-					Link link = tile.links[tidx];
-					link.ref = getPolyRefBase(target) | (targetCon.poly);
-					link.edge = 0xff;
-					link.side = (side == -1 ? 0xff : side);
-					link.bmin = link.bmax = 0;
-					// Add to linked list.
-					link.next = landPoly.firstLink;
-					landPoly.firstLink = tidx;
-				}
+				int landPolyIdx = decodePolyIdPoly(ref);
+				Poly landPoly = tile.polys[landPolyIdx];
+				link = tile.links.get(tidx);
+				link.ref = getPolyRefBase(target) | (targetCon.poly);
+				link.edge = 0xff;
+				link.side = (side == -1 ? 0xff : side);
+				link.bmin = link.bmax = 0;
+				// Add to linked list.
+				link.next = landPoly.firstLink;
+				landPoly.firstLink = tidx;
 			}
 		}
 	}
@@ -785,31 +768,27 @@ public class NavMesh {
 
 			// Link off-mesh connection to target poly.
 			int idx = allocLink(tile);
-			if (idx != DT_NULL_LINK) {
-				Link link = tile.links[idx];
-				link.ref = ref;
-				link.edge = 0;
-				link.side = 0xff;
-				link.bmin = link.bmax = 0;
-				// Add to linked list.
-				link.next = poly.firstLink;
-				poly.firstLink = idx;
-			}
+			Link link = tile.links.get(idx);
+			link.ref = ref;
+			link.edge = 0;
+			link.side = 0xff;
+			link.bmin = link.bmax = 0;
+			// Add to linked list.
+			link.next = poly.firstLink;
+			poly.firstLink = idx;
 
 			// Start end-point is always connect back to off-mesh connection.
 			int tidx = allocLink(tile);
-			if (tidx != DT_NULL_LINK) {
-				int landPolyIdx = decodePolyIdPoly(ref);
-				Poly landPoly = tile.polys[landPolyIdx];
-				Link link = tile.links[tidx];
-				link.ref = base | (con.poly);
-				link.edge = 0xff;
-				link.side = 0xff;
-				link.bmin = link.bmax = 0;
-				// Add to linked list.
-				link.next = landPoly.firstLink;
-				landPoly.firstLink = tidx;
-			}
+			int landPolyIdx = decodePolyIdPoly(ref);
+			Poly landPoly = tile.polys[landPolyIdx];
+			link = tile.links.get(tidx);
+			link.ref = base | (con.poly);
+			link.edge = 0xff;
+			link.side = 0xff;
+			link.bmin = link.bmax = 0;
+			// Add to linked list.
+			link.next = landPoly.firstLink;
+			landPoly.firstLink = tidx;
 		}
 	}
 
@@ -861,6 +840,7 @@ public class NavMesh {
 		}
 
 		// Find height at the location.
+		VectorPtr posV = new VectorPtr(pos);
 		for (int j = 0; j < pd.triCount; ++j) {
 			int t = (pd.triBase + j) * 4;
 			VectorPtr[] v = new VectorPtr[3];
@@ -871,7 +851,7 @@ public class NavMesh {
 					v[k] = new VectorPtr(tile.detailVerts,
 							(pd.vertBase + (tile.detailTris[t + k] - poly.vertCount)) * 3);
 			}
-			Tupple2<Boolean, Float> clp = closestHeightPointTriangle(pos, v[0], v[1], v[2]);
+			Tupple2<Boolean, Float> clp = closestHeightPointTriangle(posV, v[0], v[1], v[2]);
 			if (clp.first) {
 				closest[1] = clp.second;
 				break;
