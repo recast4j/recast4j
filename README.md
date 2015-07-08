@@ -1,2 +1,2 @@
 # recast4j
-Java Port of Recast Library
+Java Port of Recast & Detour

@@ -38,7 +38,6 @@ public class NavMeshQuery {
 	public static final int DT_STRAIGHTPATH_ALL_CROSSINGS = 0x02;	///< Add a vertex at every polygon edge crossing.
 
 	public static final int DT_RAYCAST_USE_COSTS = 0x01;		///< Raycast should calculate movement cost along the ray and fill RaycastHit::cost
-	private static final int DT_NODE_PARENT_DETACHED = 0;
 	
 	static float H_SCALE = 0.999f; // Search heuristic scale.
 	static int MAX_NEIS = 32;
@@ -1110,8 +1109,8 @@ public class NavMeshQuery {
 				Node next = m_nodePool.getNodeAtIdx(node.pidx);
 				node.pidx = m_nodePool.getNodeIdx(prev);
 				prev = node;
-				int nextRay = node.flags & DT_NODE_PARENT_DETACHED; // keep track of whether parent is not adjacent (i.e. due to raycast shortcut)
-				node.flags = (node.flags & ~DT_NODE_PARENT_DETACHED) | prevRay; // and store it in the reversed path's node
+				int nextRay = node.flags & Node.DT_NODE_PARENT_DETACHED; // keep track of whether parent is not adjacent (i.e. due to raycast shortcut)
+				node.flags = (node.flags & ~Node.DT_NODE_PARENT_DETACHED) | prevRay; // and store it in the reversed path's node
 				prevRay = nextRay;
 				node = next;
 			} while (node != null);
@@ -1120,7 +1119,7 @@ public class NavMeshQuery {
 			node = prev;
 			do {
 				Node next = m_nodePool.getNodeAtIdx(node.pidx);
-				if ((node.flags & DT_NODE_PARENT_DETACHED) != 0) {
+				if ((node.flags & Node.DT_NODE_PARENT_DETACHED) != 0) {
 					RaycastHit iresult = raycast(node.id, node.pos, next.pos, m_query.filter, 0, 0);
 					path.addAll(iresult.path);
 					// raycast ends on poly boundary and the path might include the next poly boundary.
@@ -1178,8 +1177,8 @@ public class NavMeshQuery {
 				Node next = m_nodePool.getNodeAtIdx(node.pidx);
 				node.pidx = m_nodePool.getNodeIdx(prev);
 				prev = node;
-				int nextRay = node.flags & DT_NODE_PARENT_DETACHED; // keep track of whether parent is not adjacent (i.e. due to raycast shortcut)
-				node.flags = (node.flags & ~DT_NODE_PARENT_DETACHED) | prevRay; // and store it in the reversed path's node
+				int nextRay = node.flags & Node.DT_NODE_PARENT_DETACHED; // keep track of whether parent is not adjacent (i.e. due to raycast shortcut)
+				node.flags = (node.flags & ~Node.DT_NODE_PARENT_DETACHED) | prevRay; // and store it in the reversed path's node
 				prevRay = nextRay;
 				node = next;
 			} while (node != null);
@@ -1188,7 +1187,7 @@ public class NavMeshQuery {
 			node = prev;
 			do {
 				Node next = m_nodePool.getNodeAtIdx(node.pidx);
-				if ((node.flags & DT_NODE_PARENT_DETACHED) != 0) {
+				if ((node.flags & Node.DT_NODE_PARENT_DETACHED) != 0) {
 					RaycastHit iresult = raycast(node.id, node.pos, next.pos, m_query.filter, 0, 0);
 					path.addAll(iresult.path);
 					// raycast ends on poly boundary and the path might include the next poly boundary.
