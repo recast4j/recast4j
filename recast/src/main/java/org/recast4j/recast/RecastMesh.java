@@ -858,6 +858,7 @@ public class RecastMesh {
 
 		mesh.verts = new int[maxVertices * 3];
 		mesh.polys = new int[maxTris * nvp * 2];
+		Arrays.fill(mesh.polys, RecastConstants.RC_MESH_NULL_IDX);
 		mesh.regs = new int[maxTris];
 		mesh.areas = new int[maxTris];
 
