@@ -53,6 +53,8 @@ public class FindPathTest {
 		{ -5.8023443f, 0.19729415f, 3.008419f }, { 38.423977f, 10.197294f, -0.116066754f },
 		{ 0.8635526f, 10.197294f, -10.31032f }, {18.784092f, 10.197294f, 3.0543678f} };
 
+
+	Status[] statuses = new Status[] { Status.SUCCSESS, Status.PARTIAL_RESULT, Status.SUCCSESS, Status.SUCCSESS, Status.SUCCSESS };
 	long[][] results = new long[][] {
 		{ 281474976710696L, 281474976710695L, 281474976710694L, 281474976710703L, 281474976710706L,
 				281474976710705L, 281474976710702L, 281474976710701L, 281474976710714L, 281474976710713L,
@@ -62,12 +64,11 @@ public class FindPathTest {
 				281474976710717L, 281474976710724L, 281474976710728L, 281474976710737L, 281474976710738L,
 				281474976710736L, 281474976710733L, 281474976710735L, 281474976710742L, 281474976710740L,
 				281474976710746L, 281474976710745L, 281474976710744L },
-		{}, {}, {} };
+		{281474976710680L, 281474976710684L, 281474976710688L, 281474976710687L, 281474976710686L, 281474976710697L, 281474976710695L, 281474976710694L, 281474976710703L, 281474976710706L, 281474976710705L, 281474976710702L, 281474976710701L, 281474976710714L, 281474976710713L, 281474976710712L, 281474976710727L, 281474976710730L, 281474976710717L, 281474976710729L, 281474976710731L, 281474976710752L, 281474976710748L, 281474976710753L, 281474976710755L, 281474976710754L, 281474976710768L, 281474976710772L, 281474976710773L, 281474976710770L, 281474976710757L, 281474976710761L, 281474976710758L},
+		{281474976710753L, 281474976710748L, 281474976710752L, 281474976710731L}, 
+		{281474976710733L, 281474976710736L, 281474976710738L, 281474976710737L, 281474976710728L, 281474976710724L, 281474976710717L, 281474976710729L, 281474976710731L, 281474976710752L, 281474976710748L, 281474976710753L, 281474976710755L, 281474976710754L, 281474976710768L, 281474976710772L}
+		};
 	
-	long[][] anyAngleResults = new long[][] {
-		{ 281474976710696L, 281474976710713L, 281474976710717L, 281474976710721L },
-		{ 281474976710773L, 281474976710753L, 281474976710724L, 281474976710736L, 281474976710746L, 281474976710744L } };
-
 	@Before
 	public void setUp() {
 		rcBuilder.build();
@@ -117,26 +118,25 @@ public class FindPathTest {
 		navmesh.init(nmd, 0);
 		query = new NavMeshQuery();
 		query.init(navmesh, 0);
-	}
 
-	/*
-	 * 
-	 * 281474976710696 22.60652, 10.197294, -45.918674 281474976710721 6.4576626, 10.197294, -18.33406
-	 * 
-	 * 281474976710773 22.331268, 10.197294, -1.0401875 281474976710767 -5.8023443, 0.19729415, 3.008419
-	 * ---
-	 * 281474976710680 18.694363, 15.803535, -73.090416 281474976710758 38.423977, 10.197294, -0.116066754
-	 * 
-	 * 281474976710753 0.7453353, 10.197294, -5.94005 281474976710731 0.8635526, 10.197294, -10.31032
-	 * 
-	 * 281474976710733 -20.651257, 5.904126, -13.712508 281474976710772 
-	 */
+		for (int i = 0; i < startRefs.length; i++) {
+			System.out.println("//---");
+			System.out.println("m_startRef = " + startRefs[i] + ";");
+			System.out.println("m_endRef = " + endRefs[i] + ";");
+			System.out.println("m_spos[0] = " + startPoss[i][0] + ";");
+			System.out.println("m_spos[1] = " + startPoss[i][1] + ";");
+			System.out.println("m_spos[2] = " + startPoss[i][2] + ";");
+			System.out.println("m_epos[0] = " + endPoss[i][0] + ";");
+			System.out.println("m_epos[1] = " + endPoss[i][1] + ";");
+			System.out.println("m_epos[2] = " + endPoss[i][2] + ";");
+		}
+
+	}
 
 	@Test
 	public void testFindPath() {
-		Status[] statuses = new Status[] { Status.SUCCSESS, Status.PARTIAL_RESULT, Status.SUCCSESS, Status.SUCCSESS, Status.SUCCSESS };
 		QueryFilter filter = new QueryFilter();
-		for (int i = 0; i < 3; i++) {
+		for (int i = 0; i < startRefs.length; i++) {
 			long startRef = startRefs[i];
 			long endRef = endRefs[i];
 			float[] startPos = startPoss[i];
@@ -152,15 +152,13 @@ public class FindPathTest {
 
 	@Test
 	public void testFindPathSliced() {
-		Status[] statuses = new Status[] { Status.SUCCSESS, Status.PARTIAL_RESULT };
 		QueryFilter filter = new QueryFilter();
-		for (int i = 0; i < 2; i++) {
-			System.out.println("START");
+		for (int i = 0; i < startRefs.length; i++) {
 			long startRef = startRefs[i];
 			long endRef = endRefs[i];
 			float[] startPos = startPoss[i];
 			float[] endPos = endPoss[i];
-			query.initSlicedFindPath(startRef, endRef, startPos, endPos, filter, 0);
+			query.initSlicedFindPath(startRef, endRef, startPos, endPos, filter, NavMeshQuery.DT_FINDPATH_ANY_ANGLE);
 			Status status = Status.IN_PROGRESS;
 			while (status == Status.IN_PROGRESS) { 
 				Tupple2<Status, Integer> res = query.updateSlicedFindPath(10);
@@ -172,18 +170,6 @@ public class FindPathTest {
 			for (int j = 0; j < results[i].length; j++) {
 				Assert.assertEquals(results[i][j], path.second.get(j).longValue());
 			}
-			query.initSlicedFindPath(startRef, endRef, startPos, endPos, filter, NavMeshQuery.DT_FINDPATH_ANY_ANGLE);
-			status = Status.IN_PROGRESS;
-			while (status == Status.IN_PROGRESS) { 
-				Tupple2<Status, Integer> res = query.updateSlicedFindPath(10);
-				status = res.first;
-			}
-			path = query.finalizeSlicedFindPath();
-			for (Long l : path.second) {
-				System.out.println(l);
-			}
-			Assert.assertEquals(statuses[i], path.first);
-			Assert.assertEquals(anyAngleResults[i].length, path.second.size());
 
 		}
 	}
