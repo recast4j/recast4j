@@ -97,6 +97,14 @@ public class DetourCommon {
 		return dest;
 	}
 
+	static float[] vCopy(float[] in) {
+		float[] out = new float[3];
+		out[0] = in[0];
+		out[1] = in[1];
+		out[2] = in[2];
+		return out;
+	}
+
 	static void vCopy(float[] out, float[] in) {
 		out[0] = in[0];
 		out[1] = in[1];
@@ -187,6 +195,20 @@ public class DetourCommon {
 		v[2] *= d;
 	}
 
+	static final float thr = sqr(1.0f / 16384.0f);
+
+	/// Performs a 'sloppy' colocation check of the specified points.
+	///  @param[in]		p0	A point. [(x, y, z)]
+	///  @param[in]		p1	A point. [(x, y, z)]
+	/// @return True if the points are considered to be at the same location.
+	///
+	/// Basically, this function will return true if the specified points are 
+	/// close enough to eachother to be considered colocated.
+	static boolean vEqual(float[] p0, float[] p1) {
+		float d = vDistSqr(p0, p1);
+		return d < thr;
+	}
+
 	/// Derives the dot product of two vectors on the xz-plane. (@p u . @p v)
 	/// @param[in] u A vector [(x, y, z)]
 	/// @param[in] v A vector [(x, y, z)]
@@ -224,6 +246,14 @@ public class DetourCommon {
 		float abz = verts[b + 2] - verts[a + 2];
 		float acx = verts[c] - verts[a];
 		float acz = verts[c + 2] - verts[a + 2];
+		return acx * abz - abx * acz;
+	}
+
+	static float triArea2D(float[] a, float[] b, float[] c) {
+		float abx = b[0] - a[0];
+		float abz = b[2] - a[2];
+		float acx = c[0] - a[0];
+		float acz = c[2] - a[2];
 		return acx * abz - abx * acz;
 	}
 
@@ -442,5 +472,21 @@ public class DetourCommon {
 
 	static int oppositeTile(int side) {
 		return (side + 4) & 0x7;
+	}
+
+	static float vperpXZ(float[] a, float[] b) {
+		return a[0] * b[2] - a[2] * b[0];
+	}
+
+	static Tupple3<Boolean, Float, Float> intersectSegSeg2D(float[] ap, float[] aq, float[] bp, float[] bq) {
+		float[] u = vSub(aq, ap);
+		float[] v = vSub(bq, bp);
+		float[] w = vSub(ap, bp);
+		float d = vperpXZ(u, v);
+		if (Math.abs(d) < 1e-6f)
+			return new Tupple3<>(false, 0f, 0f);
+		float s = vperpXZ(v, w) / d;
+		float t = vperpXZ(u, w) / d;
+		return new Tupple3<>(true, s, t);
 	}
 }

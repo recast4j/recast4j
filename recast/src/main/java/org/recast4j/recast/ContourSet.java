@@ -21,8 +21,10 @@ package org.recast4j.recast;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Represents a group of related contours. */
 public class ContourSet {
 
+	public final List<Contour> conts = new ArrayList<>();
 	final float[] bmin = new float[3];
 	final float[] bmax = new float[3];
 	public float cs;
@@ -30,5 +32,4 @@ public class ContourSet {
 	public int width;
 	public int height;
 	public int borderSize;
-	public final List<Contour> conts = new ArrayList<>();
 }

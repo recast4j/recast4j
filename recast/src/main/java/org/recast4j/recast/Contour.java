@@ -18,13 +18,20 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
+/** Represents a simple, non-overlapping contour in field space. */
 public class Contour {
 
+	/** Simplified contour vertex and connection data. [Size: 4 * #nverts] */
 	public int[] verts;
+	/** The number of vertices in the simplified contour. */
 	public int nverts;
+	/** Raw contour vertex and connection data. [Size: 4 * #nrverts] */
 	public int[] rverts;
+	/** The number of vertices in the raw contour.  */
 	public int nrverts;
+	/** The region id of the contour. */
 	public int area;
+	/** The area id of the contour. */
 	public int reg;
 
 }

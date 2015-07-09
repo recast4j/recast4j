@@ -18,9 +18,12 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
+/** Provides information on the content of a cell column in a compact heightfield. */
 public class CompactCell {
 
+	/** Index to the first span in the column.*/
 	public int index;
+	/** Number of spans in the column. */
 	public int count;
 
 }

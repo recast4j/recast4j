@@ -18,14 +18,22 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
+/** Represents a heightfield layer within a layer set. */
 public class Heightfield {
 
+	/** The width of the heightfield. (Along the x-axis in cell units.) */
 	public final int width;
+	/** The height of the heightfield. (Along the z-axis in cell units.) */
 	public final int height;
+	/** The minimum bounds in world space. [(x, y, z)] */
 	public final float[] bmin;
+	/** The maximum bounds in world space. [(x, y, z)] */
 	public final float[] bmax;
+	/** The size of each cell. (On the xz-plane.) */
 	public final float cs;
+	/** The height of each cell. (The minimum increment along the y-axis.) */
 	public final float ch;
+	/** Heightfield of spans (width*height). */
 	public final Span[] spans;
 
 	public Heightfield(int width, int height, float[] bmin, float[] bmax, float cs, float ch) {

@@ -18,11 +18,16 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
+/**  Represents a span of unobstructed space within a compact heightfield. */
 public class CompactSpan {
 
-	public int reg;
-	public int con;
+	/** The lower extent of the span. (Measured from the heightfield's base.) */
 	public int y;
+	/** The id of the region the span belongs to. (Or zero if not in a region.) */
+	public int reg;
+	/** Packed neighbor connection data. */
+	public int con;
+	/** The height of the span.  (Measured from #y.) */
 	public int h;
 
 }
