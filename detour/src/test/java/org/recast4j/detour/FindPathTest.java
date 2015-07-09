@@ -22,6 +22,7 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.recast4j.detour.NavMeshQuery.StraightPathItem;
 import org.recast4j.recast.PolyMesh;
 import org.recast4j.recast.PolyMeshDetail;
 import org.recast4j.recast.RecastBuilder;
@@ -69,6 +70,11 @@ public class FindPathTest {
 		{281474976710733L, 281474976710736L, 281474976710738L, 281474976710737L, 281474976710728L, 281474976710724L, 281474976710717L, 281474976710729L, 281474976710731L, 281474976710752L, 281474976710748L, 281474976710753L, 281474976710755L, 281474976710754L, 281474976710768L, 281474976710772L}
 		};
 	
+	StraightPathItem[][] straightPaths = new StraightPathItem[][] {
+		{new StraightPathItem(new float[]{0, 0, 0}, 0, 1L), new StraightPathItem(new float[]{0, 0, 0}, 0, 1L), new StraightPathItem(new float[]{0, 0, 0}, 0, 1L),new StraightPathItem(new float[]{0, 0, 0}, 0, 1L),new StraightPathItem(new float[]{0, 0, 0}, 0, 1L),new StraightPathItem(new float[]{0, 0, 0}, 0, 1L)},
+		{}
+	};
+		
 	@Before
 	public void setUp() {
 		rcBuilder.build();
@@ -171,6 +177,20 @@ public class FindPathTest {
 				Assert.assertEquals(results[i][j], path.second.get(j).longValue());
 			}
 
+		}
+	}
+
+	@Test
+	public void testFindPathStraight() {
+		QueryFilter filter = new QueryFilter();
+		for (int i = 0; i < startRefs.length; i++) {
+			long startRef = startRefs[i];
+			long endRef = endRefs[i];
+			float[] startPos = startPoss[i];
+			float[] endPos = endPoss[i];
+			Tupple2<Status, List<Long>> path = query.findPath(startRef, endRef, startPos, endPos, filter);
+			List<StraightPathItem> straightPath = query.findStraightPath(startPos, endPos, path.second, 0);
+			System.out.println(straightPath.size());
 		}
 	}
 

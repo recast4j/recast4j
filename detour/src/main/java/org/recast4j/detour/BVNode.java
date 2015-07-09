@@ -18,11 +18,17 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
-/// Bounding volume node.
-/// @note This structure is rarely if ever used by the end user.
-/// @see MeshTile
+/**
+ * Bounding volume node.
+ * 
+ * @note This structure is rarely if ever used by the end user.
+ * @see MeshTile
+ */
 class BVNode {
-	int bmin[] = new int[3]; /// < Minimum bounds of the node's AABB. [(x, y, z)]
-	int bmax[] = new int[3]; /// < Maximum bounds of the node's AABB. [(x, y, z)]
-	public int i;/// < The node's index. (Negative for escape sequence.)
+	/** Minimum bounds of the node's AABB. [(x, y, z)] */
+	int bmin[] = new int[3];
+	/** Maximum bounds of the node's AABB. [(x, y, z)] */
+	int bmax[] = new int[3];
+	/** The node's index. (Negative for escape sequence.) */
+	public int i;
 }

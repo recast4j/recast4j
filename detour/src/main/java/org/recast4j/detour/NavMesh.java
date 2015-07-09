@@ -29,8 +29,7 @@ public class NavMesh {
 	static int DT_TILE_BITS = 28;
 	static int DT_POLY_BITS = 20;
 
-	/// The maximum number of vertices per navigation polygon.
-	/// @ingroup detour
+	/** The maximum number of vertices per navigation polygon. */
 	public static int DT_VERTS_PER_POLYGON = 6;
 
 	/// A magic number used to detect compatibility of navigation tile data.
@@ -56,7 +55,6 @@ public class NavMesh {
 	static int DT_OFFMESH_CON_BIDIR = 1;
 
 	/// The maximum number of user defined area ids.
-	/// @ingroup detour
 	static int DT_MAX_AREAS = 64;
 
 	/// Limit raycasting during any angle pahfinding

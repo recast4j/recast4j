@@ -18,54 +18,53 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
-/// Defines a polyogn within a dtMeshTile object.
-/// @ingroup detour
+/** Defines a polyogn within a dtMeshTile object. */
 public class Poly {
 
-	/// The polygon is a standard convex polygon that is part of the surface of the mesh.
-	public static final int DT_POLYTYPE_GROUND = 0;
-
-	/// The polygon is an off-mesh connection consisting of two vertices.
-	public static final int DT_POLYTYPE_OFFMESH_CONNECTION = 1;
-
 	final int index;
-	
-	/// Index to first link in linked list. (Or #DT_NULL_LINK if there is no link.)
+	/** The polygon is a standard convex polygon that is part of the surface of the mesh. */
+	public static final int DT_POLYTYPE_GROUND = 0;
+	/** The polygon is an off-mesh connection consisting of two vertices. */
+	public static final int DT_POLYTYPE_OFFMESH_CONNECTION = 1;
+	/** Index to first link in linked list. (Or #DT_NULL_LINK if there is no link.) */
 	int firstLink;
-
-	/// The indices of the polygon's vertices.
-	/// The actual vertices are located in dtMeshTile::verts.
+	/** The indices of the polygon's vertices. The actual vertices are located in MeshTile::verts. */
 	int[] verts = new int[NavMesh.DT_VERTS_PER_POLYGON];
-
-	/// Packed data representing neighbor polygons references and flags for each edge.
+	/** Packed data representing neighbor polygons references and flags for each edge. */
 	int[] neis = new int[NavMesh.DT_VERTS_PER_POLYGON];
-
-	/// The user defined polygon flags.
+	/** The user defined polygon flags. */
 	int flags;
-
-	/// The number of vertices in the polygon.
+	/** The number of vertices in the polygon. */
 	int vertCount;
-
-	/// The bit packed area id and polygon type.
-	/// @note Use the structure's set and get methods to acess this value.
+	/**
+	 * The bit packed area id and polygon type.
+	 * 
+	 * @note Use the structure's set and get methods to access this value.
+	 */
 	int areaAndtype;
 
 	public Poly(int index) {
 		this.index = index;
 	}
 
-	/// Sets the user defined area id. [Limit: < #DT_MAX_AREAS]
-	void setArea(int a) { areaAndtype = (areaAndtype & 0xc0) | (a & 0x3f); }
+	/** Sets the user defined area id. [Limit: < #DT_MAX_AREAS] */
+	void setArea(int a) {
+		areaAndtype = (areaAndtype & 0xc0) | (a & 0x3f);
+	}
 
-	/// Sets the polygon type. (See: #dtPolyTypes.)
-	void setType(int t) { areaAndtype = (areaAndtype & 0x3f) | (t << 6); }
+	/** Sets the polygon type. (See: #dtPolyTypes.) */
+	void setType(int t) {
+		areaAndtype = (areaAndtype & 0x3f) | (t << 6);
+	}
 
-	/// Gets the user defined area id.
-	int getArea() { return areaAndtype & 0x3f; }
+	/** Gets the user defined area id. */
+	int getArea() {
+		return areaAndtype & 0x3f;
+	}
 
-	/// Gets the polygon type. (See: #dtPolyTypes)
-	int getType() { return areaAndtype >> 6; }
-
+	/** Gets the polygon type. (See: #dtPolyTypes) */
+	int getType() {
+		return areaAndtype >> 6;
+	}
 
 };
-

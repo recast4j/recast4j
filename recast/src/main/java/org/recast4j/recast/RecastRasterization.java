@@ -28,21 +28,12 @@ public class RecastRasterization {
 		return overlap;
 	}
 
-	private boolean overlapInterval(int amin, int amax, int bmin, int bmax) {
-		if (amax < bmin)
-			return false;
-		if (amin > bmax)
-			return false;
-		return true;
-	}
-
-	/// @par
-	///
-	/// The span addition can be set to favor flags. If the span is merged to
-	/// another span and the new @p smax is within @p flagMergeThr units
-	/// from the existing span, the span flags are merged.
-	///
-	/// @see rcHeightfield, rcSpan.
+	/**
+	 * The span addition can be set to favor flags. If the span is merged to another span and the new 'smax' is
+	 * within 'flagMergeThr' units from the existing span, the span flags are merged.
+	 * 
+	 * @see Heightfield, Span.
+	 */
 	private static void addSpan(Heightfield hf, int x, int y, int smin, int smax, int area, int flagMergeThr) {
 
 		int idx = x + y * hf.width;
@@ -252,11 +243,11 @@ public class RecastRasterization {
 		}
 	}
 
-	/// @par
-	///
-	/// No spans will be added if the triangle does not overlap the heightfield grid.
-	///
-	/// @see rcHeightfield
+	/**
+	 * No spans will be added if the triangle does not overlap the heightfield grid.
+	 * 
+	 * @see Heightfield
+	 */
 	public static void rasterizeTriangle(Context ctx, float[] verts, int v0, int v1, int v2, int area,
 			Heightfield solid, int flagMergeThr) {
 
@@ -269,11 +260,11 @@ public class RecastRasterization {
 		ctx.stopTimer("RASTERIZE_TRIANGLES");
 	}
 
-	/// @par
-	///
-	/// Spans will only be added for triangles that overlap the heightfield grid.
-	///
-	/// @see rcHeightfield
+	/**
+	 * Spans will only be added for triangles that overlap the heightfield grid.
+	 * 
+	 * @see Heightfield
+	 */
 	public static void rasterizeTriangles(Context ctx, float[] verts, int nv, int[] tris, int[] areas, int nt,
 			Heightfield solid, int flagMergeThr) {
 
@@ -293,11 +284,11 @@ public class RecastRasterization {
 		ctx.stopTimer("RASTERIZE_TRIANGLES");
 	}
 
-	/// @par
-	///
-	/// Spans will only be added for triangles that overlap the heightfield grid.
-	///
-	/// @see rcHeightfield
+	/**
+	 * Spans will only be added for triangles that overlap the heightfield grid.
+	 * 
+	 * @see Heightfield
+	 */
 	public static void rasterizeTriangles(Context ctx, float[] verts, int[] areas, int nt, Heightfield solid,
 			int flagMergeThr) {
 		ctx.startTimer("RASTERIZE_TRIANGLES");

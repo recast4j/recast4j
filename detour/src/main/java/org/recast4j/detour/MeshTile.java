@@ -24,11 +24,12 @@ import java.util.List;
 /// @ingroup detour
 public class MeshTile {
 	final int index;
-
-	int salt; /// < Counter describing modifications to the tile.
-
-	MeshHeader header; /// < The tile header.
-	Poly[] polys; /// < The tile polygons. [Size: dtMeshHeader::polyCount]
+	/** Counter describing modifications to the tile. */
+	int salt;
+	/** The tile header. */
+	MeshHeader header;
+	/** The tile polygons. [Size: dtMeshHeader::polyCount] */
+	Poly[] polys;
 	float[] verts; /// < The tile vertices. [Size: dtMeshHeader::vertCount]
 	List<Link> links; /// < The tile links. [Size: dtMeshHeader::maxLinkCount]
 	PolyDetail[] detailMeshes; /// < The tile's detail sub-meshes. [Size: dtMeshHeader::detailMeshCount]

@@ -35,7 +35,6 @@ public class NavMeshQuery {
 															/// still consider costs)
 
 	public static final int DT_RAYCAST_USE_COSTS = 0x01;		///< Raycast should calculate movement cost along the ray and fill RaycastHit::cost
-	private static final int DT_NODE_PARENT_DETACHED = 0;
 
 	/// Vertex flags returned by findStraightPath.
 	public static final int DT_STRAIGHTPATH_START = 0x01; ///< The vertex is the start position in the path.
@@ -1269,6 +1268,17 @@ public class NavMeshQuery {
 		return Status.IN_PROGRESS;
 	}
 
+	public static class StraightPathItem {
+		float[] pos;
+		int flags;
+		long ref;
+		public StraightPathItem(float[] pos, int flags, long ref) {
+			this.pos = vCopy(pos);
+			this.flags = flags;
+			this.ref = ref;
+		}
+	}
+
 	/// @par
 	/// 
 	/// This method peforms what is often called 'string pulling'.
@@ -1286,17 +1296,6 @@ public class NavMeshQuery {
 	/// they will be filled as far as possible from the start toward the end 
 	/// position.
 	///
-	public static class StraightPathItem {
-		float[] pos;
-		int flags;
-		long ref;
-		public StraightPathItem(float[] pos, int flags, long ref) {
-			this.pos = vCopy(pos);
-			this.flags = flags;
-			this.ref = ref;
-		}
-	}
-
 	public List<StraightPathItem> findStraightPath(float[] startPos, float[] endPos, List<Long> path, int options) {
 		if (path.isEmpty()) {
 			throw new IllegalArgumentException("Empty path");
@@ -1804,6 +1803,8 @@ public class NavMeshQuery {
 		return new Tupple2<>(Status.SUCCSESS, mid);
 	}
 
+	private static float s = 1.0f/255.0f;
+
 	/// @par
 	///
 	/// This method is meant to be used for quick, short distance checks.
@@ -1842,8 +1843,6 @@ public class NavMeshQuery {
 	/// (no wall hit), meaning it reached the end position. This is one example of why
 	/// this method is meant for short distance checks.
 	///
-	private static float s = 1.0f/255.0f;
-
 	RaycastHit raycast(long startRef, float[] startPos, float[] endPos, QueryFilter filter, int options, long prevRef) {
 		// Validate input
 		if (startRef == 0 || !m_nav.isValidPolyRef(startRef))
