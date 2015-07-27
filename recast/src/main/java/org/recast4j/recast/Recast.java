@@ -60,7 +60,6 @@ public class Recast {
 		return areas;
 	}
 
-	// TODO: Test!!
 	static void calcTriNormal(float[] verts, int v0, int v1, int v2, float[] norm) {
 		float e0[] = new float[3], e1[] = new float[3];
 		RecastVectors.sub(e0, verts, v1 * 3, v0 * 3);

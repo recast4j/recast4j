@@ -198,11 +198,11 @@ public class DetourCommon {
 	static final float thr = sqr(1.0f / 16384.0f);
 
 	/// Performs a 'sloppy' colocation check of the specified points.
-	///  @param[in]		p0	A point. [(x, y, z)]
-	///  @param[in]		p1	A point. [(x, y, z)]
+	/// @param[in] p0 A point. [(x, y, z)]
+	/// @param[in] p1 A point. [(x, y, z)]
 	/// @return True if the points are considered to be at the same location.
 	///
-	/// Basically, this function will return true if the specified points are 
+	/// Basically, this function will return true if the specified points are
 	/// close enough to eachother to be considered colocated.
 	static boolean vEqual(float[] p0, float[] p1) {
 		float d = vDistSqr(p0, p1);
@@ -218,6 +218,10 @@ public class DetourCommon {
 	/// ignored.
 	static float vDot2D(float[] u, float[] v) {
 		return u[0] * v[0] + u[2] * v[2];
+	}
+
+	static float vDot2D(float[] u, float[] v, int vi) {
+		return u[0] * v[vi] + u[2] * v[vi + 2];
 	}
 
 	/// Derives the xz-plane 2D perp product of the two vectors. (uz*vx - ux*vz)
@@ -264,7 +268,7 @@ public class DetourCommon {
 	/// @param[in] bmax Maximum bounds of box B. [(x, y, z)]
 	/// @return True if the two AABB's overlap.
 	/// @see dtOverlapBounds
-	static boolean dtOverlapQuantBounds(int amin[], int amax[], int bmin[], int bmax[]) {
+	static boolean overlapQuantBounds(int amin[], int amax[], int bmin[], int bmax[]) {
 		boolean overlap = true;
 		overlap = (amin[0] > bmax[0] || amax[0] < bmin[0]) ? false : overlap;
 		overlap = (amin[1] > bmax[1] || amax[1] < bmin[1]) ? false : overlap;
@@ -279,7 +283,7 @@ public class DetourCommon {
 	/// @param[in] bmax Maximum bounds of box B. [(x, y, z)]
 	/// @return True if the two AABB's overlap.
 	/// @see dtOverlapQuantBounds
-	static boolean dtOverlapBounds(float[] amin, float[] amax, float[] bmin, float[] bmax) {
+	static boolean overlapBounds(float[] amin, float[] amax, float[] bmin, float[] bmax) {
 		boolean overlap = true;
 		overlap = (amin[0] > bmax[0] || amax[0] < bmin[0]) ? false : overlap;
 		overlap = (amin[1] > bmax[1] || amax[1] < bmin[1]) ? false : overlap;
@@ -287,7 +291,7 @@ public class DetourCommon {
 		return overlap;
 	}
 
-	static float[] distancePtSegSqr2D(float[] pt, float[] p, float[] q) {
+	static Tupple2<Float, Float> distancePtSegSqr2D(float[] pt, float[] p, float[] q) {
 		float pqx = q[0] - p[0];
 		float pqz = q[2] - p[2];
 		float dx = pt[0] - p[0];
@@ -302,7 +306,7 @@ public class DetourCommon {
 			t = 1;
 		dx = p[0] + t * pqx - pt[0];
 		dz = p[2] + t * pqz - pt[2];
-		return new float[] { dx * dx + dz * dz, t };
+		return new Tupple2<>(dx * dx + dz * dz, t);
 	}
 
 	static Tupple2<Boolean, Float> closestHeightPointTriangle(VectorPtr p, VectorPtr a, VectorPtr b, VectorPtr c) {
@@ -331,6 +335,91 @@ public class DetourCommon {
 		}
 
 		return new Tupple2<>(false, null);
+	}
+
+	/// @par
+	///
+	/// All points are projected onto the xz-plane, so the y-values are ignored.
+	static boolean pointInPolygon(float[] pt, float[] verts, int nverts) {
+		// TODO: Replace pnpoly with triArea2D tests?
+		int i, j;
+		boolean c = false;
+		for (i = 0, j = nverts - 1; i < nverts; j = i++) {
+			int vi = i * 3;
+			int vj = j * 3;
+			if (((verts[vi + 2] > pt[2]) != (verts[vj + 2] > pt[2])) && (pt[0] < (verts[vj + 0] - verts[vi + 0])
+					* (pt[2] - verts[vi + 2]) / (verts[vj + 2] - verts[vi + 2]) + verts[vi + 0]))
+				c = !c;
+		}
+		return c;
+	}
+
+	static boolean distancePtPolyEdgesSqr(float[] pt, float[] verts, int nverts, float[] ed, float[] et) {
+		// TODO: Replace pnpoly with triArea2D tests?
+		int i, j;
+		boolean c = false;
+		for (i = 0, j = nverts - 1; i < nverts; j = i++) {
+			int vi = i * 3;
+			int vj = j * 3;
+			if (((verts[vi + 2] > pt[2]) != (verts[vj + 2] > pt[2])) && (pt[0] < (verts[vj + 0] - verts[vi + 0])
+					* (pt[2] - verts[vi + 2]) / (verts[vj + 2] - verts[vi + 2]) + verts[vi + 0]))
+				c = !c;
+			Tupple2<Float, Float> edet = distancePtSegSqr2D(pt, verts, vj, vi);
+			ed[j] = edet.first;
+			et[j] = edet.second;
+		}
+		return c;
+	}
+
+	static float[] projectPoly(float[] axis, float[] poly, int npoly) {
+		float rmin, rmax;
+		rmin = rmax = vDot2D(axis, poly, 0);
+		for (int i = 1; i < npoly; ++i) {
+			float d = vDot2D(axis, poly, i * 3);
+			rmin = Math.min(rmin, d);
+			rmax = Math.max(rmax, d);
+		}
+		return new float[] { rmin, rmax };
+	}
+
+	static boolean overlapRange(float amin, float amax, float bmin, float bmax, float eps) {
+		return ((amin + eps) > bmax || (amax - eps) < bmin) ? false : true;
+	}
+
+	static float eps = 1e-4f;
+
+	/// @par
+	///
+	/// All vertices are projected onto the xz-plane, so the y-values are ignored.
+	static boolean overlapPolyPoly2D(float[] polya, int npolya, float[] polyb, int npolyb) {
+
+		for (int i = 0, j = npolya - 1; i < npolya; j = i++) {
+			int va = j * 3;
+			int vb = i * 3;
+
+			float[] n = new float[] { polya[vb + 2] - polya[va + 2], 0, -(polya[vb + 0] - polya[va + 0]) };
+
+			float[] aminmax = projectPoly(n, polya, npolya);
+			float[] bminmax = projectPoly(n, polyb, npolyb);
+			if (!overlapRange(aminmax[0], aminmax[1], bminmax[0], bminmax[1], eps)) {
+				// Found separating axis
+				return false;
+			}
+		}
+		for (int i = 0, j = npolyb - 1; i < npolyb; j = i++) {
+			int va = j * 3;
+			int vb = i * 3;
+
+			float[] n = new float[] { polyb[vb + 2] - polyb[va + 2], 0, -(polyb[vb + 0] - polyb[va + 0]) };
+
+			float[] aminmax = projectPoly(n, polya, npolya);
+			float[] bminmax = projectPoly(n, polyb, npolyb);
+			if (!overlapRange(aminmax[0], aminmax[1], bminmax[0], bminmax[1], eps)) {
+				// Found separating axis
+				return false;
+			}
+		}
+		return true;
 	}
 
 	// Returns a random point in a convex polygon.
@@ -435,7 +524,7 @@ public class DetourCommon {
 		return result;
 	}
 
-	static Tupple2<Float, Float> dtDistancePtSegSqr2D(float[] pt, float[] verts, int p, int q) {
+	static Tupple2<Float, Float> distancePtSegSqr2D(float[] pt, float[] verts, int p, int q) {
 		float pqx = verts[q + 0] - verts[p + 0];
 		float pqz = verts[q + 2] - verts[p + 2];
 		float dx = pt[0] - verts[p + 0];
@@ -451,23 +540,6 @@ public class DetourCommon {
 		dx = verts[p + 0] + t * pqx - pt[0];
 		dz = verts[p + 2] + t * pqz - pt[2];
 		return new Tupple2<>(dx * dx + dz * dz, t);
-	}
-
-	static boolean dtDistancePtPolyEdgesSqr(float[] pt, float[] verts, int nverts, float[] ed, float[] et) {
-		// TODO: Replace pnpoly with triArea2D tests?
-		int i, j;
-		boolean c = false;
-		for (i = 0, j = nverts - 1; i < nverts; j = i++) {
-			int vi = i * 3;
-			int vj = j * 3;
-			if (((verts[vi + 2] > pt[2]) != (verts[vj + 2] > pt[2])) && (pt[0] < (verts[vj + 0] - verts[vi + 0])
-					* (pt[2] - verts[vi + 2]) / (verts[vj + 2] - verts[vi + 2]) + verts[vi + 0]))
-				c = !c;
-			Tupple2<Float, Float> edet = dtDistancePtSegSqr2D(pt, verts, vj, vi);
-			ed[j] = edet.first;
-			et[j] = edet.second;
-		}
-		return c;
 	}
 
 	static int oppositeTile(int side) {

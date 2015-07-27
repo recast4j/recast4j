@@ -261,7 +261,7 @@ public class NavMesh {
 		return params;
 	}
 
-	List<Long> queryPolygonsInTile(MeshTile tile, float[] qmin, float[] qmax, int maxPolys) {
+	List<Long> queryPolygonsInTile(MeshTile tile, float[] qmin, float[] qmax) {
 		List<Long> polys = new ArrayList<>();
 		if (tile.bvTree != null) {
 			int nodeIndex = 0;
@@ -288,16 +288,14 @@ public class NavMesh {
 
 			// Traverse tree
 			long base = getPolyRefBase(tile);
-			int n = 0;
 			int end = tile.header.bvNodeCount;
 			while (nodeIndex < end) {
 				BVNode node = tile.bvTree[nodeIndex];
-				boolean overlap = dtOverlapQuantBounds(bmin, bmax, node.bmin, node.bmax);
+				boolean overlap = overlapQuantBounds(bmin, bmax, node.bmin, node.bmax);
 				boolean isLeafNode = node.i >= 0;
 
 				if (isLeafNode && overlap) {
-					if (n < maxPolys)
-						polys.add(base | node.i);
+					polys.add(base | node.i);
 				}
 
 				if (overlap || isLeafNode)
@@ -312,7 +310,6 @@ public class NavMesh {
 		} else {
 			float[] bmin = new float[3];
 			float[] bmax = new float[3];
-			int n = 0;
 			long base = getPolyRefBase(tile);
 			for (int i = 0; i < tile.header.polyCount; ++i) {
 				Poly p = tile.polys[i];
@@ -328,9 +325,8 @@ public class NavMesh {
 					vMin(bmin, tile.verts, v);
 					vMax(bmax, tile.verts, v);
 				}
-				if (dtOverlapBounds(qmin, qmax, bmin, bmax)) {
-					if (n < maxPolys)
-						polys.add(base | i);
+				if (overlapBounds(qmin, qmax, bmin, bmax)) {
+					polys.add(base | i);
 				}
 			}
 			return polys;
@@ -819,7 +815,7 @@ public class NavMesh {
 		boolean posOverPoly = false;
 		float[] closest = new float[3];
 		vCopy(closest, pos);
-		if (!dtDistancePtPolyEdgesSqr(pos, verts, nv, edged, edget)) {
+		if (!distancePtPolyEdgesSqr(pos, verts, nv, edged, edget)) {
 			// Point is outside the polygon, dtClamp to nearest edge.
 			float dmin = Float.MAX_VALUE;
 			int imin = -1;
@@ -864,7 +860,7 @@ public class NavMesh {
 		float[] bmax = vAdd(center, extents);
 
 		// Get nearby polygons from proximity grid.
-		List<Long> polys = queryPolygonsInTile(tile, bmin, bmax, 128);
+		List<Long> polys = queryPolygonsInTile(tile, bmin, bmax);
 
 		// Find nearest polygon amongst the nearby polygons.
 		long nearest = 0;

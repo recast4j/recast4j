@@ -21,7 +21,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.recast4j.detour.NavMeshQuery.FRand;
-import org.recast4j.detour.NavMeshQuery.RandomPointResult;
 import org.recast4j.recast.PolyMesh;
 import org.recast4j.recast.PolyMeshDetail;
 import org.recast4j.recast.RecastBuilder;
@@ -104,7 +103,7 @@ public class RandomPointTest {
 		FRand f = new FRand();
 		QueryFilter filter = new QueryFilter();
 		for (int i = 0; i < 1000; i++) {
-			RandomPointResult point = query.findRandomPoint(filter, f);
+			FindRandomPointResult point = query.findRandomPoint(filter, f);
 			Assert.assertEquals(Status.SUCCSESS, point.status);
 			Tupple2<MeshTile,Poly> tileAndPoly = navmesh.getTileAndPolyByRef(point.randomRef);
 			float[] bmin = new float[2];
@@ -127,7 +126,7 @@ public class RandomPointTest {
 	public void testRandomInCircle() {
 		FRand f = new FRand();
 		QueryFilter filter = new QueryFilter();
-		RandomPointResult point = query.findRandomPoint(filter, f);
+		FindRandomPointResult point = query.findRandomPoint(filter, f);
 		for (int i = 0; i < 1000; i++) {
 			point = query.findRandomPointAroundCircle(point.randomRef, point.randomPt, 5f, filter, f);
 			Assert.assertEquals(Status.SUCCSESS, point.status);

@@ -169,7 +169,7 @@ public class NavMeshBuilder {
 	}
 
 	private static int createBVTree(int[] verts, int nverts, int[] polys, int npolys, int nvp, float cs, float ch,
-			int nnodes, BVNode[] nodes) {
+			BVNode[] nodes) {
 		// Build tree
 		BVItem[] items = new BVItem[npolys];
 		for (int i = 0; i < npolys; i++) {
@@ -436,7 +436,7 @@ public class NavMeshBuilder {
 		header.walkableRadius = params.walkableRadius;
 		header.walkableClimb = params.walkableClimb;
 		header.offMeshConCount = storedOffMeshConCount;
-		header.bvNodeCount = params.buildBvTree ? params.polyCount * 2 : 0;
+		header.bvNodeCount = 0;
 
 		int offMeshVertsBase = params.vertCount;
 		int offMeshPolyBase = params.polyCount;
@@ -568,8 +568,9 @@ public class NavMeshBuilder {
 		// Store and create BVtree.
 		// TODO: take detail mesh into account! use byte per bbox extent?
 		if (params.buildBvTree) {
-			createBVTree(params.verts, params.vertCount, params.polys, params.polyCount, nvp, params.cs, params.ch,
-					params.polyCount * 2, navBvtree);
+			header.bvNodeCount = createBVTree(params.verts, params.vertCount, params.polys, params.polyCount, nvp,
+					params.cs, params.ch, navBvtree);
+
 		}
 
 		// Store Off-Mesh connections.
