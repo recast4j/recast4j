@@ -20,24 +20,28 @@ package org.recast4j.detour;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class FindNearestPolyTest extends AbstractDetourTest {
+public class FindDistanceToWallTest extends AbstractDetourTest {
 
-	long[] polyRefs = { 281474976710696L, 281474976710773L, 281474976710680L, 281474976710753L,
-			281474976710733L };
-	float[][] polyPos = { { 22.606520f, 10.197294f, -45.918674f }, { 22.331268f, 10.197294f, -1.040187f },
-			{ 18.694363f, 15.803535f, -73.090416f }, { 0.745335f, 10.197294f, -5.940050f },
-			{ -20.651257f, 5.904126f, -13.712508f } };
+	float[] distancesToWall = { 0.597511f, 3.201085f, 0.603713f, 2.791475f, 2.815544f };
+	float[][] hitPosition = { { 23.177608f, 10.197294f, -45.742954f }, { 22.331268f, 10.197294f, -4.241272f },
+			{ 18.108675f, 15.743596f, -73.236839f }, { 1.984785f, 10.197294f, -8.441269f },
+			{ -22.315216f, 4.997294f, -11.441269f } };
+	float[][] hitNormal = { { -0.955779f, 0.000000f, -0.294087f }, { 0.000000f, 0.000000f, 1.000000f },
+			{ 0.965395f, 0.098799f, 0.241351f }, { -0.444012f, 0.000000f, 0.896021f },
+			{ 0.562533f, 0.306572f, -0.767835f } };
 
 	@Test
-	public void testFindNearestPoly() {
+	public void testFindDistanceToWall() {
 		QueryFilter filter = new QueryFilter();
-		float[] extents = { 2, 4, 2 };
 		for (int i = 0; i < startRefs.length; i++) {
 			float[] startPos = startPoss[i];
-			FindNearestPolyResult poly = query.findNearestPoly(startPos, extents, filter);
-			Assert.assertEquals(polyRefs[i], poly.getNearestRef());
-			for (int v = 0; v < polyPos[i].length; v++) {
-				Assert.assertEquals(polyPos[i][v], poly.getNearestPos()[v], 0.001f);
+			FindDistanceToWallResult hit = query.findDistanceToWall(startRefs[i], startPos, 3.5f, filter);
+			Assert.assertEquals(distancesToWall[i], hit.getDistance(), 0.001f);
+			for (int v = 0; v < 3; v++) {
+				Assert.assertEquals(hitPosition[i][v], hit.getPosition()[v], 0.001f);
+			}
+			for (int v = 0; v < 3; v++) {
+				Assert.assertEquals(hitNormal[i][v], hit.getNormal()[v], 0.001f);
 			}
 		}
 

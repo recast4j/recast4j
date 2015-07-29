@@ -21,20 +21,16 @@ package org.recast4j.detour;
 import java.util.ArrayList;
 import java.util.List;
 
-/// Provides information about raycast hit
-/// filled by NavMeshQuery::raycast
+/**
+ * Provides information about raycast hit. Filled by NavMeshQuery::raycast
+ */
 public class RaycastHit {
-	
-	Status status;
-	/// The hit parameter. (FLT_MAX if no wall hit.)
-	float t; 
-	
-	/// hitNormal	The normal of the nearest wall hit. [(x, y, z)]
+	/** The hit parameter. (Float.MAX_VALUE if no wall hit.) */
+	float t;
+	/** hitNormal The normal of the nearest wall hit. [(x, y, z)] */
 	final float[] hitNormal = new float[3];
-	
-	/// Visited polygons. [opt]
+	/** Visited polygons. */
 	final List<Long> path = new ArrayList<>();
-	
-	///  The cost of the path until hit.
+	/** The cost of the path until hit. */
 	float pathCost;
 }

@@ -20,35 +20,37 @@ package org.recast4j.detour;
 
 import java.util.List;
 
-/// Defines a navigation mesh tile.
-/// @ingroup detour
+/**
+ * Defines a navigation mesh tile.
+ */
 public class MeshTile {
 	final int index;
 	/** Counter describing modifications to the tile. */
 	int salt;
 	/** The tile header. */
 	MeshHeader header;
-	/** The tile polygons. [Size: dtMeshHeader::polyCount] */
+	/** The tile polygons. [Size: MeshHeader::polyCount] */
 	Poly[] polys;
-	float[] verts; /// < The tile vertices. [Size: dtMeshHeader::vertCount]
-	List<Link> links; /// < The tile links. [Size: dtMeshHeader::maxLinkCount]
-	PolyDetail[] detailMeshes; /// < The tile's detail sub-meshes. [Size: dtMeshHeader::detailMeshCount]
-
-	/// The detail mesh's unique vertices. [(x, y, z) * dtMeshHeader::detailVertCount]
+	/** The tile vertices. [Size: MeshHeader::vertCount] */
+	float[] verts; 
+	/** The tile links. [Size: MeshHeader::maxLinkCount] */
+	List<Link> links;
+	/** The tile's detail sub-meshes. [Size: MeshHeader::detailMeshCount] */
+	PolyDetail[] detailMeshes; /// < 
+	/** The detail mesh's unique vertices. [(x, y, z) * MeshHeader::detailVertCount] */
 	float[] detailVerts;
-
-	/// The detail mesh's triangles. [(vertA, vertB, vertC) * dtMeshHeader::detailTriCount]
+	/** The detail mesh's triangles. [(vertA, vertB, vertC) * MeshHeader::detailTriCount] */
 	int[] detailTris;
-
-	/// The tile bounding volume nodes. [Size: dtMeshHeader::bvNodeCount]
-	/// (Will be null if bounding volumes are disabled.)
+	/** The tile bounding volume nodes. [Size: MeshHeader::bvNodeCount] (Will be null if bounding volumes are disabled.) */
 	BVNode[] bvTree;
-
-	OffMeshConnection[] offMeshCons; /// < The tile off-mesh connections. [Size: dtMeshHeader::offMeshConCount]
-
-	NavMeshData data; /// < The tile data. (Not directly accessed under normal situations.)
-	int flags; /// < Tile flags. (See: #dtTileFlags)
-	MeshTile next; /// < The next free tile, or the next tile in the spatial grid.
+	/** The tile off-mesh connections. [Size: MeshHeader::offMeshConCount] */
+	OffMeshConnection[] offMeshCons;
+	/** The tile data. (Not directly accessed under normal situations.) */
+	NavMeshData data;
+	/** Tile flags. (See: #dtTileFlags) */
+	int flags;
+	/** The next free tile, or the next tile in the spatial grid. */
+	MeshTile next;
 
 	public MeshTile(int index) {
 		this.index = index;

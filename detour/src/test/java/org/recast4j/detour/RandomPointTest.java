@@ -18,94 +18,19 @@ freely, subject to the following restrictions:
 package org.recast4j.detour;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.recast4j.detour.NavMeshQuery.FRand;
-import org.recast4j.recast.PolyMesh;
-import org.recast4j.recast.PolyMeshDetail;
-import org.recast4j.recast.RecastBuilder;
 
-public class RandomPointTest {
-
-	private RecastBuilder rcBuilder = new RecastBuilder();
-	private float m_cellSize;
-	private float m_cellHeight;
-	private float m_agentHeight;
-	private float m_agentRadius;
-	private float m_agentMaxClimb;
-	private float m_agentMaxSlope;
-	private NavMeshData nmd;
-	private NavMeshQuery query;
-	private NavMesh navmesh;
-
-	@Before
-	public void setUp() {
-		rcBuilder.build();
-		m_cellSize = 0.3f;
-		m_cellHeight = 0.2f;
-		m_agentHeight = 2.0f;
-		m_agentRadius = 0.6f;
-		m_agentMaxClimb = 0.9f;
-		m_agentMaxSlope = 45.0f;
-
-		PolyMesh m_pmesh = rcBuilder.getMesh();
-		for (int i = 0; i < m_pmesh.npolys; ++i) {
-			m_pmesh.flags[i] = 1;
-		}
-		PolyMeshDetail m_dmesh = rcBuilder.getMeshDetail();
-		NavMeshCreateParams params = new NavMeshCreateParams();
-		params.verts = m_pmesh.verts;
-		params.vertCount = m_pmesh.nverts;
-		params.polys = m_pmesh.polys;
-		params.polyAreas = m_pmesh.areas;
-		params.polyFlags = m_pmesh.flags;
-		params.polyCount = m_pmesh.npolys;
-		params.nvp = m_pmesh.nvp;
-		params.detailMeshes = m_dmesh.meshes;
-		params.detailVerts = m_dmesh.verts;
-		params.detailVertsCount = m_dmesh.nverts;
-		params.detailTris = m_dmesh.tris;
-		params.detailTriCount = m_dmesh.ntris;
-		// params.offMeshConVerts = m_geom->getOffMeshConnectionVerts();
-		// params.offMeshConRad = m_geom->getOffMeshConnectionRads();
-		// params.offMeshConDir = m_geom->getOffMeshConnectionDirs();
-		// params.offMeshConAreas = m_geom->getOffMeshConnectionAreas();
-		// params.offMeshConFlags = m_geom->getOffMeshConnectionFlags();
-		// params.offMeshConUserID = m_geom->getOffMeshConnectionId();
-		// params.offMeshConCount = m_geom->getOffMeshConnectionCount();
-		params.walkableHeight = m_agentHeight;
-		params.walkableRadius = m_agentRadius;
-		params.walkableClimb = m_agentMaxClimb;
-		params.bmin = m_pmesh.bmin;
-		params.bmax = m_pmesh.bmax;
-		params.cs = m_cellSize;
-		params.ch = m_cellHeight;
-		params.buildBvTree = true;
-
-		nmd = NavMeshBuilder.createNavMeshData(params);
-		navmesh = new NavMesh();
-		navmesh.init(nmd, 0);
-		query = new NavMeshQuery();
-		query.init(navmesh, 0);
-	}
+public class RandomPointTest extends AbstractDetourTest {
 
 	@Test
 	public void testRandom() {
-		Assert.assertEquals(223, nmd.navVerts.length / 3);
-		Assert.assertEquals(118, nmd.navPolys.length);
-		Assert.assertEquals(453, nmd.header.maxLinkCount);
-		Assert.assertEquals(59, nmd.navDVerts.length / 3);
-		Assert.assertEquals(289, nmd.navDTris.length / 4);
-		Assert.assertEquals(118, nmd.navDMeshes.length);
-		Assert.assertEquals(0, nmd.offMeshCons.length);
-		Assert.assertEquals(118, nmd.header.offMeshBase);
-		Assert.assertEquals(236, nmd.navBvtree.length);
 		FRand f = new FRand();
 		QueryFilter filter = new QueryFilter();
 		for (int i = 0; i < 1000; i++) {
 			FindRandomPointResult point = query.findRandomPoint(filter, f);
-			Assert.assertEquals(Status.SUCCSESS, point.status);
-			Tupple2<MeshTile,Poly> tileAndPoly = navmesh.getTileAndPolyByRef(point.randomRef);
+			Assert.assertEquals(Status.SUCCSESS, point.getStatus());
+			Tupple2<MeshTile,Poly> tileAndPoly = navmesh.getTileAndPolyByRef(point.getRandomRef());
 			float[] bmin = new float[2];
 			float[] bmax = new float[2];
 			for (int j = 0; j < tileAndPoly.second.vertCount; j++) {
@@ -115,10 +40,10 @@ public class RandomPointTest {
 				bmin[1] = j == 0 ? tileAndPoly.first.verts[v + 2] : Math.min(bmin[1], tileAndPoly.first.verts[v + 2]);
 				bmax[1] = j == 0 ? tileAndPoly.first.verts[v + 2] : Math.max(bmax[1], tileAndPoly.first.verts[v + 2]);
 			}
-			Assert.assertTrue(point.randomPt[0] >= bmin[0]);
-			Assert.assertTrue(point.randomPt[0] <= bmax[0]);
-			Assert.assertTrue(point.randomPt[2] >= bmin[1]);
-			Assert.assertTrue(point.randomPt[2] <= bmax[1]);
+			Assert.assertTrue(point.getRandomPt()[0] >= bmin[0]);
+			Assert.assertTrue(point.getRandomPt()[0] <= bmax[0]);
+			Assert.assertTrue(point.getRandomPt()[2] >= bmin[1]);
+			Assert.assertTrue(point.getRandomPt()[2] <= bmax[1]);
 		}
 	}
 
@@ -128,9 +53,9 @@ public class RandomPointTest {
 		QueryFilter filter = new QueryFilter();
 		FindRandomPointResult point = query.findRandomPoint(filter, f);
 		for (int i = 0; i < 1000; i++) {
-			point = query.findRandomPointAroundCircle(point.randomRef, point.randomPt, 5f, filter, f);
-			Assert.assertEquals(Status.SUCCSESS, point.status);
-			Tupple2<MeshTile, Poly> tileAndPoly = navmesh.getTileAndPolyByRef(point.randomRef);
+			point = query.findRandomPointAroundCircle(point.getRandomRef(), point.getRandomPt(), 5f, filter, f);
+			Assert.assertEquals(Status.SUCCSESS, point.getStatus());
+			Tupple2<MeshTile, Poly> tileAndPoly = navmesh.getTileAndPolyByRef(point.getRandomRef());
 			float[] bmin = new float[2];
 			float[] bmax = new float[2];
 			for (int j = 0; j < tileAndPoly.second.vertCount; j++) {
@@ -140,10 +65,10 @@ public class RandomPointTest {
 				bmin[1] = j == 0 ? tileAndPoly.first.verts[v + 2] : Math.min(bmin[1], tileAndPoly.first.verts[v + 2]);
 				bmax[1] = j == 0 ? tileAndPoly.first.verts[v + 2] : Math.max(bmax[1], tileAndPoly.first.verts[v + 2]);
 			}
-			Assert.assertTrue(point.randomPt[0] >= bmin[0]);
-			Assert.assertTrue(point.randomPt[0] <= bmax[0]);
-			Assert.assertTrue(point.randomPt[2] >= bmin[1]);
-			Assert.assertTrue(point.randomPt[2] <= bmax[1]);
+			Assert.assertTrue(point.getRandomPt()[0] >= bmin[0]);
+			Assert.assertTrue(point.getRandomPt()[0] <= bmax[0]);
+			Assert.assertTrue(point.getRandomPt()[2] >= bmin[1]);
+			Assert.assertTrue(point.getRandomPt()[2] <= bmax[1]);
 		}
 	}
 }

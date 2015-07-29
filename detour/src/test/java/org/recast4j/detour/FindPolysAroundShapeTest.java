@@ -1,3 +1,20 @@
+/*
+Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+
+This software is provided 'as-is', without any express or implied
+warranty.  In no event will the authors be held liable for any damages
+arising from the use of this software.
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
+1. The origin of this software must not be misrepresented; you must not
+ claim that you wrote the original software. If you use this software
+ in a product, an acknowledgment in the product documentation would be
+ appreciated but is not required.
+2. Altered source versions must be plainly marked as such, and must not be
+ misrepresented as being the original software.
+3. This notice may not be removed or altered from any source distribution.
+*/
 package org.recast4j.detour;
 
 import org.junit.Assert;
@@ -5,7 +22,7 @@ import org.junit.Test;
 
 public class FindPolysAroundShapeTest extends AbstractDetourTest {
 
-	long[][] findPolysAroundShapeRefs = {
+	long[][] refs = {
 			{ 281474976710696L, 281474976710695L, 281474976710694L, 281474976710691L, 281474976710697L,
 					281474976710693L, 281474976710692L, 281474976710703L, 281474976710706L, 281474976710699L,
 					281474976710705L, 281474976710698L, 281474976710700L, 281474976710704L },
@@ -26,7 +43,7 @@ public class FindPolysAroundShapeTest extends AbstractDetourTest {
 					281474976710720L, 281474976710752L, 281474976710748L, 281474976710753L, 281474976710755L,
 					281474976710756L, 281474976710750L, 281474976710749L, 281474976710754L, 281474976710751L,
 					281474976710768L, 281474976710772L, 281474976710773L, 281474976710771L, 281474976710769L } };
-	long[][] findPolysAroundShapeParents = {
+	long[][] parentsRefs = {
 			{ 0L, 281474976710696L, 281474976710695L, 281474976710695L, 281474976710695L, 281474976710695L,
 					281474976710693L, 281474976710694L, 281474976710703L, 281474976710706L, 281474976710706L,
 					281474976710705L, 281474976710705L, 281474976710705L },
@@ -46,7 +63,7 @@ public class FindPolysAroundShapeTest extends AbstractDetourTest {
 					281474976710731L, 281474976710752L, 281474976710748L, 281474976710753L, 281474976710753L,
 					281474976710753L, 281474976710756L, 281474976710755L, 281474976710755L, 281474976710754L,
 					281474976710768L, 281474976710772L, 281474976710772L, 281474976710773L } };
-	float[][] findPolysAroundShapeCosts = {
+	float[][] costs = {
 			{ 0.000000f, 16.188787f, 22.561579f, 19.950766f, 19.519329f, 21.906523f, 22.806520f, 23.311579f, 25.124035f,
 					28.454576f, 26.084503f, 36.438854f, 30.526634f, 31.942192f },
 			{ 0.000000f, 16.618738f, 12.136283f, 20.387646f, 17.343250f, 22.037645f, 22.787645f, 27.178831f, 26.501472f,
@@ -69,15 +86,15 @@ public class FindPolysAroundShapeTest extends AbstractDetourTest {
 			float[] startPos = startPoss[i];
 			FindPolysAroundResult polys = query.findPolysAroundShape(startRef, getQueryPoly(startPos, endPoss[i]), 4,
 					filter);
-			Assert.assertEquals(findPolysAroundShapeRefs[i].length, polys.getRefs().size());
-			for (int v = 0; v < findPolysAroundShapeRefs[i].length; v++) {
-				Assert.assertEquals(findPolysAroundShapeRefs[i][v], polys.getRefs().get(v).longValue());
+			Assert.assertEquals(refs[i].length, polys.getRefs().size());
+			for (int v = 0; v < refs[i].length; v++) {
+				Assert.assertEquals(refs[i][v], polys.getRefs().get(v).longValue());
 			}
-			for (int v = 0; v < findPolysAroundShapeParents[i].length; v++) {
-				Assert.assertEquals(findPolysAroundShapeParents[i][v], polys.getParentRefs().get(v).longValue());
+			for (int v = 0; v < parentsRefs[i].length; v++) {
+				Assert.assertEquals(parentsRefs[i][v], polys.getParentRefs().get(v).longValue());
 			}
-			for (int v = 0; v < findPolysAroundShapeCosts[i].length; v++) {
-				Assert.assertEquals(findPolysAroundShapeCosts[i][v], polys.getCosts().get(v).floatValue(), 0.01f);
+			for (int v = 0; v < costs[i].length; v++) {
+				Assert.assertEquals(costs[i][v], polys.getCosts().get(v).floatValue(), 0.01f);
 			}
 		}
 

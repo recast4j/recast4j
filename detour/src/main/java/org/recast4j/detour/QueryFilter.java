@@ -18,7 +18,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
-import static org.recast4j.detour.DetourCommon.*;
+import static org.recast4j.detour.DetourCommon.vDist;
 
 /**
  * <b>The Default Implementation</b>
@@ -33,8 +33,6 @@ import static org.recast4j.detour.DetourCommon.*;
  * Setting the include flags to 0 will result in all polygons being excluded.
  * 
  * <b>Custom Implementations</b>
- * 
- * DT_VIRTUAL_QUERYFILTER must be defined in order to extend this class.
  * 
  * Implement a custom query filter by overriding the virtual passFilter() and getCost() functions. If this is done, both
  * functions should be as fast as possible. Use cached local copies of data rather than accessing your own objects where

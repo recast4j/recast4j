@@ -1885,7 +1885,6 @@ public class NavMeshQuery {
 			throw new IllegalArgumentException("Invalid pref ref");
 
 		RaycastHit hit = new RaycastHit();
-		hit.status = Status.SUCCSESS;
 
 		float[] verts = new float[NavMesh.DT_VERTS_PER_POLYGON * 3 + 3];
 
@@ -2600,7 +2599,6 @@ public class NavMeshQuery {
 	///  @param[out]	segmentCount	The number of segments returned.
 	///  @param[in]		maxSegments		The maximum number of segments the result arrays can hold.
 	/// @returns The status flags for the query.
-	// TODO: (PP) Test
 	public GetPolyWallSegmentsResult getPolyWallSegments(long ref, QueryFilter filter) {
 		Tupple2<MeshTile, Poly> tileAndPoly = m_nav.getTileAndPolyByRef(ref);
 		MeshTile tile = tileAndPoly.first;
@@ -2638,15 +2636,11 @@ public class NavMeshQuery {
 						neiRef = 0;
 				}
 
-				// If the edge leads to another polygon and portals are not stored, skip.
-				if (neiRef != 0)
-					continue;
-
 				int vj = poly.verts[j] * 3;
 				int vi = poly.verts[i] * 3;
 				float[] seg = new float[6];
-				System.arraycopy(tile.verts, vi, seg, 0, 3);
-				System.arraycopy(tile.verts, vj, seg, 3, 3);
+				System.arraycopy(tile.verts, vj, seg, 0, 3);
+				System.arraycopy(tile.verts, vi, seg, 3, 3);
 				segmentVerts.add(seg);
 				segmentRefs.add(neiRef);
 				continue;
@@ -2665,8 +2659,8 @@ public class NavMeshQuery {
 					float tmin = ints.get(k).tmin / 255.0f;
 					float tmax = ints.get(k).tmax / 255.0f;
 					float[] seg = new float[6];
-					System.arraycopy(vLerp(tile.verts, vi, vj, tmin), 0, seg, 0, 3);
-					System.arraycopy(vLerp(tile.verts, vi, vj, tmax), 0, seg, 3, 3);
+					System.arraycopy(vLerp(tile.verts, vj, vi, tmin), 0, seg, 0, 3);
+					System.arraycopy(vLerp(tile.verts, vj, vi, tmax), 0, seg, 3, 3);
 					segmentVerts.add(seg);
 					segmentRefs.add(ints.get(k).ref);
 				}
@@ -2709,7 +2703,6 @@ public class NavMeshQuery {
 	///  @param[out]	hitNormal		The normalized ray formed from the wall point to the 
 	///  								source point. [(x, y, z)]
 	/// @returns The status flags for the query.
-	// TODO: (PP) Test
 	public FindDistanceToWallResult findDistanceToWall(long startRef, float[] centerPos, float maxRadius,
 			QueryFilter filter) {
 

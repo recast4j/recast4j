@@ -18,14 +18,23 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
-/// Defines a link between polygons.
-/// @note This structure is rarely if ever used by the end user.
-/// @see dtMeshTile
+/**
+ * Defines a link between polygons.
+ * 
+ * @note This structure is rarely if ever used by the end user.
+ * @see MeshTile
+ */
 public class Link {
-	long ref; /// < Neighbour reference. (The neighbor that is linked to.)
-	int next; /// < Index of the next link.
-	int edge; /// < Index of the polygon edge that owns this link.
-	int side; /// < If a boundary link, defines on which side the link is.
-	int bmin; /// < If a boundary link, defines the minimum sub-edge area.
-	int bmax; /// < If a boundary link, defines the maximum sub-edge area.
+	/** Neighbour reference. (The neighbor that is linked to.) */
+	long ref;
+	/** Index of the next link. */
+	int next;
+	/** Index of the polygon edge that owns this link. */
+	int edge;
+	/** If a boundary link, defines on which side the link is. */
+	int side;
+	/** If a boundary link, defines the minimum sub-edge area. */
+	int bmin;
+	/** If a boundary link, defines the maximum sub-edge area. */
+	int bmax;
 }
