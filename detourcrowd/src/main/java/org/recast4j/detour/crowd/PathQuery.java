@@ -1,4 +1,5 @@
 /*
+Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
 Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
@@ -15,16 +16,22 @@ freely, subject to the following restrictions:
  misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
-package org.recast4j.detour;
+package org.recast4j.detour.crowd;
 
-public class Tupple2<T, S> {
+import java.util.List;
 
-	public final T first;
-	public final S second;
+import org.recast4j.detour.QueryFilter;
+import org.recast4j.detour.Status;
 
-	public Tupple2(T first, S second) {
-		this.first = first;
-		this.second = second;
-	}
-
+public class PathQuery {
+		long ref;
+		/// Path find start and end location.
+		float[] startPos = new float[3], endPos = new float[3];
+		long startRef, endRef;
+		/// Result.
+		List<Long> path;
+		/// State.
+		Status status;
+		int keepAlive;
+		QueryFilter filter; ///< TODO: This is potentially dangerous!
 }

@@ -96,8 +96,7 @@ public abstract class AbstractDetourTest {
 		nmd = NavMeshBuilder.createNavMeshData(params);
 		navmesh = new NavMesh();
 		navmesh.init(nmd, 0);
-		query = new NavMeshQuery();
-		query.init(navmesh, 0);
+		query = new NavMeshQuery(navmesh);
 
 		for (int i = 0; i < startRefs.length; i++) {
 			System.out.println("//---");

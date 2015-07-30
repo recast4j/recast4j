@@ -27,7 +27,7 @@ public class DetourCommon {
 	/// @param[in] v1 The base vector. [(x, y, z)]
 	/// @param[in] v2 The vector to scale and add to @p v1. [(x, y, z)]
 	/// @param[in] s The amount to scale @p v2 by before adding to @p v1.
-	static float[] vMad(float[] v1, float[] v2, float s) {
+	public static float[] vMad(float[] v1, float[] v2, float s) {
 		float[] dest = new float[3];
 		dest[0] = v1[0] + v2[0] * s;
 		dest[1] = v1[1] + v2[1] * s;
@@ -41,7 +41,7 @@ public class DetourCommon {
 	/// @param[in] v1 The starting vector.
 	/// @param[in] v2 The destination vector.
 	/// @param[in] t The interpolation factor. [Limits: 0 <= value <= 1.0]
-	static float[] vLerp(VectorPtr v1, VectorPtr v2, float t) {
+	public static float[] vLerp(VectorPtr v1, VectorPtr v2, float t) {
 		float[] dest = new float[3];
 		dest[0] = v1.get(0) + (v2.get(0) - v1.get(0)) * t;
 		dest[1] = v1.get(1) + (v2.get(1) - v1.get(1)) * t;
@@ -49,7 +49,7 @@ public class DetourCommon {
 		return dest;
 	}
 
-	static float[] vLerp(float[] verts, int v1, int v2, float t) {
+	public static float[] vLerp(float[] verts, int v1, int v2, float t) {
 		float[] dest = new float[3];
 		dest[0] = verts[v1 + 0] + (verts[v2 + 0] - verts[v1 + 0]) * t;
 		dest[1] = verts[v1 + 1] + (verts[v2 + 1] - verts[v1 + 1]) * t;
@@ -57,7 +57,7 @@ public class DetourCommon {
 		return dest;
 	}
 
-	static float[] vLerp(float[] v1, float[] v2, float t) {
+	public static float[] vLerp(float[] v1, float[] v2, float t) {
 		float[] dest = new float[3];
 		dest[0] = v1[0] + (v2[0] - v1[0]) * t;
 		dest[1] = v1[1] + (v2[1] - v1[1]) * t;
@@ -97,7 +97,7 @@ public class DetourCommon {
 		return dest;
 	}
 
-	static float[] vCopy(float[] in) {
+	public static float[] vCopy(float[] in) {
 		float[] out = new float[3];
 		out[0] = in[0];
 		out[1] = in[1];
@@ -105,13 +105,13 @@ public class DetourCommon {
 		return out;
 	}
 
-	static void vCopy(float[] out, float[] in) {
+	public static void vCopy(float[] out, float[] in) {
 		out[0] = in[0];
 		out[1] = in[1];
 		out[2] = in[2];
 	}
 
-	static void vCopy(float[] out, float[] in, int i) {
+	public static void vCopy(float[] out, float[] in, int i) {
 		out[0] = in[i];
 		out[1] = in[i + 1];
 		out[2] = in[i + 2];
@@ -151,7 +151,7 @@ public class DetourCommon {
 		return dx * dx + dy * dy + dz * dz;
 	}
 
-	static float sqr(float a) {
+	public static float sqr(float a) {
 		return a * a;
 	}
 
@@ -291,7 +291,7 @@ public class DetourCommon {
 		return overlap;
 	}
 
-	static Tupple2<Float, Float> distancePtSegSqr2D(float[] pt, float[] p, float[] q) {
+	public static Tupple2<Float, Float> distancePtSegSqr2D(float[] pt, float[] p, float[] q) {
 		float pqx = q[0] - p[0];
 		float pqz = q[2] - p[2];
 		float dx = pt[0] - p[0];
@@ -524,7 +524,7 @@ public class DetourCommon {
 		return result;
 	}
 
-	static Tupple2<Float, Float> distancePtSegSqr2D(float[] pt, float[] verts, int p, int q) {
+	public static Tupple2<Float, Float> distancePtSegSqr2D(float[] pt, float[] verts, int p, int q) {
 		float pqx = verts[q + 0] - verts[p + 0];
 		float pqz = verts[q + 2] - verts[p + 2];
 		float dx = pt[0] - verts[p + 0];

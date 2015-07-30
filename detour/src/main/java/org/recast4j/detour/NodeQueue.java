@@ -18,17 +18,11 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
-import java.util.Comparator;
 import java.util.PriorityQueue;
 
 public class NodeQueue {
 
-	private final PriorityQueue<Node> m_heap = new PriorityQueue<>(new Comparator<Node>() {
-		@Override
-		public int compare(Node n1, Node n2) {
-			return Float.compare(n1.total, n2.total);
-		}
-	});
+	private final PriorityQueue<Node> m_heap = new PriorityQueue<>((n1, n2) -> Float.compare(n1.total, n2.total));
 	
 	public void clear() {
 		m_heap.clear();

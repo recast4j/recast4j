@@ -74,23 +74,17 @@ public class NavMeshQuery {
 
 	static float H_SCALE = 0.999f; // Search heuristic scale.
 
-	private NavMesh m_nav;
-	private NodePool m_nodePool;
-	private NodePool m_tinyNodePool;
+	private final NavMesh m_nav;
+	private final NodePool m_nodePool;
+	private final NodePool m_tinyNodePool;
+	private final NodeQueue m_openList;
 	private QueryData m_query; /// < Sliced query state.
-	private NodeQueue m_openList;
 
-	public NavMeshQuery() {
+	public NavMeshQuery(NavMesh nav) {
+		m_nav = nav;
 		m_nodePool = new NodePool();
 		m_tinyNodePool = new NodePool();
 		m_openList = new NodeQueue();
-	}
-
-	public void init(NavMesh nav, int maxNodes) {
-		m_nav = nav;
-		m_nodePool.clear();
-		m_tinyNodePool.clear();
-		m_openList.clear();
 	}
 
 	public static class FRand {
@@ -1283,7 +1277,7 @@ public class NavMeshQuery {
 		return new FindPathResult(status, path);
 	}	
 	
-	Status appendVertex(float[] pos, int flags, long ref, List<StraightPathItem> straightPath) {
+	protected Status appendVertex(float[] pos, int flags, long ref, List<StraightPathItem> straightPath) {
 		if (straightPath.size() > 0 && vEqual(straightPath.get(straightPath.size() - 1).pos, pos)) {
 			// The vertices are equal, update flags and poly.
 			straightPath.get(straightPath.size() - 1).flags = flags;
@@ -1299,7 +1293,7 @@ public class NavMeshQuery {
 		return Status.IN_PROGRESS;
 	}
 
-	Status appendPortals(int startIdx, int endIdx, float[] endPos, List<Long> path, List<StraightPathItem> straightPath,
+	protected Status appendPortals(int startIdx, int endIdx, float[] endPos, List<Long> path, List<StraightPathItem> straightPath,
 			int options) {
 		float[] startPos = straightPath.get(straightPath.size() - 1).pos;
 		// Append or update last vertex
@@ -1721,7 +1715,7 @@ public class NavMeshQuery {
 
 	}
 
-	PortalResult getPortalPoints(long from, long to) {
+	protected PortalResult getPortalPoints(long from, long to) {
 		Tupple2<MeshTile,Poly> tileAndPoly = m_nav.getTileAndPolyByRef(from);
 		MeshTile fromTile = tileAndPoly.first;
 		Poly fromPoly = tileAndPoly.second;
@@ -1736,7 +1730,7 @@ public class NavMeshQuery {
 	}
 
 	// Returns portal points between two polygons.
-	PortalResult getPortalPoints(long from, Poly fromPoly, MeshTile fromTile, long to, Poly toPoly, MeshTile toTile,
+	protected PortalResult getPortalPoints(long from, Poly fromPoly, MeshTile fromTile, long to, Poly toPoly, MeshTile toTile,
 			int fromType, int toType) {
 		float[] left = new float[3];
 		float[] right = new float[3];
@@ -1800,7 +1794,7 @@ public class NavMeshQuery {
 	}
 
 	// Returns edge mid point between two polygons.
-	float[] getEdgeMidPoint(long from, long to) {
+	protected float[] getEdgeMidPoint(long from, long to) {
 		PortalResult ppoints = getPortalPoints(from, to);
 		float[] left = ppoints.left;
 		float[] right = ppoints.right;
@@ -1811,7 +1805,7 @@ public class NavMeshQuery {
 		return mid;
 	}
 
-	float[] getEdgeMidPoint(long from, Poly fromPoly, MeshTile fromTile, long to, Poly toPoly,
+	protected float[] getEdgeMidPoint(long from, Poly fromPoly, MeshTile fromTile, long to, Poly toPoly,
 			MeshTile toTile) {
 		PortalResult ppoints = getPortalPoints(from, fromPoly, fromTile, to, toPoly, toTile, 0, 0);
 		float[] left = ppoints.left;
@@ -2567,7 +2561,7 @@ public class NavMeshQuery {
 
 	};
 
-	static void insertInterval(List<SegInterval> ints, int tmin, int tmax, long ref) {
+	protected void insertInterval(List<SegInterval> ints, int tmin, int tmax, long ref) {
 		// Find insertion point.
 		int idx = 0;
 		while (idx < ints.size()) {

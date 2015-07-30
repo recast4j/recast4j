@@ -32,5 +32,9 @@ public enum Status {
 	public boolean isInProgress() {
 		return this == IN_PROGRESS;
 	}
+
+	public boolean isSuccess() {
+		return this == Status.SUCCSESS;
+	}
 }
 

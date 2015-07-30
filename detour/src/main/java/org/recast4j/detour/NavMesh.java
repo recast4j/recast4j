@@ -18,7 +18,22 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
-import static org.recast4j.detour.DetourCommon.*;
+import static org.recast4j.detour.DetourCommon.clamp;
+import static org.recast4j.detour.DetourCommon.closestHeightPointTriangle;
+import static org.recast4j.detour.DetourCommon.distancePtPolyEdgesSqr;
+import static org.recast4j.detour.DetourCommon.nextPow2;
+import static org.recast4j.detour.DetourCommon.oppositeTile;
+import static org.recast4j.detour.DetourCommon.overlapBounds;
+import static org.recast4j.detour.DetourCommon.overlapQuantBounds;
+import static org.recast4j.detour.DetourCommon.sqr;
+import static org.recast4j.detour.DetourCommon.vAdd;
+import static org.recast4j.detour.DetourCommon.vCopy;
+import static org.recast4j.detour.DetourCommon.vDist;
+import static org.recast4j.detour.DetourCommon.vLenSqr;
+import static org.recast4j.detour.DetourCommon.vLerp;
+import static org.recast4j.detour.DetourCommon.vMax;
+import static org.recast4j.detour.DetourCommon.vMin;
+import static org.recast4j.detour.DetourCommon.vSub;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -333,6 +348,13 @@ public class NavMesh {
 		}
 	}
 
+	/// Adds a tile to the navigation mesh.
+	///  @param[in]		data		Data for the new tile mesh. (See: #dtCreateNavMeshData)
+	///  @param[in]		dataSize	Data size of the new tile mesh.
+	///  @param[in]		flags		Tile flags. (See: #dtTileFlags)
+	///  @param[in]		lastRef		The desired reference for the tile. (When reloading a tile.) [opt] [Default: 0]
+	///  @param[out]	result		The tile reference. (If the tile was succesfully added.) [opt]
+	/// @return The status flags for the operation.
 	/// @par
 	///
 	/// The add operation will fail if the data is in the wrong format, the allocated tile
@@ -443,6 +465,7 @@ public class NavMesh {
 		return getTileRef(tile);
 	}
 
+	/// Builds internal polygons links for a tile.
 	void connectIntLinks(MeshTile tile) {
 		if (tile == null)
 			return;
@@ -731,6 +754,7 @@ public class NavMesh {
 		return false;
 	}
 
+	/// Builds internal polygons links for a tile.
 	void baseOffMeshLinks(MeshTile tile) {
 		if (tile == null)
 			return;
