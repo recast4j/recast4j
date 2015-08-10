@@ -2871,6 +2871,12 @@ public class NavMeshQuery {
 		return false;
 	}
 
+	/// Gets the navigation mesh the query object is using.
+	/// @return The navigation mesh the query object is using.
+	public NavMesh getAttachedNavMesh() {
+		return m_nav;
+	}
+	
 	/*
 	/// @par
 	///

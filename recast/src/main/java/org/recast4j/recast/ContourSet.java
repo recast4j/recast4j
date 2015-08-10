@@ -24,12 +24,20 @@ import java.util.List;
 /** Represents a group of related contours. */
 public class ContourSet {
 
+	/** A list of the contours in the set. */
 	public final List<Contour> conts = new ArrayList<>();
+	/** The minimum bounds in world space. [(x, y, z)] */
 	final float[] bmin = new float[3];
+	/** The maximum bounds in world space. [(x, y, z)] */
 	final float[] bmax = new float[3];
+	/** The size of each cell. (On the xz-plane.) */
 	public float cs;
+	/** The height of each cell. (The minimum increment along the y-axis.) */
 	public float ch;
+	/** The width of the set. (Along the x-axis in cell units.) */
 	public int width;
+	/** The height of the set. (Along the z-axis in cell units.) */
 	public int height;
+	/** The AABB border size used to generate the source data from which the contours were derived. */
 	public int borderSize;
 }

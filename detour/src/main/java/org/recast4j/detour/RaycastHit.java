@@ -26,11 +26,11 @@ import java.util.List;
  */
 public class RaycastHit {
 	/** The hit parameter. (Float.MAX_VALUE if no wall hit.) */
-	float t;
+	public float t;
 	/** hitNormal The normal of the nearest wall hit. [(x, y, z)] */
-	final float[] hitNormal = new float[3];
+	public final float[] hitNormal = new float[3];
 	/** Visited polygons. */
-	final List<Long> path = new ArrayList<>();
+	public final List<Long> path = new ArrayList<>();
 	/** The cost of the path until hit. */
-	float pathCost;
+	public float pathCost;
 }

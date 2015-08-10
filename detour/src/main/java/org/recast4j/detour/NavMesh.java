@@ -1003,4 +1003,57 @@ public class NavMesh {
 		return (int) (n & mask);
 	}
 
+	/// @par
+	///
+	/// Off-mesh connections are stored in the navigation mesh as special 2-vertex 
+	/// polygons with a single edge. At least one of the vertices is expected to be 
+	/// inside a normal polygon. So an off-mesh connection is "entered" from a 
+	/// normal polygon at one of its endpoints. This is the polygon identified by 
+	/// the prevRef parameter.
+	public Tupple2<float[], float[]> getOffMeshConnectionPolyEndPoints(long prevRef, long polyRef) {
+		if (polyRef == 0)
+			throw new IllegalArgumentException("polyRef = 0");
+
+		// Get current polygon
+		int[] saltitip = decodePolyId(polyRef);
+		int salt = saltitip[0];
+		int it = saltitip[1];
+		int ip = saltitip[2];
+		if (it >= m_maxTiles) {
+			throw new IllegalArgumentException("Invalid tile ID > max tiles");
+		}
+		if (m_tiles[it].salt != salt || m_tiles[it].header == null) {
+			throw new IllegalArgumentException("Invalid salt or missing tile header");
+		}
+		MeshTile tile = m_tiles[it];
+		if (ip >= tile.header.polyCount) {
+			throw new IllegalArgumentException("Invalid poly ID > poly count");
+		}
+		Poly poly = tile.polys[ip];
+
+		// Make sure that the current poly is indeed off-mesh link.
+		if (poly.getType() != Poly.DT_POLYTYPE_OFFMESH_CONNECTION)
+			throw new IllegalArgumentException("Invalid poly type");
+
+		// Figure out which way to hand out the vertices.
+		int idx0 = 0, idx1 = 1;
+
+		// Find link that points to first vertex.
+		for (int i = poly.firstLink; i != DT_NULL_LINK; i = tile.links.get(i).next) {
+			if (tile.links.get(i).edge == 0) {
+				if (tile.links.get(i).ref != prevRef) {
+					idx0 = 1;
+					idx1 = 0;
+				}
+				break;
+			}
+		}
+		float[] startPos = new float[3];
+		float[] endPos = new float[3];
+		vCopy(startPos, tile.verts, poly.verts[idx0] * 3);
+		vCopy(endPos, tile.verts, poly.verts[idx1] * 3);
+		return new Tupple2<float[], float[]>(startPos, endPos);
+
+	}
+	
 }

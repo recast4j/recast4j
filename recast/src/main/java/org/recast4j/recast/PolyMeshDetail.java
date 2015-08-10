@@ -18,13 +18,20 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
+/** Contains triangle meshes that represent detailed height data associated with the polygons in its associated polygon mesh object. */
 public class PolyMeshDetail {
 
-	public int nmeshes;
-	public int nverts;
-	public int ntris;
+	/** The sub-mesh data. [Size: 4*#nmeshes] */
 	public int[] meshes;
+	/** The mesh vertices. [Size: 3*#nverts] */
 	public float[] verts;
+	/** The mesh triangles. [Size: 4*#ntris] */
 	public int[] tris;
+	/** The number of sub-meshes defined by #meshes. */
+	public int nmeshes;
+	/** The number of vertices in #verts. */
+	public int nverts;
+	/** The number of triangles in #tris. */
+	public int ntris;
 
 }

@@ -18,11 +18,16 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
+/** Represents a span in a heightfield. */
 public class Span {
 
-	public Span next;
-	public int area;
-	public int smax;
+	/** The lower limit of the span. [Limit: < #smax] */
 	public int smin;
+	/** The upper limit of the span. [Limit: <= #RC_SPAN_MAX_HEIGHT] */
+	public int smax;
+	/** The area id assigned to the span. */
+	public int area;
+	/** The next span higher up in column. */
+	public Span next;
 
 }
