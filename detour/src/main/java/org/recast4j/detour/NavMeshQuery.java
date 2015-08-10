@@ -42,7 +42,7 @@ import static org.recast4j.detour.DetourCommon.vLerp;
 import static org.recast4j.detour.DetourCommon.vMad;
 import static org.recast4j.detour.DetourCommon.vMax;
 import static org.recast4j.detour.DetourCommon.vMin;
-import static org.recast4j.detour.DetourCommon.vNnormalize;
+import static org.recast4j.detour.DetourCommon.vNormalize;
 import static org.recast4j.detour.DetourCommon.vSub;
 
 import java.util.ArrayList;
@@ -2046,7 +2046,7 @@ public class NavMeshQuery {
 				hit.hitNormal[0] = dz;
 				hit.hitNormal[1] = 0;
 				hit.hitNormal[2] = -dx;
-				vNnormalize(hit.hitNormal);
+				vNormalize(hit.hitNormal);
 				return hit;
 			}
 
@@ -2851,7 +2851,7 @@ public class NavMeshQuery {
 
 		// Calc hit normal.
 		float[] hitNormal = vSub(centerPos, hitPos);
-		vNnormalize(hitNormal);
+		vNormalize(hitNormal);
 
 		return new FindDistanceToWallResult((float) Math.sqrt(radiusSqr), hitPos, hitNormal);
 	}

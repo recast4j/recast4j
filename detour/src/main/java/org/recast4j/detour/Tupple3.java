@@ -19,9 +19,9 @@ package org.recast4j.detour;
 
 public class Tupple3<T, S, U> {
 
-	final T first;
-	final S second;
-	final U third;
+	public final T first;
+	public final S second;
+	public final U third;
 
 	public Tupple3(T first, S second, U third) {
 		this.first = first;

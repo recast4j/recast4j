@@ -73,7 +73,7 @@ public class DetourCommon {
 		return dest;
 	}
 
-	static float[] vSub(float[] v1, float[] v2) {
+	public static float[] vSub(float[] v1, float[] v2) {
 		float[] dest = new float[3];
 		dest[0] = v1[0] - v2[0];
 		dest[1] = v1[1] - v2[1];
@@ -103,6 +103,12 @@ public class DetourCommon {
 		out[1] = in[1];
 		out[2] = in[2];
 		return out;
+	}
+
+	public static void vSet(float[] out, float a, float b, float c) {
+		out[0] = a;
+		out[1] = b;
+		out[2] = c;
 	}
 
 	public static void vCopy(float[] out, float[] in) {
@@ -169,7 +175,11 @@ public class DetourCommon {
 		return (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
 	}
 
-	static final float clamp(float v, float min, float max) {
+	public static final float clamp(float v, float min, float max) {
+		return Math.max(Math.min(v, max), min);
+	}
+
+	public static final int clamp(int v, int min, int max) {
 		return Math.max(Math.min(v, max), min);
 	}
 
@@ -180,15 +190,21 @@ public class DetourCommon {
 	///
 	/// The vectors are projected onto the xz-plane, so the y-values are
 	/// ignored.
-	static float vDist2D(VectorPtr v1, VectorPtr v2) {
+	public static float vDist2D(VectorPtr v1, VectorPtr v2) {
 		float dx = v2.get(0) - v1.get(0);
 		float dz = v2.get(2) - v1.get(2);
 		return (float) Math.sqrt(dx * dx + dz * dz);
 	}
 
+	public static float vDist2D(float[] v1, float[] v2) {
+		float dx = v2[0] - v1[0];
+		float dz = v2[2] - v1[2];
+		return (float) Math.sqrt(dx * dx + dz * dz);
+	}
+
 	/// Normalizes the vector.
 	/// @param[in,out] v The vector to normalize. [(x, y, z)]
-	static void vNnormalize(float[] v) {
+	public static void vNormalize(float[] v) {
 		float d = (float) (1.0f / Math.sqrt(sqr(v[0]) + sqr(v[1]) + sqr(v[2])));
 		v[0] *= d;
 		v[1] *= d;
@@ -216,7 +232,7 @@ public class DetourCommon {
 	///
 	/// The vectors are projected onto the xz-plane, so the y-values are
 	/// ignored.
-	static float vDot2D(float[] u, float[] v) {
+	public static float vDot2D(float[] u, float[] v) {
 		return u[0] * v[0] + u[2] * v[2];
 	}
 
@@ -231,7 +247,7 @@ public class DetourCommon {
 	///
 	/// The vectors are projected onto the xz-plane, so the y-values are
 	/// ignored.
-	static float vPerp2D(float[] u, float[] v) {
+	public static float vPerp2D(float[] u, float[] v) {
 		return u[2] * v[0] - u[0] * v[2];
 	}
 
@@ -245,7 +261,7 @@ public class DetourCommon {
 	/// @param[in] b Vertex B. [(x, y, z)]
 	/// @param[in] c Vertex C. [(x, y, z)]
 	/// @return The signed xz-plane area of the triangle.
-	static float triArea2D(float[] verts, int a, int b, int c) {
+	public static float triArea2D(float[] verts, int a, int b, int c) {
 		float abx = verts[b] - verts[a];
 		float abz = verts[b + 2] - verts[a + 2];
 		float acx = verts[c] - verts[a];
@@ -253,7 +269,7 @@ public class DetourCommon {
 		return acx * abz - abx * acz;
 	}
 
-	static float triArea2D(float[] a, float[] b, float[] c) {
+	public static float triArea2D(float[] a, float[] b, float[] c) {
 		float abx = b[0] - a[0];
 		float abz = b[2] - a[2];
 		float acx = c[0] - a[0];
@@ -561,4 +577,13 @@ public class DetourCommon {
 		float t = vperpXZ(u, w) / d;
 		return new Tupple3<>(true, s, t);
 	}
+
+	public static float[] vScale(float[] in, float scale) {
+		float[] out = new float[3];
+		out[0] = in[0] * scale;
+		out[1] = in[1] * scale;
+		out[2] = in[2] * scale;
+		return out;
+	}
+
 }
