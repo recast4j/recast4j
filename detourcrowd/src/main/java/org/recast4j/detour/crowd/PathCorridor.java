@@ -229,7 +229,7 @@ public class PathCorridor {
 		for (Iterator<StraightPathItem> iter = path.iterator(); iter.hasNext();) {
 			StraightPathItem spi = iter.next();
 			if ((spi.getFlags() & NavMeshQuery.DT_STRAIGHTPATH_OFFMESH_CONNECTION) != 0
-					|| vDist2D(spi.getPos(), m_pos) > MIN_TARGET_DIST) {
+					|| vDist2DSqr(spi.getPos(), m_pos) > MIN_TARGET_DIST) {
 				break;
 			}
 			iter.remove();

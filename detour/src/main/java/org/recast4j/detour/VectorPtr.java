@@ -17,6 +17,10 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
+/**
+ * Wrapper for 3-element pieces (3D vectors) of a bigger float array.
+ *
+ */
 public class VectorPtr {
 
 	private final float[] array;

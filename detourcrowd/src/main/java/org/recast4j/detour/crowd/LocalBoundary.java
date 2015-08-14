@@ -68,7 +68,7 @@ public class LocalBoundary {
 		m_segs.add(seg);
 	}
 
-	void update(long ref, float[] pos, float collisionQueryRange, NavMeshQuery navquery, QueryFilter filter) {
+	public void update(long ref, float[] pos, float collisionQueryRange, NavMeshQuery navquery, QueryFilter filter) {
 		if (ref == 0) {
 			reset();
 			return;
@@ -92,7 +92,7 @@ public class LocalBoundary {
 		}
 	}
 
-	boolean isValid(NavMeshQuery navquery, QueryFilter filter) {
+	public boolean isValid(NavMeshQuery navquery, QueryFilter filter) {
 		if (m_polys.isEmpty())
 			return false;
 

@@ -22,18 +22,25 @@ public class Node {
 
 	static int DT_NODE_OPEN = 0x01;
 	static int DT_NODE_CLOSED = 0x02;
-	static int DT_NODE_PARENT_DETACHED = 0x04; // parent of the node is not adjacent. Found using raycast.
+	/** parent of the node is not adjacent. Found using raycast. */
+	static int DT_NODE_PARENT_DETACHED = 0x04;
 
 	public final int index;
 
-	float[] pos = new float[3]; /// < Position of the node.
-	float cost; /// < Cost from previous node to current node.
-	float total; /// < Cost up to the node.
-	int pidx;// : 24; ///< Index to parent node.
-	int state;// : 2; ///< extra state information. A polyRef can have multiple nodes with different extra info. see
-				// DT_MAX_STATES_PER_NODE
-	int flags;// : 3; ///< Node flags. A combination of dtNodeFlags.
-	long id; /// < Polygon ref the node corresponds to.
+	/** Position of the node. */
+	float[] pos = new float[3]; 
+	/** Cost from previous node to current node. */
+	float cost;
+	/** Cost up to the node. */
+	float total;
+	/** Index to parent node. */
+	int pidx;
+	/** extra state information. A polyRef can have multiple nodes with different extra info. see DT_MAX_STATES_PER_NODE */
+	int state;
+	/** Node flags. A combination of dtNodeFlags. */
+	int flags;
+	/** Polygon ref the node corresponds to. */
+	long id;
 
 	public Node(int index) {
 		super();

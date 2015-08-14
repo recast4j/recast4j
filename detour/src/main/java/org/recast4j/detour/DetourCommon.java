@@ -65,7 +65,7 @@ public class DetourCommon {
 		return dest;
 	}
 
-	static float[] vSub(VectorPtr v1, VectorPtr v2) {
+	public static float[] vSub(VectorPtr v1, VectorPtr v2) {
 		float[] dest = new float[3];
 		dest[0] = v1.get(0) - v2.get(0);
 		dest[1] = v1.get(1) - v2.get(1);
@@ -89,7 +89,7 @@ public class DetourCommon {
 		return dest;
 	}
 
-	static float[] vAdd(float[] v1, float[] v2) {
+	public static float[] vAdd(float[] v1, float[] v2) {
 		float[] dest = new float[3];
 		dest[0] = v1[0] + v2[0];
 		dest[1] = v1[1] + v2[1];
@@ -164,8 +164,12 @@ public class DetourCommon {
 	/// Derives the square of the scalar length of the vector. (len * len)
 	/// @param[in] v The vector. [(x, y, z)]
 	/// @return The square of the scalar length of the vector.
-	static float vLenSqr(float[] v) {
+	public static float vLenSqr(float[] v) {
 		return v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+	}
+
+	public static float vLen(float[] v) {
+		return (float) Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
 	}
 
 	static float vDist(float[] v1, float[] verts, int i) {
@@ -200,6 +204,18 @@ public class DetourCommon {
 		float dx = v2[0] - v1[0];
 		float dz = v2[2] - v1[2];
 		return (float) Math.sqrt(dx * dx + dz * dz);
+	}
+
+	public static float vDist2DSqr(VectorPtr v1, VectorPtr v2) {
+		float dx = v2.get(0) - v1.get(0);
+		float dz = v2.get(2) - v1.get(2);
+		return dx * dx + dz * dz;
+	}
+
+	public static float vDist2DSqr(float[] v1, float[] v2) {
+		float dx = v2[0] - v1[0];
+		float dz = v2[2] - v1[2];
+		return dx * dx + dz * dz;
 	}
 
 	/// Normalizes the vector.

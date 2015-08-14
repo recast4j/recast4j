@@ -64,9 +64,12 @@ public class NavMeshQuery {
 	public static final int DT_RAYCAST_USE_COSTS = 0x01;
 
 	/// Vertex flags returned by findStraightPath.
-	public static final int DT_STRAIGHTPATH_START = 0x01; ///< The vertex is the start position in the path.
-	public static final int DT_STRAIGHTPATH_END = 0x02; ///< The vertex is the end position in the path.
-	public static final int DT_STRAIGHTPATH_OFFMESH_CONNECTION = 0x04; ///< The vertex is the start of an off-mesh connection.
+	/** The vertex is the start position in the path. */
+	public static final int DT_STRAIGHTPATH_START = 0x01; 
+	/** The vertex is the end position in the path. */
+	public static final int DT_STRAIGHTPATH_END = 0x02;
+	/** The vertex is the start of an off-mesh connection. */
+	public static final int DT_STRAIGHTPATH_OFFMESH_CONNECTION = 0x04; 
 
 	/// Options for findStraightPath.
 	public static final int DT_STRAIGHTPATH_AREA_CROSSINGS = 0x01; ///< Add a vertex at every polygon edge crossing where area changes.
@@ -652,20 +655,19 @@ public class NavMeshQuery {
 		}
 	}
 
-	/// @par
-	///
-	/// If no polygons are found, the function will return #DT_SUCCESS with a
-	/// @p polyCount of zero.
-	///
-	/// If @p polys is too small to hold the entire result set, then the array will
-	/// be filled to capacity. The method of choosing which polygons from the
-	/// full set are included in the partial result set is undefined.
-	///
-	/// Finds polygons that overlap the search box.
-	///  @param[in]		center		The center of the search box. [(x, y, z)]
-	///  @param[in]		extents		The search distance along each axis. [(x, y, z)]
-	///  @param[in]		filter		The polygon filter to apply to the query.
-	///  @param[out]	polys		The reference ids of the polygons that overlap the query box.
+	/**
+	 * Finds polygons that overlap the search box.
+	 * 
+	 * If no polygons are found, the function will return with a polyCount of zero.
+	 * 
+	 * @param center
+	 *            The center of the search box. [(x, y, z)]
+	 * @param extents
+	 *            The search distance along each axis. [(x, y, z)]
+	 * @param filter
+	 *            The polygon filter to apply to the query.
+	 * @return The reference ids of the polygons that overlap the query box.
+	 */
 	public List<Long> queryPolygons(float[] center, float[] extents, QueryFilter filter) {
 		float[] bmin = vSub(center, extents);
 		float[] bmax = vAdd(center, extents);
@@ -691,20 +693,22 @@ public class NavMeshQuery {
 	
 	/**
 	 * Finds a path from the start polygon to the end polygon.
-	 * If the end polygon cannot be reached through the navigation graph,
-	 * the last polygon in the path will be the nearest the end polygon.
 	 * 
-	 * If the path array is to small to hold the full result, it will be filled as
-	 * far as possible from the start polygon toward the end polygon.
+	 * If the end polygon cannot be reached through the navigation graph, the last polygon in the path will be the
+	 * nearest the end polygon.
 	 * 
-	 * The start and end positions are used to calculate traversal costs.
-	 * (The y-values impact the result.)
+	 * The start and end positions are used to calculate traversal costs. (The y-values impact the result.)
 	 * 
-	 * @param startRef The refrence id of the start polygon.
-	 * @param endRef The reference id of the end polygon.
-	 * @param startPos A position within the start polygon. [(x, y, z)]
-	 * @param endPos A position within the end polygon. [(x, y, z)]
-	 * @param filter The polygon filter to apply to the query.
+	 * @param startRef
+	 *            The refrence id of the start polygon.
+	 * @param endRef
+	 *            The reference id of the end polygon.
+	 * @param startPos
+	 *            A position within the start polygon. [(x, y, z)]
+	 * @param endPos
+	 *            A position within the end polygon. [(x, y, z)]
+	 * @param filter
+	 *            The polygon filter to apply to the query.
 	 * @return Found path
 	 */
 	public FindPathResult findPath(long startRef, long endRef, float[] startPos, float[] endPos,
@@ -878,22 +882,26 @@ public class NavMeshQuery {
 		return new FindPathResult(status, path);
 	}
 
-	/// @par
-	///
-	/// @warning Calling any non-slice methods before calling finalizeSlicedFindPath()
-	/// or finalizeSlicedFindPathPartial() may result in corrupted data!
-	///
-	/// The @p filter pointer is stored and used for the duration of the sliced
-	/// path query.
-	///
-	/// Intializes a sliced path query.
-	///  @param[in]		startRef	The refrence id of the start polygon.
-	///  @param[in]		endRef		The reference id of the end polygon.
-	///  @param[in]		startPos	A position within the start polygon. [(x, y, z)]
-	///  @param[in]		endPos		A position within the end polygon. [(x, y, z)]
-	///  @param[in]		filter		The polygon filter to apply to the query.
-	///  @param[in]		options		query options (see: #dtFindPathOptions)
-	/// @returns The status flags for the query.
+	/**
+	 * Intializes a sliced path query.
+	 * 
+	 * Common use case: -# Call initSlicedFindPath() to initialize the sliced path query. -# Call updateSlicedFindPath()
+	 * until it returns complete. -# Call finalizeSlicedFindPath() to get the path.
+	 * 
+	 * @param startRef
+	 *            The reference id of the start polygon.
+	 * @param endRef
+	 *            The reference id of the end polygon.
+	 * @param startPos
+	 *            A position within the start polygon. [(x, y, z)]
+	 * @param endPos
+	 *            A position within the end polygon. [(x, y, z)]
+	 * @param filter
+	 *            The polygon filter to apply to the query.
+	 * @param options
+	 *            query options (see: #FindPathOptions)
+	 * @return
+	 */
 	public Status initSlicedFindPath(long startRef, long endRef, float[] startPos, float[] endPos, QueryFilter filter,
 			int options) {
 		// Init path state.
@@ -947,10 +955,13 @@ public class NavMeshQuery {
 		return m_query.status;
 	}
 
-	/// Updates an in-progress sliced path query.
-	///  @param[in]		maxIter		The maximum number of iterations to perform.
-	///  @param[out]	doneIters	The actual number of iterations completed. [opt]
-	/// @returns The status flags for the query.
+	/**
+	 * Updates an in-progress sliced path query.
+	 * 
+	 * @param maxIter
+	 *            The maximum number of iterations to perform.
+	 * @return The status flags for the query.
+	 */
 	public UpdateSlicedPathResult updateSlicedFindPath(int maxIter) {
 		if (!m_query.status.isInProgress())
 			return new UpdateSlicedPathResult(m_query.status, 0);
