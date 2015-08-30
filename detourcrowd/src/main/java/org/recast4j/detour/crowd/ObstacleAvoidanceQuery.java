@@ -167,18 +167,18 @@ public class ObstacleAvoidanceQuery {
 	};
 	
 
-	ObstacleAvoidanceParams m_params;
-	float m_invHorizTime;
-	float m_vmax;
-	float m_invVmax;
+	private ObstacleAvoidanceParams m_params;
+	private float m_invHorizTime;
+	private float m_vmax;
+	private float m_invVmax;
 
-	int m_maxCircles;
-	ObstacleCircle[] m_circles;
-	int m_ncircles;
+	private int m_maxCircles;
+	private ObstacleCircle[] m_circles;
+	private int m_ncircles;
 
-	int m_maxSegments;
-	ObstacleSegment[] m_segments;
-	int m_nsegments;
+	private int m_maxSegments;
+	private ObstacleSegment[] m_segments;
+	private int m_nsegments;
 
 	public void init(int maxCircles, int maxSegments) {
 		m_maxCircles = maxCircles;

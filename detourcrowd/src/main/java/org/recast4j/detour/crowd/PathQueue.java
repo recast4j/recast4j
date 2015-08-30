@@ -37,7 +37,6 @@ public class PathQueue {
 
 	PathQuery[] m_queue = new PathQuery[MAX_QUEUE];
 	long m_nextHandle = 1;
-	int m_maxPathSize;
 	int m_queueHead;
 	NavMeshQuery m_navquery;
 
@@ -54,13 +53,12 @@ public class PathQueue {
 		}
 	}
 
-	protected void init(int maxPathSize, int maxSearchNodeCount, NavMesh nav) {
+	protected void init(int maxSearchNodeCount, NavMesh nav) {
 		purge();
 		m_navquery = new NavMeshQuery(nav);
-		m_maxPathSize = maxPathSize;
 		for (int i = 0; i < MAX_QUEUE; ++i) {
 			m_queue[i].ref = DT_PATHQ_INVALID;
-			m_queue[i].path = new ArrayList<Long>(maxPathSize);
+			m_queue[i].path = new ArrayList<Long>(256);
 		}
 		m_queueHead = 0;
 	}

@@ -1,3 +1,21 @@
+/*
+Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
+Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+
+This software is provided 'as-is', without any express or implied
+warranty.  In no event will the authors be held liable for any damages
+arising from the use of this software.
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
+1. The origin of this software must not be misrepresented; you must not
+ claim that you wrote the original software. If you use this software
+ in a product, an acknowledgment in the product documentation would be
+ appreciated but is not required.
+2. Altered source versions must be plainly marked as such, and must not be
+ misrepresented as being the original software.
+3. This notice may not be removed or altered from any source distribution.
+*/
 package org.recast4j.detour.crowd;
 
 import static org.recast4j.detour.DetourCommon.*;
@@ -9,39 +27,12 @@ import java.util.Set;
 
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
+import org.recast4j.detour.QueryFilter;
 import org.recast4j.detour.VectorPtr;
+import org.recast4j.detour.crowd.ObstacleAvoidanceQuery.ObstacleAvoidanceParams;
 
 
 /*
- * 
-//
-// Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-//
-// This software is provided 'as-is', without any express or implied
-// warranty.  In no event will the authors be held liable for any damages
-// arising from the use of this software.
-// Permission is granted to anyone to use this software for any purpose,
-// including commercial applications, and to alter it and redistribute it
-// freely, subject to the following restrictions:
-// 1. The origin of this software must not be misrepresented; you must not
-//    claim that you wrote the original software. If you use this software
-//    in a product, an acknowledgment in the product documentation would be
-//    appreciated but is not required.
-// 2. Altered source versions must be plainly marked as such, and must not be
-//    misrepresented as being the original software.
-// 3. This notice may not be removed or altered from any source distribution.
-//
-
-#ifndef DETOURCROWD_H
-#define DETOURCROWD_H
-
-#include "DetourNavMeshQuery.h"
-#include "DetourObstacleAvoidance.h"
-#include "DetourLocalBoundary.h"
-#include "DetourPathCorridor.h"
-#include "DetourProximityGrid.h"
-#include "DetourPathQueue.h"
-
 
 enum MoveRequestState
 {
@@ -318,6 +309,31 @@ void dtFreeCrowd(dtCrowd* ptr);
  *      steering in tight spaces.
  *
  */
+/**
+This is the core class of the @ref crowd module.  See the @ref crowd documentation for a summary
+of the crowd features.
+A common method for setting up the crowd is as follows:
+-# Allocate the crowd using #dtAllocCrowd.
+-# Initialize the crowd using #init().
+-# Set the avoidance configurations using #setObstacleAvoidanceParams().
+-# Add agents using #addAgent() and make an initial movement request using #requestMoveTarget().
+A common process for managing the crowd is as follows:
+-# Call #update() to allow the crowd to manage its agents.
+-# Retrieve agent information using #getActiveAgents().
+-# Make movement requests using #requestMoveTarget() when movement goal changes.
+-# Repeat every frame.
+Some agent configuration settings can be updated using #updateAgentParameters().  But the crowd owns the
+agent position.  So it is not possible to update an active agent's position.  If agent position
+must be fed back into the crowd, the agent must be removed and re-added.
+Notes: 
+- Path related information is available for newly added agents only after an #update() has been
+  performed.
+- Agent objects are kept in a pool and re-used.  So it is important when using agent objects to check the value of
+  #dtCrowdAgent::active to determine if the agent is actually in use or not.
+- This class is meant to provide 'local' movement. There is a limit of 256 polygons in the path corridor.  
+  So it is not meant to provide automatic pathfinding services over long distances.
+@see dtAllocCrowd(), dtFreeCrowd(), init(), dtCrowdAgent
+*/
 public class Crowd {
 
 	static final int MAX_ITERS_PER_UPDATE = 100;
@@ -392,11 +408,33 @@ public class Crowd {
 	};
 
 
+	int m_maxAgents;
+	List<CrowdAgent> m_agents;
+	List<CrowdAgent> m_activeAgents;
+	List<CrowdAgentAnimation> m_agentAnims;
+	PathQueue m_pathq;
+
+	ObstacleAvoidanceParams[] m_obstacleQueryParams = new ObstacleAvoidanceParams[DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS];
+	ObstacleAvoidanceQuery m_obstacleQuery;
+	
+	ProximityGrid m_grid;
+	
+	List<Long> m_pathResult;
+	float[] m_ext = new float[3];
+
+	QueryFilter[] m_filters = new QueryFilter[DT_CROWD_MAX_QUERY_FILTER_TYPE];
+
+	float m_maxAgentRadius;
+
+	int m_velocitySampleCount;
+
+	NavMeshQuery m_navquery;
+
 	float tween(float t, float t0, float t1) {
 		return clamp((t - t0) / (t1 - t0), 0.0f, 1.0f);
 	}
 
-	void addNeighbour(int idx, float dist, List<CrowdNeighbour> neis) {
+	public void addNeighbour(int idx, float dist, List<CrowdNeighbour> neis) {
 		// Insert neighbour based on the distance.
 		CrowdNeighbour nei = new CrowdNeighbour();
 		nei.idx = idx;
@@ -405,8 +443,8 @@ public class Crowd {
 		Collections.sort(neis, (o1, o2) -> Float.compare(o1.dist, o2.dist));
 	}
 
-	List<CrowdNeighbour> getNeighbours(float[] pos, float height, float range, CrowdAgent skip, List<CrowdAgent> agents,
-			ProximityGrid grid) {
+	public List<CrowdNeighbour> getNeighbours(float[] pos, float height, float range, CrowdAgent skip,
+			List<CrowdAgent> agents, ProximityGrid grid) {
 
 		List<CrowdNeighbour> result = new ArrayList<>();
 		Set<Integer> ids = grid.queryItems(pos[0] - range, pos[2] - range, pos[0] + range, pos[2] + range);
@@ -432,4 +470,90 @@ public class Crowd {
 
 	}
 
+	public void addToOptQueue(CrowdAgent newag, List<CrowdAgent> agents) {
+		// Insert neighbour based on greatest time.
+		int slot = Collections.binarySearch(agents, newag,
+				(a1, a2) -> Float.compare(a2.topologyOptTime, a1.topologyOptTime));
+		if (slot < 0) {
+			slot = -slot - 1;
+		}
+		agents.add(slot, newag);
+	}
+
+	public void addToPathQueue(CrowdAgent newag, List<CrowdAgent> agents) {
+		// Insert neighbour based on greatest time.
+		int slot = Collections.binarySearch(agents, newag,
+				(a1, a2) -> Float.compare(a2.targetReplanTime, a1.targetReplanTime));
+		if (slot < 0) {
+			slot = -slot - 1;
+		}
+		agents.add(slot, newag);
+	}
+
+	// @par
+	///
+	/// May be called more than once to purge and re-initialize the crowd.
+	void init(int maxAgents, float maxAgentRadius, NavMesh nav) {
+
+		m_maxAgents = maxAgents;
+		m_maxAgentRadius = maxAgentRadius;
+		vSet(m_ext, m_maxAgentRadius * 2.0f, m_maxAgentRadius * 1.5f, m_maxAgentRadius * 2.0f);
+
+		m_grid = new ProximityGrid(m_maxAgents * 4, maxAgentRadius * 3);
+		m_obstacleQuery = new ObstacleAvoidanceQuery();
+		m_obstacleQuery.init(6, 8);
+
+		// Init obstacle query params.
+		for (int i = 0; i < DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS; ++i) {
+			ObstacleAvoidanceParams params = m_obstacleQueryParams[i] = new ObstacleAvoidanceParams();
+			params.velBias = 0.4f;
+			params.weightDesVel = 2.0f;
+			params.weightCurVel = 0.75f;
+			params.weightSide = 0.75f;
+			params.weightToi = 2.5f;
+			params.horizTime = 2.5f;
+			params.gridSize = 33;
+			params.adaptiveDivs = 7;
+			params.adaptiveRings = 2;
+			params.adaptiveDepth = 5;
+		}
+
+		// Allocate temp buffer for merging paths.
+		m_pathResult = new ArrayList<>();
+		m_pathq = new PathQueue();
+		m_pathq.init(MAX_PATHQUEUE_NODES, nav);
+		m_agents = new ArrayList<>();
+		m_activeAgents = new ArrayList<>();
+		m_agentAnims = new ArrayList<>();
+		for (int i = 0; i < m_maxAgents; ++i) {
+			m_agents.add(new CrowdAgent());
+			m_agents.get(i).active = false;
+			m_agents.get(i).corridor.init();
+		}
+
+		for (int i = 0; i < m_maxAgents; ++i) {
+			m_agentAnims.add(new CrowdAgentAnimation());
+			m_agentAnims.get(i).active = false;
+		}
+
+		// The navquery is mostly used for local searches, no need for large
+		// node pool.
+		m_navquery = new NavMeshQuery(nav);
+	}
+
+	void setObstacleAvoidanceParams(int idx, ObstacleAvoidanceParams params) {
+		if (idx >= 0 && idx < DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS) {
+			m_obstacleQueryParams[idx] = params;
+		}
+	}
+
+	ObstacleAvoidanceParams getObstacleAvoidanceParams(int idx) {
+		if (idx >= 0 && idx < DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS)
+			return m_obstacleQueryParams[idx];
+		return null;
+	}
+
+	int getAgentCount() {
+		return m_maxAgents;
+	}
 }
