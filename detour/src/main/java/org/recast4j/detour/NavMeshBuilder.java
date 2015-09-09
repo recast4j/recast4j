@@ -244,7 +244,6 @@ public class NavMeshBuilder {
 		case XP | ZM:
 			return 7;
 		}
-		;
 
 		return 0xff;
 	}
@@ -257,7 +256,7 @@ public class NavMeshBuilder {
 	/// @param[out] outData The resulting tile data.
 	/// @param[out] outDataSize The size of the tile data array.
 	/// @return True if the tile data was successfully created.
-	static NavMeshData createNavMeshData(NavMeshCreateParams params) {// , unsigned char** outData, int* outDataSize)
+	public static MeshData createNavMeshData(NavMeshCreateParams params) {// , unsigned char** outData, int* outDataSize)
 		if (params.nvp > DT_VERTS_PER_POLYGON)
 			return null;
 		if (params.vertCount >= 0xffff)
@@ -318,7 +317,7 @@ public class NavMeshBuilder {
 						offMeshConClass[i * 2 + 0] = 0;
 				}
 
-				// Cound how many links should be allocated for off-mesh connections.
+				// Count how many links should be allocated for off-mesh connections.
 				if (offMeshConClass[i * 2 + 0] == 0xff)
 					offMeshConLinkCount++;
 				if (offMeshConClass[i * 2 + 1] == 0xff)
@@ -387,23 +386,6 @@ public class NavMeshBuilder {
 			}
 		}
 
-		// Calculate data size
-		/*
-		 * int headerSize = dtAlign4(sizeof(dtMeshHeader)); int vertsSize = dtAlign4(sizeof(float)*3*totVertCount); int
-		 * polysSize = dtAlign4(sizeof(dtPoly)*totPolyCount); int linksSize = dtAlign4(sizeof(dtLink)*maxLinkCount); int
-		 * detailMeshesSize = dtAlign4(sizeof(dtPolyDetail)*params->polyCount); int detailVertsSize =
-		 * dtAlign4(sizeof(float)*3*uniqueDetailVertCount); int detailTrisSize = dtAlign4(sizeof(unsigned
-		 * char)*4*detailTriCount); int bvTreeSize = params->buildBvTree ?
-		 * dtAlign4(sizeof(dtBVNode)*params->polyCount*2) : 0; int offMeshConsSize =
-		 * dtAlign4(sizeof(dtOffMeshConnection)*storedOffMeshConCount);
-		 * 
-		 * unsigned char* d = data; dtMeshHeader* header = (dtMeshHeader*)d; d += headerSize; float* navVerts =
-		 * (float*)d; d += vertsSize; dtPoly* navPolys = (dtPoly*)d; d += polysSize; d += linksSize; dtPolyDetail*
-		 * navDMeshes = (dtPolyDetail*)d; d += detailMeshesSize; float* navDVerts = (float*)d; d += detailVertsSize;
-		 * unsigned char* navDTris = (unsigned char*)d; d += detailTrisSize; dtBVNode* navBvtree = (dtBVNode*)d; d +=
-		 * bvTreeSize; dtOffMeshConnection* offMeshCons = (dtOffMeshConnection*)d; d += offMeshConsSize;
-		 * 
-		 */
 		int bvTreeSize = params.buildBvTree ? params.polyCount * 2 : 0;
 		MeshHeader header = new MeshHeader();
 		float[] navVerts = new float[3 * totVertCount];
@@ -413,11 +395,10 @@ public class NavMeshBuilder {
 		int[] navDTris = new int[4 * detailTriCount];
 		BVNode[] navBvtree = new BVNode[bvTreeSize];
 		OffMeshConnection[] offMeshCons = new OffMeshConnection[storedOffMeshConCount];
-		Link[] navLinks = new Link[maxLinkCount];
 
 		// Store header
-		header.magic = NavMesh.DT_NAVMESH_MAGIC;
-		header.version = NavMesh.DT_NAVMESH_VERSION;
+		header.magic = MeshHeader.DT_NAVMESH_MAGIC;
+		header.version = MeshHeader.DT_NAVMESH_VERSION;
 		header.x = params.tileX;
 		header.y = params.tileY;
 		header.layer = params.tileLayer;
@@ -506,7 +487,7 @@ public class NavMeshBuilder {
 				Poly p = new Poly(offMeshPolyBase + n);
 				navPolys[offMeshPolyBase + n] = p;
 				p.vertCount = 2;
-				p.verts[0] = offMeshVertsBase + n * 2 + 0;
+				p.verts[0] = offMeshVertsBase + n * 2;
 				p.verts[1] = offMeshVertsBase + n * 2 + 1;
 				p.flags = params.offMeshConFlags[i];
 				p.setArea(params.offMeshConAreas[i]);
@@ -523,8 +504,8 @@ public class NavMeshBuilder {
 			for (int i = 0; i < params.polyCount; ++i) {
 				PolyDetail dtl = new PolyDetail();
 				navDMeshes[i] = dtl;
-				int vb = (int) params.detailMeshes[i * 4 + 0];
-				int ndv = (int) params.detailMeshes[i * 4 + 1];
+				int vb = params.detailMeshes[i * 4 + 0];
+				int ndv = params.detailMeshes[i * 4 + 1];
 				int nv = navPolys[i].vertCount;
 				dtl.vertBase = vbase;
 				dtl.vertCount = (ndv - nv);
@@ -593,174 +574,16 @@ public class NavMeshBuilder {
 			}
 		}
 
-		NavMeshData nmd = new NavMeshData();
+		MeshData nmd = new MeshData();
 		nmd.header = header;
-		nmd.navVerts = navVerts;
-		nmd.navPolys = navPolys;
-		nmd.navDMeshes = navDMeshes;
-		nmd.navDVerts = navDVerts;
-		nmd.navDTris = navDTris;
-		nmd.navBvtree = navBvtree;
+		nmd.verts = navVerts;
+		nmd.polys = navPolys;
+		nmd.detailMeshes = navDMeshes;
+		nmd.detailVerts = navDVerts;
+		nmd.detailTris = navDTris;
+		nmd.bvTree = navBvtree;
 		nmd.offMeshCons = offMeshCons;
 		return nmd;
 	}
 
 }
-
-/*
-
-
-// TODO: Better error handling.
-
-/// @par
-/// 
-/// The output data array is allocated using the detour allocator (dtAlloc()).  The method
-/// used to free the memory will be determined by how the tile is added to the navigation
-/// mesh.
-///
-/// @see dtNavMesh, dtNavMesh::addTile()
-
-bool dtNavMeshHeaderSwapEndian(unsigned char* data, const int dataSize)
-{
-	dtMeshHeader* header = (dtMeshHeader*)data;
-	
-	int swappedMagic = DT_NAVMESH_MAGIC;
-	int swappedVersion = DT_NAVMESH_VERSION;
-	dtSwapEndian(&swappedMagic);
-	dtSwapEndian(&swappedVersion);
-	
-	if ((header->magic != DT_NAVMESH_MAGIC || header->version != DT_NAVMESH_VERSION) &&
-		(header->magic != swappedMagic || header->version != swappedVersion))
-	{
-		return false;
-	}
-		
-	dtSwapEndian(&header->magic);
-	dtSwapEndian(&header->version);
-	dtSwapEndian(&header->x);
-	dtSwapEndian(&header->y);
-	dtSwapEndian(&header->layer);
-	dtSwapEndian(&header->userId);
-	dtSwapEndian(&header->polyCount);
-	dtSwapEndian(&header->vertCount);
-	dtSwapEndian(&header->maxLinkCount);
-	dtSwapEndian(&header->detailMeshCount);
-	dtSwapEndian(&header->detailVertCount);
-	dtSwapEndian(&header->detailTriCount);
-	dtSwapEndian(&header->bvNodeCount);
-	dtSwapEndian(&header->offMeshConCount);
-	dtSwapEndian(&header->offMeshBase);
-	dtSwapEndian(&header->walkableHeight);
-	dtSwapEndian(&header->walkableRadius);
-	dtSwapEndian(&header->walkableClimb);
-	dtSwapEndian(&header->bmin[0]);
-	dtSwapEndian(&header->bmin[1]);
-	dtSwapEndian(&header->bmin[2]);
-	dtSwapEndian(&header->bmax[0]);
-	dtSwapEndian(&header->bmax[1]);
-	dtSwapEndian(&header->bmax[2]);
-	dtSwapEndian(&header->bvQuantFactor);
-
-	// Freelist index and pointers are updated when tile is added, no need to swap.
-
-	return true;
-}
-
-/// @par
-///
-/// @warning This function assumes that the header is in the correct endianess already. 
-/// Call #dtNavMeshHeaderSwapEndian() first on the data if the data is expected to be in wrong endianess 
-/// to start with. Call #dtNavMeshHeaderSwapEndian() after the data has been swapped if converting from 
-/// native to foreign endianess.
-bool dtNavMeshDataSwapEndian(unsigned char* data, const int dataSize)
-{
-	// Make sure the data is in right format.
-	dtMeshHeader* header = (dtMeshHeader*)data;
-	if (header->magic != DT_NAVMESH_MAGIC)
-		return false;
-	if (header->version != DT_NAVMESH_VERSION)
-		return false;
-	
-	// Patch header pointers.
-	const int headerSize = dtAlign4(sizeof(dtMeshHeader));
-	const int vertsSize = dtAlign4(sizeof(float)*3*header->vertCount);
-	const int polysSize = dtAlign4(sizeof(dtPoly)*header->polyCount);
-	const int linksSize = dtAlign4(sizeof(dtLink)*(header->maxLinkCount));
-	const int detailMeshesSize = dtAlign4(sizeof(dtPolyDetail)*header->detailMeshCount);
-	const int detailVertsSize = dtAlign4(sizeof(float)*3*header->detailVertCount);
-	const int detailTrisSize = dtAlign4(sizeof(unsigned char)*4*header->detailTriCount);
-	const int bvtreeSize = dtAlign4(sizeof(dtBVNode)*header->bvNodeCount);
-	const int offMeshLinksSize = dtAlign4(sizeof(dtOffMeshConnection)*header->offMeshConCount);
-	
-	unsigned char* d = data + headerSize;
-	float* verts = (float*)d; d += vertsSize;
-	dtPoly* polys = (dtPoly*)d; d += polysSize;
-	/*dtLink* links = (dtLink*)d;* / d += linksSize;
-	dtPolyDetail* detailMeshes = (dtPolyDetail*)d; d += detailMeshesSize;
-	float* detailVerts = (float*)d; d += detailVertsSize;
-	/*unsigned char* detailTris = (unsigned char*)d;* / d += detailTrisSize;
-	dtBVNode* bvTree = (dtBVNode*)d; d += bvtreeSize;
-	dtOffMeshConnection* offMeshCons = (dtOffMeshConnection*)d; d += offMeshLinksSize;
-	
-	// Vertices
-	for (int i = 0; i < header->vertCount*3; ++i)
-	{
-		dtSwapEndian(&verts[i]);
-	}
-
-	// Polys
-	for (int i = 0; i < header->polyCount; ++i)
-	{
-		dtPoly* p = &polys[i];
-		// poly->firstLink is update when tile is added, no need to swap.
-		for (int j = 0; j < DT_VERTS_PER_POLYGON; ++j)
-		{
-			dtSwapEndian(&p->verts[j]);
-			dtSwapEndian(&p->neis[j]);
-		}
-		dtSwapEndian(&p->flags);
-	}
-
-	// Links are rebuild when tile is added, no need to swap.
-
-	// Detail meshes
-	for (int i = 0; i < header->detailMeshCount; ++i)
-	{
-		dtPolyDetail* pd = &detailMeshes[i];
-		dtSwapEndian(&pd->vertBase);
-		dtSwapEndian(&pd->triBase);
-	}
-	
-	// Detail verts
-	for (int i = 0; i < header->detailVertCount*3; ++i)
-	{
-		dtSwapEndian(&detailVerts[i]);
-	}
-
-	// BV-tree
-	for (int i = 0; i < header->bvNodeCount; ++i)
-	{
-		dtBVNode* node = &bvTree[i];
-		for (int j = 0; j < 3; ++j)
-		{
-			dtSwapEndian(&node->bmin[j]);
-			dtSwapEndian(&node->bmax[j]);
-		}
-		dtSwapEndian(&node->i);
-	}
-
-	// Off-mesh Connections.
-	for (int i = 0; i < header->offMeshConCount; ++i)
-	{
-		dtOffMeshConnection* con = &offMeshCons[i];
-		for (int j = 0; j < 6; ++j)
-			dtSwapEndian(&con->pos[j]);
-		dtSwapEndian(&con->rad);
-		dtSwapEndian(&con->poly);
-	}
-	
-	return true;
-}
-
-
-*/

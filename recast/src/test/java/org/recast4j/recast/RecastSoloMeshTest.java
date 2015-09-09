@@ -80,7 +80,7 @@ public class RecastSoloMeshTest {
 		testBuild("nav_test.obj", PartitionType.LAYERS, 0, 19, 32, 312, 150, 150, 768, 529);
 	}
 
-	public void testBuild(String filename, PartitionType partitionType, int expDisatnce, int expRegions, int expContours, int expVerts,
+	public void testBuild(String filename, PartitionType partitionType, int expDistance, int expRegions, int expContours, int expVerts,
 			int expPolys, int expDetMeshes, int expDetVerts, int expDetTRis) {
 		resetCommonSettings();
 		m_partitionType = partitionType;
@@ -234,7 +234,7 @@ public class RecastSoloMeshTest {
 			RecastRegion.buildLayerRegions(m_ctx, m_chf, 0, m_cfg.minRegionArea);
 		}
 
-		Assert.assertEquals("maxDistance", expDisatnce, m_chf.maxDistance);
+		Assert.assertEquals("maxDistance", expDistance, m_chf.maxDistance);
 		Assert.assertEquals("Regions", expRegions, m_chf.maxRegions);
 		//
 		// Step 5. Trace and simplify region contours.

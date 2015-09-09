@@ -35,10 +35,10 @@ public class RandomPointTest extends AbstractDetourTest {
 			float[] bmax = new float[2];
 			for (int j = 0; j < tileAndPoly.second.vertCount; j++) {
 				int v = tileAndPoly.second.verts[j] * 3;
-				bmin[0] = j == 0 ? tileAndPoly.first.verts[v] : Math.min(bmin[0], tileAndPoly.first.verts[v]);
-				bmax[0] = j == 0 ? tileAndPoly.first.verts[v] : Math.max(bmax[0], tileAndPoly.first.verts[v]);
-				bmin[1] = j == 0 ? tileAndPoly.first.verts[v + 2] : Math.min(bmin[1], tileAndPoly.first.verts[v + 2]);
-				bmax[1] = j == 0 ? tileAndPoly.first.verts[v + 2] : Math.max(bmax[1], tileAndPoly.first.verts[v + 2]);
+				bmin[0] = j == 0 ? tileAndPoly.first.data.verts[v] : Math.min(bmin[0], tileAndPoly.first.data.verts[v]);
+				bmax[0] = j == 0 ? tileAndPoly.first.data.verts[v] : Math.max(bmax[0], tileAndPoly.first.data.verts[v]);
+				bmin[1] = j == 0 ? tileAndPoly.first.data.verts[v + 2] : Math.min(bmin[1], tileAndPoly.first.data.verts[v + 2]);
+				bmax[1] = j == 0 ? tileAndPoly.first.data.verts[v + 2] : Math.max(bmax[1], tileAndPoly.first.data.verts[v + 2]);
 			}
 			Assert.assertTrue(point.getRandomPt()[0] >= bmin[0]);
 			Assert.assertTrue(point.getRandomPt()[0] <= bmax[0]);
@@ -60,10 +60,10 @@ public class RandomPointTest extends AbstractDetourTest {
 			float[] bmax = new float[2];
 			for (int j = 0; j < tileAndPoly.second.vertCount; j++) {
 				int v = tileAndPoly.second.verts[j] * 3;
-				bmin[0] = j == 0 ? tileAndPoly.first.verts[v] : Math.min(bmin[0], tileAndPoly.first.verts[v]);
-				bmax[0] = j == 0 ? tileAndPoly.first.verts[v] : Math.max(bmax[0], tileAndPoly.first.verts[v]);
-				bmin[1] = j == 0 ? tileAndPoly.first.verts[v + 2] : Math.min(bmin[1], tileAndPoly.first.verts[v + 2]);
-				bmax[1] = j == 0 ? tileAndPoly.first.verts[v + 2] : Math.max(bmax[1], tileAndPoly.first.verts[v + 2]);
+				bmin[0] = j == 0 ? tileAndPoly.first.data.verts[v] : Math.min(bmin[0], tileAndPoly.first.data.verts[v]);
+				bmax[0] = j == 0 ? tileAndPoly.first.data.verts[v] : Math.max(bmax[0], tileAndPoly.first.data.verts[v]);
+				bmin[1] = j == 0 ? tileAndPoly.first.data.verts[v + 2] : Math.min(bmin[1], tileAndPoly.first.data.verts[v + 2]);
+				bmax[1] = j == 0 ? tileAndPoly.first.data.verts[v + 2] : Math.max(bmax[1], tileAndPoly.first.data.verts[v + 2]);
 			}
 			Assert.assertTrue(point.getRandomPt()[0] >= bmin[0]);
 			Assert.assertTrue(point.getRandomPt()[0] <= bmax[0]);

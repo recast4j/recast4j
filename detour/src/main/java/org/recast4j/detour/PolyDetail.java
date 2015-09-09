@@ -21,11 +21,11 @@ package org.recast4j.detour;
 /** Defines the location of detail sub-mesh data within a dtMeshTile. */
 public class PolyDetail {
 	/** The offset of the vertices in the MeshTile::detailVerts array. */
-	int vertBase;
+	public int vertBase;
 	/** The offset of the triangles in the MeshTile::detailTris array. */
-	int triBase;
+	public int triBase;
 	/** The number of vertices in the sub-mesh. */
-	int vertCount;
+	public int vertCount;
 	/** The number of triangles in the sub-mesh. */
-	int triCount;
+	public int triCount;
 }

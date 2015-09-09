@@ -17,26 +17,43 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
-import org.junit.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import org.junit.Test;
 
 public class NavMeshBuilderTest extends AbstractDetourTest {
 
 	@Test
 	public void testBVTree() {
-		Assert.assertEquals(223, nmd.navVerts.length / 3);
-		Assert.assertEquals(118, nmd.navPolys.length);
-		Assert.assertEquals(453, nmd.header.maxLinkCount);
-		Assert.assertEquals(59, nmd.navDVerts.length / 3);
-		Assert.assertEquals(289, nmd.navDTris.length / 4);
-		Assert.assertEquals(118, nmd.navDMeshes.length);
-		Assert.assertEquals(0, nmd.offMeshCons.length);
-		Assert.assertEquals(118, nmd.header.offMeshBase);
-		Assert.assertEquals(236, nmd.navBvtree.length);
-		Assert.assertTrue(nmd.header.bvNodeCount <= nmd.navBvtree.length);
+		assertEquals(225, nmd.verts.length / 3);
+		assertEquals(119, nmd.polys.length);
+		assertEquals(457, nmd.header.maxLinkCount);
+		assertEquals(118, nmd.detailMeshes.length);
+		assertEquals(289, nmd.detailTris.length / 4);
+		assertEquals(59, nmd.detailVerts.length / 3);
+		assertEquals(1, nmd.offMeshCons.length);
+		assertEquals(118, nmd.header.offMeshBase);
+		assertEquals(236, nmd.bvTree.length);
+		assertTrue(nmd.header.bvNodeCount <= nmd.bvTree.length);
 		for (int i = 0; i < nmd.header.bvNodeCount; i++) {
-			Assert.assertNotNull(nmd.navBvtree[i]);
+			assertNotNull(nmd.bvTree[i]);
 		}
-		//nmd.navBvtree
+		for (int i = 0; i < 6; i++) {
+			assertEquals(nmd.offMeshCons[0].pos[i], nmd.verts[223 * 3 + i], 0.0f);
+		}
+		assertEquals(0.1f, nmd.offMeshCons[0].rad, 0.0f);
+		assertEquals(118, nmd.offMeshCons[0].poly);
+		assertEquals(NavMesh.DT_OFFMESH_CON_BIDIR, nmd.offMeshCons[0].flags);
+		assertEquals(0xFF, nmd.offMeshCons[0].side);
+		assertEquals(0x4567, nmd.offMeshCons[0].userId);
+		assertEquals(2, nmd.polys[118].vertCount);
+		assertEquals(223, nmd.polys[118].verts[0]);
+		assertEquals(224, nmd.polys[118].verts[1]);
+		assertEquals(12, nmd.polys[118].flags);
+		assertEquals(2, nmd.polys[118].getArea());
+		assertEquals(Poly.DT_POLYTYPE_OFFMESH_CONNECTION, nmd.polys[118].getType());
+		
 	}
 }

@@ -47,18 +47,6 @@ public class NavMesh {
 	/** The maximum number of vertices per navigation polygon. */
 	public static int DT_VERTS_PER_POLYGON = 6;
 
-	/// A magic number used to detect compatibility of navigation tile data.
-	static int DT_NAVMESH_MAGIC = 'D' << 24 | 'N' << 16 | 'A' << 8 | 'V';
-
-	/// A version number used to detect compatibility of navigation tile data.
-	static int DT_NAVMESH_VERSION = 7;
-
-	/// A magic number used to detect the compatibility of navigation tile states.
-	static int DT_NAVMESH_STATE_MAGIC = 'D' << 24 | 'N' << 16 | 'M' << 8 | 'S';
-
-	/// A version number used to detect compatibility of navigation tile states.
-	static int DT_NAVMESH_STATE_VERSION = 1;
-
 	/// A flag that indicates that an entity links to an external entity.
 	/// (E.g. A polygon edge is a portal that links to another polygon.)
 	static int DT_EXT_LINK = 0x8000;
@@ -76,33 +64,40 @@ public class NavMesh {
 	/// The limit is given as a multiple of the character radius
 	static float DT_RAY_CAST_LIMIT_PROPORTIONS = 50.0f;
 
-	/// The maximum number of tiles supported by the navigation mesh.
-	/// @return The maximum number of tiles supported by the navigation mesh.
+	NavMeshParams m_params; /// < Current initialization params. TODO: do not store this info twice.
+	private float[] m_orig; /// < Origin of the tile (0,0)
+	// float m_orig[3]; ///< Origin of the tile (0,0)
+	float m_tileWidth, m_tileHeight; /// < Dimensions of each tile.
+	int m_maxTiles; /// < Max number of tiles.
+	int m_tileLutSize; /// < Tile hash lookup size (must be pot).
+	int m_tileLutMask; /// < Tile hash lookup mask.
+
+	// MeshTile** m_posLookup; ///< Tile hash lookup.
+	// MeshTile[] m_nextFree; ///< Freelist of tiles.
+	MeshTile[] m_posLookup; /// < Tile hash lookup.
+	MeshTile m_nextFree; /// < Freelist of tiles.
+	MeshTile[] m_tiles; /// < List of tiles.
+
+	/**
+	 *  The maximum number of tiles supported by the navigation mesh.
+	 * @return The maximum number of tiles supported by the navigation mesh.
+	 */
 	int getMaxTiles() {
 		return m_maxTiles;
 	}
 
+	/**
+	 * Returns tile in the tile array. 
+	 */
 	MeshTile getTile(int i) {
 		return m_tiles[i];
 	}
 
-	/// Gets the polygon reference for the tile's base polygon.
-	/// @param[in] tile The tile.
-	/// @return The polygon reference for the base polygon in the specified tile.
-	/// @par
-	///
-	/// Example use case:
-	/// @code
-	///
-	/// const dtPolyRef base = navmesh->getPolyRefBase(tile);
-	/// for (int i = 0; i < tile->header->polyCount; ++i)
-	/// {
-	/// const dtPoly* p = &tile->polys[i];
-	/// const dtPolyRef ref = base | (dtPolyRef)i;
-	///
-	/// // Use the reference to access the polygon data.
-	/// }
-	/// @endcode
+	/**
+	 * Gets the polygon reference for the tile's base polygon.
+	 * @param tile The tile.
+	 * @return The polygon reference for the base polygon in the specified tile.
+	 */
 	public long getPolyRefBase(MeshTile tile) {
 		if (tile == null)
 			return 0;
@@ -110,11 +105,14 @@ public class NavMesh {
 		return encodePolyId(tile.salt, it, 0);
 	}
 
-	/// Derives a standard polygon reference.
-	/// @note This function is generally meant for internal use only.
-	/// @param[in] salt The tile's salt value.
-	/// @param[in] it The index of the tile.
-	/// @param[in] ip The index of the polygon within the tile.
+	/**
+	 * Derives a standard polygon reference.
+	 * @note This function is generally meant for internal use only.
+	 * @param salt The tile's salt value.
+	 * @param it The index of the tile.
+	 * @param ip The index of the polygon within the tile.
+	 * @return encoded polygon reference
+	 */
 	static long encodePolyId(int salt, int it, int ip) {
 		return (((long) salt) << (DT_POLY_BITS + DT_TILE_BITS)) | ((long) it << DT_POLY_BITS) | (long) ip;
 	}
@@ -173,21 +171,12 @@ public class NavMesh {
 		return tile.links.size() - 1;
 	}
 
-	NavMeshParams m_params; /// < Current initialization params. TODO: do not store this info twice.
-	private float[] m_orig; /// < Origin of the tile (0,0)
-	// float m_orig[3]; ///< Origin of the tile (0,0)
-	float m_tileWidth, m_tileHeight; /// < Dimensions of each tile.
-	int m_maxTiles; /// < Max number of tiles.
-	int m_tileLutSize; /// < Tile hash lookup size (must be pot).
-	int m_tileLutMask; /// < Tile hash lookup mask.
-
-	// MeshTile** m_posLookup; ///< Tile hash lookup.
-	// MeshTile[] m_nextFree; ///< Freelist of tiles.
-	MeshTile[] m_posLookup; /// < Tile hash lookup.
-	MeshTile m_nextFree; /// < Freelist of tiles.
-	MeshTile[] m_tiles; /// < List of tiles.
-
-	int[] calcTileLoc(float[] pos) {
+	/**
+	 * Calculates the tile grid location for the specified world position.
+	 * @param	pos  The world position for the query. [(x, y, z)]
+	 * @return  2-element int array with (tx,ty) tile location  
+	 */
+	public int[] calcTileLoc(float[] pos) {
 		int tx = (int) Math.floor((pos[0] - m_orig[0]) / m_tileWidth);
 		int ty = (int) Math.floor((pos[2] - m_orig[2]) / m_tileHeight);
 		return new int[] { tx, ty };
@@ -203,11 +192,11 @@ public class NavMesh {
 		int ip = saltitip[2];
 		if (it >= m_maxTiles)
 			throw new IllegalArgumentException("tile > m_maxTiles");
-		if (m_tiles[it].salt != salt || m_tiles[it].header == null)
+		if (m_tiles[it].salt != salt || m_tiles[it].data.header == null)
 			throw new IllegalArgumentException("Invalid salt or header");
-		if (ip >= m_tiles[it].header.polyCount)
+		if (ip >= m_tiles[it].data.header.polyCount)
 			throw new IllegalArgumentException("poly > polyCount");
-		return new Tupple2<>(m_tiles[it], m_tiles[it].polys[ip]);
+		return new Tupple2<>(m_tiles[it], m_tiles[it].data.polys[ip]);
 	}
 
 	/// @par
@@ -219,7 +208,7 @@ public class NavMesh {
 		int[] saltitip = decodePolyId(ref);
 		int it = saltitip[1];
 		int ip = saltitip[2];
-		return new Tupple2<>(m_tiles[it], m_tiles[it].polys[ip]);
+		return new Tupple2<>(m_tiles[it], m_tiles[it].data.polys[ip]);
 	}
 
 	boolean isValidPolyRef(long ref) {
@@ -231,9 +220,9 @@ public class NavMesh {
 		int ip = saltitip[2];
 		if (it >= m_maxTiles)
 			return false;
-		if (m_tiles[it].salt != salt || m_tiles[it].header == null)
+		if (m_tiles[it].salt != salt || m_tiles[it].data.header == null)
 			return false;
-		if (ip >= m_tiles[it].header.polyCount)
+		if (ip >= m_tiles[it].data.header.polyCount)
 			return false;
 		return true;
 	}
@@ -261,12 +250,12 @@ public class NavMesh {
 
 	}
 
-	public void init(NavMeshData data, int flags) {
+	public void init(MeshData data, int flags) {
 		init(getNavMeshParams(data));
 		addTile(data, flags, 0);
 	}
 
-	private static NavMeshParams getNavMeshParams(NavMeshData data) {
+	private static NavMeshParams getNavMeshParams(MeshData data) {
 		NavMeshParams params = new NavMeshParams();
 		params.orig = data.header.bmin;
 		params.tileWidth = data.header.bmax[0] - data.header.bmin[0];
@@ -276,13 +265,15 @@ public class NavMesh {
 		return params;
 	}
 
+	// TODO: These methods are duplicates from dtNavMeshQuery, but are needed for off-mesh connection finding.
+
 	List<Long> queryPolygonsInTile(MeshTile tile, float[] qmin, float[] qmax) {
 		List<Long> polys = new ArrayList<>();
-		if (tile.bvTree != null) {
+		if (tile.data.bvTree != null) {
 			int nodeIndex = 0;
-			float[] tbmin = tile.header.bmin;
-			float[] tbmax = tile.header.bmax;
-			float qfac = tile.header.bvQuantFactor;
+			float[] tbmin = tile.data.header.bmin;
+			float[] tbmax = tile.data.header.bmax;
+			float qfac = tile.data.header.bvQuantFactor;
 			// Calculate quantized box
 			int[] bmin = new int[3];
 			int[] bmax = new int[3];
@@ -303,9 +294,9 @@ public class NavMesh {
 
 			// Traverse tree
 			long base = getPolyRefBase(tile);
-			int end = tile.header.bvNodeCount;
+			int end = tile.data.header.bvNodeCount;
 			while (nodeIndex < end) {
-				BVNode node = tile.bvTree[nodeIndex];
+				BVNode node = tile.data.bvTree[nodeIndex];
 				boolean overlap = overlapQuantBounds(bmin, bmax, node.bmin, node.bmax);
 				boolean isLeafNode = node.i >= 0;
 
@@ -326,19 +317,19 @@ public class NavMesh {
 			float[] bmin = new float[3];
 			float[] bmax = new float[3];
 			long base = getPolyRefBase(tile);
-			for (int i = 0; i < tile.header.polyCount; ++i) {
-				Poly p = tile.polys[i];
+			for (int i = 0; i < tile.data.header.polyCount; ++i) {
+				Poly p = tile.data.polys[i];
 				// Do not return off-mesh connection polygons.
 				if (p.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION)
 					continue;
 				// Calc polygon bounds.
 				int v = p.verts[0] * 3;
-				vCopy(bmin, tile.verts, v);
-				vCopy(bmax, tile.verts, v);
+				vCopy(bmin, tile.data.verts, v);
+				vCopy(bmax, tile.data.verts, v);
 				for (int j = 1; j < p.vertCount; ++j) {
 					v = p.verts[j] * 3;
-					vMin(bmin, tile.verts, v);
-					vMax(bmax, tile.verts, v);
+					vMin(bmin, tile.data.verts, v);
+					vMax(bmax, tile.data.verts, v);
 				}
 				if (overlapBounds(qmin, qmax, bmin, bmax)) {
 					polys.add(base | i);
@@ -366,7 +357,7 @@ public class NavMesh {
 	/// removed.
 	///
 	/// @see dtCreateNavMeshData, #removeTile
-	long addTile(NavMeshData data, int flags, long lastRef) {
+	public long addTile(MeshData data, int flags, long lastRef) {
 		// Make sure the data is in right format.
 		MeshHeader header = data.header;
 
@@ -412,6 +403,10 @@ public class NavMesh {
 		if (tile == null)
 			throw new RuntimeException("Could not allocate a tile");
 
+		tile.data = data;
+		tile.flags = flags;
+		tile.links = new ArrayList<>();
+		
 		// Insert tile into the position lut.
 		int h = computeTileHash(header.x, header.y, m_tileLutMask);
 		tile.next = m_posLookup[h];
@@ -419,23 +414,11 @@ public class NavMesh {
 
 		// Patch header pointers.
 
-		tile.verts = data.navVerts;
-		tile.polys = data.navPolys;
-		tile.links = new ArrayList<>();
-		tile.detailMeshes = data.navDMeshes;
-		tile.detailVerts = data.navDVerts;
-		tile.detailTris = data.navDTris;
-		tile.bvTree = data.navBvtree;
-		tile.offMeshCons = data.offMeshCons;
-
 		// If there are no items in the bvtree, reset the tree pointer.
-		if (tile.bvTree != null && tile.bvTree.length == 0)
-			tile.bvTree = null;
+		if (tile.data.bvTree != null && tile.data.bvTree.length == 0)
+			tile.data.bvTree = null;
 
 		// Init tile.
-		tile.header = header;
-		tile.data = data;
-		tile.flags = flags;
 
 		connectIntLinks(tile);
 		baseOffMeshLinks(tile);
@@ -465,6 +448,14 @@ public class NavMesh {
 		return getTileRef(tile);
 	}
 
+	// FIXME: Implement
+	/// Removes the specified tile from the navigation mesh.
+	///  @param[in]		ref			The reference of the tile to remove.
+	///  @param[out]	data		Data associated with deleted tile.
+	///  @param[out]	dataSize	Size of the data associated with deleted tile.
+	/// @return The status flags for the operation.
+	//dtStatus removeTile(dtTileRef ref, unsigned char** data, int* dataSize);
+	
 	/// Builds internal polygons links for a tile.
 	void connectIntLinks(MeshTile tile) {
 		if (tile == null)
@@ -472,8 +463,8 @@ public class NavMesh {
 
 		long base = getPolyRefBase(tile);
 
-		for (int i = 0; i < tile.header.polyCount; ++i) {
-			Poly poly = tile.polys[i];
+		for (int i = 0; i < tile.data.header.polyCount; ++i) {
+			Poly poly = tile.data.polys[i];
 			poly.firstLink = DT_NULL_LINK;
 
 			if (poly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION)
@@ -504,8 +495,8 @@ public class NavMesh {
 			return;
 
 		// Connect border links.
-		for (int i = 0; i < tile.header.polyCount; ++i) {
-			Poly poly = tile.polys[i];
+		for (int i = 0; i < tile.data.header.polyCount; ++i) {
+			Poly poly = tile.data.polys[i];
 
 			// Create new links.
 			// unsigned short m = DT_EXT_LINK | (unsigned short)side;
@@ -523,7 +514,7 @@ public class NavMesh {
 				// Create new links
 				int va = poly.verts[j] * 3;
 				int vb = poly.verts[(j + 1) % nv] * 3;
-				Tupple3<long[], float[], Integer> connectedPolys = findConnectingPolys(tile.verts, va, vb, target,
+				Tupple3<long[], float[], Integer> connectedPolys = findConnectingPolys(tile.data.verts, va, vb, target,
 						oppositeTile(dir), 4);
 				long[] nei = connectedPolys.first;
 				float[] neia = connectedPolys.second;
@@ -540,10 +531,10 @@ public class NavMesh {
 
 					// Compress portal limits to a byte value.
 					if (dir == 0 || dir == 4) {
-						float tmin = (neia[k * 2 + 0] - tile.verts[va + 2])
-								/ (tile.verts[vb + 2] - tile.verts[va + 2]);
-						float tmax = (neia[k * 2 + 1] - tile.verts[va + 2])
-								/ (tile.verts[vb + 2] - tile.verts[va + 2]);
+						float tmin = (neia[k * 2 + 0] - tile.data.verts[va + 2])
+								/ (tile.data.verts[vb + 2] - tile.data.verts[va + 2]);
+						float tmax = (neia[k * 2 + 1] - tile.data.verts[va + 2])
+								/ (tile.data.verts[vb + 2] - tile.data.verts[va + 2]);
 						if (tmin > tmax) {
 							float temp = tmin;
 							tmin = tmax;
@@ -552,8 +543,8 @@ public class NavMesh {
 						link.bmin = (int) (clamp(tmin, 0.0f, 1.0f) * 255.0f);
 						link.bmax = (int) (clamp(tmax, 0.0f, 1.0f) * 255.0f);
 					} else if (dir == 2 || dir == 6) {
-						float tmin = (neia[k * 2 + 0] - tile.verts[va]) / (tile.verts[vb] - tile.verts[va]);
-						float tmax = (neia[k * 2 + 1] - tile.verts[va]) / (tile.verts[vb] - tile.verts[va]);
+						float tmin = (neia[k * 2 + 0] - tile.data.verts[va]) / (tile.data.verts[vb] - tile.data.verts[va]);
+						float tmax = (neia[k * 2 + 1] - tile.data.verts[va]) / (tile.data.verts[vb] - tile.data.verts[va]);
 						if (tmin > tmax) {
 							float temp = tmin;
 							tmin = tmax;
@@ -575,17 +566,17 @@ public class NavMesh {
 		// We are interested on links which land from target tile to this tile.
 		int oppositeSide = (side == -1) ? 0xff : oppositeTile(side);
 
-		for (int i = 0; i < target.header.offMeshConCount; ++i) {
-			OffMeshConnection targetCon = target.offMeshCons[i];
+		for (int i = 0; i < target.data.header.offMeshConCount; ++i) {
+			OffMeshConnection targetCon = target.data.offMeshCons[i];
 			if (targetCon.side != oppositeSide)
 				continue;
 
-			Poly targetPoly = target.polys[targetCon.poly];
+			Poly targetPoly = target.data.polys[targetCon.poly];
 			// Skip off-mesh connections which start location could not be connected at all.
 			if (targetPoly.firstLink == DT_NULL_LINK)
 				continue;
 
-			float[] ext = new float[] { targetCon.rad, target.header.walkableClimb, targetCon.rad };
+			float[] ext = new float[] { targetCon.rad, target.data.header.walkableClimb, targetCon.rad };
 
 			// Find polygon to connect to.
 			float[] p = new float[3];
@@ -602,9 +593,9 @@ public class NavMesh {
 			if (sqr(nearestPt[0] - p[0]) + sqr(nearestPt[2] - p[2]) > sqr(targetCon.rad))
 				continue;
 			// Make sure the location is on current mesh.
-			target.verts[targetPoly.verts[1] * 3] = nearestPt[0];
-			target.verts[targetPoly.verts[1] * 3 + 1] = nearestPt[1];
-			target.verts[targetPoly.verts[1] * 3 + 2] = nearestPt[2];
+			target.data.verts[targetPoly.verts[1] * 3] = nearestPt[0];
+			target.data.verts[targetPoly.verts[1] * 3 + 1] = nearestPt[1];
+			target.data.verts[targetPoly.verts[1] * 3 + 2] = nearestPt[2];
 
 			// Link off-mesh connection to target poly.
 			int idx = allocLink(target);
@@ -621,7 +612,7 @@ public class NavMesh {
 			if ((targetCon.flags & DT_OFFMESH_CON_BIDIR) != 0) {
 				int tidx = allocLink(tile);
 				int landPolyIdx = decodePolyIdPoly(ref);
-				Poly landPoly = tile.polys[landPolyIdx];
+				Poly landPoly = tile.data.polys[landPolyIdx];
 				link = tile.links.get(tidx);
 				link.ref = getPolyRefBase(target) | (targetCon.poly);
 				link.edge = 0xff;
@@ -652,8 +643,8 @@ public class NavMesh {
 		int n = 0;
 		long base = getPolyRefBase(tile);
 
-		for (int i = 0; i < tile.header.polyCount; ++i) {
-			Poly poly = tile.polys[i];
+		for (int i = 0; i < tile.data.header.polyCount; ++i) {
+			Poly poly = tile.data.polys[i];
 			int nv = poly.vertCount;
 			for (int j = 0; j < nv; ++j) {
 				// Skip edges which do not point to the right side.
@@ -661,15 +652,15 @@ public class NavMesh {
 					continue;
 				int vc = poly.verts[j] * 3;
 				int vd = poly.verts[(j + 1) % nv] * 3;
-				float bpos = getSlabCoord(tile.verts, vc, side);
+				float bpos = getSlabCoord(tile.data.verts, vc, side);
 				// Segments are not close enough.
 				if (Math.abs(apos - bpos) > 0.01f)
 					continue;
 
 				// Check if the segments touch.
-				calcSlabEndPoints(tile.verts, vc, vd, bmin, bmax, side);
+				calcSlabEndPoints(tile.data.verts, vc, vd, bmin, bmax, side);
 
-				if (!overlapSlabs(amin, amax, bmin, bmax, 0.01f, tile.header.walkableClimb))
+				if (!overlapSlabs(amin, amax, bmin, bmax, 0.01f, tile.data.header.walkableClimb))
 					continue;
 
 				// Add return value.
@@ -754,7 +745,10 @@ public class NavMesh {
 		return false;
 	}
 
-	/// Builds internal polygons links for a tile.
+	/**
+	 * Builds internal polygons links for a tile.
+	 * @param tile
+	 */
 	void baseOffMeshLinks(MeshTile tile) {
 		if (tile == null)
 			return;
@@ -762,11 +756,11 @@ public class NavMesh {
 		long base = getPolyRefBase(tile);
 
 		// Base off-mesh connection start points.
-		for (int i = 0; i < tile.header.offMeshConCount; ++i) {
-			OffMeshConnection con = tile.offMeshCons[i];
-			Poly poly = tile.polys[con.poly];
+		for (int i = 0; i < tile.data.header.offMeshConCount; ++i) {
+			OffMeshConnection con = tile.data.offMeshCons[i];
+			Poly poly = tile.data.polys[con.poly];
 
-			float[] ext = new float[] { con.rad, tile.header.walkableClimb, con.rad };
+			float[] ext = new float[] { con.rad, tile.data.header.walkableClimb, con.rad };
 
 			// Find polygon to connect to.
 			Tupple2<Long, float[]> nearestPoly = findNearestPolyInTile(tile, con.pos, ext);
@@ -782,7 +776,7 @@ public class NavMesh {
 			if (dx * dx + dz * dz > dr * dr)
 				continue;
 			// Make sure the location is on current mesh.
-			System.arraycopy(nearestPoly, 0, tile.verts, poly.verts[0] * 3, 3);
+			System.arraycopy(nearestPoly, 0, tile.data.verts, poly.verts[0] * 3, 3);
 
 			// Link off-mesh connection to target poly.
 			int idx = allocLink(tile);
@@ -798,7 +792,7 @@ public class NavMesh {
 			// Start end-point is always connect back to off-mesh connection.
 			int tidx = allocLink(tile);
 			int landPolyIdx = decodePolyIdPoly(ref);
-			Poly landPoly = tile.polys[landPolyIdx];
+			Poly landPoly = tile.data.polys[landPolyIdx];
 			link = tile.links.get(tidx);
 			link.ref = base | (con.poly);
 			link.edge = 0xff;
@@ -810,6 +804,12 @@ public class NavMesh {
 		}
 	}
 
+	/**
+	 * Returns closest point on polygon.
+	 * @param ref
+	 * @param pos
+	 * @return
+	 */
 	Tupple2<Boolean, float[]> closestPointOnPoly(long ref, float[] pos) {
 		Tupple2<MeshTile, Poly> tileAndPoly = getTileAndPolyByRefUnsafe(ref);
 		MeshTile tile = tileAndPoly.first;
@@ -818,15 +818,12 @@ public class NavMesh {
 		if (poly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
 			int v0 = poly.verts[0] * 3;
 			int v1 = poly.verts[1] * 3;
-			float d0 = vDist(pos, tile.verts, v0);
-			float d1 = vDist(pos, tile.verts, v1);
+			float d0 = vDist(pos, tile.data.verts, v0);
+			float d1 = vDist(pos, tile.data.verts, v1);
 			float u = d0 / (d0 + d1);
-			float[] closest = vLerp(tile.verts, v0, v1, u);
+			float[] closest = vLerp(tile.data.verts, v0, v1, u);
 			return new Tupple2<>(false, closest);
 		}
-
-		int ip = poly.index;
-		PolyDetail pd = tile.detailMeshes[ip];
 
 		// Clamp point to be inside the polygon.
 		float[] verts = new float[DT_VERTS_PER_POLYGON * 3];
@@ -834,7 +831,7 @@ public class NavMesh {
 		float[] edget = new float[DT_VERTS_PER_POLYGON];
 		int nv = poly.vertCount;
 		for (int i = 0; i < nv; ++i)
-			System.arraycopy(tile.verts, poly.verts[i] * 3, verts, i * 3, 3);
+			System.arraycopy(tile.data.verts, poly.verts[i] * 3, verts, i * 3, 3);
 
 		boolean posOverPoly = false;
 		float[] closest = new float[3];
@@ -858,21 +855,25 @@ public class NavMesh {
 		}
 
 		// Find height at the location.
-		VectorPtr posV = new VectorPtr(pos);
-		for (int j = 0; j < pd.triCount; ++j) {
-			int t = (pd.triBase + j) * 4;
-			VectorPtr[] v = new VectorPtr[3];
-			for (int k = 0; k < 3; ++k) {
-				if (tile.detailTris[t + k] < poly.vertCount)
-					v[k] = new VectorPtr(tile.verts, poly.verts[tile.detailTris[t + k]] * 3);
-				else
-					v[k] = new VectorPtr(tile.detailVerts,
-							(pd.vertBase + (tile.detailTris[t + k] - poly.vertCount)) * 3);
-			}
-			Tupple2<Boolean, Float> clp = closestHeightPointTriangle(posV, v[0], v[1], v[2]);
-			if (clp.first) {
-				closest[1] = clp.second;
-				break;
+		int ip = poly.index;
+		if (tile.data.detailMeshes != null && tile.data.detailMeshes.length > ip) {
+			PolyDetail pd = tile.data.detailMeshes[ip];
+			VectorPtr posV = new VectorPtr(pos);
+			for (int j = 0; j < pd.triCount; ++j) {
+				int t = (pd.triBase + j) * 4;
+				VectorPtr[] v = new VectorPtr[3];
+				for (int k = 0; k < 3; ++k) {
+					if (tile.data.detailTris[t + k] < poly.vertCount)
+						v[k] = new VectorPtr(tile.data.verts, poly.verts[tile.data.detailTris[t + k]] * 3);
+					else
+						v[k] = new VectorPtr(tile.data.detailVerts,
+								(pd.vertBase + (tile.data.detailTris[t + k] - poly.vertCount)) * 3);
+				}
+				Tupple2<Boolean, Float> clp = closestHeightPointTriangle(posV, v[0], v[1], v[2]);
+				if (clp.first) {
+					closest[1] = clp.second;
+					break;
+				}
 			}
 		}
 		return new Tupple2<>(posOverPoly, closest);
@@ -900,7 +901,7 @@ public class NavMesh {
 			// climb height, favor that instead of straight line nearest point.
 			float[] diff = vSub(center, closestPtPoly);
 			if (posOverPoly) {
-				d = Math.abs(diff[1]) - tile.header.walkableClimb;
+				d = Math.abs(diff[1]) - tile.data.header.walkableClimb;
 				d = d > 0 ? d * d : 0;
 			} else {
 				d = vLenSqr(diff);
@@ -919,7 +920,7 @@ public class NavMesh {
 		int h = computeTileHash(x, y, m_tileLutMask);
 		MeshTile tile = m_posLookup[h];
 		while (tile != null) {
-			if (tile.header != null && tile.header.x == x && tile.header.y == y && tile.header.layer == layer) {
+			if (tile.data.header != null && tile.data.header.x == x && tile.data.header.y == y && tile.data.header.layer == layer) {
 				return tile;
 			}
 			tile = tile.next;
@@ -968,7 +969,7 @@ public class NavMesh {
 		int h = computeTileHash(x, y, m_tileLutMask);
 		MeshTile tile = m_posLookup[h];
 		while (tile != null) {
-			if (tile.header != null && tile.header.x == x && tile.header.y == y) {
+			if (tile.data.header != null && tile.data.header.x == x && tile.data.header.y == y) {
 				tiles.add(tile);
 			}
 			tile = tile.next;
@@ -1022,14 +1023,14 @@ public class NavMesh {
 		if (it >= m_maxTiles) {
 			throw new IllegalArgumentException("Invalid tile ID > max tiles");
 		}
-		if (m_tiles[it].salt != salt || m_tiles[it].header == null) {
+		if (m_tiles[it].salt != salt || m_tiles[it].data.header == null) {
 			throw new IllegalArgumentException("Invalid salt or missing tile header");
 		}
 		MeshTile tile = m_tiles[it];
-		if (ip >= tile.header.polyCount) {
+		if (ip >= tile.data.header.polyCount) {
 			throw new IllegalArgumentException("Invalid poly ID > poly count");
 		}
-		Poly poly = tile.polys[ip];
+		Poly poly = tile.data.polys[ip];
 
 		// Make sure that the current poly is indeed off-mesh link.
 		if (poly.getType() != Poly.DT_POLYTYPE_OFFMESH_CONNECTION)
@@ -1050,8 +1051,8 @@ public class NavMesh {
 		}
 		float[] startPos = new float[3];
 		float[] endPos = new float[3];
-		vCopy(startPos, tile.verts, poly.verts[idx0] * 3);
-		vCopy(endPos, tile.verts, poly.verts[idx1] * 3);
+		vCopy(startPos, tile.data.verts, poly.verts[idx0] * 3);
+		vCopy(endPos, tile.data.verts, poly.verts[idx1] * 3);
 		return new Tupple2<float[], float[]>(startPos, endPos);
 
 	}

@@ -27,21 +27,21 @@ public class Poly {
 	/** The polygon is an off-mesh connection consisting of two vertices. */
 	public static final int DT_POLYTYPE_OFFMESH_CONNECTION = 1;
 	/** Index to first link in linked list. (Or #DT_NULL_LINK if there is no link.) */
-	int firstLink;
+	public int firstLink;
 	/** The indices of the polygon's vertices. The actual vertices are located in MeshTile::verts. */
-	int[] verts = new int[NavMesh.DT_VERTS_PER_POLYGON];
+	public final int[] verts = new int[NavMesh.DT_VERTS_PER_POLYGON];
 	/** Packed data representing neighbor polygons references and flags for each edge. */
-	int[] neis = new int[NavMesh.DT_VERTS_PER_POLYGON];
+	public final int[] neis = new int[NavMesh.DT_VERTS_PER_POLYGON];
 	/** The user defined polygon flags. */
-	int flags;
+	public int flags;
 	/** The number of vertices in the polygon. */
-	int vertCount;
+	public int vertCount;
 	/**
 	 * The bit packed area id and polygon type.
 	 * 
 	 * @note Use the structure's set and get methods to access this value.
 	 */
-	int areaAndtype;
+	public int areaAndtype;
 
 	public Poly(int index) {
 		this.index = index;

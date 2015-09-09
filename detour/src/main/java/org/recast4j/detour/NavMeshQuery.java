@@ -111,7 +111,7 @@ public class NavMeshQuery {
 		float tsum = 0.0f;
 		for (int i = 0; i < m_nav.getMaxTiles(); i++) {
 			MeshTile t = m_nav.getTile(i);
-			if (t == null || t.header == null)
+			if (t == null || t.data == null || t.data.header == null)
 				continue;
 
 			// Choose random tile using reservoi sampling.
@@ -130,8 +130,8 @@ public class NavMeshQuery {
 		long base = m_nav.getPolyRefBase(tile);
 
 		float areaSum = 0.0f;
-		for (int i = 0; i < tile.header.polyCount; ++i) {
-			Poly p = tile.polys[i];
+		for (int i = 0; i < tile.data.header.polyCount; ++i) {
+			Poly p = tile.data.polys[i];
 			// Do not return off-mesh connection polygons.
 			if (p.getType() != Poly.DT_POLYTYPE_GROUND)
 				continue;
@@ -146,7 +146,7 @@ public class NavMeshQuery {
 				int va = p.verts[0] * 3;
 				int vb = p.verts[j - 1] * 3;
 				int vc = p.verts[j] * 3;
-				polyArea += triArea2D(tile.verts, va, vb, vc);
+				polyArea += triArea2D(tile.data.verts, va, vb, vc);
 			}
 
 			// Choose random polygon weighted by area, using reservoi sampling.
@@ -164,9 +164,9 @@ public class NavMeshQuery {
 		// Randomly pick point on polygon.
 		float[] verts = new float[3 * NavMesh.DT_VERTS_PER_POLYGON];
 		float[] areas = new float[NavMesh.DT_VERTS_PER_POLYGON];
-		System.arraycopy(tile.verts, poly.verts[0] * 3, verts, 0, 3);
+		System.arraycopy(tile.data.verts, poly.verts[0] * 3, verts, 0, 3);
 		for (int j = 1; j < poly.vertCount; ++j) {
-			System.arraycopy(tile.verts, poly.verts[j] * 3, verts, j * 3, 3);
+			System.arraycopy(tile.data.verts, poly.verts[j] * 3, verts, j * 3, 3);
 		}
 
 		float s = frand.frand();
@@ -242,7 +242,7 @@ public class NavMeshQuery {
 					int va = bestPoly.verts[0] * 3;
 					int vb = bestPoly.verts[j - 1] * 3;
 					int vc = bestPoly.verts[j] * 3;
-					polyArea += triArea2D(bestTile.verts, va, vb, vc);
+					polyArea += triArea2D(bestTile.data.verts, va, vb, vc);
 				}
 				// Choose random polygon weighted by area, using reservoi sampling.
 				areaSum += polyArea;
@@ -328,9 +328,9 @@ public class NavMeshQuery {
 		// Randomly pick point on polygon.
 		float[] verts = new float[3 * NavMesh.DT_VERTS_PER_POLYGON];
 		float[] areas = new float[NavMesh.DT_VERTS_PER_POLYGON];
-		System.arraycopy(randomTile.verts, randomPoly.verts[0] * 3, verts, 0, 3);
+		System.arraycopy(randomTile.data.verts, randomPoly.verts[0] * 3, verts, 0, 3);
 		for (int j = 1; j < randomPoly.vertCount; ++j) {
-			System.arraycopy(randomTile.verts, randomPoly.verts[j] * 3, verts, j * 3, 3);
+			System.arraycopy(randomTile.data.verts, randomPoly.verts[j] * 3, verts, j * 3, 3);
 		}
 
 		float s = frand.frand();
@@ -367,15 +367,12 @@ public class NavMeshQuery {
 		if (poly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
 			int v0 = poly.verts[0] * 3;
 			int v1 = poly.verts[1] * 3;
-			float d0 = vDist(pos, tile.verts, v0);
-			float d1 = vDist(pos, tile.verts, v1);
+			float d0 = vDist(pos, tile.data.verts, v0);
+			float d1 = vDist(pos, tile.data.verts, v1);
 			float u = d0 / (d0 + d1);
-			float[] closest = vLerp(tile.verts, v0, v1, u);
+			float[] closest = vLerp(tile.data.verts, v0, v1, u);
 			return new ClosesPointOnPolyResult(false, closest);
 		}
-
-		int ip = poly.index;
-		PolyDetail pd = tile.detailMeshes[ip];
 
 		// Clamp point to be inside the polygon.
 		float[] verts = new float[NavMesh.DT_VERTS_PER_POLYGON * 3];
@@ -383,7 +380,7 @@ public class NavMeshQuery {
 		float[] edget = new float[NavMesh.DT_VERTS_PER_POLYGON];
 		int nv = poly.vertCount;
 		for (int i = 0; i < nv; ++i)
-			System.arraycopy(tile.verts, poly.verts[i] * 3, verts, i * 3, 3);
+			System.arraycopy(tile.data.verts, poly.verts[i] * 3, verts, i * 3, 3);
 
 		boolean posOverPoly = false;
 		float[] closest = new float[3];
@@ -405,22 +402,26 @@ public class NavMeshQuery {
 		} else {
 			posOverPoly = true;
 		}
-		VectorPtr posV = new VectorPtr(pos);
-		// Find height at the location.
-		for (int j = 0; j < pd.triCount; ++j) {
-			int t = (pd.triBase + j) * 4;
-			VectorPtr[] v = new VectorPtr[3];
-			for (int k = 0; k < 3; ++k) {
-				if (tile.detailTris[t + k] < poly.vertCount)
-					v[k] = new VectorPtr(tile.verts, poly.verts[tile.detailTris[t + k]] * 3);
-				else
-					v[k] = new VectorPtr(tile.detailVerts,
-							(pd.vertBase + (tile.detailTris[t + k] - poly.vertCount)) * 3);
-			}
-			Tupple2<Boolean, Float> clp = closestHeightPointTriangle(posV, v[0], v[1], v[2]);
-			if (clp.first) {
-				closest[1] = clp.second;
-				break;
+		int ip = poly.index;
+		if (tile.data.detailMeshes != null && tile.data.detailMeshes.length > ip) {
+			PolyDetail pd = tile.data.detailMeshes[ip];
+			VectorPtr posV = new VectorPtr(pos);
+			// Find height at the location.
+			for (int j = 0; j < pd.triCount; ++j) {
+				int t = (pd.triBase + j) * 4;
+				VectorPtr[] v = new VectorPtr[3];
+				for (int k = 0; k < 3; ++k) {
+					if (tile.data.detailTris[t + k] < poly.vertCount)
+						v[k] = new VectorPtr(tile.data.verts, poly.verts[tile.data.detailTris[t + k]] * 3);
+					else
+						v[k] = new VectorPtr(tile.data.detailVerts,
+								(pd.vertBase + (tile.data.detailTris[t + k] - poly.vertCount)) * 3);
+				}
+				Tupple2<Boolean, Float> clp = closestHeightPointTriangle(posV, v[0], v[1], v[2]);
+				if (clp.first) {
+					closest[1] = clp.second;
+					break;
+				}
 			}
 		}
 		return new ClosesPointOnPolyResult(posOverPoly, closest);
@@ -455,7 +456,7 @@ public class NavMeshQuery {
 		float[] edget = new float[NavMesh.DT_VERTS_PER_POLYGON];
 		int nv = poly.vertCount;
 		for (int i = 0; i < nv; ++i)
-			System.arraycopy(tile.verts, poly.verts[i] * 3, verts, i * 3, 3);
+			System.arraycopy(tile.data.verts, poly.verts[i] * 3, verts, i * 3, 3);
 
 		float[] closest;
 		if (distancePtPolyEdgesSqr(pos, verts, nv, edged, edget)) {
@@ -492,24 +493,24 @@ public class NavMeshQuery {
 		MeshTile tile = tileAndPoly.first;
 		Poly poly = tileAndPoly.second;
 		if (poly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
-			VectorPtr v0 = new VectorPtr(tile.verts, poly.verts[0] * 3);
-			VectorPtr v1 = new VectorPtr(tile.verts, poly.verts[1] * 3);
+			VectorPtr v0 = new VectorPtr(tile.data.verts, poly.verts[0] * 3);
+			VectorPtr v1 = new VectorPtr(tile.data.verts, poly.verts[1] * 3);
 			float d0 = vDist2D(pos, v0);
 			float d1 = vDist2D(pos, v1);
 			float u = d0 / (d0 + d1);
 			return v0.get(1) + (v1.get(1) - v0.get(1)) * u;
 		} else {
 			int ip = poly.index;
-			PolyDetail pd = tile.detailMeshes[ip];
+			PolyDetail pd = tile.data.detailMeshes[ip];
 			for (int j = 0; j < pd.triCount; ++j) {
 				int t = (pd.triBase + j) * 4;
 				VectorPtr[] v = new VectorPtr[3];
 				for (int k = 0; k < 3; ++k) {
-					if (tile.detailTris[t + k] < poly.vertCount)
-						v[k] = new VectorPtr(tile.verts, poly.verts[tile.detailTris[t + k]] * 3);
+					if (tile.data.detailTris[t + k] < poly.vertCount)
+						v[k] = new VectorPtr(tile.data.verts, poly.verts[tile.data.detailTris[t + k]] * 3);
 					else
-						v[k] = new VectorPtr(tile.detailVerts,
-								(pd.vertBase + (tile.detailTris[t + k] - poly.vertCount)) * 3);
+						v[k] = new VectorPtr(tile.data.detailVerts,
+								(pd.vertBase + (tile.data.detailTris[t + k] - poly.vertCount)) * 3);
 				}
 				Tupple2<Boolean, Float> heightResult = closestHeightPointTriangle(pos, v[0], v[1], v[2]);
 				if (heightResult.first) {
@@ -561,7 +562,7 @@ public class NavMeshQuery {
 			if (posOverPoly) {
 				Tupple2<MeshTile, Poly> tilaAndPoly = m_nav.getTileAndPolyByRefUnsafe(polys.get(i));
 				MeshTile tile = tilaAndPoly.first;
-				d = Math.abs(diff[1]) - tile.header.walkableClimb;
+				d = Math.abs(diff[1]) - tile.data.header.walkableClimb;
 				d = d > 0 ? d * d : 0;
 			} else {
 				d = vLenSqr(diff);
@@ -580,11 +581,11 @@ public class NavMeshQuery {
 	// FIXME: (PP) duplicate?
 	protected List<Long> queryPolygonsInTile(MeshTile tile, float[] qmin, float[] qmax, QueryFilter filter) {
 		List<Long> polys = new ArrayList<>();
-		if (tile.bvTree != null) {
+		if (tile.data.bvTree != null) {
 			int nodeIndex = 0;
-			float[] tbmin = tile.header.bmin;
-			float[] tbmax = tile.header.bmax;
-			float qfac = tile.header.bvQuantFactor;
+			float[] tbmin = tile.data.header.bmin;
+			float[] tbmax = tile.data.header.bmax;
+			float qfac = tile.data.header.bvQuantFactor;
 			// Calculate quantized box
 			int[] bmin = new int[3];
 			int[] bmax = new int[3];
@@ -605,15 +606,15 @@ public class NavMeshQuery {
 
 			// Traverse tree
 			long base = m_nav.getPolyRefBase(tile);
-			int end = tile.header.bvNodeCount;
+			int end = tile.data.header.bvNodeCount;
 			while (nodeIndex < end) {
-				BVNode node = tile.bvTree[nodeIndex];
+				BVNode node = tile.data.bvTree[nodeIndex];
 				boolean overlap = overlapQuantBounds(bmin, bmax, node.bmin, node.bmax);
 				boolean isLeafNode = node.i >= 0;
 
 				if (isLeafNode && overlap) {
 					long ref = base | node.i;
-					if (filter.passFilter(ref, tile, tile.polys[node.i])) {
+					if (filter.passFilter(ref, tile, tile.data.polys[node.i])) {
 						polys.add(ref);
 					}
 				}
@@ -630,8 +631,8 @@ public class NavMeshQuery {
 			float[] bmin = new float[3];
 			float[] bmax = new float[3];
 			long base = m_nav.getPolyRefBase(tile);
-			for (int i = 0; i < tile.header.polyCount; ++i) {
-				Poly p = tile.polys[i];
+			for (int i = 0; i < tile.data.header.polyCount; ++i) {
+				Poly p = tile.data.polys[i];
 				// Do not return off-mesh connection polygons.
 				if (p.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION)
 					continue;
@@ -640,12 +641,12 @@ public class NavMeshQuery {
 					continue;
 				// Calc polygon bounds.
 				int v = p.verts[0] * 3;
-				vCopy(bmin, tile.verts, v);
-				vCopy(bmax, tile.verts, v);
+				vCopy(bmin, tile.data.verts, v);
+				vCopy(bmax, tile.data.verts, v);
 				for (int j = 1; j < p.vertCount; ++j) {
 					v = p.verts[j] * 3;
-					vMin(bmin, tile.verts, v);
-					vMax(bmax, tile.verts, v);
+					vMin(bmin, tile.data.verts, v);
+					vMax(bmax, tile.data.verts, v);
 				}
 				if (overlapBounds(qmin, qmax, bmin, bmax)) {
 					polys.add(ref);
@@ -927,7 +928,7 @@ public class NavMeshQuery {
 			// limiting to several times the character radius yields nice results. It is not sensitive
 			// so it is enough to compute it from the first tile.
 			MeshTile tile = m_nav.getTileByRef(startRef);
-			float agentRadius = tile.header.walkableRadius;
+			float agentRadius = tile.data.header.walkableRadius;
 			m_query.raycastLimitSqr = sqr(agentRadius * NavMesh.DT_RAY_CAST_LIMIT_PROPORTIONS);
 		}
 
@@ -1607,7 +1608,7 @@ public class NavMeshQuery {
 			// Collect vertices.
 			int nverts = curPoly.vertCount;
 			for (int i = 0; i < nverts; ++i)
-				System.arraycopy(curTile.verts, curPoly.verts[i] * 3, verts, i * 3, 3);
+				System.arraycopy(curTile.data.verts, curPoly.verts[i] * 3, verts, i * 3, 3);
 
 			// If target is inside the poly, stop search.
 			if (pointInPolygon(endPos, verts, nverts)) {
@@ -1642,7 +1643,7 @@ public class NavMeshQuery {
 				} else if (curPoly.neis[j] != 0) {
 					int idx = curPoly.neis[j] - 1;
 					long ref = m_nav.getPolyRefBase(curTile) | idx;
-					if (filter.passFilter(ref, curTile, curTile.polys[idx])) {
+					if (filter.passFilter(ref, curTile, curTile.data.polys[idx])) {
 						// Internal edge, encode id.
 						neis[nneis++] = ref;
 					}
@@ -1762,8 +1763,8 @@ public class NavMeshQuery {
 			for (int i = fromPoly.firstLink; i != NavMesh.DT_NULL_LINK; i = fromTile.links.get(i).next) {
 				if (fromTile.links.get(i).ref == to) {
 					int v = fromTile.links.get(i).edge;
-					System.arraycopy(fromTile.verts, fromPoly.verts[v] * 3, left, 0, 3);
-					System.arraycopy(fromTile.verts, fromPoly.verts[v] * 3, right, 0, 3);
+					System.arraycopy(fromTile.data.verts, fromPoly.verts[v] * 3, left, 0, 3);
+					System.arraycopy(fromTile.data.verts, fromPoly.verts[v] * 3, right, 0, 3);
 					return new PortalResult(left, right, fromType, toType);
 				}
 			}
@@ -1774,8 +1775,8 @@ public class NavMeshQuery {
 			for (int i = toPoly.firstLink; i != NavMesh.DT_NULL_LINK; i = toTile.links.get(i).next) {
 				if (toTile.links.get(i).ref == from) {
 					int v = toTile.links.get(i).edge;
-					System.arraycopy(toTile.verts, toPoly.verts[v] * 3, left, 0, 3);
-					System.arraycopy(toTile.verts, toPoly.verts[v] * 3, right, 0, 3);
+					System.arraycopy(toTile.data.verts, toPoly.verts[v] * 3, left, 0, 3);
+					System.arraycopy(toTile.data.verts, toPoly.verts[v] * 3, right, 0, 3);
 					return new PortalResult(left, right, fromType, toType);
 				}
 			}
@@ -1785,8 +1786,8 @@ public class NavMeshQuery {
 		// Find portal vertices.
 		int v0 = fromPoly.verts[link.edge];
 		int v1 = fromPoly.verts[(link.edge + 1) % (int) fromPoly.vertCount];
-		System.arraycopy(fromTile.verts, v0 * 3, left, 0, 3);
-		System.arraycopy(fromTile.verts, v1 * 3, right, 0, 3);
+		System.arraycopy(fromTile.data.verts, v0 * 3, left, 0, 3);
+		System.arraycopy(fromTile.data.verts, v1 * 3, right, 0, 3);
 
 		// If the link is at tile boundary, dtClamp the vertices to
 		// the link width.
@@ -1796,8 +1797,8 @@ public class NavMeshQuery {
 				float s = 1.0f / 255.0f;
 				float tmin = link.bmin * s;
 				float tmax = link.bmax * s;
-				left = vLerp(fromTile.verts, v0 * 3, v1 * 3, tmin);
-				right = vLerp(fromTile.verts, v0 * 3, v1 * 3, tmax);
+				left = vLerp(fromTile.data.verts, v0 * 3, v1 * 3, tmin);
+				right = vLerp(fromTile.data.verts, v0 * 3, v1 * 3, tmax);
 			}
 		}
 
@@ -1920,7 +1921,7 @@ public class NavMeshQuery {
 			// Collect vertices.
 			int nv = 0;
 			for (int i = 0; i < (int) poly.vertCount; ++i) {
-				System.arraycopy(tile.verts, poly.verts[i] * 3, verts, nv * 3, 3);
+				System.arraycopy(tile.data.verts, poly.verts[i] * 3, verts, nv * 3, 3);
 				nv++;
 			}
 
@@ -1992,10 +1993,10 @@ public class NavMeshQuery {
 				// Check that the intersection lies inside the link portal.
 				if (link.side == 0 || link.side == 4) {
 					// Calculate link size.
-					float lmin = tile.verts[left + 2]
-							+ (tile.verts[right + 2] - tile.verts[left + 2]) * (link.bmin * s);
-					float lmax = tile.verts[left + 2]
-							+ (tile.verts[right + 2] - tile.verts[left + 2]) * (link.bmax * s);
+					float lmin = tile.data.verts[left + 2]
+							+ (tile.data.verts[right + 2] - tile.data.verts[left + 2]) * (link.bmin * s);
+					float lmax = tile.data.verts[left + 2]
+							+ (tile.data.verts[right + 2] - tile.data.verts[left + 2]) * (link.bmax * s);
 					if (lmin > lmax) {
 						float temp = lmin;
 						lmin = lmax;
@@ -2010,8 +2011,8 @@ public class NavMeshQuery {
 					}
 				} else if (link.side == 2 || link.side == 6) {
 					// Calculate link size.
-					float lmin = tile.verts[left] + (tile.verts[right] - tile.verts[left]) * (link.bmin * s);
-					float lmax = tile.verts[left] + (tile.verts[right] - tile.verts[left]) * (link.bmax * s);
+					float lmin = tile.data.verts[left] + (tile.data.verts[right] - tile.data.verts[left]) * (link.bmin * s);
+					float lmax = tile.data.verts[left] + (tile.data.verts[right] - tile.data.verts[left]) * (link.bmax * s);
 					if (lmin > lmax) {
 						float temp = lmin;
 						lmin = lmax;
@@ -2516,7 +2517,7 @@ public class NavMeshQuery {
 				// Collect vertices of the neighbour poly.
 				int npa = neighbourPoly.vertCount;
 				for (int k = 0; k < npa; ++k)
-					System.arraycopy(neighbourTile.verts, neighbourPoly.verts[k] * 3, pa, k * 3, 3);
+					System.arraycopy(neighbourTile.data.verts, neighbourPoly.verts[k] * 3, pa, k * 3, 3);
 
 				boolean overlap = false;
 				for (int j = 0; j < resultRef.size(); ++j) {
@@ -2541,7 +2542,7 @@ public class NavMeshQuery {
 					// Get vertices and test overlap
 					int npb = pastPoly.vertCount;
 					for (int k = 0; k < npb; ++k)
-						System.arraycopy(pastTile.verts, pastPoly.verts[k] * 3, pb, k * 3, 3);
+						System.arraycopy(pastTile.data.verts, pastPoly.verts[k] * 3, pb, k * 3, 3);
 
 					if (overlapPolyPoly2D(pa, npa, pb, npb)) {
 						overlap = true;
@@ -2637,15 +2638,15 @@ public class NavMeshQuery {
 				if (poly.neis[j] != 0) {
 					int idx = (poly.neis[j] - 1);
 					neiRef = m_nav.getPolyRefBase(tile) | idx;
-					if (!filter.passFilter(neiRef, tile, tile.polys[idx]))
+					if (!filter.passFilter(neiRef, tile, tile.data.polys[idx]))
 						neiRef = 0;
 				}
 
 				int vj = poly.verts[j] * 3;
 				int vi = poly.verts[i] * 3;
 				float[] seg = new float[6];
-				System.arraycopy(tile.verts, vj, seg, 0, 3);
-				System.arraycopy(tile.verts, vi, seg, 3, 3);
+				System.arraycopy(tile.data.verts, vj, seg, 0, 3);
+				System.arraycopy(tile.data.verts, vi, seg, 3, 3);
 				segmentVerts.add(seg);
 				segmentRefs.add(neiRef);
 				continue;
@@ -2664,8 +2665,8 @@ public class NavMeshQuery {
 					float tmin = ints.get(k).tmin / 255.0f;
 					float tmax = ints.get(k).tmax / 255.0f;
 					float[] seg = new float[6];
-					System.arraycopy(vLerp(tile.verts, vj, vi, tmin), 0, seg, 0, 3);
-					System.arraycopy(vLerp(tile.verts, vj, vi, tmax), 0, seg, 3, 3);
+					System.arraycopy(vLerp(tile.data.verts, vj, vi, tmin), 0, seg, 0, 3);
+					System.arraycopy(vLerp(tile.data.verts, vj, vi, tmax), 0, seg, 3, 3);
 					segmentVerts.add(seg);
 					segmentRefs.add(ints.get(k).ref);
 				}
@@ -2677,8 +2678,8 @@ public class NavMeshQuery {
 					float tmin = imin / 255.0f;
 					float tmax = imax / 255.0f;
 					float[] seg = new float[6];
-					System.arraycopy(vLerp(tile.verts, vj, vi, tmin), 0, seg, 0, 3);
-					System.arraycopy(vLerp(tile.verts, vj, vi, tmax), 0, seg, 3, 3);
+					System.arraycopy(vLerp(tile.data.verts, vj, vi, tmin), 0, seg, 0, 3);
+					System.arraycopy(vLerp(tile.data.verts, vj, vi, tmax), 0, seg, 3, 3);
 					segmentVerts.add(seg);
 					segmentRefs.add(0L);
 				}
@@ -2778,14 +2779,14 @@ public class NavMeshQuery {
 					// Internal edge
 					int idx = (bestPoly.neis[j] - 1);
 					long ref = m_nav.getPolyRefBase(bestTile) | idx;
-					if (filter.passFilter(ref, bestTile, bestTile.polys[idx]))
+					if (filter.passFilter(ref, bestTile, bestTile.data.polys[idx]))
 						continue;
 				}
 
 				// Calc distance to the edge.
 				int vj = bestPoly.verts[j] * 3;
 				int vi = bestPoly.verts[i] * 3;
-				Tupple2<Float, Float> distseg = distancePtSegSqr2D(centerPos, bestTile.verts, vj, vi);
+				Tupple2<Float, Float> distseg = distancePtSegSqr2D(centerPos, bestTile.data.verts, vj, vi);
 				float distSqr = distseg.first;
 				float tseg = distseg.second;
 
@@ -2796,9 +2797,9 @@ public class NavMeshQuery {
 				// Hit wall, update radius.
 				radiusSqr = distSqr;
 				// Calculate hit pos.
-				hitPos[0] = bestTile.verts[vj] + (bestTile.verts[vi] - bestTile.verts[vj]) * tseg;
-				hitPos[1] = bestTile.verts[vj + 1] + (bestTile.verts[vi + 1] - bestTile.verts[vj + 1]) * tseg;
-				hitPos[2] = bestTile.verts[vj + 2] + (bestTile.verts[vi + 2] - bestTile.verts[vj + 2]) * tseg;
+				hitPos[0] = bestTile.data.verts[vj] + (bestTile.data.verts[vi] - bestTile.data.verts[vj]) * tseg;
+				hitPos[1] = bestTile.data.verts[vj + 1] + (bestTile.data.verts[vi + 1] - bestTile.data.verts[vj + 1]) * tseg;
+				hitPos[2] = bestTile.data.verts[vj + 2] + (bestTile.data.verts[vi + 2] - bestTile.data.verts[vj + 2]) * tseg;
 			}
 
 			for (int i = bestPoly.firstLink; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
@@ -2820,7 +2821,7 @@ public class NavMeshQuery {
 				// Calc distance to the edge.
 				int va = bestPoly.verts[link.edge] * 3;
 				int vb = bestPoly.verts[(link.edge + 1) % bestPoly.vertCount] * 3;
-				Tupple2<Float, Float> distseg = distancePtSegSqr2D(centerPos, bestTile.verts, va, vb);
+				Tupple2<Float, Float> distseg = distancePtSegSqr2D(centerPos, bestTile.data.verts, va, vb);
 				float distSqr = distseg.first;
 				// If the circle is not touching the next polygon, skip it.
 				if (distSqr > radiusSqr)

@@ -4,6 +4,8 @@ import org.recast4j.recast.RecastConstants.PartitionType;
 
 public class RecastBuilder {
 
+	private InputGeom m_geom;
+	private PartitionType m_partitionType;
 	private float m_cellSize;
 	private float m_cellHeight;
 	private float m_agentHeight;
@@ -14,31 +16,36 @@ public class RecastBuilder {
 	private int m_regionMergeSize;
 	private float m_edgeMaxLen;
 	private float m_edgeMaxError;
-	private float m_vertsPerPoly;
+	private int m_vertsPerPoly;
 	private float m_detailSampleDist;
-	private PartitionType m_partitionType;
 	private float m_detailSampleMaxError;
-	private InputGeom m_geom;
 	private PolyMesh m_pmesh;
 	private PolyMeshDetail m_dmesh;
 
 	public RecastBuilder() {
-		m_cellSize = 0.3f;
-		m_cellHeight = 0.2f;
-		m_agentHeight = 2.0f;
-		m_agentRadius = 0.6f;
-		m_agentMaxClimb = 0.9f;
-		m_agentMaxSlope = 45.0f;
-		m_regionMinSize = 8;
-		m_regionMergeSize = 20;
-		m_edgeMaxLen = 12.0f;
-		m_edgeMaxError = 1.3f;
-		m_vertsPerPoly = 6.0f;
-		m_detailSampleDist = 6.0f;
-		m_detailSampleMaxError = 1.0f;
-		m_partitionType = PartitionType.WATERSHED;
-		ObjImporter importer = new ObjImporter();
-		m_geom = importer.load(getClass().getResourceAsStream("dungeon.obj"));
+		this(new ObjImporter().load(RecastBuilder.class.getResourceAsStream("dungeon.obj")), PartitionType.WATERSHED,
+				0.3f, 0.2f, 2.0f, 0.6f, 0.9f, 45.0f, 8, 20, 12.0f, 1.3f, 6, 6.0f, 1.0f);
+	}
+
+	public RecastBuilder(InputGeom m_geom, PartitionType m_partitionType, float m_cellSize, float m_cellHeight,
+			float m_agentHeight, float m_agentRadius, float m_agentMaxClimb, float m_agentMaxSlope, int m_regionMinSize,
+			int m_regionMergeSize, float m_edgeMaxLen, float m_edgeMaxError, int m_vertsPerPoly,
+			float m_detailSampleDist, float m_detailSampleMaxError) {
+		this.m_geom = m_geom;
+		this.m_cellSize = m_cellSize;
+		this.m_cellHeight = m_cellHeight;
+		this.m_agentHeight = m_agentHeight;
+		this.m_agentRadius = m_agentRadius;
+		this.m_agentMaxClimb = m_agentMaxClimb;
+		this.m_agentMaxSlope = m_agentMaxSlope;
+		this.m_regionMinSize = m_regionMinSize;
+		this.m_regionMergeSize = m_regionMergeSize;
+		this.m_edgeMaxLen = m_edgeMaxLen;
+		this.m_edgeMaxError = m_edgeMaxError;
+		this.m_vertsPerPoly = m_vertsPerPoly;
+		this.m_detailSampleDist = m_detailSampleDist;
+		this.m_partitionType = m_partitionType;
+		this.m_detailSampleMaxError = m_detailSampleMaxError;
 	}
 
 	public void build() {
@@ -70,7 +77,7 @@ public class RecastBuilder {
 																		// area
 																		// =
 																		// size*size
-		m_cfg.maxVertsPerPoly = (int) m_vertsPerPoly;
+		m_cfg.maxVertsPerPoly = m_vertsPerPoly;
 		m_cfg.detailSampleDist = m_detailSampleDist < 0.9f ? 0 : m_cellSize * m_detailSampleDist;
 		m_cfg.detailSampleMaxError = m_cellHeight * m_detailSampleMaxError;
 
@@ -220,4 +227,5 @@ public class RecastBuilder {
 	public PolyMeshDetail getMeshDetail() {
 		return m_dmesh;
 	}
+
 }

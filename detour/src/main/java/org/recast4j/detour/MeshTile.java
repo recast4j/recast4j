@@ -27,26 +27,10 @@ public class MeshTile {
 	final int index;
 	/** Counter describing modifications to the tile. */
 	int salt;
-	/** The tile header. */
-	MeshHeader header;
-	/** The tile polygons. [Size: MeshHeader::polyCount] */
-	Poly[] polys;
-	/** The tile vertices. [Size: MeshHeader::vertCount] */
-	float[] verts; 
+	/** The tile data. */
+	MeshData data;
 	/** The tile links. [Size: MeshHeader::maxLinkCount] */
 	List<Link> links;
-	/** The tile's detail sub-meshes. [Size: MeshHeader::detailMeshCount] */
-	PolyDetail[] detailMeshes; /// < 
-	/** The detail mesh's unique vertices. [(x, y, z) * MeshHeader::detailVertCount] */
-	float[] detailVerts;
-	/** The detail mesh's triangles. [(vertA, vertB, vertC) * MeshHeader::detailTriCount] */
-	int[] detailTris;
-	/** The tile bounding volume nodes. [Size: MeshHeader::bvNodeCount] (Will be null if bounding volumes are disabled.) */
-	BVNode[] bvTree;
-	/** The tile off-mesh connections. [Size: MeshHeader::offMeshConCount] */
-	OffMeshConnection[] offMeshCons;
-	/** The tile data. (Not directly accessed under normal situations.) */
-	NavMeshData data;
 	/** Tile flags. (See: #dtTileFlags) */
 	int flags;
 	/** The next free tile, or the next tile in the spatial grid. */
