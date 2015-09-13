@@ -22,11 +22,6 @@ public class RecastBuilder {
 	private PolyMesh m_pmesh;
 	private PolyMeshDetail m_dmesh;
 
-	public RecastBuilder() {
-		this(new ObjImporter().load(RecastBuilder.class.getResourceAsStream("dungeon.obj")), PartitionType.WATERSHED,
-				0.3f, 0.2f, 2.0f, 0.6f, 0.9f, 45.0f, 8, 20, 12.0f, 1.3f, 6, 6.0f, 1.0f);
-	}
-
 	public RecastBuilder(InputGeom m_geom, PartitionType m_partitionType, float m_cellSize, float m_cellHeight,
 			float m_agentHeight, float m_agentRadius, float m_agentMaxClimb, float m_agentMaxSlope, int m_regionMinSize,
 			int m_regionMergeSize, float m_edgeMaxLen, float m_edgeMaxError, int m_vertsPerPoly,
