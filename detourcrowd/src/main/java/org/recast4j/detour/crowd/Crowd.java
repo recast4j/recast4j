@@ -25,25 +25,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import org.recast4j.detour.ClosesPointOnPolyResult;
+import org.recast4j.detour.FindNearestPolyResult;
+import org.recast4j.detour.FindPathResult;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.detour.QueryFilter;
+import org.recast4j.detour.Status;
 import org.recast4j.detour.VectorPtr;
+import org.recast4j.detour.crowd.CrowdAgent.CrowdAgentState;
 import org.recast4j.detour.crowd.ObstacleAvoidanceQuery.ObstacleAvoidanceParams;
 
 
 /*
-
-enum MoveRequestState
-{
-	DT_CROWDAGENT_TARGET_NONE = 0,
-	DT_CROWDAGENT_TARGET_FAILED,
-	DT_CROWDAGENT_TARGET_VALID,
-	DT_CROWDAGENT_TARGET_REQUESTING,
-	DT_CROWDAGENT_TARGET_WAITING_FOR_QUEUE,
-	DT_CROWDAGENT_TARGET_WAITING_FOR_PATH,
-	DT_CROWDAGENT_TARGET_VELOCITY,
-};
 
 
 struct dtCrowdAgentAnimation
@@ -108,60 +102,10 @@ class dtCrowd
 
 	inline int getAgentIndex(const dtCrowdAgent* agent) const  { return (int)(agent - m_agents); }
 
-	bool requestMoveTargetReplan(const int idx, dtPolyRef ref, const float* pos);
-
 	void purge();
 	
 public:
-	dtCrowd();
-	~dtCrowd();
 	
-	/// Initializes the crowd.  
-	///  @param[in]		maxAgents		The maximum number of agents the crowd can manage. [Limit: >= 1]
-	///  @param[in]		maxAgentRadius	The maximum radius of any agent that will be added to the crowd. [Limit: > 0]
-	///  @param[in]		nav				The navigation mesh to use for planning.
-	/// @return True if the initialization succeeded.
-	bool init(const int maxAgents, const float maxAgentRadius, dtNavMesh* nav);
-	
-	/// Sets the shared avoidance configuration for the specified index.
-	///  @param[in]		idx		The index. [Limits: 0 <= value < #DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS]
-	///  @param[in]		params	The new configuration.
-	void setObstacleAvoidanceParams(const int idx, const dtObstacleAvoidanceParams* params);
-
-	/// Gets the shared avoidance configuration for the specified index.
-	///  @param[in]		idx		The index of the configuration to retreive. 
-	///							[Limits:  0 <= value < #DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS]
-	/// @return The requested configuration.
-	const dtObstacleAvoidanceParams* getObstacleAvoidanceParams(const int idx) const;
-	
-	/// Gets the specified agent from the pool.
-	///	 @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
-	/// @return The requested agent.
-	const dtCrowdAgent* getAgent(const int idx);
-
-	/// Gets the specified agent from the pool.
-	///	 @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
-	/// @return The requested agent.
-	dtCrowdAgent* getEditableAgent(const int idx);
-
-	/// The maximum number of agents that can be managed by the object.
-	/// @return The maximum number of agents.
-	int getAgentCount() const;
-	
-	/// Adds a new agent to the crowd.
-	///  @param[in]		pos		The requested position of the agent. [(x, y, z)]
-	///  @param[in]		params	The configutation of the agent.
-	/// @return The index of the agent in the agent pool. Or -1 if the agent could not be added.
-	int addAgent(const float* pos, const dtCrowdAgentParams* params);
-
-	/// Updates the specified agent's configuration.
-	///  @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
-	///  @param[in]		params	The new agent configuration.
-	void updateAgentParameters(const int idx, const dtCrowdAgentParams* params);
-
-	/// Removes the agent from the crowd.
-	///  @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
-	void removeAgent(const int idx);
 	
 	/// Submits a new move request for the specified agent.
 	///  @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
@@ -219,17 +163,6 @@ public:
 	/// Gets the query object used by the crowd.
 	const dtNavMeshQuery* getNavMeshQuery() const { return m_navquery; }
 };
-
-/// Allocates a crowd object using the Detour allocator.
-/// @return A crowd object that is ready for initialization, or null on failure.
-///  @ingroup crowd
-dtCrowd* dtAllocCrowd();
-
-/// Frees the specified crowd object using the Detour allocator.
-///  @param[in]		ptr		A crowd object allocated using #dtAllocCrowd
-///  @ingroup crowd
-void dtFreeCrowd(dtCrowd* ptr);
-
 
 #endif // DETOURCROWD_H
 
@@ -375,43 +308,23 @@ public class Crowd {
 		float dist;		///< The distance between the current agent and the neighbor.
 	};
 
-
-	/// Configuration parameters for a crowd agent.
-	/// @ingroup crowd
-	class CrowdAgentParams
+	public enum MoveRequestState
 	{
-		float radius;						///< Agent radius. [Limit: >= 0]
-		float height;						///< Agent height. [Limit: > 0]
-		float maxAcceleration;				///< Maximum allowed acceleration. [Limit: >= 0]
-		float maxSpeed;						///< Maximum allowed speed. [Limit: >= 0]
-
-		/// Defines how close a collision element must be before it is considered for steering behaviors. [Limits: > 0]
-		float collisionQueryRange;
-
-		float pathOptimizationRange;		///< The path visibility optimization range. [Limit: > 0]
-
-		/// How aggresive the agent manager should be at avoiding collisions with this agent. [Limit: >= 0]
-		float separationWeight;
-
-		/// Flags that impact steering behavior. (See: #UpdateFlags)
-		int updateFlags;
-
-		/// The index of the avoidance configuration to use for the agent. 
-		/// [Limits: 0 <= value <= #DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS]
-		int obstacleAvoidanceType;	
-
-		/// The index of the query filter used by this agent.
-		int queryFilterType;
-
-		/// User defined data attached to the agent.
-		Object userData;
+		DT_CROWDAGENT_TARGET_UNKNOWN,
+		DT_CROWDAGENT_TARGET_NONE,
+		DT_CROWDAGENT_TARGET_FAILED,
+		DT_CROWDAGENT_TARGET_VALID,
+		DT_CROWDAGENT_TARGET_REQUESTING,
+		DT_CROWDAGENT_TARGET_WAITING_FOR_QUEUE,
+		DT_CROWDAGENT_TARGET_WAITING_FOR_PATH,
+		DT_CROWDAGENT_TARGET_VELOCITY
 	};
 
 
 	int m_maxAgents;
-	List<CrowdAgent> m_agents;
+	CrowdAgent[] m_agents;
 	List<CrowdAgent> m_activeAgents;
-	List<CrowdAgentAnimation> m_agentAnims;
+	CrowdAgentAnimation[] m_agentAnims;
 	PathQueue m_pathq;
 
 	ObstacleAvoidanceParams[] m_obstacleQueryParams = new ObstacleAvoidanceParams[DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS];
@@ -432,15 +345,6 @@ public class Crowd {
 
 	float tween(float t, float t0, float t1) {
 		return clamp((t - t0) / (t1 - t0), 0.0f, 1.0f);
-	}
-
-	public void addNeighbour(int idx, float dist, List<CrowdNeighbour> neis) {
-		// Insert neighbour based on the distance.
-		CrowdNeighbour nei = new CrowdNeighbour();
-		nei.idx = idx;
-		nei.dist = dist;
-		neis.add(nei);
-		Collections.sort(neis, (o1, o2) -> Float.compare(o1.dist, o2.dist));
 	}
 
 	public List<CrowdNeighbour> getNeighbours(float[] pos, float height, float range, CrowdAgent skip,
@@ -470,6 +374,15 @@ public class Crowd {
 
 	}
 
+	void addNeighbour(int idx, float dist, List<CrowdNeighbour> neis) {
+		// Insert neighbour based on the distance.
+		CrowdNeighbour nei = new CrowdNeighbour();
+		nei.idx = idx;
+		nei.dist = dist;
+		neis.add(nei);
+		Collections.sort(neis, (o1, o2) -> Float.compare(o1.dist, o2.dist));
+	}
+
 	public void addToOptQueue(CrowdAgent newag, List<CrowdAgent> agents) {
 		// Insert neighbour based on greatest time.
 		int slot = Collections.binarySearch(agents, newag,
@@ -480,7 +393,7 @@ public class Crowd {
 		agents.add(slot, newag);
 	}
 
-	public void addToPathQueue(CrowdAgent newag, List<CrowdAgent> agents) {
+	public List<CrowdAgent> addToPathQueue(CrowdAgent newag, List<CrowdAgent> agents) {
 		// Insert neighbour based on greatest time.
 		int slot = Collections.binarySearch(agents, newag,
 				(a1, a2) -> Float.compare(a2.targetReplanTime, a1.targetReplanTime));
@@ -488,12 +401,17 @@ public class Crowd {
 			slot = -slot - 1;
 		}
 		agents.add(slot, newag);
+		return agents;
 	}
 
-	// @par
 	///
+	/// Initializes the crowd.  
 	/// May be called more than once to purge and re-initialize the crowd.
-	void init(int maxAgents, float maxAgentRadius, NavMesh nav) {
+	///  @param[in]		maxAgents		The maximum number of agents the crowd can manage. [Limit: >= 1]
+	///  @param[in]		maxAgentRadius	The maximum radius of any agent that will be added to the crowd. [Limit: > 0]
+	///  @param[in]		nav				The navigation mesh to use for planning.
+	/// @return True if the initialization succeeded.
+	public void init(int maxAgents, float maxAgentRadius, NavMesh nav) {
 
 		m_maxAgents = maxAgents;
 		m_maxAgentRadius = maxAgentRadius;
@@ -503,6 +421,9 @@ public class Crowd {
 		m_obstacleQuery = new ObstacleAvoidanceQuery();
 		m_obstacleQuery.init(6, 8);
 
+		for (int i = 0; i < DT_CROWD_MAX_QUERY_FILTER_TYPE; i++) {
+			m_filters[i] = new QueryFilter();
+		}
 		// Init obstacle query params.
 		for (int i = 0; i < DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS; ++i) {
 			ObstacleAvoidanceParams params = m_obstacleQueryParams[i] = new ObstacleAvoidanceParams();
@@ -522,18 +443,18 @@ public class Crowd {
 		m_pathResult = new ArrayList<>();
 		m_pathq = new PathQueue();
 		m_pathq.init(MAX_PATHQUEUE_NODES, nav);
-		m_agents = new ArrayList<>();
+		m_agents = new CrowdAgent[m_maxAgents];
 		m_activeAgents = new ArrayList<>();
-		m_agentAnims = new ArrayList<>();
+		m_agentAnims = new CrowdAgentAnimation[m_maxAgents];
 		for (int i = 0; i < m_maxAgents; ++i) {
-			m_agents.add(new CrowdAgent());
-			m_agents.get(i).active = false;
-			m_agents.get(i).corridor.init();
+			m_agents[i] = new CrowdAgent();
+			m_agents[i].active = false;
+			m_agents[i].corridor.init();
 		}
 
 		for (int i = 0; i < m_maxAgents; ++i) {
-			m_agentAnims.add(new CrowdAgentAnimation());
-			m_agentAnims.get(i).active = false;
+			m_agentAnims[i] = new CrowdAgentAnimation();
+			m_agentAnims[i].active = false;
 		}
 
 		// The navquery is mostly used for local searches, no need for large
@@ -541,19 +462,389 @@ public class Crowd {
 		m_navquery = new NavMeshQuery(nav);
 	}
 
-	void setObstacleAvoidanceParams(int idx, ObstacleAvoidanceParams params) {
+	/// Sets the shared avoidance configuration for the specified index.
+	///  @param[in]		idx		The index. [Limits: 0 <= value < #DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS]
+	///  @param[in]		params	The new configuration.
+	public void setObstacleAvoidanceParams(int idx, ObstacleAvoidanceParams params) {
 		if (idx >= 0 && idx < DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS) {
 			m_obstacleQueryParams[idx] = params;
 		}
 	}
 
-	ObstacleAvoidanceParams getObstacleAvoidanceParams(int idx) {
+	/// Gets the shared avoidance configuration for the specified index.
+	///  @param[in]		idx		The index of the configuration to retreive. 
+	///							[Limits:  0 <= value < #DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS]
+	/// @return The requested configuration.
+	public ObstacleAvoidanceParams getObstacleAvoidanceParams(int idx) {
 		if (idx >= 0 && idx < DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS)
 			return m_obstacleQueryParams[idx];
 		return null;
 	}
 
+	/// The maximum number of agents that can be managed by the object.
+	/// @return The maximum number of agents.
 	int getAgentCount() {
 		return m_maxAgents;
 	}
+
+	/// Gets the specified agent from the pool.
+	///	 @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
+	/// @return The requested agent.
+	/// Agents in the pool may not be in use.  Check #dtCrowdAgent.active before using the returned object.
+	public CrowdAgent getAgent(int idx) {
+		return idx < 0 || idx >= m_agents.length ? null : m_agents[idx];
+	}
+
+	/// 
+	/// Gets the specified agent from the pool.
+	///	 @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
+	/// @return The requested agent.
+	/// Agents in the pool may not be in use.  Check #dtCrowdAgent.active before using the returned object.
+	public CrowdAgent getEditableAgent(int idx) {
+		return idx < 0 || idx >= m_agents.length ? null : m_agents[idx];
+	}
+
+	/// Updates the specified agent's configuration.
+	///  @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
+	///  @param[in]		params	The new agent configuration.
+	public void updateAgentParameters(int idx, CrowdAgentParams params) {
+		if (idx < 0 || idx >= m_maxAgents)
+			return;
+		m_agents[idx].params = params;
+	}
+
+	/// Adds a new agent to the crowd.
+	///  @param[in]		pos		The requested position of the agent. [(x, y, z)]
+	///  @param[in]		params	The configutation of the agent.
+	/// @return The index of the agent in the agent pool. Or -1 if the agent could not be added.
+	/// The agent's position will be constrained to the surface of the navigation mesh.
+	public int addAgent(float[] pos, CrowdAgentParams params) {
+		// Find empty slot.
+		int idx = -1;
+		for (int i = 0; i < m_maxAgents; ++i) {
+			if (!m_agents[i].active) {
+				idx = i;
+				break;
+			}
+		}
+		if (idx == -1)
+			return -1;
+
+		CrowdAgent ag = m_agents[idx];
+
+		updateAgentParameters(idx, params);
+
+		// Find nearest position on navmesh and place the agent there.
+		FindNearestPolyResult nearest = m_navquery.findNearestPoly(pos, m_ext, m_filters[ag.params.queryFilterType]);
+
+		ag.corridor.reset(nearest.getNearestRef(), nearest.getNearestPos());
+		ag.boundary.reset();
+		ag.partial = false;
+
+		ag.topologyOptTime = 0;
+		ag.targetReplanTime = 0;
+		ag.nneis = 0;
+
+		vSet(ag.dvel, 0, 0, 0);
+		vSet(ag.nvel, 0, 0, 0);
+		vSet(ag.vel, 0, 0, 0);
+		vCopy(ag.npos, nearest.getNearestPos());
+
+		ag.desiredSpeed = 0;
+
+		if (nearest.getNearestRef() != 0)
+			ag.state = CrowdAgentState.DT_CROWDAGENT_STATE_WALKING;
+		else
+			ag.state = CrowdAgentState.DT_CROWDAGENT_STATE_INVALID;
+
+		ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_NONE;
+
+		ag.active = true;
+
+		return idx;
+	}
+
+
+	/// Removes the agent from the crowd.
+	///  @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
+	///
+	/// The agent is deactivated and will no longer be processed.  Its #dtCrowdAgent object
+	/// is not removed from the pool.  It is marked as inactive so that it is available for reuse.
+	void removeAgent(int idx) {
+		if (idx >= 0 && idx < m_maxAgents) {
+			m_agents[idx].active = false;
+		}
+	}
+
+	protected boolean requestMoveTargetReplan(int idx, long ref, float[] pos) {
+		if (idx < 0 || idx >= m_maxAgents)
+			return false;
+
+		CrowdAgent ag = m_agents[idx];
+
+		ag.setTarget(ref, pos);
+		ag.targetReplan = true;
+
+		return true;
+	}
+
+
+	/// Submits a new move request for the specified agent.
+	///  @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
+	///  @param[in]		ref		The position's polygon reference.
+	///  @param[in]		pos		The position within the polygon. [(x, y, z)]
+	/// @return True if the request was successfully submitted.
+	/// 
+	/// This method is used when a new target is set.
+	/// 
+	/// The position will be constrained to the surface of the navigation mesh.
+	///
+	/// The request will be processed during the next #update().
+	public boolean requestMoveTarget(int idx, long ref, float[] pos)
+	{
+		if (idx < 0 || idx >= m_maxAgents)
+			return false;
+		if (ref == 0)
+			return false;
+
+		CrowdAgent ag = m_agents[idx];
+		
+		// Initialize request.
+		ag.setTarget(ref, pos);
+		ag.targetReplan = true;
+
+		return true;
+	}
+
+	/// Submits a new move request for the specified agent.
+	///  @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
+	///  @param[in]		vel		The movement velocity. [(x, y, z)]
+	/// @return True if the request was successfully submitted.
+	public boolean requestMoveVelocity(int idx, float[] vel) {
+		if (idx < 0 || idx >= m_maxAgents)
+			return false;
+
+		CrowdAgent ag = m_agents[idx];
+
+		// Initialize request.
+		ag.targetRef = 0;
+		vCopy(ag.targetPos, vel);
+		ag.targetPathqRef = PathQueue.DT_PATHQ_INVALID;
+		ag.targetReplan = false;
+		ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY;
+
+		return true;
+	}
+	
+
+	/// Resets any request for the specified agent.
+	///  @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
+	/// @return True if the request was successfully reseted.
+	public boolean resetMoveTarget(int idx) {
+		if (idx < 0 || idx >= m_maxAgents)
+			return false;
+
+		CrowdAgent ag = m_agents[idx];
+
+		// Initialize request.
+		ag.targetRef = 0;
+		vSet(ag.targetPos, 0, 0, 0);
+		vSet(ag.dvel, 0, 0, 0);
+		ag.targetPathqRef = PathQueue.DT_PATHQ_INVALID;
+		ag.targetReplan = false;
+		ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_NONE;
+		return true;
+	}
+
+	/// Gets the active agents int the agent pool.
+	///  @param[out]	agents		An array of agent pointers. [(#dtCrowdAgent *) * maxAgents]
+	///  @param[in]		maxAgents	The size of the crowd agent array.
+	/// @return The number of agents returned in @p agents.
+	public List<CrowdAgent> getActiveAgents() {
+		List<CrowdAgent> agents = new ArrayList<>(m_maxAgents);
+		for (int i = 0; i < m_maxAgents; ++i) {
+			if (m_agents[i].active) {
+				agents.add(m_agents[i]);
+			}
+		}
+		return agents;
+	}
+
+
+	public void updateMoveRequest(float dt) {
+		List<CrowdAgent> queue = new ArrayList<>();
+
+		// Fire off new requests.
+		for (int i = 0; i < m_maxAgents; ++i) {
+			CrowdAgent ag = m_agents[i];
+			if (!ag.active)
+				continue;
+			if (ag.state == CrowdAgentState.DT_CROWDAGENT_STATE_INVALID)
+				continue;
+			if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_NONE
+					|| ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY)
+				continue;
+
+			if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_REQUESTING) {
+				List<Long> path = ag.corridor.getPath();
+				if (path.isEmpty()) {
+					throw new IllegalArgumentException("Empty path");
+				}
+				// Quick search towards the goal.
+				int MAX_ITER = 20;
+				m_navquery.initSlicedFindPath(path.get(0), ag.targetRef, ag.npos, ag.targetPos,
+						m_filters[ag.params.queryFilterType], 0);
+				m_navquery.updateSlicedFindPath(MAX_ITER);
+				FindPathResult pathFound;
+				if (ag.targetReplan) // && npath > 10)
+				{
+					// Try to use existing steady path during replan if possible.
+					pathFound = m_navquery.finalizeSlicedFindPathPartial(path);
+				} else {
+					// Try to move towards target when goal changes.
+					pathFound = m_navquery.finalizeSlicedFindPath();
+				}
+
+				float[] reqPos = new float[3];
+				List<Long> reqPath = pathFound.getRefs();
+				if (!pathFound.getStatus().isFailed() && !pathFound.getRefs().isEmpty()) {
+					// In progress or succeed.
+					if (reqPath.get(reqPath.size() - 1) != ag.targetRef) {
+						// Partial path, constrain target position inside the last polygon.
+						ClosesPointOnPolyResult closest = m_navquery.closestPointOnPoly(
+								pathFound.getRefs().get(pathFound.getRefs().size() - 1), ag.targetPos);
+						reqPos = closest.getClosest();
+					} else {
+						vCopy(reqPos, ag.targetPos);
+					}
+				} else {
+					// Could not find path, start the request from current location.
+					vCopy(reqPos, ag.npos);
+					reqPath = new ArrayList<>();
+					reqPath.add(path.get(0));
+				}
+
+				ag.corridor.setCorridor(reqPos, reqPath);
+				ag.boundary.reset();
+				ag.partial = false;
+
+				if (reqPath.get(reqPath.size() - 1) == ag.targetRef) {
+					ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_VALID;
+					ag.targetReplanTime = 0.0f;
+				} else {
+					// The path is longer or potentially unreachable, full plan.
+					ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_QUEUE;
+				}
+			}
+
+			if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_QUEUE) {
+				queue = addToPathQueue(ag, queue);
+			}
+		}
+
+		for (int i = 0; i < queue.size(); ++i) {
+			CrowdAgent ag = queue.get(i);
+			ag.targetPathqRef = m_pathq.request(ag.corridor.getLastPoly(), ag.targetRef, ag.corridor.getTarget(),
+					ag.targetPos, m_filters[ag.params.queryFilterType]);
+			if (ag.targetPathqRef != PathQueue.DT_PATHQ_INVALID)
+				ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_PATH;
+		}
+
+		// Update requests.
+		m_pathq.update(MAX_ITERS_PER_UPDATE);
+
+		// Process path results.
+		for (int i = 0; i < m_maxAgents; ++i) {
+			CrowdAgent ag = m_agents[i];
+			if (!ag.active)
+				continue;
+			if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_NONE
+					|| ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY)
+				continue;
+
+			if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_PATH) {
+				// Poll path queue.
+				Status status = m_pathq.getRequestStatus(ag.targetPathqRef);
+				if (status.isFailed()) {
+					// Path find failed, retry if the target location is still valid.
+					ag.targetPathqRef = PathQueue.DT_PATHQ_INVALID;
+					if (ag.targetRef != 0)
+						ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_REQUESTING;
+					else
+						ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_FAILED;
+					ag.targetReplanTime = 0.0f;
+				} else if (status.isSuccess()) {
+					List<Long> path = ag.corridor.getPath();
+					if (path.isEmpty()) {
+						throw new IllegalArgumentException("Empty path");
+					}
+
+					// Apply results.
+					float[] targetPos = new float[3];
+					vCopy(targetPos, ag.targetPos);
+
+					boolean valid = true;
+					FindPathResult fpr = m_pathq.getPathResult(ag.targetPathqRef);
+					List<Long> res = fpr.getRefs();
+					if (fpr.getStatus().isFailed() || res.isEmpty())
+						valid = false;
+
+					if (fpr.getStatus() == Status.PARTIAL_RESULT)
+						ag.partial = true;
+					else
+						ag.partial = false;
+
+					// Merge result and existing path.
+					// The agent might have moved whilst the request is
+					// being processed, so the path may have changed.
+					// We assume that the end of the path is at the same location
+					// where the request was issued.
+
+					// The last ref in the old path should be the same as
+					// the location where the request was issued..
+					if (valid && path.get(path.size() - 1).longValue() != res.get(0).longValue())
+						valid = false;
+
+					if (valid) {
+						// Put the old path infront of the old path.
+						if (path.size() > 1) {
+							res.addAll(0, path.subList(1, path.size()));
+							// Remove trackbacks
+							for (int j = 1; j < res.size() - 1; ++j) {
+								if (res.get(j - 1) == res.get(j + 1)) {
+									res.remove(j);
+									res.remove(j + 1);
+								}
+							}
+
+						}
+
+						// Check for partial path.
+						if (res.get(res.size() - 1) != ag.targetRef) {
+							// Partial path, constrain target position inside the last polygon.
+							ClosesPointOnPolyResult nearest = m_navquery.closestPointOnPoly(res.get(res.size() - 1),
+									targetPos);
+							vCopy(targetPos, nearest.getClosest());
+						}
+					}
+
+					if (valid) {
+						// Set current corridor.
+						ag.corridor.setCorridor(targetPos, res);
+						// Force to update boundary.
+						ag.boundary.reset();
+						ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_VALID;
+					} else {
+						// Something went wrong.
+						ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_FAILED;
+					}
+
+					ag.targetReplanTime = 0.0f;
+				}
+			}
+		}
+
+	}
+
 }
+

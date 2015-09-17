@@ -535,9 +535,4 @@ public class PathCorridor {
 	 */
 	public List<Long> getPath() { return m_path; }
 
-	/**
-	 * The number of polygons in the current corridor path.
-	 * @return The number of polygons in the current corridor path.
-	 */
-	public int getPathCount() { return m_path.size(); } 	
 }

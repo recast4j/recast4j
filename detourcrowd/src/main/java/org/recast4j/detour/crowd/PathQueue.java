@@ -32,7 +32,7 @@ import org.recast4j.detour.UpdateSlicedPathResult;
 public class PathQueue {
 
 	private static final int MAX_QUEUE = 8;
-	private static final int DT_PATHQ_INVALID = 0;
+	static final int DT_PATHQ_INVALID = 0;
 	private static final int MAX_KEEP_ALIVE = 2; // in update ticks.
 
 	PathQuery[] m_queue = new PathQuery[MAX_QUEUE];
@@ -78,7 +78,7 @@ public class PathQueue {
 			}
 
 			// Handle completed request.
-			if (q.status.isSuccess() || q.status.isFailed()) {
+			if (q.status != null && (q.status.isSuccess() || q.status.isFailed())) {
 				// If the path result has not been read in few frames, free the slot.
 				q.keepAlive++;
 				if (q.keepAlive > MAX_KEEP_ALIVE) {
@@ -146,7 +146,7 @@ public class PathQueue {
 
 	}
 
-	Status getStatus(long ref) {
+	Status getRequestStatus(long ref) {
 		for (int i = 0; i < MAX_QUEUE; ++i) {
 			if (m_queue[i].ref == ref)
 				return m_queue[i].status;

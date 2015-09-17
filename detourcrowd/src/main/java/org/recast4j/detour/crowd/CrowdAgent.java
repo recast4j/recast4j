@@ -19,6 +19,7 @@ freely, subject to the following restrictions:
 package org.recast4j.detour.crowd;
 
 import static org.recast4j.detour.DetourCommon.vAdd;
+import static org.recast4j.detour.DetourCommon.vCopy;
 import static org.recast4j.detour.DetourCommon.vDist2D;
 import static org.recast4j.detour.DetourCommon.vDist2DSqr;
 import static org.recast4j.detour.DetourCommon.vLen;
@@ -30,8 +31,8 @@ import static org.recast4j.detour.DetourCommon.vSub;
 
 import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.detour.VectorPtr;
-import org.recast4j.detour.crowd.Crowd.CrowdAgentParams;
 import org.recast4j.detour.crowd.Crowd.CrowdNeighbour;
+import org.recast4j.detour.crowd.Crowd.MoveRequestState;
 
 /// Represents an agent managed by a #dtCrowd object.
 /// @ingroup crowd
@@ -94,13 +95,18 @@ class CrowdAgent {
 	/// The number of corners.
 	int ncorners;
 
-	int targetState; ///< State of the movement request.
+	MoveRequestState targetState; ///< State of the movement request.
 	long targetRef; ///< Target polyref of the movement request.
 	float[] targetPos = new float[3]; ///< Target position of the movement request (or velocity in case of DT_CROWDAGENT_TARGET_VELOCITY).
 	long targetPathqRef; ///< Path finder ref.
 	boolean targetReplan; ///< Flag indicating that the current path is being replanned.
 	float targetReplanTime; /// <Time since the agent's target was replanned.
 
+	public CrowdAgent() {
+		corridor = new PathCorridor();
+		boundary = new LocalBoundary();
+	}
+	
 	void integrate(float dt) {
 		// Fake dynamic constraint.
 		float maxDelta = params.maxAcceleration * dt;
@@ -180,6 +186,17 @@ class CrowdAgent {
 			vNormalize(dir);
 		}
 		return dir;
+	}
+
+	
+	void setTarget(long ref, float[] pos) {
+		targetRef = ref;
+		vCopy(targetPos, pos);
+		targetPathqRef = PathQueue.DT_PATHQ_INVALID;
+		if (targetRef != 0)
+			targetState = MoveRequestState.DT_CROWDAGENT_TARGET_REQUESTING;
+		else
+			targetState = MoveRequestState.DT_CROWDAGENT_TARGET_FAILED;
 	}
 
 }
