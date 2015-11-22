@@ -57,6 +57,13 @@ class CrowdAgent {
 		DT_CROWDAGENT_TARGET_VELOCITY,
 	};
 	
+	/// Crowd agent update flags.
+	static final int DT_CROWD_ANTICIPATE_TURNS = 1;
+	static final int DT_CROWD_OBSTACLE_AVOIDANCE = 2;
+	static final int DT_CROWD_SEPARATION = 4;
+	static final int DT_CROWD_OPTIMIZE_VIS = 8;			///< Use #dtPathCorridor::optimizePathVisibility() to optimize the agent path.
+	static final int DT_CROWD_OPTIMIZE_TOPO = 16;		///< Use dtPathCorridor::optimizePathTopology() to optimize the agent path.
+	
 	/// True if the agent is active, false if the agent is in an unused slot in the agent pool.
 	boolean active;
 

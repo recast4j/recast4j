@@ -33,34 +33,11 @@ import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.detour.QueryFilter;
 import org.recast4j.detour.Status;
-import org.recast4j.detour.VectorPtr;
 import org.recast4j.detour.crowd.CrowdAgent.CrowdAgentState;
 import org.recast4j.detour.crowd.CrowdAgent.MoveRequestState;
 import org.recast4j.detour.crowd.ObstacleAvoidanceQuery.ObstacleAvoidanceParams;
 
-
 /*
-
-
-struct dtCrowdAgentAnimation
-{
-	bool active;
-	float initPos[3], startPos[3], endPos[3];
-	dtPolyRef polyRef;
-	float t, tmax;
-};
-
-/// Crowd agent update flags.
-/// @ingroup crowd
-/// @see dtCrowdAgentParams::updateFlags
-enum UpdateFlags
-{
-	DT_CROWD_ANTICIPATE_TURNS = 1,
-	DT_CROWD_OBSTACLE_AVOIDANCE = 2,
-	DT_CROWD_SEPARATION = 4,
-	DT_CROWD_OPTIMIZE_VIS = 8,			///< Use #dtPathCorridor::optimizePathVisibility() to optimize the agent path.
-	DT_CROWD_OPTIMIZE_TOPO = 16,		///< Use dtPathCorridor::optimizePathTopology() to optimize the agent path.
-};
 
 struct dtCrowdAgentDebugInfo
 {
@@ -109,8 +86,6 @@ class dtCrowd
 	void purge();
 	
 public:
-	dtCrowd();
-	~dtCrowd();
 	
 	/// Initializes the crowd.  
 	///  @param[in]		maxAgents		The maximum number of agents the crowd can manage. [Limit: >= 1]
@@ -220,11 +195,6 @@ dtCrowd* dtAllocCrowd();
 ///  @param[in]		ptr		A crowd object allocated using #dtAllocCrowd
 ///  @ingroup crowd
 void dtFreeCrowd(dtCrowd* ptr);
-
-
-#endif // DETOURCROWD_H
-
-
 
 */
 /**
@@ -428,14 +398,9 @@ public class Crowd {
 		Collections.sort(neis, (o1, o2) -> Float.compare(o1.dist, o2.dist));
 	}
 
-	public void addToOptQueue(CrowdAgent newag, List<CrowdAgent> agents) {
+	public void addToOptQueue(CrowdAgent newag, PriorityQueue<CrowdAgent> agents) {
 		// Insert neighbour based on greatest time.
-		int slot = Collections.binarySearch(agents, newag,
-				(a1, a2) -> Float.compare(a2.topologyOptTime, a1.topologyOptTime));
-		if (slot < 0) {
-			slot = -slot - 1;
-		}
-		agents.add(slot, newag);
+		agents.add(newag);
 	}
 
 	// Insert neighbour based on greatest time.
@@ -711,13 +676,11 @@ public class Crowd {
 		return agents;
 	}
 
-
-	static final int PATH_MAX_AGENTS = 8;
 	static final int MAX_ITER = 20;
 
-	void updateMoveRequest(float dt)
-	{
-		PriorityQueue<CrowdAgent> queue = new PriorityQueue<CrowdAgent>((a1, a2) -> Float.compare(a2.targetReplanTime, a1.targetReplanTime));
+	void updateMoveRequest(float dt) {
+		PriorityQueue<CrowdAgent> queue = new PriorityQueue<CrowdAgent>(
+				(a1, a2) -> Float.compare(a2.targetReplanTime, a1.targetReplanTime));
 
 		// Fire off new requests.
 		for (int i = 0; i < m_maxAgents; ++i) {
@@ -726,7 +689,8 @@ public class Crowd {
 				continue;
 			if (ag.state == CrowdAgentState.DT_CROWDAGENT_STATE_INVALID)
 				continue;
-			if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_NONE || ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY)
+			if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_NONE
+					|| ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY)
 				continue;
 
 			if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_REQUESTING) {
@@ -735,12 +699,14 @@ public class Crowd {
 					throw new IllegalArgumentException("Empty path");
 				}
 				// Quick search towards the goal.
-				m_navquery.initSlicedFindPath(path.get(0), ag.targetRef, ag.npos, ag.targetPos, m_filters[ag.params.queryFilterType], 0);
+				m_navquery.initSlicedFindPath(path.get(0), ag.targetRef, ag.npos, ag.targetPos,
+						m_filters[ag.params.queryFilterType], 0);
 				m_navquery.updateSlicedFindPath(MAX_ITER);
 				FindPathResult pathFound;
 				if (ag.targetReplan) // && npath > 10)
 				{
-					// Try to use existing steady path during replan if possible.
+					// Try to use existing steady path during replan if
+					// possible.
 					pathFound = m_navquery.finalizeSlicedFindPathPartial(path);
 				} else {
 					// Try to move towards target when goal changes.
@@ -748,20 +714,20 @@ public class Crowd {
 				}
 				List<Long> reqPath = pathFound.getRefs();
 				float[] reqPos = new float[3];
-				if (!pathFound.getStatus().isFailed() && reqPath.size() > 0)
-				{
+				if (!pathFound.getStatus().isFailed() && reqPath.size() > 0) {
 					// In progress or succeed.
 					if (reqPath.get(reqPath.size() - 1) != ag.targetRef) {
-						// Partial path, constrain target position inside the last polygon.
-						ClosesPointOnPolyResult cr = m_navquery.closestPointOnPoly(reqPath.get(reqPath.size() - 1), ag.targetPos);
+						// Partial path, constrain target position inside the
+						// last polygon.
+						ClosesPointOnPolyResult cr = m_navquery.closestPointOnPoly(reqPath.get(reqPath.size() - 1),
+								ag.targetPos);
 						reqPos = cr.getClosest();
-					}
-					else
-					{
+					} else {
 						vCopy(reqPos, ag.targetPos);
 					}
 				} else {
-					// Could not find path, start the request from current location.
+					// Could not find path, start the request from current
+					// location.
 					vCopy(reqPos, ag.npos);
 					reqPath = new ArrayList<>();
 					reqPath.add(path.get(0));
@@ -779,18 +745,16 @@ public class Crowd {
 					ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_QUEUE;
 				}
 			}
-			
-			if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_QUEUE)
-			{
+
+			if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_QUEUE) {
 				addToPathQueue(ag, queue);
 			}
 		}
 
-		while (!queue.isEmpty())
-		{
+		while (!queue.isEmpty()) {
 			CrowdAgent ag = queue.poll();
-			ag.targetPathqRef = m_pathq.request(ag.corridor.getLastPoly(), ag.targetRef,
-												 ag.corridor.getTarget(), ag.targetPos, m_filters[ag.params.queryFilterType]);
+			ag.targetPathqRef = m_pathq.request(ag.corridor.getLastPoly(), ag.targetRef, ag.corridor.getTarget(),
+					ag.targetPos, m_filters[ag.params.queryFilterType]);
 			if (ag.targetPathqRef != PathQueue.DT_PATHQ_INVALID)
 				ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_PATH;
 		}
@@ -803,14 +767,16 @@ public class Crowd {
 			CrowdAgent ag = m_agents[i];
 			if (!ag.active)
 				continue;
-			if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_NONE || ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY)
+			if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_NONE
+					|| ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY)
 				continue;
 
 			if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_PATH) {
 				// Poll path queue.
 				Status status = m_pathq.getRequestStatus(ag.targetPathqRef);
 				if (status.isFailed()) {
-					// Path find failed, retry if the target location is still valid.
+					// Path find failed, retry if the target location is still
+					// valid.
 					ag.targetPathqRef = PathQueue.DT_PATHQ_INVALID;
 					if (ag.targetRef != 0)
 						ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_REQUESTING;
@@ -824,8 +790,7 @@ public class Crowd {
 					}
 
 					// Apply results.
-					float[] targetPos = new float[3];
-					vCopy(targetPos, ag.targetPos);
+					float[] targetPos = ag.targetPos;
 
 					boolean valid = true;
 					FindPathResult pathFound = m_pathq.getPathResult(ag.targetPathqRef);
@@ -842,7 +807,8 @@ public class Crowd {
 					// Merge result and existing path.
 					// The agent might have moved whilst the request is
 					// being processed, so the path may have changed.
-					// We assume that the end of the path is at the same location
+					// We assume that the end of the path is at the same
+					// location
 					// where the request was issued.
 
 					// The last ref in the old path should be the same as
@@ -855,25 +821,23 @@ public class Crowd {
 						if (path.size() > 1) {
 							res.addAll(0, path.subList(1, path.size()));
 							// Remove trackbacks
-							for (int j = 0; j < res.size(); ++j)
-							{
-								if (j-1 >= 0 && j+1 < res.size())
-								{
-									if (res.get(j-1) == res.get(j+1))
-									{
+							for (int j = 1; j < res.size() - 1; ++j) {
+								if (j - 1 >= 0 && j + 1 < res.size()) {
+									if (res.get(j - 1).longValue() == res.get(j + 1).longValue()) {
 										res.remove(j + 1);
-										res.remove(j - 1);
+										res.remove(j);
 										j -= 2;
 									}
 								}
 							}
-
 						}
 
 						// Check for partial path.
 						if (res.get(res.size() - 1) != ag.targetRef) {
-							// Partial path, constrain target position inside the last polygon.
-							ClosesPointOnPolyResult cr = m_navquery.closestPointOnPoly(res.get(res.size()-1), targetPos);
+							// Partial path, constrain target position inside
+							// the last polygon.
+							ClosesPointOnPolyResult cr = m_navquery.closestPointOnPoly(res.get(res.size() - 1),
+									targetPos);
 							targetPos = cr.getClosest();
 						}
 					}
@@ -893,8 +857,41 @@ public class Crowd {
 				}
 			}
 		}
+	}
+
+	static final float OPT_TIME_THR = 0.5f; // seconds
+	
+	void updateTopologyOptimization(List<CrowdAgent> agents, float dt)
+	{
+		if (!agents.isEmpty())
+			return;
+		
+		PriorityQueue<CrowdAgent> queue = new PriorityQueue<CrowdAgent>(
+				(a1, a2) -> Float.compare(a2.topologyOptTime, a1.topologyOptTime));
+		
+		for (int i = 0; i < agents.size(); ++i)
+		{
+			CrowdAgent ag = agents.get(i);
+			if (ag.state != CrowdAgentState.DT_CROWDAGENT_STATE_WALKING)
+				continue;
+			if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_NONE || ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY)
+				continue;
+			if ((ag.params.updateFlags & CrowdAgent.DT_CROWD_OPTIMIZE_TOPO) == 0)
+				continue;
+			ag.topologyOptTime += dt;
+			if (ag.topologyOptTime >= OPT_TIME_THR)
+				addToOptQueue(ag, queue);
+		}
+
+		while (!queue.isEmpty())
+		{
+			CrowdAgent ag = queue.poll();
+			ag.corridor.optimizePathTopology(m_navquery, m_filters[ag.params.queryFilterType]);
+			ag.topologyOptTime = 0;
+		}
 
 	}
 
+	
 }
 
