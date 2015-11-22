@@ -32,7 +32,6 @@ import static org.recast4j.detour.DetourCommon.vSub;
 import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.detour.VectorPtr;
 import org.recast4j.detour.crowd.Crowd.CrowdNeighbour;
-import org.recast4j.detour.crowd.Crowd.MoveRequestState;
 
 /// Represents an agent managed by a #dtCrowd object.
 /// @ingroup crowd
@@ -44,7 +43,18 @@ class CrowdAgent {
 	{
 		DT_CROWDAGENT_STATE_INVALID,		///< The agent is not in a valid state.
 		DT_CROWDAGENT_STATE_WALKING,		///< The agent is traversing a normal navigation mesh polygon.
-		DT_CROWDAGENT_STATE_OFFMESH,		///< The agent is traversing an off-mesh connection.
+		DT_CROWDAGENT_STATE_OFFMESH, 		///< The agent is traversing an off-mesh connection.
+	};
+	
+	enum MoveRequestState
+	{
+		DT_CROWDAGENT_TARGET_NONE,
+		DT_CROWDAGENT_TARGET_FAILED,
+		DT_CROWDAGENT_TARGET_VALID,
+		DT_CROWDAGENT_TARGET_REQUESTING,
+		DT_CROWDAGENT_TARGET_WAITING_FOR_QUEUE,
+		DT_CROWDAGENT_TARGET_WAITING_FOR_PATH,
+		DT_CROWDAGENT_TARGET_VELOCITY,
 	};
 	
 	/// True if the agent is active, false if the agent is in an unused slot in the agent pool.
