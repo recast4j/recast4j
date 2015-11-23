@@ -105,4 +105,8 @@ public class LocalBoundary {
 		return true;
 	}
 
+	public float[] getCenter() {
+		return m_center;
+	}
+
 }

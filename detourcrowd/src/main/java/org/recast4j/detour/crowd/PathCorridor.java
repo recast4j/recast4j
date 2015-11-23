@@ -216,11 +216,12 @@ public class PathCorridor {
 	 * 
 	 * If the target is within range, it will be the last corner and have a
 	 * polygon reference id of zero.
+	 * @param filter 
 	 * 
 	 * @param[in] navquery The query object used to build the corridor.
 	 * @return Corners
 	 */
-	public List<StraightPathItem> findCorners(NavMeshQuery navquery) {
+	public List<StraightPathItem> findCorners(NavMeshQuery navquery, QueryFilter filter) {
 		final float MIN_TARGET_DIST = sqr(0.01f);
 
 		List<StraightPathItem> path = navquery.findStraightPath(m_pos, m_target, m_path, 0);
@@ -328,7 +329,7 @@ public class PathCorridor {
 		return false;
 	}
 
-	public boolean moveOverOffmeshConnection(long offMeshConRef, NavMeshQuery navquery) {
+	public boolean moveOverOffmeshConnection(long offMeshConRef, long[] refs, float[] start, float[]end, NavMeshQuery navquery) {
 		// Advance the path up to and over the off-mesh connection.
 		long prevRef = 0, polyRef = m_path.get(0);
 		int npos = 0;
@@ -344,13 +345,14 @@ public class PathCorridor {
 
 		// Prune path
 		m_path = m_path.subList(npos, m_path.size());
-		long[] refs = new long[2];
 		refs[0] = prevRef;
 		refs[1] = polyRef;
 
 		NavMesh nav = navquery.getAttachedNavMesh();
 		Tupple2<float[], float[]> startEnd = nav.getOffMeshConnectionPolyEndPoints(refs[0], refs[1]);
 		vCopy(m_pos, startEnd.second);
+		vCopy(start, startEnd.first);
+		vCopy(end, startEnd.second);
 		return true;
 	}
 

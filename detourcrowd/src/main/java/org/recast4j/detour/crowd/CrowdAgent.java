@@ -29,7 +29,11 @@ import static org.recast4j.detour.DetourCommon.vScale;
 import static org.recast4j.detour.DetourCommon.vSet;
 import static org.recast4j.detour.DetourCommon.vSub;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.recast4j.detour.NavMeshQuery;
+import org.recast4j.detour.StraightPathItem;
 import org.recast4j.detour.VectorPtr;
 import org.recast4j.detour.crowd.Crowd.CrowdNeighbour;
 
@@ -83,10 +87,7 @@ class CrowdAgent {
 	float topologyOptTime;
 
 	/// The known neighbors of the agent.
-	CrowdNeighbour[] neis = new CrowdNeighbour[Crowd.DT_CROWDAGENT_MAX_NEIGHBOURS];
-
-	/// The number of neighbors.
-	int nneis;
+	List<CrowdNeighbour> neis = new ArrayList<>();
 
 	/// The desired speed.
 	float desiredSpeed;
@@ -99,18 +100,8 @@ class CrowdAgent {
 
 	/// The agent's configuration parameters.
 	CrowdAgentParams params;
-
-	/// The local path corridor corners for the agent. (Staight path.) [(x, y, z) * #ncorners]
-	float[] cornerVerts = new float[Crowd.DT_CROWDAGENT_MAX_CORNERS * 3];
-
-	/// The local path corridor corner flags. (See: #dtStraightPathFlags) [(flags) * #ncorners]
-	int[] cornerFlags = new int[Crowd.DT_CROWDAGENT_MAX_CORNERS];
-
-	/// The reference id of the polygon being entered at the corner. [(polyRef) * #ncorners]
-	long[] cornerPolys = new long[Crowd.DT_CROWDAGENT_MAX_CORNERS];
-
-	/// The number of corners.
-	int ncorners;
+	/// The local path corridor corners for the agent.
+	List<StraightPathItem> corners = new ArrayList<>();
 
 	MoveRequestState targetState; ///< State of the movement request.
 	long targetRef; ///< Target polyref of the movement request.
@@ -119,9 +110,12 @@ class CrowdAgent {
 	boolean targetReplan; ///< Flag indicating that the current path is being replanned.
 	float targetReplanTime; /// <Time since the agent's target was replanned.
 
+	CrowdAgentAnimation animation;
+
 	public CrowdAgent() {
 		corridor = new PathCorridor();
 		boundary = new LocalBoundary();
+		animation = new CrowdAgentAnimation();
 	}
 	
 	void integrate(float dt) {
@@ -141,13 +135,13 @@ class CrowdAgent {
 	}
 
 	boolean overOffmeshConnection(float radius) {
-		if (ncorners == 0)
+		if (corners.isEmpty())
 			return false;
 
-		boolean offMeshConnection = ((cornerFlags[ncorners - 1] & NavMeshQuery.DT_STRAIGHTPATH_OFFMESH_CONNECTION) != 0)
+		boolean offMeshConnection = ((corners.get(corners.size() - 1).getFlags() & NavMeshQuery.DT_STRAIGHTPATH_OFFMESH_CONNECTION) != 0)
 				? true : false;
 		if (offMeshConnection) {
-			float distSq = vDist2DSqr(new VectorPtr(npos), new VectorPtr(cornerVerts, (ncorners - 1) * 3));
+			float distSq = vDist2DSqr(npos, corners.get(corners.size() - 1).getPos());
 			if (distSq < radius * radius)
 				return true;
 		}
@@ -156,28 +150,27 @@ class CrowdAgent {
 	}
 
 	float getDistanceToGoal(float range) {
-		if (ncorners == 0)
+		if (corners.isEmpty())
 			return range;
 
-		boolean endOfPath = ((cornerFlags[ncorners - 1] & NavMeshQuery.DT_STRAIGHTPATH_END) != 0) ? true : false;
+		boolean endOfPath = ((corners.get(corners.size() - 1).getFlags() & NavMeshQuery.DT_STRAIGHTPATH_END) != 0) ? true : false;
 		if (endOfPath)
-			return Math.min(vDist2D(new VectorPtr(npos), new VectorPtr(cornerVerts, (ncorners - 1) * 3)), range);
+			return Math.min(vDist2D(npos, corners.get(corners.size() - 1).getPos()), range);
 
 		return range;
 	}
 
 	public float[] calcSmoothSteerDirection() {
 		float[] dir = new float[3];
-		if (ncorners != 0) {
+		if (!corners.isEmpty()) {
 
 			int ip0 = 0;
-			int ip1 = Math.min(1, ncorners - 1);
-			VectorPtr p0 = new VectorPtr(cornerVerts, ip0 * 3);
-			VectorPtr p1 = new VectorPtr(cornerVerts, ip1 * 3);
-			VectorPtr vnpos = new VectorPtr(npos);
+			int ip1 = Math.min(1, corners.size() - 1);
+			float[] p0 = corners.get(ip0).getPos();
+			float[] p1 = corners.get(ip1).getPos();
 
-			float[] dir0 = vSub(p0, vnpos);
-			float[] dir1 = vSub(p1, vnpos);
+			float[] dir0 = vSub(p0, npos);
+			float[] dir1 = vSub(p1, npos);
 			dir0[1] = 0;
 			dir1[1] = 0;
 
@@ -197,8 +190,8 @@ class CrowdAgent {
 
 	public float[] calcStraightSteerDirection() {
 		float[] dir = new float[3];
-		if (ncorners != 0) {
-			dir = vSub(cornerVerts, npos);
+		if (!corners.isEmpty()) {
+			dir = vSub(corners.get(0).getPos(), npos);
 			dir[1] = 0;
 			vNormalize(dir);
 		}

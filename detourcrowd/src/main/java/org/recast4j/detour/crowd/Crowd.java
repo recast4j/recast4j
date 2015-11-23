@@ -60,8 +60,6 @@ class dtCrowd
 	dtObstacleAvoidanceParams m_obstacleQueryParams[DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS];
 	dtObstacleAvoidanceQuery* m_obstacleQuery;
 	
-	dtProximityGrid* m_grid;
-	
 	dtPolyRef* m_pathResult;
 	int m_maxPathResult;
 	
@@ -340,7 +338,6 @@ public class Crowd {
 	int m_maxAgents;
 	CrowdAgent[] m_agents;
 	List<CrowdAgent> m_activeAgents;
-	CrowdAgentAnimation[] m_agentAnims;
 	PathQueue m_pathq;
 
 	ObstacleAvoidanceParams[] m_obstacleQueryParams = new ObstacleAvoidanceParams[DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS];
@@ -448,16 +445,10 @@ public class Crowd {
 		m_pathq.init(MAX_PATHQUEUE_NODES, nav);
 		m_agents = new CrowdAgent[m_maxAgents];
 		m_activeAgents = new ArrayList<>();
-		m_agentAnims = new CrowdAgentAnimation[m_maxAgents];
 		for (int i = 0; i < m_maxAgents; ++i) {
 			m_agents[i] = new CrowdAgent();
 			m_agents[i].active = false;
 			m_agents[i].corridor.init();
-		}
-
-		for (int i = 0; i < m_maxAgents; ++i) {
-			m_agentAnims[i] = new CrowdAgentAnimation();
-			m_agentAnims[i].active = false;
 		}
 
 		// The navquery is mostly used for local searches, no need for large
@@ -547,7 +538,6 @@ public class Crowd {
 
 		ag.topologyOptTime = 0;
 		ag.targetReplanTime = 0;
-		ag.nneis = 0;
 
 		vSet(ag.dvel, 0, 0, 0);
 		vSet(ag.nvel, 0, 0, 0);
@@ -584,15 +574,9 @@ public class Crowd {
 		}
 	}
 
-	boolean requestMoveTargetReplan(int idx, long ref, float[] pos) {
-		if (idx < 0 || idx >= m_maxAgents)
-			return false;
-
-		CrowdAgent ag = m_agents[idx];
-
+	boolean requestMoveTargetReplan(CrowdAgent ag, long ref, float[] pos) {
 		ag.setTarget(ref, pos);
 		ag.targetReplan = true;
-
 		return true;
 	}
 
@@ -678,7 +662,7 @@ public class Crowd {
 
 	static final int MAX_ITER = 20;
 
-	void updateMoveRequest(float dt) {
+	void updateMoveRequest() {
 		PriorityQueue<CrowdAgent> queue = new PriorityQueue<CrowdAgent>(
 				(a1, a2) -> Float.compare(a2.targetReplanTime, a1.targetReplanTime));
 
@@ -892,6 +876,512 @@ public class Crowd {
 
 	}
 
+	static final int CHECK_LOOKAHEAD = 10;
+	static final float TARGET_REPLAN_DELAY = 1.0f; // seconds
+
+	void checkPathValidity(List<CrowdAgent> agents, float dt) {
+
+		for (int i = 0; i < agents.size(); ++i) {
+			CrowdAgent ag = agents.get(i);
+
+			if (ag.state != CrowdAgentState.DT_CROWDAGENT_STATE_WALKING)
+				continue;
+
+			ag.targetReplanTime += dt;
+
+			boolean replan = false;
+
+			// First check that the current location is valid.
+			float[] agentPos = new float[3];
+			long agentRef = ag.corridor.getFirstPoly();
+			vCopy(agentPos, ag.npos);
+			if (!m_navquery.isValidPolyRef(agentRef, m_filters[ag.params.queryFilterType])) {
+				// Current location is not valid, try to reposition.
+				// TODO: this can snap agents, how to handle that?
+				FindNearestPolyResult fnp = m_navquery.findNearestPoly(ag.npos, m_ext,
+						m_filters[ag.params.queryFilterType]);
+				agentRef = fnp.getNearestRef();
+				if (fnp.getNearestPos() != null) {
+					vCopy(agentPos, fnp.getNearestPos());
+				}
+
+				if (agentRef == 0) {
+					// Could not find location in navmesh, set state to invalid.
+					ag.corridor.reset(0, agentPos);
+					ag.partial = false;
+					ag.boundary.reset();
+					ag.state = CrowdAgentState.DT_CROWDAGENT_STATE_INVALID;
+					continue;
+				}
+
+				// Make sure the first polygon is valid, but leave other valid
+				// polygons in the path so that replanner can adjust the path
+				// better.
+				ag.corridor.fixPathStart(agentRef, agentPos);
+				// ag.corridor.trimInvalidPath(agentRef, agentPos, m_navquery,
+				// &m_filter);
+				ag.boundary.reset();
+				vCopy(ag.npos, agentPos);
+
+				replan = true;
+			}
+
+			// If the agent does not have move target or is controlled by
+			// velocity, no need to recover the target nor replan.
+			if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_NONE
+					|| ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY)
+				continue;
+
+			// Try to recover move request position.
+			if (ag.targetState != MoveRequestState.DT_CROWDAGENT_TARGET_NONE
+					&& ag.targetState != MoveRequestState.DT_CROWDAGENT_TARGET_FAILED) {
+				if (!m_navquery.isValidPolyRef(ag.targetRef, m_filters[ag.params.queryFilterType])) {
+					// Current target is not valid, try to reposition.
+					FindNearestPolyResult fnp = m_navquery.findNearestPoly(ag.targetPos, m_ext,
+							m_filters[ag.params.queryFilterType]);
+					ag.targetRef = fnp.getNearestRef();
+					if (fnp.getNearestPos() != null) {
+						vCopy(ag.targetPos, fnp.getNearestPos());
+					}
+					replan = true;
+				}
+				if (ag.targetRef == 0) {
+					// Failed to reposition target, fail moverequest.
+					ag.corridor.reset(agentRef, agentPos);
+					ag.partial = false;
+					ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_NONE;
+				}
+			}
+
+			// If nearby corridor is not valid, replan.
+			if (!ag.corridor.isValid(CHECK_LOOKAHEAD, m_navquery, m_filters[ag.params.queryFilterType])) {
+				// Fix current path.
+				// ag.corridor.trimInvalidPath(agentRef, agentPos, m_navquery,
+				// &m_filter);
+				// ag.boundary.reset();
+				replan = true;
+			}
+
+			// If the end of the path is near and it is not the requested
+			// location, replan.
+			if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VALID) {
+				if (ag.targetReplanTime > TARGET_REPLAN_DELAY && ag.corridor.getPathCount() < CHECK_LOOKAHEAD
+						&& ag.corridor.getLastPoly() != ag.targetRef)
+					replan = true;
+			}
+
+			// Try to replan path to goal.
+			if (replan) {
+				if (ag.targetState != MoveRequestState.DT_CROWDAGENT_TARGET_NONE) {
+					requestMoveTargetReplan(ag, ag.targetRef, ag.targetPos);
+				}
+			}
+		}
+	}
 	
+	void update(float dt, CrowdAgentDebugInfo debug)
+	{
+		m_velocitySampleCount = 0;
+		
+		int debugIdx = debug != null ? debug.idx : -1;
+		
+		List<CrowdAgent> agents = getActiveAgents();
+
+		// Check that all agents still have valid paths.
+		checkPathValidity(agents, dt);
+		
+		// Update async move request and path finder.
+		updateMoveRequest();
+
+		// Optimize path topology.
+		updateTopologyOptimization(agents, dt);
+		
+		// Register agents to proximity grid.
+		m_grid.clear();
+		for (int i = 0; i < agents.size(); ++i)
+		{
+			CrowdAgent ag = agents.get(i);
+			float[] p = ag.npos;
+			float r = ag.params.radius;
+			m_grid.addItem(i, p[0]-r, p[2]-r, p[0]+r, p[2]+r);
+		}
+		
+		// Get nearby navmesh segments and agents to collide with.
+		for (int i = 0; i < agents.size(); ++i)
+		{
+			CrowdAgent ag = agents.get(i);
+			if (ag.state != CrowdAgentState.DT_CROWDAGENT_STATE_WALKING)
+				continue;
+
+			// Update the collision boundary after certain distance has been passed or
+			// if it has become invalid.
+			float updateThr = ag.params.collisionQueryRange*0.25f;
+			if (vDist2DSqr(ag.npos, ag.boundary.getCenter()) > sqr(updateThr) ||
+				!ag.boundary.isValid(m_navquery, m_filters[ag.params.queryFilterType]))
+			{
+				ag.boundary.update(ag.corridor.getFirstPoly(), ag.npos, ag.params.collisionQueryRange,
+									m_navquery, m_filters[ag.params.queryFilterType]);
+			}
+			// Query neighbour agents
+			ag.neis = getNeighbours(ag.npos, ag.params.height, ag.params.collisionQueryRange,
+									  ag, agents, m_grid);
+			for (int j = 0; j < ag.neis.size(); j++)
+				ag.neis.get(j).idx = getAgentIndex(agents.get(ag.neis.get(j).idx));
+		}
+		
+		// Find next corner to steer to.
+		for (int i = 0; i < agents.size(); ++i)
+		{
+			CrowdAgent ag = agents.get(i);
+			
+			if (ag.state != CrowdAgentState.DT_CROWDAGENT_STATE_WALKING)
+				continue;
+			if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_NONE || ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY)
+				continue;
+			
+			// Find corners for steering
+			ag.corners = ag.corridor.findCorners(m_navquery, m_filters[ag.params.queryFilterType]);
+			
+			// Check to see if the corner after the next corner is directly visible,
+			// and short cut to there.
+			if ((ag.params.updateFlags & CrowdAgent.DT_CROWD_OPTIMIZE_VIS) != 0 && ag.corners.size() > 0)
+			{
+				float[] target = ag.corners.get(Math.min(1,ag.corners.size()-1)).getPos();
+				ag.corridor.optimizePathVisibility(target, ag.params.pathOptimizationRange, m_navquery, m_filters[ag.params.queryFilterType]);
+				
+				// Copy data for debug purposes.
+				if (debugIdx == i)
+				{
+					vCopy(debug.optStart, ag.corridor.getPos());
+					vCopy(debug.optEnd, target);
+				}
+			}
+			else
+			{
+				// Copy data for debug purposes.
+				if (debugIdx == i)
+				{
+					vSet(debug.optStart, 0,0,0);
+					vSet(debug.optEnd, 0,0,0);
+				}
+			}
+		}
+
+		// Trigger off-mesh connections (depends on corners).
+		for (int i = 0; i < agents.size(); ++i)
+		{
+			CrowdAgent ag = agents.get(i);
+			
+			if (ag.state != CrowdAgentState.DT_CROWDAGENT_STATE_WALKING)
+				continue;
+			if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_NONE || ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY)
+				continue;
+			
+			// Check 
+			float triggerRadius = ag.params.radius*2.25f;
+			if (ag.overOffmeshConnection(triggerRadius))
+			{
+				// Prepare to off-mesh connection.
+				CrowdAgentAnimation anim = ag.animation;
+				
+				// Adjust the path over the off-mesh connection.
+				long[] refs = new long[2];
+				if (ag.corridor.moveOverOffmeshConnection(ag.corners.get(ag.corners.size() - 1).getRef(), refs,
+														   anim.startPos, anim.endPos, m_navquery))
+				{
+					vCopy(anim.initPos, ag.npos);
+					anim.polyRef = refs[1];
+					anim.active = true;
+					anim.t = 0.0f;
+					anim.tmax = (vDist2D(anim.startPos, anim.endPos) / ag.params.maxSpeed) * 0.5f;
+					
+					ag.state = CrowdAgentState.DT_CROWDAGENT_STATE_OFFMESH;
+					ag.corners.clear();
+					ag.neis.clear();
+					continue;
+				}
+				else
+				{
+					// Path validity check will ensure that bad/blocked connections will be replanned.
+				}
+			}
+		}
+		/*
+
+		// Calculate steering.
+		for (int i = 0; i < nagents; ++i)
+		{
+			dtCrowdAgent* ag = agents[i];
+
+			if (ag.state != DT_CROWDAGENT_STATE_WALKING)
+				continue;
+			if (ag.targetState == DT_CROWDAGENT_TARGET_NONE)
+				continue;
+			
+			float dvel[3] = {0,0,0};
+
+			if (ag.targetState == DT_CROWDAGENT_TARGET_VELOCITY)
+			{
+				dtVcopy(dvel, ag.targetPos);
+				ag.desiredSpeed = dtVlen(ag.targetPos);
+			}
+			else
+			{
+				// Calculate steering direction.
+				if (ag.params.updateFlags & DT_CROWD_ANTICIPATE_TURNS)
+					calcSmoothSteerDirection(ag, dvel);
+				else
+					calcStraightSteerDirection(ag, dvel);
+				
+				// Calculate speed scale, which tells the agent to slowdown at the end of the path.
+				const float slowDownRadius = ag.params.radius*2;	// TODO: make less hacky.
+				const float speedScale = getDistanceToGoal(ag, slowDownRadius) / slowDownRadius;
+					
+				ag.desiredSpeed = ag.params.maxSpeed;
+				dtVscale(dvel, dvel, ag.desiredSpeed * speedScale);
+			}
+
+			// Separation
+			if (ag.params.updateFlags & DT_CROWD_SEPARATION)
+			{
+				float separationDist = ag.params.collisionQueryRange; 
+				float invSeparationDist = 1.0f / separationDist; 
+				float separationWeight = ag.params.separationWeight;
+				
+				float w = 0;
+				float disp[3] = {0,0,0};
+				
+				for (int j = 0; j < ag.nneis; ++j)
+				{
+					const dtCrowdAgent* nei = &m_agents[ag.neis[j].idx];
+					
+					float diff[3];
+					dtVsub(diff, ag.npos, nei->npos);
+					diff[1] = 0;
+					
+					const float distSqr = dtVlenSqr(diff);
+					if (distSqr < 0.00001f)
+						continue;
+					if (distSqr > dtSqr(separationDist))
+						continue;
+					const float dist = dtMathSqrtf(distSqr);
+					const float weight = separationWeight * (1.0f - dtSqr(dist*invSeparationDist));
+					
+					dtVmad(disp, disp, diff, weight/dist);
+					w += 1.0f;
+				}
+				
+				if (w > 0.0001f)
+				{
+					// Adjust desired velocity.
+					dtVmad(dvel, dvel, disp, 1.0f/w);
+					// Clamp desired velocity to desired speed.
+					const float speedSqr = dtVlenSqr(dvel);
+					const float desiredSqr = dtSqr(ag.desiredSpeed);
+					if (speedSqr > desiredSqr)
+						dtVscale(dvel, dvel, desiredSqr/speedSqr);
+				}
+			}
+			
+			// Set the desired velocity.
+			dtVcopy(ag.dvel, dvel);
+		}
+		
+		// Velocity planning.	
+		for (int i = 0; i < nagents; ++i)
+		{
+			dtCrowdAgent* ag = agents[i];
+			
+			if (ag.state != DT_CROWDAGENT_STATE_WALKING)
+				continue;
+			
+			if (ag.params.updateFlags & DT_CROWD_OBSTACLE_AVOIDANCE)
+			{
+				m_obstacleQuery->reset();
+				
+				// Add neighbours as obstacles.
+				for (int j = 0; j < ag.nneis; ++j)
+				{
+					const dtCrowdAgent* nei = &m_agents[ag.neis[j].idx];
+					m_obstacleQuery->addCircle(nei->npos, nei->params.radius, nei->vel, nei->dvel);
+				}
+
+				// Append neighbour segments as obstacles.
+				for (int j = 0; j < ag.boundary.getSegmentCount(); ++j)
+				{
+					const float* s = ag.boundary.getSegment(j);
+					if (dtTriArea2D(ag.npos, s, s+3) < 0.0f)
+						continue;
+					m_obstacleQuery->addSegment(s, s+3);
+				}
+
+				dtObstacleAvoidanceDebugData* vod = 0;
+				if (debugIdx == i) 
+					vod = debug->vod;
+				
+				// Sample new safe velocity.
+				bool adaptive = true;
+				int ns = 0;
+
+				const dtObstacleAvoidanceParams* params = &m_obstacleQueryParams[ag.params.obstacleAvoidanceType];
+					
+				if (adaptive)
+				{
+					ns = m_obstacleQuery->sampleVelocityAdaptive(ag.npos, ag.params.radius, ag.desiredSpeed,
+																 ag.vel, ag.dvel, ag.nvel, params, vod);
+				}
+				else
+				{
+					ns = m_obstacleQuery->sampleVelocityGrid(ag.npos, ag.params.radius, ag.desiredSpeed,
+															 ag.vel, ag.dvel, ag.nvel, params, vod);
+				}
+				m_velocitySampleCount += ns;
+			}
+			else
+			{
+				// If not using velocity planning, new velocity is directly the desired velocity.
+				dtVcopy(ag.nvel, ag.dvel);
+			}
+		}
+
+		// Integrate.
+		for (int i = 0; i < nagents; ++i)
+		{
+			dtCrowdAgent* ag = agents[i];
+			if (ag.state != DT_CROWDAGENT_STATE_WALKING)
+				continue;
+			integrate(ag, dt);
+		}
+		
+		// Handle collisions.
+		static const float COLLISION_RESOLVE_FACTOR = 0.7f;
+		
+		for (int iter = 0; iter < 4; ++iter)
+		{
+			for (int i = 0; i < nagents; ++i)
+			{
+				dtCrowdAgent* ag = agents[i];
+				const int idx0 = getAgentIndex(ag);
+				
+				if (ag.state != DT_CROWDAGENT_STATE_WALKING)
+					continue;
+
+				dtVset(ag.disp, 0,0,0);
+				
+				float w = 0;
+
+				for (int j = 0; j < ag.nneis; ++j)
+				{
+					const dtCrowdAgent* nei = &m_agents[ag.neis[j].idx];
+					const int idx1 = getAgentIndex(nei);
+
+					float diff[3];
+					dtVsub(diff, ag.npos, nei->npos);
+					diff[1] = 0;
+					
+					float dist = dtVlenSqr(diff);
+					if (dist > dtSqr(ag.params.radius + nei->params.radius))
+						continue;
+					dist = dtMathSqrtf(dist);
+					float pen = (ag.params.radius + nei->params.radius) - dist;
+					if (dist < 0.0001f)
+					{
+						// Agents on top of each other, try to choose diverging separation directions.
+						if (idx0 > idx1)
+							dtVset(diff, -ag.dvel[2],0,ag.dvel[0]);
+						else
+							dtVset(diff, ag.dvel[2],0,-ag.dvel[0]);
+						pen = 0.01f;
+					}
+					else
+					{
+						pen = (1.0f/dist) * (pen*0.5f) * COLLISION_RESOLVE_FACTOR;
+					}
+					
+					dtVmad(ag.disp, ag.disp, diff, pen);			
+					
+					w += 1.0f;
+				}
+				
+				if (w > 0.0001f)
+				{
+					const float iw = 1.0f / w;
+					dtVscale(ag.disp, ag.disp, iw);
+				}
+			}
+			
+			for (int i = 0; i < nagents; ++i)
+			{
+				dtCrowdAgent* ag = agents[i];
+				if (ag.state != DT_CROWDAGENT_STATE_WALKING)
+					continue;
+				
+				dtVadd(ag.npos, ag.npos, ag.disp);
+			}
+		}
+		
+		for (int i = 0; i < nagents; ++i)
+		{
+			dtCrowdAgent* ag = agents[i];
+			if (ag.state != DT_CROWDAGENT_STATE_WALKING)
+				continue;
+			
+			// Move along navmesh.
+			ag.corridor.movePosition(ag.npos, m_navquery, &m_filters[ag.params.queryFilterType]);
+			// Get valid constrained position back.
+			dtVcopy(ag.npos, ag.corridor.getPos());
+
+			// If not using path, truncate the corridor to just one poly.
+			if (ag.targetState == DT_CROWDAGENT_TARGET_NONE || ag.targetState == DT_CROWDAGENT_TARGET_VELOCITY)
+			{
+				ag.corridor.reset(ag.corridor.getFirstPoly(), ag.npos);
+				ag.partial = false;
+			}
+
+		}
+		
+		// Update agents using off-mesh connection.
+		for (int i = 0; i < m_maxAgents; ++i)
+		{
+			dtCrowdAgentAnimation* anim = &m_agentAnims[i];
+			if (!anim.active)
+				continue;
+			dtCrowdAgent* ag = agents[i];
+
+			anim.t += dt;
+			if (anim.t > anim.tmax)
+			{
+				// Reset animation
+				anim.active = false;
+				// Prepare agent for walking.
+				ag.state = DT_CROWDAGENT_STATE_WALKING;
+				continue;
+			}
+			
+			// Update position
+			const float ta = anim.tmax*0.15f;
+			const float tb = anim.tmax;
+			if (anim.t < ta)
+			{
+				const float u = tween(anim.t, 0.0, ta);
+				dtVlerp(ag.npos, anim.initPos, anim.startPos, u);
+			}
+			else
+			{
+				const float u = tween(anim.t, ta, tb);
+				dtVlerp(ag.npos, anim.startPos, anim.endPos, u);
+			}
+				
+			// Update velocity.
+			dtVset(ag.vel, 0,0,0);
+			dtVset(ag.dvel, 0,0,0);
+		}
+		*/
+	}
+
+	private int getAgentIndex(CrowdAgent crowdAgent) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }
 
