@@ -24,7 +24,6 @@ import static org.recast4j.detour.DetourCommon.vCopy;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.PriorityQueue;
 
 import org.recast4j.detour.FindLocalNeighbourhoodResult;
 import org.recast4j.detour.GetPolyWallSegmentsResult;
@@ -44,7 +43,7 @@ public class LocalBoundary {
 	}
 
 	float[] m_center = new float[3];
-	PriorityQueue<Segment> m_segs = new PriorityQueue<>((o1, o2) -> Float.compare(o1.d, o2.d));
+	List<Segment> m_segs = new ArrayList<>();
 	List<Long> m_polys = new ArrayList<>();
 
 	protected LocalBoundary() {
@@ -59,13 +58,27 @@ public class LocalBoundary {
 
 	protected void addSegment(float dist, float[] s) {
 		// Insert neighbour based on the distance.
-		if (m_segs.size() >= MAX_LOCAL_SEGS) {
-			return;
-		}
 		Segment seg = new Segment();
 		System.arraycopy(s, 0, seg.s, 0, 6);
 		seg.d = dist;
-		m_segs.add(seg);
+		if (m_segs.isEmpty()) {
+			m_segs.add(seg);
+		} else if (dist >= m_segs.get(m_segs.size() - 1).d) {
+			if (m_segs.size() >= MAX_LOCAL_SEGS) {
+				return;
+			}
+			m_segs.set(m_segs.size() - 1, seg);
+		} else {
+			// Insert inbetween.
+			int i;
+			for (i = 0; i < m_segs.size(); ++i)
+				if (dist <= m_segs.get(i).d)
+					break;
+			m_segs.add(i, seg);
+		}
+		while (m_segs.size() > MAX_LOCAL_SEGS) {
+			m_segs.remove(m_segs.size() - 1);
+		}
 	}
 
 	public void update(long ref, float[] pos, float collisionQueryRange, NavMeshQuery navquery, QueryFilter filter) {
@@ -109,4 +122,11 @@ public class LocalBoundary {
 		return m_center;
 	}
 
+	public float[] getSegment(int j) {
+		return m_segs.get(j).s;
+	}
+
+	public int getSegmentCount() {
+		return m_segs.size();
+	}
 }

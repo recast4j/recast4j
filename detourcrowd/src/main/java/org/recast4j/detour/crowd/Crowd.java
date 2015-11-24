@@ -21,6 +21,7 @@ package org.recast4j.detour.crowd;
 import static org.recast4j.detour.DetourCommon.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -33,8 +34,10 @@ import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.detour.QueryFilter;
 import org.recast4j.detour.Status;
+import org.recast4j.detour.Tupple2;
 import org.recast4j.detour.crowd.CrowdAgent.CrowdAgentState;
 import org.recast4j.detour.crowd.CrowdAgent.MoveRequestState;
+import org.recast4j.detour.crowd.ObstacleAvoidanceQuery.ObstacleAvoidanceDebugData;
 import org.recast4j.detour.crowd.ObstacleAvoidanceQuery.ObstacleAvoidanceParams;
 
 /*
@@ -73,13 +76,13 @@ class dtCrowd
 
 	dtNavMeshQuery* m_navquery;
 
-	void updateTopologyOptimization(dtCrowdAgent** agents, const int nagents, const float dt);
-	void updateMoveRequest(const float dt);
-	void checkPathValidity(dtCrowdAgent** agents, const int nagents, const float dt);
+	void updateTopologyOptimization(dtCrowdAgent** agents, int nagents, float dt);
+	void updateMoveRequest(float dt);
+	void checkPathValidity(dtCrowdAgent** agents, int nagents, float dt);
 
-	inline int getAgentIndex(const dtCrowdAgent* agent) const  { return (int)(agent - m_agents); }
+	inline int getAgentIndex(dtCrowdAgent* agent)  { return (int)(agent - m_agents); }
 
-	bool requestMoveTargetReplan(const int idx, dtPolyRef ref, const float* pos);
+	bool requestMoveTargetReplan(int idx, dtPolyRef ref, float* pos);
 
 	void purge();
 	
@@ -90,23 +93,23 @@ public:
 	///  @param[in]		maxAgentRadius	The maximum radius of any agent that will be added to the crowd. [Limit: > 0]
 	///  @param[in]		nav				The navigation mesh to use for planning.
 	/// @return True if the initialization succeeded.
-	bool init(const int maxAgents, const float maxAgentRadius, dtNavMesh* nav);
+	bool init(int maxAgents, float maxAgentRadius, dtNavMesh* nav);
 	
 	/// Gets the shared avoidance configuration for the specified index.
 	///  @param[in]		idx		The index of the configuration to retreive. 
 	///							[Limits:  0 <= value < #DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS]
 	/// @return The requested configuration.
-	const dtObstacleAvoidanceParams* getObstacleAvoidanceParams(const int idx) const;
+	dtObstacleAvoidanceParams* getObstacleAvoidanceParams(int idx) const;
 	
 	/// Gets the specified agent from the pool.
 	///	 @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
 	/// @return The requested agent.
-	const dtCrowdAgent* getAgent(const int idx);
+	dtCrowdAgent* getAgent(int idx);
 
 	/// Gets the specified agent from the pool.
 	///	 @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
 	/// @return The requested agent.
-	dtCrowdAgent* getEditableAgent(const int idx);
+	dtCrowdAgent* getEditableAgent(int idx);
 
 	/// The maximum number of agents that can be managed by the object.
 	/// @return The maximum number of agents.
@@ -116,72 +119,72 @@ public:
 	///  @param[in]		pos		The requested position of the agent. [(x, y, z)]
 	///  @param[in]		params	The configutation of the agent.
 	/// @return The index of the agent in the agent pool. Or -1 if the agent could not be added.
-	int addAgent(const float* pos, const dtCrowdAgentParams* params);
+	int addAgent(float* pos, dtCrowdAgentParams* params);
 
 	/// Updates the specified agent's configuration.
 	///  @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
 	///  @param[in]		params	The new agent configuration.
-	void updateAgentParameters(const int idx, const dtCrowdAgentParams* params);
+	void updateAgentParameters(int idx, dtCrowdAgentParams* params);
 
 	/// Removes the agent from the crowd.
 	///  @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
-	void removeAgent(const int idx);
+	void removeAgent(int idx);
 	
 	/// Submits a new move request for the specified agent.
 	///  @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
 	///  @param[in]		ref		The position's polygon reference.
 	///  @param[in]		pos		The position within the polygon. [(x, y, z)]
 	/// @return True if the request was successfully submitted.
-	bool requestMoveTarget(const int idx, dtPolyRef ref, const float* pos);
+	bool requestMoveTarget(int idx, dtPolyRef ref, float* pos);
 
 	/// Submits a new move request for the specified agent.
 	///  @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
 	///  @param[in]		vel		The movement velocity. [(x, y, z)]
 	/// @return True if the request was successfully submitted.
-	bool requestMoveVelocity(const int idx, const float* vel);
+	bool requestMoveVelocity(int idx, float* vel);
 
 	/// Resets any request for the specified agent.
 	///  @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
 	/// @return True if the request was successfully reseted.
-	bool resetMoveTarget(const int idx);
+	bool resetMoveTarget(int idx);
 
 	/// Gets the active agents int the agent pool.
 	///  @param[out]	agents		An array of agent pointers. [(#dtCrowdAgent *) * maxAgents]
 	///  @param[in]		maxAgents	The size of the crowd agent array.
 	/// @return The number of agents returned in @p agents.
-	int getActiveAgents(dtCrowdAgent** agents, const int maxAgents);
+	int getActiveAgents(dtCrowdAgent** agents, int maxAgents);
 
 	/// Updates the steering and positions of all agents.
 	///  @param[in]		dt		The time, in seconds, to update the simulation. [Limit: > 0]
 	///  @param[out]	debug	A debug object to load with debug information. [Opt]
-	void update(const float dt, dtCrowdAgentDebugInfo* debug);
+	void update(float dt, dtCrowdAgentDebugInfo* debug);
 	
 	/// Gets the filter used by the crowd.
 	/// @return The filter used by the crowd.
-	inline const dtQueryFilter* getFilter(const int i) const { return (i >= 0 && i < DT_CROWD_MAX_QUERY_FILTER_TYPE) ? &m_filters[i] : 0; }
+	inline dtQueryFilter* getFilter(int i) { return (i >= 0 && i < DT_CROWD_MAX_QUERY_FILTER_TYPE) ? &m_filters[i] : 0; }
 	
 	/// Gets the filter used by the crowd.
 	/// @return The filter used by the crowd.
-	inline dtQueryFilter* getEditableFilter(const int i) { return (i >= 0 && i < DT_CROWD_MAX_QUERY_FILTER_TYPE) ? &m_filters[i] : 0; }
+	inline dtQueryFilter* getEditableFilter(int i) { return (i >= 0 && i < DT_CROWD_MAX_QUERY_FILTER_TYPE) ? &m_filters[i] : 0; }
 
 	/// Gets the search extents [(x, y, z)] used by the crowd for query operations. 
 	/// @return The search extents used by the crowd. [(x, y, z)]
-	const float* getQueryExtents() const { return m_ext; }
+	float* getQueryExtents() { return m_ext; }
 	
 	/// Gets the velocity sample count.
 	/// @return The velocity sample count.
-	inline int getVelocitySampleCount() const { return m_velocitySampleCount; }
+	inline int getVelocitySampleCount() { return m_velocitySampleCount; }
 	
 	/// Gets the crowd's proximity grid.
 	/// @return The crowd's proximity grid.
-	const dtProximityGrid* getGrid() const { return m_grid; }
+	dtProximityGrid* getGrid() { return m_grid; }
 
 	/// Gets the crowd's path request queue.
 	/// @return The crowd's path request queue.
-	const dtPathQueue* getPathQueue() const { return &m_pathq; }
+	dtPathQueue* getPathQueue() { return &m_pathq; }
 
 	/// Gets the query object used by the crowd.
-	const dtNavMeshQuery* getNavMeshQuery() const { return m_navquery; }
+	dtNavMeshQuery* getNavMeshQuery() { return m_navquery; }
 };
 
 /// Allocates a crowd object using the Detour allocator.
@@ -1007,9 +1010,8 @@ public class Crowd {
 		}
 		
 		// Get nearby navmesh segments and agents to collide with.
-		for (int i = 0; i < agents.size(); ++i)
+		for (CrowdAgent ag : agents)
 		{
-			CrowdAgent ag = agents.get(i);
 			if (ag.state != CrowdAgentState.DT_CROWDAGENT_STATE_WALKING)
 				continue;
 
@@ -1068,9 +1070,8 @@ public class Crowd {
 		}
 
 		// Trigger off-mesh connections (depends on corners).
-		for (int i = 0; i < agents.size(); ++i)
+		for (CrowdAgent ag : agents)
 		{
-			CrowdAgent ag = agents.get(i);
 			
 			if (ag.state != CrowdAgentState.DT_CROWDAGENT_STATE_WALKING)
 				continue;
@@ -1106,143 +1107,146 @@ public class Crowd {
 				}
 			}
 		}
-		/*
 
 		// Calculate steering.
-		for (int i = 0; i < nagents; ++i)
+		for (CrowdAgent ag : agents)
 		{
-			dtCrowdAgent* ag = agents[i];
 
-			if (ag.state != DT_CROWDAGENT_STATE_WALKING)
+			if (ag.state != CrowdAgentState.DT_CROWDAGENT_STATE_WALKING)
 				continue;
-			if (ag.targetState == DT_CROWDAGENT_TARGET_NONE)
+			if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_NONE)
 				continue;
 			
-			float dvel[3] = {0,0,0};
+			float[] dvel = new float[3];
 
-			if (ag.targetState == DT_CROWDAGENT_TARGET_VELOCITY)
+			if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY)
 			{
-				dtVcopy(dvel, ag.targetPos);
-				ag.desiredSpeed = dtVlen(ag.targetPos);
+				vCopy(dvel, ag.targetPos);
+				ag.desiredSpeed = vLen(ag.targetPos);
 			}
 			else
 			{
 				// Calculate steering direction.
-				if (ag.params.updateFlags & DT_CROWD_ANTICIPATE_TURNS)
-					calcSmoothSteerDirection(ag, dvel);
+				if ((ag.params.updateFlags & CrowdAgent.DT_CROWD_ANTICIPATE_TURNS) != 0)
+					dvel = ag.calcSmoothSteerDirection();
 				else
-					calcStraightSteerDirection(ag, dvel);
+					dvel = ag.calcStraightSteerDirection();
 				
 				// Calculate speed scale, which tells the agent to slowdown at the end of the path.
-				const float slowDownRadius = ag.params.radius*2;	// TODO: make less hacky.
-				const float speedScale = getDistanceToGoal(ag, slowDownRadius) / slowDownRadius;
+				float slowDownRadius = ag.params.radius*2;	// TODO: make less hacky.
+				float speedScale = ag.getDistanceToGoal(slowDownRadius) / slowDownRadius;
 					
 				ag.desiredSpeed = ag.params.maxSpeed;
-				dtVscale(dvel, dvel, ag.desiredSpeed * speedScale);
+				vScale(dvel, ag.desiredSpeed * speedScale);
 			}
 
 			// Separation
-			if (ag.params.updateFlags & DT_CROWD_SEPARATION)
+			if ((ag.params.updateFlags & CrowdAgent.DT_CROWD_SEPARATION) != 0)
 			{
 				float separationDist = ag.params.collisionQueryRange; 
 				float invSeparationDist = 1.0f / separationDist; 
 				float separationWeight = ag.params.separationWeight;
 				
 				float w = 0;
-				float disp[3] = {0,0,0};
+				float[] disp = new float[3];
 				
-				for (int j = 0; j < ag.nneis; ++j)
+				for (int j = 0; j < ag.neis.size(); ++j)
 				{
-					const dtCrowdAgent* nei = &m_agents[ag.neis[j].idx];
+					CrowdAgent nei = m_agents[ag.neis.get(j).idx];
 					
-					float diff[3];
-					dtVsub(diff, ag.npos, nei->npos);
+					float[] diff = vSub(ag.npos, nei.npos);
 					diff[1] = 0;
 					
-					const float distSqr = dtVlenSqr(diff);
+					float distSqr = vLenSqr(diff);
 					if (distSqr < 0.00001f)
 						continue;
-					if (distSqr > dtSqr(separationDist))
+					if (distSqr > sqr(separationDist))
 						continue;
-					const float dist = dtMathSqrtf(distSqr);
-					const float weight = separationWeight * (1.0f - dtSqr(dist*invSeparationDist));
+					float dist = (float) Math.sqrt(distSqr);
+					float weight = separationWeight * (1.0f - sqr(dist*invSeparationDist));
 					
-					dtVmad(disp, disp, diff, weight/dist);
+					disp = vMad(disp, diff, weight/dist);
 					w += 1.0f;
 				}
 				
 				if (w > 0.0001f)
 				{
 					// Adjust desired velocity.
-					dtVmad(dvel, dvel, disp, 1.0f/w);
+					dvel = vMad(dvel, disp, 1.0f/w);
 					// Clamp desired velocity to desired speed.
-					const float speedSqr = dtVlenSqr(dvel);
-					const float desiredSqr = dtSqr(ag.desiredSpeed);
+					float speedSqr = vLenSqr(dvel);
+					float desiredSqr = sqr(ag.desiredSpeed);
 					if (speedSqr > desiredSqr)
-						dtVscale(dvel, dvel, desiredSqr/speedSqr);
+						dvel = vScale(dvel, desiredSqr/speedSqr);
 				}
 			}
 			
 			// Set the desired velocity.
-			dtVcopy(ag.dvel, dvel);
+			vCopy(ag.dvel, dvel);
 		}
 		
 		// Velocity planning.	
-		for (int i = 0; i < nagents; ++i)
+		for (int i = 0; i < agents.size(); ++i)
 		{
-			dtCrowdAgent* ag = agents[i];
+			CrowdAgent ag = agents.get(i);
 			
-			if (ag.state != DT_CROWDAGENT_STATE_WALKING)
+			if (ag.state != CrowdAgentState.DT_CROWDAGENT_STATE_WALKING)
 				continue;
 			
-			if (ag.params.updateFlags & DT_CROWD_OBSTACLE_AVOIDANCE)
+			if ((ag.params.updateFlags & CrowdAgent.DT_CROWD_OBSTACLE_AVOIDANCE) != 0)
 			{
-				m_obstacleQuery->reset();
+				m_obstacleQuery.reset();
 				
 				// Add neighbours as obstacles.
-				for (int j = 0; j < ag.nneis; ++j)
+				for (int j = 0; j < ag.neis.size(); ++j)
 				{
-					const dtCrowdAgent* nei = &m_agents[ag.neis[j].idx];
-					m_obstacleQuery->addCircle(nei->npos, nei->params.radius, nei->vel, nei->dvel);
+					CrowdAgent nei = m_agents[ag.neis.get(j).idx];
+					m_obstacleQuery.addCircle(nei.npos, nei.params.radius, nei.vel, nei.dvel);
 				}
 
 				// Append neighbour segments as obstacles.
 				for (int j = 0; j < ag.boundary.getSegmentCount(); ++j)
 				{
-					const float* s = ag.boundary.getSegment(j);
-					if (dtTriArea2D(ag.npos, s, s+3) < 0.0f)
+					float[] s = ag.boundary.getSegment(j);
+					float[] s3 = Arrays.copyOfRange(s, 3, 6);
+					if (triArea2D(ag.npos, s, s3) < 0.0f)
 						continue;
-					m_obstacleQuery->addSegment(s, s+3);
+					m_obstacleQuery.addSegment(s, s3);
 				}
 
-				dtObstacleAvoidanceDebugData* vod = 0;
+				ObstacleAvoidanceDebugData vod = null;
 				if (debugIdx == i) 
-					vod = debug->vod;
+					vod = debug.vod;
 				
 				// Sample new safe velocity.
-				bool adaptive = true;
+				boolean adaptive = true;
 				int ns = 0;
 
-				const dtObstacleAvoidanceParams* params = &m_obstacleQueryParams[ag.params.obstacleAvoidanceType];
+				ObstacleAvoidanceParams params = m_obstacleQueryParams[ag.params.obstacleAvoidanceType];
 					
 				if (adaptive)
 				{
-					ns = m_obstacleQuery->sampleVelocityAdaptive(ag.npos, ag.params.radius, ag.desiredSpeed,
-																 ag.vel, ag.dvel, ag.nvel, params, vod);
+					Tupple2<Integer, float[]> nsnvel = m_obstacleQuery.sampleVelocityAdaptive(ag.npos, ag.params.radius, ag.desiredSpeed,
+																 ag.vel, ag.dvel, params, vod);
+					ns = nsnvel.first;
+					ag.nvel = nsnvel.second;
 				}
 				else
 				{
-					ns = m_obstacleQuery->sampleVelocityGrid(ag.npos, ag.params.radius, ag.desiredSpeed,
-															 ag.vel, ag.dvel, ag.nvel, params, vod);
+					Tupple2<Integer, float[]> nsnvel = m_obstacleQuery.sampleVelocityGrid(ag.npos, ag.params.radius, ag.desiredSpeed,
+															 ag.vel, ag.dvel, params, vod);
+					ns = nsnvel.first;
+					ag.nvel = nsnvel.second;
 				}
 				m_velocitySampleCount += ns;
 			}
 			else
 			{
 				// If not using velocity planning, new velocity is directly the desired velocity.
-				dtVcopy(ag.nvel, ag.dvel);
+				vCopy(ag.nvel, ag.dvel);
 			}
 		}
+		/*
 
 		// Integrate.
 		for (int i = 0; i < nagents; ++i)
@@ -1254,14 +1258,14 @@ public class Crowd {
 		}
 		
 		// Handle collisions.
-		static const float COLLISION_RESOLVE_FACTOR = 0.7f;
+		static float COLLISION_RESOLVE_FACTOR = 0.7f;
 		
 		for (int iter = 0; iter < 4; ++iter)
 		{
 			for (int i = 0; i < nagents; ++i)
 			{
 				dtCrowdAgent* ag = agents[i];
-				const int idx0 = getAgentIndex(ag);
+				int idx0 = getAgentIndex(ag);
 				
 				if (ag.state != DT_CROWDAGENT_STATE_WALKING)
 					continue;
@@ -1272,8 +1276,8 @@ public class Crowd {
 
 				for (int j = 0; j < ag.nneis; ++j)
 				{
-					const dtCrowdAgent* nei = &m_agents[ag.neis[j].idx];
-					const int idx1 = getAgentIndex(nei);
+					dtCrowdAgent* nei = &m_agents[ag.neis[j].idx];
+					int idx1 = getAgentIndex(nei);
 
 					float diff[3];
 					dtVsub(diff, ag.npos, nei->npos);
@@ -1305,7 +1309,7 @@ public class Crowd {
 				
 				if (w > 0.0001f)
 				{
-					const float iw = 1.0f / w;
+					float iw = 1.0f / w;
 					dtVscale(ag.disp, ag.disp, iw);
 				}
 			}
@@ -1359,16 +1363,16 @@ public class Crowd {
 			}
 			
 			// Update position
-			const float ta = anim.tmax*0.15f;
-			const float tb = anim.tmax;
+			float ta = anim.tmax*0.15f;
+			float tb = anim.tmax;
 			if (anim.t < ta)
 			{
-				const float u = tween(anim.t, 0.0, ta);
+				float u = tween(anim.t, 0.0, ta);
 				dtVlerp(ag.npos, anim.initPos, anim.startPos, u);
 			}
 			else
 			{
-				const float u = tween(anim.t, ta, tb);
+				float u = tween(anim.t, ta, tb);
 				dtVlerp(ag.npos, anim.startPos, anim.endPos, u);
 			}
 				
