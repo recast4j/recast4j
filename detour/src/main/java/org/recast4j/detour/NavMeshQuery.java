@@ -518,7 +518,7 @@ public class NavMeshQuery {
 				}
 			}
 		}
-		throw new IllegalArgumentException("Invalid ref");
+		throw new IllegalArgumentException("Invalid ref " + ref);
 	}
 
 	/// @par

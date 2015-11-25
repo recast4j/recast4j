@@ -6,7 +6,6 @@
     <artifactId>parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-
 	
     <modules>
         <module>recast</module>
@@ -14,7 +13,7 @@
         <module>detourcrowd</module>
     </modules>
 
-    <name>Recast for Java</name>
+    <name>Recast and Detour for Java</name>
     <description>Navigation Mesh Construction and Path-finding Toolkit.</description>
     <url>https://github.com/piotr-piastucki/recast4j</url>
 

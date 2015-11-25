@@ -1,6 +1,4 @@
-package org.recast4j.detour.crowd;
-
-import org.recast4j.detour.crowd.ObstacleAvoidanceQuery.ObstacleAvoidanceDebugData;
+package org.recast4j.detour.crowd.debug;
 
 public class CrowdAgentDebugInfo {
 

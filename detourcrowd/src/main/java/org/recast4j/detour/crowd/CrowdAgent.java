@@ -68,6 +68,8 @@ class CrowdAgent {
 	static final int DT_CROWD_OPTIMIZE_VIS = 8;			///< Use #dtPathCorridor::optimizePathVisibility() to optimize the agent path.
 	static final int DT_CROWD_OPTIMIZE_TOPO = 16;		///< Use dtPathCorridor::optimizePathTopology() to optimize the agent path.
 	
+	final int idx;
+	
 	/// True if the agent is active, false if the agent is in an unused slot in the agent pool.
 	boolean active;
 
@@ -112,7 +114,8 @@ class CrowdAgent {
 
 	CrowdAgentAnimation animation;
 
-	public CrowdAgent() {
+	public CrowdAgent(int idx) {
+		this.idx = idx;
 		corridor = new PathCorridor();
 		boundary = new LocalBoundary();
 		animation = new CrowdAgentAnimation();
@@ -209,4 +212,11 @@ class CrowdAgent {
 			targetState = MoveRequestState.DT_CROWDAGENT_TARGET_FAILED;
 	}
 
+	int getAgentIndex() {
+		return idx;
+	}
+	
+	public boolean isActive() {
+		return active;
+	}
 }
