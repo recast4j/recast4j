@@ -293,7 +293,7 @@ public class ObstacleAvoidanceQuery {
 		for (int i = 0; i < m_nsegments; ++i) {
 			ObstacleSegment seg = m_segments[i];
 			float htmin = 0;
-
+			
 			if (seg.touch) {
 				// Special case when the agent is very close to the segment.
 				float[] sdir = vSub(seg.q, seg.p);
@@ -331,7 +331,6 @@ public class ObstacleAvoidanceQuery {
 		float tpen = m_params.weightToi * (1.0f / (0.1f + tmin * m_invHorizTime));
 
 		float penalty = vpen + vcpen + spen + tpen;
-
 		// Store different penalties for debug viewing
 		if (debug != null)
 			debug.addSample(vcand, cs, penalty, vpen, vcpen, spen, tpen);
@@ -480,7 +479,6 @@ public class ObstacleAvoidanceQuery {
 		float[] res = new float[3];
 		vSet(res, dvel[0] * m_params.velBias, 0, dvel[2] * m_params.velBias);
 		int ns = 0;
-
 		for (int k = 0; k < depth; ++k) {
 			float minPenalty = Float.MAX_VALUE;
 			float[] bvel = new float[3];
@@ -489,7 +487,6 @@ public class ObstacleAvoidanceQuery {
 			for (int i = 0; i < npat; ++i) {
 				float[] vcand = new float[3];
 				vSet(vcand, res[0] + pat[i * 2 + 0] * cr, 0f, res[2] + pat[i * 2 + 1] * cr);
-
 				if (sqr(vcand[0]) + sqr(vcand[2]) > sqr(vmax + 0.001f))
 					continue;
 
@@ -505,7 +502,6 @@ public class ObstacleAvoidanceQuery {
 
 			cr *= 0.5f;
 		}
-
 		vCopy(nvel, res);
 
 		return new Tupple2<Integer, float[]>(ns, nvel);

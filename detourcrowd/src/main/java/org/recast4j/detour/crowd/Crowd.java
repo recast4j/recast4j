@@ -1124,7 +1124,6 @@ public class Crowd {
 					dvel = ag.calcSmoothSteerDirection();
 				else
 					dvel = ag.calcStraightSteerDirection();
-				
 				// Calculate speed scale, which tells the agent to slowdown at the end of the path.
 				float slowDownRadius = ag.params.radius*2;	// TODO: make less hacky.
 				float speedScale = ag.getDistanceToGoal(slowDownRadius) / slowDownRadius;
@@ -1216,6 +1215,7 @@ public class Crowd {
 				int ns = 0;
 
 				ObstacleAvoidanceParams params = m_obstacleQueryParams[ag.params.obstacleAvoidanceType];
+//				System.out.println("Dvel = " + ag.dvel[0] + ", " + ag.dvel[1] + ", " + ag.dvel[2]);
 					
 				if (adaptive)
 				{

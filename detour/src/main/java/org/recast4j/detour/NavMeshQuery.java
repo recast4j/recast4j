@@ -2605,7 +2605,7 @@ public class NavMeshQuery {
 	///  @param[out]	segmentCount	The number of segments returned.
 	///  @param[in]		maxSegments		The maximum number of segments the result arrays can hold.
 	/// @returns The status flags for the query.
-	public GetPolyWallSegmentsResult getPolyWallSegments(long ref, QueryFilter filter) {
+	public GetPolyWallSegmentsResult getPolyWallSegments(long ref, boolean storePortals, QueryFilter filter) {
 		Tupple2<MeshTile, Poly> tileAndPoly = m_nav.getTileAndPolyByRef(ref);
 		MeshTile tile = tileAndPoly.first;
 		Poly poly = tileAndPoly.second;
@@ -2641,6 +2641,9 @@ public class NavMeshQuery {
 					if (!filter.passFilter(neiRef, tile, tile.data.polys[idx]))
 						neiRef = 0;
 				}
+				// If the edge leads to another polygon and portals are not stored, skip.
+				if (neiRef != 0 && !storePortals)
+					continue;
 
 				int vj = poly.verts[j] * 3;
 				int vi = poly.verts[i] * 3;
@@ -2661,7 +2664,7 @@ public class NavMeshQuery {
 			int vi = poly.verts[i] * 3;
 			for (int k = 1; k < ints.size(); ++k) {
 				// Portal segment.
-				if (ints.get(k).ref != 0) {
+				if (storePortals && ints.get(k).ref != 0) {
 					float tmin = ints.get(k).tmin / 255.0f;
 					float tmax = ints.get(k).tmax / 255.0f;
 					float[] seg = new float[6];

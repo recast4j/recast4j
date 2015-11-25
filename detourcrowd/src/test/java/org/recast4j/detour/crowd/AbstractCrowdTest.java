@@ -82,7 +82,7 @@ public class AbstractCrowdTest {
 		return ap;
 	}
 
-	protected void addAgentGrid(int size, float distance, int updateFlags, float[] startPos) {
+	protected void addAgentGrid(int size, float distance, int updateFlags, int obstacleAvoidanceType, float[] startPos) {
 		CrowdAgentParams ap = getAgentParams(updateFlags);
 		for (int i = 0; i < size; i++) {
 			for (int j = 0; j < size; j++) {

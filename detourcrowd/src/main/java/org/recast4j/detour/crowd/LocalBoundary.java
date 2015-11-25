@@ -93,7 +93,7 @@ public class LocalBoundary {
 		m_segs.clear();
 		// Secondly, store all polygon edges.
 		for (int j = 0; j < m_polys.size(); ++j) {
-			GetPolyWallSegmentsResult gpws = navquery.getPolyWallSegments(m_polys.get(j), filter);
+			GetPolyWallSegmentsResult gpws = navquery.getPolyWallSegments(m_polys.get(j), false, filter);
 			for (int k = 0; k < gpws.getSegmentRefs().size(); ++k) {
 				float[] s = gpws.getSegmentVerts().get(k);
 				// Skip too distant segments.
