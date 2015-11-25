@@ -18,7 +18,20 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour.crowd;
 
-import static org.recast4j.detour.DetourCommon.*;
+import static org.recast4j.detour.DetourCommon.clamp;
+import static org.recast4j.detour.DetourCommon.sqr;
+import static org.recast4j.detour.DetourCommon.triArea2D;
+import static org.recast4j.detour.DetourCommon.vAdd;
+import static org.recast4j.detour.DetourCommon.vCopy;
+import static org.recast4j.detour.DetourCommon.vDist2D;
+import static org.recast4j.detour.DetourCommon.vDist2DSqr;
+import static org.recast4j.detour.DetourCommon.vLen;
+import static org.recast4j.detour.DetourCommon.vLenSqr;
+import static org.recast4j.detour.DetourCommon.vLerp;
+import static org.recast4j.detour.DetourCommon.vMad;
+import static org.recast4j.detour.DetourCommon.vScale;
+import static org.recast4j.detour.DetourCommon.vSet;
+import static org.recast4j.detour.DetourCommon.vSub;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -420,17 +433,7 @@ public class Crowd {
 		}
 		// Init obstacle query params.
 		for (int i = 0; i < DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS; ++i) {
-			ObstacleAvoidanceParams params = m_obstacleQueryParams[i] = new ObstacleAvoidanceParams();
-			params.velBias = 0.4f;
-			params.weightDesVel = 2.0f;
-			params.weightCurVel = 0.75f;
-			params.weightSide = 0.75f;
-			params.weightToi = 2.5f;
-			params.horizTime = 2.5f;
-			params.gridSize = 33;
-			params.adaptiveDivs = 7;
-			params.adaptiveRings = 2;
-			params.adaptiveDepth = 5;
+			m_obstacleQueryParams[i] = new ObstacleAvoidanceParams();
 		}
 
 		// Allocate temp buffer for merging paths.
@@ -1127,7 +1130,7 @@ public class Crowd {
 				float speedScale = ag.getDistanceToGoal(slowDownRadius) / slowDownRadius;
 					
 				ag.desiredSpeed = ag.params.maxSpeed;
-				vScale(dvel, ag.desiredSpeed * speedScale);
+				dvel = vScale(dvel, ag.desiredSpeed * speedScale);
 			}
 
 			// Separation

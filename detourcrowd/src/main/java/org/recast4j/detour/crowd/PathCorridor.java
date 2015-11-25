@@ -18,6 +18,17 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour.crowd;
 
+import static org.recast4j.detour.DetourCommon.sqr;
+import static org.recast4j.detour.DetourCommon.vCopy;
+import static org.recast4j.detour.DetourCommon.vDist2D;
+import static org.recast4j.detour.DetourCommon.vDist2DSqr;
+import static org.recast4j.detour.DetourCommon.vMad;
+import static org.recast4j.detour.DetourCommon.vSub;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import org.recast4j.detour.FindPathResult;
 import org.recast4j.detour.MoveAlongSurfaceResult;
 import org.recast4j.detour.NavMesh;
@@ -27,12 +38,6 @@ import org.recast4j.detour.RaycastHit;
 import org.recast4j.detour.StraightPathItem;
 import org.recast4j.detour.Tupple2;
 import org.recast4j.detour.VectorPtr;
-
-import static org.recast4j.detour.DetourCommon.*;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * Represents a dynamic polygon corridor used to plan agent movement.
@@ -98,7 +103,7 @@ public class PathCorridor {
 		for (int i = path.size() - 1; i >= 0; --i) {
 			boolean found = false;
 			for (int j = visited.size() - 1; j >= 0; --j) {
-				if (path.get(i) == visited.get(j)) {
+				if (path.get(i).longValue() == visited.get(j).longValue()) {
 					furthestPath = i;
 					furthestVisited = j;
 					found = true;
@@ -118,7 +123,7 @@ public class PathCorridor {
 		List<Long> result = new ArrayList<>();
 		// Store visited
 		for (int i = visited.size() - 1; i > furthestVisited; --i)
-			path.add(visited.get(i));
+			result.add(visited.get(i));
 		result.addAll(path.subList(furthestPath, path.size()));
 		return result;
 	}

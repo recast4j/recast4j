@@ -18,12 +18,22 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour.crowd;
 
-import org.recast4j.detour.Tupple3;
-import org.recast4j.detour.crowd.debug.ObstacleAvoidanceDebugData;
-
-import static org.recast4j.detour.DetourCommon.*;
+import static org.recast4j.detour.DetourCommon.clamp;
+import static org.recast4j.detour.DetourCommon.distancePtSegSqr2D;
+import static org.recast4j.detour.DetourCommon.sqr;
+import static org.recast4j.detour.DetourCommon.triArea2D;
+import static org.recast4j.detour.DetourCommon.vCopy;
+import static org.recast4j.detour.DetourCommon.vDist2D;
+import static org.recast4j.detour.DetourCommon.vDot2D;
+import static org.recast4j.detour.DetourCommon.vNormalize;
+import static org.recast4j.detour.DetourCommon.vPerp2D;
+import static org.recast4j.detour.DetourCommon.vScale;
+import static org.recast4j.detour.DetourCommon.vSet;
+import static org.recast4j.detour.DetourCommon.vSub;
 
 import org.recast4j.detour.Tupple2;
+import org.recast4j.detour.Tupple3;
+import org.recast4j.detour.crowd.debug.ObstacleAvoidanceDebugData;
 
 public class ObstacleAvoidanceQuery {
 
@@ -65,6 +75,19 @@ public class ObstacleAvoidanceQuery {
 		int adaptiveDivs; ///< adaptive
 		int adaptiveRings; ///< adaptive
 		int adaptiveDepth; ///< adaptive
+
+		public ObstacleAvoidanceParams() {
+			velBias = 0.4f;
+			weightDesVel = 2.0f;
+			weightCurVel = 0.75f;
+			weightSide = 0.75f;
+			weightToi = 2.5f;
+			horizTime = 2.5f;
+			gridSize = 33;
+			adaptiveDivs = 7;
+			adaptiveRings = 2;
+			adaptiveDepth = 5;
+		}
 	};
 	
 
