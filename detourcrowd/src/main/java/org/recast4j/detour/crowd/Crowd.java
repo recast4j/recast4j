@@ -800,10 +800,9 @@ public class Crowd {
 					if (valid) {
 						// Put the old path infront of the old path.
 						if (path.size() > 1) {
-							if (res.size() > 0) {
-								res.remove(0);
-							}
-							res.addAll(0, path.subList(0, path.size()));
+							path.remove(path.size() - 1);
+							path.addAll(res);
+							res = path;
 							// Remove trackbacks
 							for (int j = 1; j < res.size() - 1; ++j) {
 								if (j - 1 >= 0 && j + 1 < res.size()) {
