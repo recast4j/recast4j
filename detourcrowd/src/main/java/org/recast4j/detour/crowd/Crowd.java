@@ -598,7 +598,7 @@ public class Crowd {
 
 		// Initialize request.
 		ag.setTarget(ref, pos);
-		ag.targetReplan = true;
+		ag.targetReplan = false;
 
 		return true;
 	}
@@ -763,6 +763,7 @@ public class Crowd {
 					else
 						ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_FAILED;
 					ag.targetReplanTime = 0.0f;
+					System.err.println("asas");
 				} else if (status != null && status.isSuccess()) {
 					List<Long> path = ag.corridor.getPath();
 					if (path.isEmpty()) {
@@ -799,7 +800,10 @@ public class Crowd {
 					if (valid) {
 						// Put the old path infront of the old path.
 						if (path.size() > 1) {
-							res.addAll(0, path.subList(1, path.size()));
+							if (res.size() > 0) {
+								res.remove(0);
+							}
+							res.addAll(0, path.subList(0, path.size()));
 							// Remove trackbacks
 							for (int j = 1; j < res.size() - 1; ++j) {
 								if (j - 1 >= 0 && j + 1 < res.size()) {
@@ -1035,7 +1039,7 @@ public class Crowd {
 				continue;
 			
 			// Find corners for steering
-			ag.corners = ag.corridor.findCorners(m_navquery, m_filters[ag.params.queryFilterType]);
+			ag.corners = ag.corridor.findCorners(DT_CROWDAGENT_MAX_CORNERS, m_navquery, m_filters[ag.params.queryFilterType]);
 			
 			// Check to see if the corner after the next corner is directly visible,
 			// and short cut to there.
@@ -1215,7 +1219,6 @@ public class Crowd {
 				int ns = 0;
 
 				ObstacleAvoidanceParams params = m_obstacleQueryParams[ag.params.obstacleAvoidanceType];
-//				System.out.println("Dvel = " + ag.dvel[0] + ", " + ag.dvel[1] + ", " + ag.dvel[2]);
 					
 				if (adaptive)
 				{

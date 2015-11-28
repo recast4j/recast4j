@@ -24,14 +24,14 @@ import org.recast4j.detour.QueryFilter;
 import org.recast4j.detour.Status;
 
 public class PathQuery {
-		long ref;
-		/// Path find start and end location.
-		float[] startPos = new float[3], endPos = new float[3];
-		long startRef, endRef;
-		/// Result.
-		List<Long> path;
-		/// State.
-		Status status;
-		int keepAlive;
-		QueryFilter filter; ///< TODO: This is potentially dangerous!
+	long ref;
+	/// Path find start and end location.
+	float[] startPos = new float[3], endPos = new float[3];
+	long startRef, endRef;
+	/// Result.
+	List<Long> path;
+	/// State.
+	Status status;
+	int keepAlive;
+	QueryFilter filter; /// < TODO: This is potentially dangerous!
 }

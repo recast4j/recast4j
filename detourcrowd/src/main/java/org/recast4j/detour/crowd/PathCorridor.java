@@ -226,11 +226,10 @@ public class PathCorridor {
 	 * @param[in] navquery The query object used to build the corridor.
 	 * @return Corners
 	 */
-	public List<StraightPathItem> findCorners(NavMeshQuery navquery, QueryFilter filter) {
+	public List<StraightPathItem> findCorners(int maxCorners, NavMeshQuery navquery, QueryFilter filter) {
 		final float MIN_TARGET_DIST = sqr(0.01f);
 
-		List<StraightPathItem> path = navquery.findStraightPath(m_pos, m_target, m_path, 0);
-
+		List<StraightPathItem> path = navquery.findStraightPath(m_pos, m_target, m_path, maxCorners, 0);
 		// Prune points in the beginning of the path which are too close.
 		for (Iterator<StraightPathItem> iter = path.iterator(); iter.hasNext();) {
 			StraightPathItem spi = iter.next();

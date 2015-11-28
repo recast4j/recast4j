@@ -67,7 +67,7 @@ public class LocalBoundary {
 			if (m_segs.size() >= MAX_LOCAL_SEGS) {
 				return;
 			}
-			m_segs.set(m_segs.size() - 1, seg);
+			m_segs.add(seg);
 		} else {
 			// Insert inbetween.
 			int i;

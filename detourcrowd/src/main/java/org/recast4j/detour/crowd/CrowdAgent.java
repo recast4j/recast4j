@@ -123,7 +123,6 @@ class CrowdAgent {
 	void integrate(float dt) {
 		// Fake dynamic constraint.
 		float maxDelta = params.maxAcceleration * dt;
-		//System.out.println("=== Integrate velocity " + nvel[0] + ", " + nvel[1] + ", " + nvel[2]);
 		float[] dv = vSub(nvel, vel);
 		float ds = vLen(dv);
 		if (ds > maxDelta)

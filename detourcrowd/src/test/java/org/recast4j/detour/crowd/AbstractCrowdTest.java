@@ -68,7 +68,7 @@ public class AbstractCrowdTest {
 		crowd.setObstacleAvoidanceParams(3, params);
 	}
 
-	protected CrowdAgentParams getAgentParams(int updateFlags) {
+	protected CrowdAgentParams getAgentParams(int updateFlags, int obstacleAvoidanceType) {
 		CrowdAgentParams ap = new CrowdAgentParams();
 		ap.radius = 0.6f;
 		ap.height = 2f;
@@ -77,19 +77,19 @@ public class AbstractCrowdTest {
 		ap.collisionQueryRange = ap.radius * 12f;
 		ap.pathOptimizationRange = ap.radius * 30f;
 		ap.updateFlags = updateFlags;
-		ap.obstacleAvoidanceType = 0;
+		ap.obstacleAvoidanceType = obstacleAvoidanceType;
 		ap.separationWeight = 0;
 		return ap;
 	}
 
 	protected void addAgentGrid(int size, float distance, int updateFlags, int obstacleAvoidanceType, float[] startPos) {
-		CrowdAgentParams ap = getAgentParams(updateFlags);
+		CrowdAgentParams ap = getAgentParams(updateFlags, obstacleAvoidanceType);
 		for (int i = 0; i < size; i++) {
 			for (int j = 0; j < size; j++) {
 				float[] pos = new float[3];
-				pos[0] = startPos[0] +  (i - size / 2) * distance;
+				pos[0] = startPos[0] +  i * distance;
 				pos[1] = startPos[1];
-				pos[2] = startPos[2] +  (j - size / 2) * distance;
+				pos[2] = startPos[2] +  j * distance;
 				crowd.addAgent(pos, ap);
 			}
 		}
@@ -122,4 +122,14 @@ public class AbstractCrowdTest {
 		vel = vScale(vel, speed);
 		return vel;
 	}
+
+	protected void dumpActiveAgents(int i) {
+		System.out.println(crowd.getActiveAgents().size());
+		for (CrowdAgent ag : crowd.getActiveAgents()) {
+			System.out.println(ag.state + ", " + ag.targetState);
+			System.out.println(ag.npos[0] + ", " + ag.npos[1] + ", " + ag.npos[2]);
+			System.out.println(ag.nvel[0] + ", " + ag.nvel[1] + ", " + ag.nvel[2]);
+		}
+	}
+
 }
