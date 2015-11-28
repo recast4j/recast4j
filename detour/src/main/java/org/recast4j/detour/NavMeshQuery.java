@@ -1289,16 +1289,18 @@ public class NavMeshQuery {
 		return new FindPathResult(status, path);
 	}	
 	
-	protected Status appendVertex(float[] pos, int flags, long ref, List<StraightPathItem> straightPath) {
+	protected Status appendVertex(float[] pos, int flags, long ref, List<StraightPathItem> straightPath, int maxStraightPath) {
 		if (straightPath.size() > 0 && vEqual(straightPath.get(straightPath.size() - 1).pos, pos)) {
 			// The vertices are equal, update flags and poly.
 			straightPath.get(straightPath.size() - 1).flags = flags;
 			straightPath.get(straightPath.size() - 1).ref = ref;
 		} else {
-			// Append new vertex.
-			straightPath.add(new StraightPathItem(pos, flags, ref));
+			if (straightPath.size() < maxStraightPath) {
+				// Append new vertex.
+				straightPath.add(new StraightPathItem(pos, flags, ref));
+			}
 			// If reached end of path or there is no space to append more vertices, return.
-			if (flags == DT_STRAIGHTPATH_END) {
+			if (flags == DT_STRAIGHTPATH_END || straightPath.size() >= maxStraightPath) {
 				return Status.SUCCSESS;
 			}
 		}
@@ -1306,7 +1308,7 @@ public class NavMeshQuery {
 	}
 
 	protected Status appendPortals(int startIdx, int endIdx, float[] endPos, List<Long> path, List<StraightPathItem> straightPath,
-			int options) {
+			int maxStraightPath, int options) {
 		float[] startPos = straightPath.get(straightPath.size() - 1).pos;
 		// Append or update last vertex
 		Status stat = null;
@@ -1337,8 +1339,8 @@ public class NavMeshQuery {
 			if (interect.first) {
 				float t = interect.third;
 				float[] pt = vLerp(left, right, t);
-				stat = appendVertex(pt, 0, path.get(i + 1), straightPath);
-				if (stat != Status.IN_PROGRESS)
+				stat = appendVertex(pt, 0, path.get(i + 1), straightPath, maxStraightPath);
+				if (!stat.isInProgress())
 					return stat;
 			}
 		}
@@ -1374,18 +1376,17 @@ public class NavMeshQuery {
 	///  @param[in]		maxStraightPath		The maximum number of points the straight path arrays can hold.  [Limit: > 0]
 	///  @param[in]		options				Query options. (see: #dtStraightPathOptions)
 	/// @returns The status flags for the query.
-	public List<StraightPathItem> findStraightPath(float[] startPos, float[] endPos, List<Long> path, int options) {
+	public List<StraightPathItem> findStraightPath(float[] startPos, float[] endPos, List<Long> path, int maxStraightPath, int options) {
 		if (path.isEmpty()) {
 			throw new IllegalArgumentException("Empty path");
 		}
-
 		// TODO: Should this be callers responsibility?
 		float[] closestStartPos = closestPointOnPolyBoundary(path.get(0), startPos);
 		float[] closestEndPos = closestPointOnPolyBoundary(path.get(path.size() - 1), endPos);
 		List<StraightPathItem> straightPath = new ArrayList<>();
 		// Add start point.
-		Status stat = appendVertex(closestStartPos, DT_STRAIGHTPATH_START, path.get(0), straightPath);
-		if (stat != Status.IN_PROGRESS)
+		Status stat = appendVertex(closestStartPos, DT_STRAIGHTPATH_START, path.get(0), straightPath, maxStraightPath);
+		if (!stat.isInProgress())
 			return straightPath;
 
 		if (path.size() > 1) {
@@ -1420,9 +1421,11 @@ public class NavMeshQuery {
 						closestEndPos = closestPointOnPolyBoundary(path.get(i), endPos);
 						// Append portals along the current straight path segment.
 						if ((options & (DT_STRAIGHTPATH_AREA_CROSSINGS | DT_STRAIGHTPATH_ALL_CROSSINGS)) != 0) {
-							appendPortals(apexIndex, i, closestEndPos, path, straightPath, options);
+							stat = appendPortals(apexIndex, i, closestEndPos, path, straightPath, options, maxStraightPath);
+							if (!stat.isInProgress())
+								return straightPath;
 						}
-						appendVertex(closestEndPos, 0, path.get(i), straightPath);
+						appendVertex(closestEndPos, 0, path.get(i), straightPath, maxStraightPath);
 						return straightPath;
 					}
 
@@ -1449,8 +1452,8 @@ public class NavMeshQuery {
 					} else {
 						// Append portals along the current straight path segment.
 						if ((options & (DT_STRAIGHTPATH_AREA_CROSSINGS | DT_STRAIGHTPATH_ALL_CROSSINGS)) != 0) {
-							stat = appendPortals(apexIndex, leftIndex, portalLeft, path, straightPath, options);
-							if (stat != Status.IN_PROGRESS)
+							stat = appendPortals(apexIndex, leftIndex, portalLeft, path, straightPath, options, maxStraightPath);
+							if (!stat.isInProgress())
 								return straightPath;
 						}
 
@@ -1465,8 +1468,8 @@ public class NavMeshQuery {
 						long ref = leftPolyRef;
 
 						// Append or update vertex
-						stat = appendVertex(portalApex, flags, ref, straightPath);
-						if (stat != Status.IN_PROGRESS)
+						stat = appendVertex(portalApex, flags, ref, straightPath, maxStraightPath);
+						if (!stat.isInProgress())
 							return straightPath;
 
 						portalLeft = vCopy(portalApex);
@@ -1491,8 +1494,8 @@ public class NavMeshQuery {
 					} else {
 						// Append portals along the current straight path segment.
 						if ((options & (DT_STRAIGHTPATH_AREA_CROSSINGS | DT_STRAIGHTPATH_ALL_CROSSINGS)) != 0) {
-							stat = appendPortals(apexIndex, rightIndex, portalRight, path, straightPath, options);
-							if (stat != Status.IN_PROGRESS)
+							stat = appendPortals(apexIndex, rightIndex, portalRight, path, straightPath, options, maxStraightPath);
+							if (!stat.isInProgress())
 								return straightPath;
 						}
 
@@ -1507,8 +1510,8 @@ public class NavMeshQuery {
 						long ref = rightPolyRef;
 
 						// Append or update vertex
-						stat = appendVertex(portalApex, flags, ref, straightPath);
-						if (stat != Status.IN_PROGRESS)
+						stat = appendVertex(portalApex, flags, ref, straightPath, maxStraightPath);
+						if (!stat.isInProgress())
 							return straightPath;
 
 						portalLeft = vCopy(portalApex);
@@ -1526,13 +1529,13 @@ public class NavMeshQuery {
 
 			// Append portals along the current straight path segment.
 			if ((options & (DT_STRAIGHTPATH_AREA_CROSSINGS | DT_STRAIGHTPATH_ALL_CROSSINGS)) != 0) {
-				stat = appendPortals(apexIndex, path.size() - 1, closestEndPos, path, straightPath, options);
-				if (stat != Status.IN_PROGRESS)
+				stat = appendPortals(apexIndex, path.size() - 1, closestEndPos, path, straightPath, options, maxStraightPath);
+				if (!stat.isInProgress())
 					return straightPath;
 			}
 		}
 
-		appendVertex(closestEndPos, DT_STRAIGHTPATH_END, 0, straightPath);
+		appendVertex(closestEndPos, DT_STRAIGHTPATH_END, 0, straightPath, maxStraightPath);
 
 		return straightPath;
 	}

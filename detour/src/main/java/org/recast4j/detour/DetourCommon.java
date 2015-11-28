@@ -222,9 +222,11 @@ public class DetourCommon {
 	/// @param[in,out] v The vector to normalize. [(x, y, z)]
 	public static void vNormalize(float[] v) {
 		float d = (float) (1.0f / Math.sqrt(sqr(v[0]) + sqr(v[1]) + sqr(v[2])));
-		v[0] *= d;
-		v[1] *= d;
-		v[2] *= d;
+		if (d != 0) {
+			v[0] *= d;
+			v[1] *= d;
+			v[2] *= d;
+		}
 	}
 
 	static final float thr = sqr(1.0f / 16384.0f);

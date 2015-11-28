@@ -140,7 +140,7 @@ public class FindPathTest extends AbstractDetourTest {
 			float[] startPos = startPoss[i];
 			float[] endPos = endPoss[i];
 			FindPathResult path = query.findPath(startRef, endRef, startPos, endPos, filter);
-			List<StraightPathItem> straightPath = query.findStraightPath(startPos, endPos, path.getRefs(), 0);
+			List<StraightPathItem> straightPath = query.findStraightPath(startPos, endPos, path.getRefs(), Integer.MAX_VALUE, 0);
 			Assert.assertEquals(straightPaths[i].length, straightPath.size());
 			for (int j = 0; j < straightPaths[i].length; j++) {
 				Assert.assertEquals(straightPaths[i][j].ref, straightPath.get(j).ref);
