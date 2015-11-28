@@ -78,7 +78,7 @@ public class AbstractCrowdTest {
 		ap.pathOptimizationRange = ap.radius * 30f;
 		ap.updateFlags = updateFlags;
 		ap.obstacleAvoidanceType = obstacleAvoidanceType;
-		ap.separationWeight = 0;
+		ap.separationWeight = 2f;
 		return ap;
 	}
 
