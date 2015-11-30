@@ -293,13 +293,10 @@ public class Crowd4Test extends AbstractCrowdTest {
 				| CrowdAgent.DT_CROWD_OPTIMIZE_TOPO | CrowdAgent.DT_CROWD_OBSTACLE_AVOIDANCE;
 
 		addAgentGrid(2, 0.3f, updateFlags, 2, startPoss[0]);
-		for (CrowdAgent ag : crowd.getActiveAgents()) {
-			crowd.requestMoveTarget(ag.getAgentIndex(), endRefs[0], endPoss[0]);
-		}
+		setMoveTarget(endPoss[0], false);
 		for (int i = 0; i < EXPECTED_A1Q2TVTA.length; i++) {
 			crowd.update(1 / 5f, null);
 			CrowdAgent ag = crowd.getAgent(2);
-			dumpActiveAgents(i);
 			Assert.assertEquals(EXPECTED_A1Q2TVTA[i][0], ag.npos[0], 0.001f);
 			Assert.assertEquals(EXPECTED_A1Q2TVTA[i][1], ag.npos[1], 0.001f);
 			Assert.assertEquals(EXPECTED_A1Q2TVTA[i][2], ag.npos[2], 0.001f);
@@ -316,13 +313,10 @@ public class Crowd4Test extends AbstractCrowdTest {
 				| CrowdAgent.DT_CROWD_SEPARATION;
 
 		addAgentGrid(2, 0.3f, updateFlags, 2, startPoss[0]);
-		for (CrowdAgent ag : crowd.getActiveAgents()) {
-			crowd.requestMoveTarget(ag.getAgentIndex(), endRefs[0], endPoss[0]);
-		}
+		setMoveTarget(endPoss[0], false);
 		for (int i = 0; i < EXPECTED_A1Q2TVTAS.length; i++) {
 			crowd.update(1 / 5f, null);
 			CrowdAgent ag = crowd.getAgent(2);
-			dumpActiveAgents(i);
 			Assert.assertEquals(EXPECTED_A1Q2TVTAS[i][0], ag.npos[0], 0.001f);
 			Assert.assertEquals(EXPECTED_A1Q2TVTAS[i][1], ag.npos[1], 0.001f);
 			Assert.assertEquals(EXPECTED_A1Q2TVTAS[i][2], ag.npos[2], 0.001f);
@@ -337,13 +331,10 @@ public class Crowd4Test extends AbstractCrowdTest {
 		int updateFlags = CrowdAgent.DT_CROWD_OPTIMIZE_TOPO;
 
 		addAgentGrid(2, 0.3f, updateFlags, 2, startPoss[0]);
-		for (CrowdAgent ag : crowd.getActiveAgents()) {
-			crowd.requestMoveTarget(ag.getAgentIndex(), endRefs[0], endPoss[0]);
-		}
+		setMoveTarget(endPoss[0], false);
 		for (int i = 0; i < EXPECTED_A1Q2T.length; i++) {
 			crowd.update(1 / 5f, null);
 			CrowdAgent ag = crowd.getAgent(2);
-			dumpActiveAgents(i);
 			Assert.assertEquals(EXPECTED_A1Q2T[i][0], ag.npos[0], 0.001f);
 			Assert.assertEquals(EXPECTED_A1Q2T[i][1], ag.npos[1], 0.001f);
 			Assert.assertEquals(EXPECTED_A1Q2T[i][2], ag.npos[2], 0.001f);

@@ -530,9 +530,7 @@ public class Crowd1Test extends AbstractCrowdTest {
 				| CrowdAgent.DT_CROWD_OPTIMIZE_TOPO | CrowdAgent.DT_CROWD_OBSTACLE_AVOIDANCE;
 
 		addAgentGrid(1, 0.4f, updateFlags, 0, startPoss[0]);
-		for (CrowdAgent ag : crowd.getActiveAgents()) {
-			crowd.requestMoveTarget(ag.getAgentIndex(), endRefs[0], endPoss[0]);
-		}
+		setMoveTarget(endPoss[0], false);
 		for (int i = 0; i < EXPECTED_A1Q0TVTA.length; i++) {
 			crowd.update(1 / 5f, null);
 			for (CrowdAgent ag : crowd.getActiveAgents()) {
@@ -543,7 +541,6 @@ public class Crowd1Test extends AbstractCrowdTest {
 				Assert.assertEquals(EXPECTED_A1Q0TVTA[i][4], ag.nvel[1], 0.001f);
 				Assert.assertEquals(EXPECTED_A1Q0TVTA[i][5], ag.nvel[2], 0.001f);
 			}
-			dumpActiveAgents(i);
 		}
 	}
 
@@ -553,9 +550,7 @@ public class Crowd1Test extends AbstractCrowdTest {
 				| CrowdAgent.DT_CROWD_OPTIMIZE_TOPO;
 
 		addAgentGrid(1, 0.4f, updateFlags, 0, startPoss[0]);
-		for (CrowdAgent ag : crowd.getActiveAgents()) {
-			crowd.requestMoveTarget(ag.getAgentIndex(), endRefs[0], endPoss[0]);
-		}
+		setMoveTarget(endPoss[0], false);
 		for (int i = 0; i < EXPECTED_A1Q0TVT.length; i++) {
 			crowd.update(1 / 5f, null);
 			for (CrowdAgent ag : crowd.getActiveAgents()) {
@@ -566,7 +561,6 @@ public class Crowd1Test extends AbstractCrowdTest {
 				Assert.assertEquals(EXPECTED_A1Q0TVT[i][4], ag.nvel[1], 0.001f);
 				Assert.assertEquals(EXPECTED_A1Q0TVT[i][5], ag.nvel[2], 0.001f);
 			}
-			dumpActiveAgents(i);
 		}
 	}
 
@@ -575,9 +569,7 @@ public class Crowd1Test extends AbstractCrowdTest {
 		int updateFlags = CrowdAgent.DT_CROWD_OPTIMIZE_TOPO | CrowdAgent.DT_CROWD_OPTIMIZE_VIS;
 
 		addAgentGrid(1, 0.4f, updateFlags, 0, startPoss[0]);
-		for (CrowdAgent ag : crowd.getActiveAgents()) {
-			crowd.requestMoveTarget(ag.getAgentIndex(), endRefs[0], endPoss[0]);
-		}
+		setMoveTarget(endPoss[0], false);
 		for (int i = 0; i < EXPECTED_A1Q0TV.length; i++) {
 			crowd.update(1 / 5f, null);
 			for (CrowdAgent ag : crowd.getActiveAgents()) {
@@ -588,7 +580,6 @@ public class Crowd1Test extends AbstractCrowdTest {
 				Assert.assertEquals(EXPECTED_A1Q0TV[i][4], ag.nvel[1], 0.001f);
 				Assert.assertEquals(EXPECTED_A1Q0TV[i][5], ag.nvel[2], 0.001f);
 			}
-			dumpActiveAgents(i);
 		}
 	}
 
@@ -597,9 +588,7 @@ public class Crowd1Test extends AbstractCrowdTest {
 		int updateFlags = CrowdAgent.DT_CROWD_OPTIMIZE_TOPO;
 
 		addAgentGrid(1, 0.4f, updateFlags, 0, startPoss[0]);
-		for (CrowdAgent ag : crowd.getActiveAgents()) {
-			crowd.requestMoveTarget(ag.getAgentIndex(), endRefs[0], endPoss[0]);
-		}
+		setMoveTarget(endPoss[0], false);
 		for (int i = 0; i < EXPECTED_A1Q0T.length; i++) {
 			crowd.update(1 / 5f, null);
 			for (CrowdAgent ag : crowd.getActiveAgents()) {
@@ -610,7 +599,6 @@ public class Crowd1Test extends AbstractCrowdTest {
 				Assert.assertEquals(EXPECTED_A1Q0T[i][4], ag.nvel[1], 0.001f);
 				Assert.assertEquals(EXPECTED_A1Q0T[i][5], ag.nvel[2], 0.001f);
 			}
-			dumpActiveAgents(i);
 		}
 	}
 
@@ -620,9 +608,7 @@ public class Crowd1Test extends AbstractCrowdTest {
 				| CrowdAgent.DT_CROWD_OPTIMIZE_TOPO | CrowdAgent.DT_CROWD_OBSTACLE_AVOIDANCE;
 
 		addAgentGrid(1, 0.4f, updateFlags, 1, startPoss[0]);
-		for (CrowdAgent ag : crowd.getActiveAgents()) {
-			crowd.requestMoveTarget(ag.getAgentIndex(), endRefs[0], endPoss[0]);
-		}
+		setMoveTarget(endPoss[0], false);
 		for (int i = 0; i < EXPECTED_A1Q1TVTA.length; i++) {
 			crowd.update(1 / 5f, null);
 			for (CrowdAgent ag : crowd.getActiveAgents()) {
@@ -633,7 +619,6 @@ public class Crowd1Test extends AbstractCrowdTest {
 				Assert.assertEquals(EXPECTED_A1Q1TVTA[i][4], ag.nvel[1], 0.001f);
 				Assert.assertEquals(EXPECTED_A1Q1TVTA[i][5], ag.nvel[2], 0.001f);
 			}
-			dumpActiveAgents(i);
 		}
 	}
 
@@ -643,9 +628,7 @@ public class Crowd1Test extends AbstractCrowdTest {
 				| CrowdAgent.DT_CROWD_OPTIMIZE_TOPO | CrowdAgent.DT_CROWD_OBSTACLE_AVOIDANCE;
 
 		addAgentGrid(1, 0.4f, updateFlags, 2, startPoss[0]);
-		for (CrowdAgent ag : crowd.getActiveAgents()) {
-			crowd.requestMoveTarget(ag.getAgentIndex(), endRefs[0], endPoss[0]);
-		}
+		setMoveTarget(endPoss[0], false);
 		for (int i = 0; i < EXPECTED_A1Q2TVTA.length; i++) {
 			crowd.update(1 / 5f, null);
 			for (CrowdAgent ag : crowd.getActiveAgents()) {
@@ -656,7 +639,6 @@ public class Crowd1Test extends AbstractCrowdTest {
 				Assert.assertEquals(EXPECTED_A1Q2TVTA[i][4], ag.nvel[1], 0.001f);
 				Assert.assertEquals(EXPECTED_A1Q2TVTA[i][5], ag.nvel[2], 0.001f);
 			}
-			dumpActiveAgents(i);
 		}
 	}
 
@@ -666,9 +648,7 @@ public class Crowd1Test extends AbstractCrowdTest {
 				| CrowdAgent.DT_CROWD_OPTIMIZE_TOPO | CrowdAgent.DT_CROWD_OBSTACLE_AVOIDANCE;
 
 		addAgentGrid(1, 0.4f, updateFlags, 3, startPoss[0]);
-		for (CrowdAgent ag : crowd.getActiveAgents()) {
-			crowd.requestMoveTarget(ag.getAgentIndex(), endRefs[0], endPoss[0]);
-		}
+		setMoveTarget(endPoss[0], false);
 		for (int i = 0; i < EXPECTED_A1Q3TVTA.length; i++) {
 			crowd.update(1 / 5f, null);
 			for (CrowdAgent ag : crowd.getActiveAgents()) {
@@ -679,7 +659,6 @@ public class Crowd1Test extends AbstractCrowdTest {
 				Assert.assertEquals(EXPECTED_A1Q3TVTA[i][4], ag.nvel[1], 0.001f);
 				Assert.assertEquals(EXPECTED_A1Q3TVTA[i][5], ag.nvel[2], 0.001f);
 			}
-			dumpActiveAgents(i);
 		}
 	}
 
@@ -690,9 +669,7 @@ public class Crowd1Test extends AbstractCrowdTest {
 				| CrowdAgent.DT_CROWD_SEPARATION;
 
 		addAgentGrid(1, 0.4f, updateFlags, 3, startPoss[0]);
-		for (CrowdAgent ag : crowd.getActiveAgents()) {
-			crowd.requestMoveTarget(ag.getAgentIndex(), endRefs[0], endPoss[0]);
-		}
+		setMoveTarget(endPoss[0], false);
 		for (int i = 0; i < EXPECTED_A1Q3TVTAS.length; i++) {
 			crowd.update(1 / 5f, null);
 			for (CrowdAgent ag : crowd.getActiveAgents()) {
@@ -703,7 +680,6 @@ public class Crowd1Test extends AbstractCrowdTest {
 				Assert.assertEquals(EXPECTED_A1Q3TVTAS[i][4], ag.nvel[1], 0.001f);
 				Assert.assertEquals(EXPECTED_A1Q3TVTAS[i][5], ag.nvel[2], 0.001f);
 			}
-			dumpActiveAgents(i);
 		}
 	}
 
