@@ -11,6 +11,7 @@
         <module>recast</module>
         <module>detour</module>
         <module>detourcrowd</module>
+        <module>detourtilecache</module>
     </modules>
 
     <name>Recast and Detour for Java</name>
