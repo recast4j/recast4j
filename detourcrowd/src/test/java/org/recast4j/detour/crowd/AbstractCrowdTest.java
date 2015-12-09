@@ -10,7 +10,7 @@ import org.recast4j.detour.MeshData;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.detour.QueryFilter;
-import org.recast4j.detour.RecastNavMeshBuilder;
+import org.recast4j.detour.RecastTestMeshBuilder;
 import org.recast4j.detour.crowd.ObstacleAvoidanceQuery.ObstacleAvoidanceParams;
 
 public class AbstractCrowdTest {
@@ -36,7 +36,7 @@ public class AbstractCrowdTest {
 
 	@Before
 	public void setUp() {
-		nmd = new RecastNavMeshBuilder().getMeshData();
+		nmd = new RecastTestMeshBuilder().getMeshData();
 		navmesh = new NavMesh();
 		navmesh.init(nmd, 0);
 		query = new NavMeshQuery(navmesh);

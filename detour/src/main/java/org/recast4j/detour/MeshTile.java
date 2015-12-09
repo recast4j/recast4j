@@ -18,6 +18,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -28,9 +29,9 @@ public class MeshTile {
 	/** Counter describing modifications to the tile. */
 	int salt;
 	/** The tile data. */
-	MeshData data;
+	public MeshData data;
 	/** The tile links. [Size: MeshHeader::maxLinkCount] */
-	List<Link> links;
+	final List<Link> links = new ArrayList<>();
 	/** Tile flags. (See: #dtTileFlags) */
 	int flags;
 	/** The next free tile, or the next tile in the spatial grid. */

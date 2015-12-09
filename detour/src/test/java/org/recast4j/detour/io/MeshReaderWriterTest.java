@@ -5,11 +5,12 @@ import static org.junit.Assert.assertEquals;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteOrder;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.recast4j.detour.MeshData;
-import org.recast4j.detour.RecastNavMeshBuilder;
+import org.recast4j.detour.RecastTestMeshBuilder;
 
 public class MeshReaderWriterTest {
 
@@ -17,20 +18,29 @@ public class MeshReaderWriterTest {
 
 	@Before
 	public void setUp() {
-		RecastNavMeshBuilder rcBuilder = new RecastNavMeshBuilder();
+		RecastTestMeshBuilder rcBuilder = new RecastTestMeshBuilder();
 		meshData = rcBuilder.getMeshData();
-		//meshData.offMeshCons
+		// meshData.offMeshCons
 	}
 
 	@Test
-	public void test() throws IOException {
+	public void testCCompatibility() throws IOException {
+		test(true);
+	}
+
+	@Test
+	public void testCompact() throws IOException {
+		test(false);
+	}
+
+	public void test(boolean cCompatibility) throws IOException {
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
 		MeshWriter writer = new MeshWriter();
-		writer.write(os, meshData);
+		writer.write(os, meshData, ByteOrder.BIG_ENDIAN, cCompatibility);
 		ByteArrayInputStream bais = new ByteArrayInputStream(os.toByteArray());
 		MeshReader reader = new MeshReader();
-		MeshData readData = reader.read(bais);
-		
+		MeshData readData = reader.read(bais, ByteOrder.BIG_ENDIAN, cCompatibility);
+
 		System.out.println("verts: " + meshData.header.vertCount);
 		System.out.println("polys: " + meshData.header.polyCount);
 		System.out.println("detail vert: " + meshData.header.detailVertCount);

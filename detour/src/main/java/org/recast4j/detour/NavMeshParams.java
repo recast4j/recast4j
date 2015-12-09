@@ -23,9 +23,9 @@ package org.recast4j.detour;
 /// @see dtNavMesh::init()
 /// @ingroup detour
 public class NavMeshParams {
-	float[] orig = new float[3]; /// < The world space origin of the navigation mesh's tile space. [(x, y, z)]
-	float tileWidth; /// < The width of each tile. (Along the x-axis.)
-	float tileHeight; /// < The height of each tile. (Along the z-axis.)
-	int maxTiles; /// < The maximum number of tiles the navigation mesh can contain.
-	int maxPolys; /// < The maximum number of polygons each tile can contain.
+	public float[] orig = new float[3]; /// < The world space origin of the navigation mesh's tile space. [(x, y, z)]
+	public float tileWidth; /// < The width of each tile. (Along the x-axis.)
+	public float tileHeight; /// < The height of each tile. (Along the z-axis.)
+	public int maxTiles; /// < The maximum number of tiles the navigation mesh can contain.
+	public int maxPolys; /// < The maximum number of polygons each tile can contain.
 }

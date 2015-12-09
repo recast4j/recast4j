@@ -54,7 +54,8 @@ public class NavMesh {
 	/// A value that indicates the entity does not link to anything.
 	static int DT_NULL_LINK = 0xffffffff;
 
-	/// A flag that indicates that an off-mesh connection can be traversed in both directions. (Is bidirectional.)
+	/// A flag that indicates that an off-mesh connection can be traversed in
+	/// both directions. (Is bidirectional.)
 	static int DT_OFFMESH_CON_BIDIR = 1;
 
 	/// The maximum number of user defined area ids.
@@ -64,7 +65,8 @@ public class NavMesh {
 	/// The limit is given as a multiple of the character radius
 	static float DT_RAY_CAST_LIMIT_PROPORTIONS = 50.0f;
 
-	NavMeshParams m_params; /// < Current initialization params. TODO: do not store this info twice.
+	NavMeshParams m_params; /// < Current initialization params. TODO: do not
+							/// store this info twice.
 	private float[] m_orig; /// < Origin of the tile (0,0)
 	// float m_orig[3]; ///< Origin of the tile (0,0)
 	float m_tileWidth, m_tileHeight; /// < Dimensions of each tile.
@@ -79,23 +81,26 @@ public class NavMesh {
 	MeshTile[] m_tiles; /// < List of tiles.
 
 	/**
-	 *  The maximum number of tiles supported by the navigation mesh.
+	 * The maximum number of tiles supported by the navigation mesh.
+	 * 
 	 * @return The maximum number of tiles supported by the navigation mesh.
 	 */
-	int getMaxTiles() {
+	public int getMaxTiles() {
 		return m_maxTiles;
 	}
 
 	/**
-	 * Returns tile in the tile array. 
+	 * Returns tile in the tile array.
 	 */
-	MeshTile getTile(int i) {
+	public MeshTile getTile(int i) {
 		return m_tiles[i];
 	}
 
 	/**
 	 * Gets the polygon reference for the tile's base polygon.
-	 * @param tile The tile.
+	 * 
+	 * @param tile
+	 *            The tile.
 	 * @return The polygon reference for the base polygon in the specified tile.
 	 */
 	public long getPolyRefBase(MeshTile tile) {
@@ -107,14 +112,18 @@ public class NavMesh {
 
 	/**
 	 * Derives a standard polygon reference.
+	 * 
 	 * @note This function is generally meant for internal use only.
-	 * @param salt The tile's salt value.
-	 * @param it The index of the tile.
-	 * @param ip The index of the polygon within the tile.
+	 * @param salt
+	 *            The tile's salt value.
+	 * @param it
+	 *            The index of the tile.
+	 * @param ip
+	 *            The index of the polygon within the tile.
 	 * @return encoded polygon reference
 	 */
 	static long encodePolyId(int salt, int it, int ip) {
-		return (((long) salt) << (DT_POLY_BITS + DT_TILE_BITS)) | ((long) it << DT_POLY_BITS) | (long) ip;
+		return (((long) salt) << (DT_POLY_BITS + DT_TILE_BITS)) | ((long) it << DT_POLY_BITS) | ip;
 	}
 
 	/// Decodes a standard polygon reference.
@@ -155,7 +164,8 @@ public class NavMesh {
 		return (int) ((ref >> DT_POLY_BITS) & tileMask);
 	}
 
-	/// Extracts the polygon's index (within its tile) from the specified polygon reference.
+	/// Extracts the polygon's index (within its tile) from the specified
+	/// polygon reference.
 	/// @note This function is generally meant for internal use only.
 	/// @param[in] ref The polygon reference.
 	/// @see #encodePolyId
@@ -164,17 +174,24 @@ public class NavMesh {
 		return (int) (ref & polyMask);
 	}
 
-	int allocLink(MeshTile tile) {
+	private int allocLink(MeshTile tile) {
 		Link link = new Link();
 		link.next = DT_NULL_LINK;
 		tile.links.add(link);
 		return tile.links.size() - 1;
 	}
 
+	private void freeLink(MeshTile tile, int link)
+	{
+		tile.links.remove(link);
+	}
+
 	/**
 	 * Calculates the tile grid location for the specified world position.
-	 * @param	pos  The world position for the query. [(x, y, z)]
-	 * @return  2-element int array with (tx,ty) tile location  
+	 * 
+	 * @param pos
+	 *            The world position for the query. [(x, y, z)]
+	 * @return 2-element int array with (tx,ty) tile location
 	 */
 	public int[] calcTileLoc(float[] pos) {
 		int tx = (int) Math.floor((pos[0] - m_orig[0]) / m_tileWidth);
@@ -202,7 +219,8 @@ public class NavMesh {
 	/// @par
 	///
 	/// @warning Only use this function if it is known that the provided polygon
-	/// reference is valid. This function is faster than #getTileAndPolyByRef, but
+	/// reference is valid. This function is faster than #getTileAndPolyByRef,
+	/// but
 	/// it does not validate the reference.
 	Tupple2<MeshTile, Poly> getTileAndPolyByRefUnsafe(long ref) {
 		int[] saltitip = decodePolyId(ref);
@@ -225,6 +243,15 @@ public class NavMesh {
 		if (ip >= m_tiles[it].data.header.polyCount)
 			return false;
 		return true;
+	}
+
+	public void init(MeshData data, int flags) {
+		init(getNavMeshParams(data));
+		addTile(data, flags, 0);
+	}
+
+	public NavMeshParams getParams() {
+		return m_params;
 	}
 
 	public void init(NavMeshParams params) {
@@ -250,11 +277,6 @@ public class NavMesh {
 
 	}
 
-	public void init(MeshData data, int flags) {
-		init(getNavMeshParams(data));
-		addTile(data, flags, 0);
-	}
-
 	private static NavMeshParams getNavMeshParams(MeshData data) {
 		NavMeshParams params = new NavMeshParams();
 		params.orig = data.header.bmin;
@@ -265,7 +287,8 @@ public class NavMesh {
 		return params;
 	}
 
-	// TODO: These methods are duplicates from dtNavMeshQuery, but are needed for off-mesh connection finding.
+	// TODO: These methods are duplicates from dtNavMeshQuery, but are needed
+	// for off-mesh connection finding.
 
 	List<Long> queryPolygonsInTile(MeshTile tile, float[] qmin, float[] qmax) {
 		List<Long> polys = new ArrayList<>();
@@ -340,15 +363,18 @@ public class NavMesh {
 	}
 
 	/// Adds a tile to the navigation mesh.
-	///  @param[in]		data		Data for the new tile mesh. (See: #dtCreateNavMeshData)
-	///  @param[in]		dataSize	Data size of the new tile mesh.
-	///  @param[in]		flags		Tile flags. (See: #dtTileFlags)
-	///  @param[in]		lastRef		The desired reference for the tile. (When reloading a tile.) [opt] [Default: 0]
-	///  @param[out]	result		The tile reference. (If the tile was succesfully added.) [opt]
+	/// @param[in] data Data for the new tile mesh. (See: #dtCreateNavMeshData)
+	/// @param[in] dataSize Data size of the new tile mesh.
+	/// @param[in] flags Tile flags. (See: #dtTileFlags)
+	/// @param[in] lastRef The desired reference for the tile. (When reloading a
+	/// tile.) [opt] [Default: 0]
+	/// @param[out] result The tile reference. (If the tile was succesfully
+	/// added.) [opt]
 	/// @return The status flags for the operation.
 	/// @par
 	///
-	/// The add operation will fail if the data is in the wrong format, the allocated tile
+	/// The add operation will fail if the data is in the wrong format, the
+	/// allocated tile
 	/// space is full, or there is a tile already at the specified reference.
 	///
 	/// The lastRef parameter is used to restore a tile with the same tile
@@ -375,7 +401,7 @@ public class NavMesh {
 			}
 		} else {
 			// Try to relocate the tile to specific index with same salt.
-			int tileIndex = (int) decodePolyIdTile(lastRef);
+			int tileIndex = decodePolyIdTile(lastRef);
 			if (tileIndex >= m_maxTiles)
 				throw new RuntimeException("Tile index too high");
 			// Try to find the specific tile id from the free list.
@@ -405,8 +431,8 @@ public class NavMesh {
 
 		tile.data = data;
 		tile.flags = flags;
-		tile.links = new ArrayList<>();
-		
+		tile.links.clear();
+
 		// Insert tile into the position lut.
 		int h = computeTileHash(header.x, header.y, m_tileLutMask);
 		tile.next = m_posLookup[h];
@@ -450,11 +476,86 @@ public class NavMesh {
 
 	// FIXME: Implement
 	/// Removes the specified tile from the navigation mesh.
-	///  @param[in]		ref			The reference of the tile to remove.
-	///  @param[out]	data		Data associated with deleted tile.
-	///  @param[out]	dataSize	Size of the data associated with deleted tile.
+	/// @param[in] ref The reference of the tile to remove.
+	/// @param[out] data Data associated with deleted tile.
+	/// @param[out] dataSize Size of the data associated with deleted tile.
 	/// @return The status flags for the operation.
-	//dtStatus removeTile(dtTileRef ref, unsigned char** data, int* dataSize);
+	// dtStatus removeTile(dtTileRef ref, char** data, int* dataSize);
+	/// @par
+	///
+	/// This function returns the data for the tile so that, if desired,
+	/// it can be added back to the navigation mesh at a later point.
+	///
+	/// @see #addTile
+	public MeshData removeTile(long ref)
+	{
+		if (ref == 0) {
+			throw new RuntimeException("Invalid tile ref");
+		}
+		int tileIndex = decodePolyIdTile(ref);
+		int tileSalt = decodePolyIdSalt(ref);
+		if (tileIndex >= m_maxTiles)
+			throw new RuntimeException("Invalid tile index");
+		MeshTile tile = m_tiles[tileIndex];
+		if (tile.salt != tileSalt)
+			throw new RuntimeException("Invalid tile salt");
+		
+		// Remove tile from hash lookup.
+		int h = computeTileHash(tile.data.header.x,tile.data.header.y,m_tileLutMask);
+		MeshTile prev = null;
+		MeshTile cur = m_posLookup[h];
+		while (cur != null)
+		{
+			if (cur == tile)
+			{
+				if (prev != null)
+					prev.next = cur.next;
+				else
+					m_posLookup[h] = cur.next;
+				break;
+			}
+			prev = cur;
+			cur = cur.next;
+		}
+		
+		// Remove connections to neighbour tiles.
+		// Create connections with neighbour tiles.
+		
+		// Connect with layers in current tile.
+		List<MeshTile> nneis = getTilesAt(tile.data.header.x, tile.data.header.y);
+		for (MeshTile j : nneis)
+		{
+			if (j == tile) continue;
+			unconnectExtLinks(j, tile);
+		}
+		
+		// Connect with neighbour tiles.
+		for (int i = 0; i < 8; ++i)
+		{
+			nneis = getNeighbourTilesAt(tile.data.header.x, tile.data.header.y, i);
+			for (MeshTile j : nneis)
+				unconnectExtLinks(j, tile);
+		}
+		MeshData data = tile.data;
+		// Reset tile.
+		tile.data = null;
+
+		tile.flags = 0;
+		tile.links.clear();
+
+		// Update salt, salt should never be zero.
+		tile.salt = (tile.salt+1) & ((1<<DT_SALT_BITS)-1);
+		if (tile.salt == 0)
+			tile.salt++;
+
+		// Add to free list.
+		tile.next = m_nextFree;
+		m_nextFree = tile;
+
+		return data;
+	}
+
+
 	
 	/// Builds internal polygons links for a tile.
 	void connectIntLinks(MeshTile tile) {
@@ -490,6 +591,41 @@ public class NavMesh {
 		}
 	}
 
+	void unconnectExtLinks(MeshTile tile, MeshTile target)
+	{
+		if (tile == null || target == null) return;
+
+		int targetNum = decodePolyIdTile(getTileRef(target));
+
+		for (int i = 0; i < tile.data.header.polyCount; ++i)
+		{
+			Poly poly = tile.data.polys[i];
+			int j = poly.firstLink;
+			int pj = DT_NULL_LINK;
+			while (j != DT_NULL_LINK)
+			{
+				if (tile.links.get(j).side != 0xff &&
+					decodePolyIdTile(tile.links.get(j).ref) == targetNum)
+				{
+					// Revove link.
+					int nj = tile.links.get(j).next;
+					if (pj == DT_NULL_LINK)
+						poly.firstLink = nj;
+					else
+						tile.links.get(pj).next = nj;
+					freeLink(tile, j);
+					j = nj;
+				}
+				else
+				{
+					// Advance
+					pj = j;
+					j = tile.links.get(j).next;
+				}
+			}
+		}
+	}
+
 	void connectExtLinks(MeshTile tile, MeshTile target, int side) {
 		if (tile == null)
 			return;
@@ -499,7 +635,7 @@ public class NavMesh {
 			Poly poly = tile.data.polys[i];
 
 			// Create new links.
-			// unsigned short m = DT_EXT_LINK | (unsigned short)side;
+			// short m = DT_EXT_LINK | (short)side;
 
 			int nv = poly.vertCount;
 			for (int j = 0; j < nv; ++j) {
@@ -507,7 +643,7 @@ public class NavMesh {
 				if ((poly.neis[j] & DT_EXT_LINK) == 0)
 					continue;
 
-				int dir = (int) (poly.neis[j] & 0xff);
+				int dir = poly.neis[j] & 0xff;
 				if (side != -1 && dir != side)
 					continue;
 
@@ -543,8 +679,10 @@ public class NavMesh {
 						link.bmin = (int) (clamp(tmin, 0.0f, 1.0f) * 255.0f);
 						link.bmax = (int) (clamp(tmax, 0.0f, 1.0f) * 255.0f);
 					} else if (dir == 2 || dir == 6) {
-						float tmin = (neia[k * 2 + 0] - tile.data.verts[va]) / (tile.data.verts[vb] - tile.data.verts[va]);
-						float tmax = (neia[k * 2 + 1] - tile.data.verts[va]) / (tile.data.verts[vb] - tile.data.verts[va]);
+						float tmin = (neia[k * 2 + 0] - tile.data.verts[va])
+								/ (tile.data.verts[vb] - tile.data.verts[va]);
+						float tmax = (neia[k * 2 + 1] - tile.data.verts[va])
+								/ (tile.data.verts[vb] - tile.data.verts[va]);
 						if (tmin > tmax) {
 							float temp = tmin;
 							tmin = tmax;
@@ -572,7 +710,8 @@ public class NavMesh {
 				continue;
 
 			Poly targetPoly = target.data.polys[targetCon.poly];
-			// Skip off-mesh connections which start location could not be connected at all.
+			// Skip off-mesh connections which start location could not be
+			// connected at all.
 			if (targetPoly.firstLink == DT_NULL_LINK)
 				continue;
 
@@ -588,7 +727,8 @@ public class NavMesh {
 			if (ref == 0)
 				continue;
 			float[] nearestPt = nearest.second;
-			// findNearestPoly may return too optimistic results, further check to make sure.
+			// findNearestPoly may return too optimistic results, further check
+			// to make sure.
 
 			if (sqr(nearestPt[0] - p[0]) + sqr(nearestPt[2] - p[2]) > sqr(targetCon.rad))
 				continue;
@@ -747,6 +887,7 @@ public class NavMesh {
 
 	/**
 	 * Builds internal polygons links for a tile.
+	 * 
 	 * @param tile
 	 */
 	void baseOffMeshLinks(MeshTile tile) {
@@ -769,7 +910,8 @@ public class NavMesh {
 				continue;
 			float[] p = con.pos; // First vertex
 			float[] nearestPt = nearestPoly.second;
-			// findNearestPoly may return too optimistic results, further check to make sure.
+			// findNearestPoly may return too optimistic results, further check
+			// to make sure.
 			float dx = nearestPt[0] - p[0];
 			float dz = nearestPt[2] - p[2];
 			float dr = con.rad;
@@ -806,6 +948,7 @@ public class NavMesh {
 
 	/**
 	 * Returns closest point on polygon.
+	 * 
 	 * @param ref
 	 * @param pos
 	 * @return
@@ -920,7 +1063,8 @@ public class NavMesh {
 		int h = computeTileHash(x, y, m_tileLutMask);
 		MeshTile tile = m_posLookup[h];
 		while (tile != null) {
-			if (tile.data.header != null && tile.data.header.x == x && tile.data.header.y == y && tile.data.header.layer == layer) {
+			if (tile.data.header != null && tile.data.header.x == x && tile.data.header.y == y
+					&& tile.data.header.layer == layer) {
 				return tile;
 			}
 			tile = tile.next;
@@ -977,12 +1121,26 @@ public class NavMesh {
 		return tiles;
 	}
 
+	public long getTileRefAt(int x, int y, int layer) {
+		// Find tile based on hash.
+		int h = computeTileHash(x, y, m_tileLutMask);
+		MeshTile tile = m_posLookup[h];
+		while (tile != null) {
+			if (tile.data.header != null && tile.data.header.x == x && tile.data.header.y == y
+					&& tile.data.header.layer == layer) {
+				return getTileRef(tile);
+			}
+			tile = tile.next;
+		}
+		return 0;
+	}
+
 	MeshTile getTileByRef(long ref) {
 		if (ref == 0)
 			return null;
 		int tileIndex = decodePolyIdTile(ref);
 		int tileSalt = decodePolyIdSalt(ref);
-		if ((int) tileIndex >= m_maxTiles)
+		if (tileIndex >= m_maxTiles)
 			return null;
 		MeshTile tile = m_tiles[tileIndex];
 		if (tile.salt != tileSalt)
@@ -997,19 +1155,22 @@ public class NavMesh {
 		return encodePolyId(tile.salt, it, 0);
 	}
 
-	static int computeTileHash(int x, int y, int mask) {
+	public static int computeTileHash(int x, int y, int mask) {
 		int h1 = 0x8da6b343; // Large multiplicative constants;
 		int h2 = 0xd8163841; // here arbitrarily chosen primes
 		int n = h1 * x + h2 * y;
-		return (int) (n & mask);
+		return n & mask;
 	}
 
 	/// @par
 	///
-	/// Off-mesh connections are stored in the navigation mesh as special 2-vertex 
-	/// polygons with a single edge. At least one of the vertices is expected to be 
-	/// inside a normal polygon. So an off-mesh connection is "entered" from a 
-	/// normal polygon at one of its endpoints. This is the polygon identified by 
+	/// Off-mesh connections are stored in the navigation mesh as special
+	/// 2-vertex
+	/// polygons with a single edge. At least one of the vertices is expected to
+	/// be
+	/// inside a normal polygon. So an off-mesh connection is "entered" from a
+	/// normal polygon at one of its endpoints. This is the polygon identified
+	/// by
 	/// the prevRef parameter.
 	public Tupple2<float[], float[]> getOffMeshConnectionPolyEndPoints(long prevRef, long polyRef) {
 		if (polyRef == 0)
@@ -1056,5 +1217,5 @@ public class NavMesh {
 		return new Tupple2<float[], float[]>(startPos, endPos);
 
 	}
-	
+
 }

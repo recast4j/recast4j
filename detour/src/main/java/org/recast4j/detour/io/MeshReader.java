@@ -17,25 +17,30 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour.io;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 import org.recast4j.detour.BVNode;
-import org.recast4j.detour.MeshHeader;
+import org.recast4j.detour.Link;
 import org.recast4j.detour.MeshData;
+import org.recast4j.detour.MeshHeader;
 import org.recast4j.detour.OffMeshConnection;
 import org.recast4j.detour.Poly;
 import org.recast4j.detour.PolyDetail;
 
 public class MeshReader {
 
-	// C++ object sizeof
 	final static int DT_POLY_DETAIL_SIZE = 10;
 
-	public MeshData read(InputStream stream) throws IOException {
-		ByteBuffer buf = toByteBuffer(stream);
+	public MeshData read(InputStream stream, ByteOrder order, boolean cCompatibility) throws IOException {
+		ByteBuffer buf = IOUtils.toByteBuffer(stream);
+		buf.order(order);
+		return read(buf, cCompatibility);
+	}
+
+	public MeshData read(ByteBuffer buf, boolean cCompatibility) throws IOException {
 		MeshData data = new MeshData();
 		MeshHeader header = new MeshHeader();
 		data.header = header;
@@ -72,8 +77,10 @@ public class MeshReader {
 		header.bvQuantFactor = buf.getFloat();
 		data.verts = readVerts(buf, header.vertCount);
 		data.polys = readPolys(buf, header);
-		data.detailMeshes = readPolyDetails(buf, header);
-		align4(buf, header.detailMeshCount * DT_POLY_DETAIL_SIZE);
+		if (cCompatibility) {
+			buf.position(buf.position() + header.maxLinkCount * Link.SIZEOF);
+		}
+		data.detailMeshes = readPolyDetails(buf, header, cCompatibility);
 		data.detailVerts = readVerts(buf, header.detailVertCount);
 		data.detailTris = readDTris(buf, header);
 		data.bvTree = readBVTree(buf, header);
@@ -107,7 +114,7 @@ public class MeshReader {
 		return polys;
 	}
 
-	private PolyDetail[] readPolyDetails(ByteBuffer buf, MeshHeader header) {
+	private PolyDetail[] readPolyDetails(ByteBuffer buf, MeshHeader header, boolean cCompatibility) {
 		PolyDetail[] polys = new PolyDetail[header.detailMeshCount];
 		for (int i = 0; i < polys.length; i++) {
 			polys[i] = new PolyDetail();
@@ -115,6 +122,9 @@ public class MeshReader {
 			polys[i].triBase = buf.getInt();
 			polys[i].vertCount = buf.get() & 0xFF;
 			polys[i].triCount = buf.get() & 0xFF;
+			if (cCompatibility) {
+				buf.getShort(); // C struct padding
+			}
 		}
 		return polys;
 	}
@@ -158,21 +168,11 @@ public class MeshReader {
 		return cons;
 	}
 
-	private void align4(ByteBuffer buf, int size) {
-		int toSkip = ((size + 3) & ~3) - size;
+	private void align4(ByteBuffer buf) {
+		int toSkip = (-buf.position()) & 3;
 		for (int i = 0; i < toSkip; i++) {
 			buf.get();
 		}
-	}
-
-	private ByteBuffer toByteBuffer(InputStream inputStream) throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		byte[] buffer = new byte[4096];
-		int l;
-		while ((l = inputStream.read(buffer)) != -1) {
-			baos.write(buffer, 0, l);
-		}
-		return ByteBuffer.wrap(baos.toByteArray());
 	}
 
 }

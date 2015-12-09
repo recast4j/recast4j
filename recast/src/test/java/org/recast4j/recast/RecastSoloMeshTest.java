@@ -1,5 +1,7 @@
 package org.recast4j.recast;
 
+import static org.recast4j.recast.RecastVectors.copy;
+
 import java.io.File;
 import java.io.FileWriter;
 
@@ -122,8 +124,8 @@ public class RecastSoloMeshTest {
 		// Set the area where the navigation will be build.
 		// Here the bounds of the input mesh are used, but the
 		// area could be specified by an user defined box, etc.
-		m_cfg.bmin = bmin;
-		m_cfg.bmax = bmax;
+		copy(m_cfg.bmin, bmin);
+		copy(m_cfg.bmax, bmax);
 
 		int[] wh = Recast.calcGridSize(m_cfg.bmin, m_cfg.bmax, m_cfg.cs);
 		m_cfg.width = wh[0];

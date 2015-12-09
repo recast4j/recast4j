@@ -36,6 +36,10 @@ public class RecastVectors {
 		copy(out, 0, in, i);
 	}
 
+	public static void copy(float[] out, float[] in) {
+		copy(out, 0, in, 0);
+	}
+
 	public static void copy(float[] out, int n, float[] in, int m) {
 		out[n] = in[m];
 		out[n + 1] = in[m + 1];

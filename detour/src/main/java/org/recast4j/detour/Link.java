@@ -25,6 +25,8 @@ package org.recast4j.detour;
  * @see MeshTile
  */
 public class Link {
+	public static final int SIZEOF = 16;
+
 	/** Neighbour reference. (The neighbor that is linked to.) */
 	long ref;
 	/** Index of the next link. */

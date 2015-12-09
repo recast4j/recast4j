@@ -317,7 +317,7 @@ public class DetourCommon {
 	/// @param[in] bmax Maximum bounds of box B. [(x, y, z)]
 	/// @return True if the two AABB's overlap.
 	/// @see dtOverlapQuantBounds
-	static boolean overlapBounds(float[] amin, float[] amax, float[] bmin, float[] bmax) {
+	public static boolean overlapBounds(float[] amin, float[] amax, float[] bmin, float[] bmax) {
 		boolean overlap = true;
 		overlap = (amin[0] > bmax[0] || amax[0] < bmin[0]) ? false : overlap;
 		overlap = (amin[1] > bmax[1] || amax[1] < bmin[1]) ? false : overlap;
@@ -494,7 +494,7 @@ public class DetourCommon {
 				a * pts[pa + 2] + b * pts[pb + 2] + c * pts[pc + 2] };
 	}
 
-	static int nextPow2(int v) {
+	public static int nextPow2(int v) {
 		v--;
 		v |= v >> 1;
 		v |= v >> 2;
@@ -503,6 +503,24 @@ public class DetourCommon {
 		v |= v >> 16;
 		v++;
 		return v;
+	}
+
+	public static int ilog2(int v) {
+		int r;
+		int shift;
+		r = (v > 0xffff ? 1 : 0) << 4;
+		v >>= r;
+		shift = (v > 0xff ? 1 : 0) << 3;
+		v >>= shift;
+		r |= shift;
+		shift = (v > 0xf ? 1 : 0) << 2;
+		v >>= shift;
+		r |= shift;
+		shift = (v > 0x3 ? 1 : 0) << 1;
+		v >>= shift;
+		r |= shift;
+		r |= (v >> 1);
+		return r;
 	}
 
 	public static class IntersectResult {

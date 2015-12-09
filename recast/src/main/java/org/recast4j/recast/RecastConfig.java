@@ -38,10 +38,10 @@ public class RecastConfig {
 	float ch;
 
 	/** The minimum bounds of the field's AABB. [(x, y, z)] [Units: wu] **/
-	float bmin[];
+	final float[] bmin = new float[3];
 
 	/** The maximum bounds of the field's AABB. [(x, y, z)] [Units: wu] **/
-	float bmax[];
+	final float[] bmax = new float[3];
 
 	/** The maximum slope that is considered walkable. [Limits: 0 <= value < 90] [Units: Degrees] **/
 	float walkableSlopeAngle;

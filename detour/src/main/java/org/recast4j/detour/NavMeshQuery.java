@@ -1788,7 +1788,7 @@ public class NavMeshQuery {
 
 		// Find portal vertices.
 		int v0 = fromPoly.verts[link.edge];
-		int v1 = fromPoly.verts[(link.edge + 1) % (int) fromPoly.vertCount];
+		int v1 = fromPoly.verts[(link.edge + 1) % fromPoly.vertCount];
 		System.arraycopy(fromTile.data.verts, v0 * 3, left, 0, 3);
 		System.arraycopy(fromTile.data.verts, v1 * 3, right, 0, 3);
 
@@ -1923,7 +1923,7 @@ public class NavMeshQuery {
 
 			// Collect vertices.
 			int nv = 0;
-			for (int i = 0; i < (int) poly.vertCount; ++i) {
+			for (int i = 0; i < poly.vertCount; ++i) {
 				System.arraycopy(tile.data.verts, poly.verts[i] * 3, verts, nv * 3, 3);
 				nv++;
 			}
@@ -2205,7 +2205,7 @@ public class NavMeshQuery {
 
 				Node neighbourNode = m_nodePool.getNode(neighbourRef); 
 
-				if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0)// TODO: (PP) move it higher?
+				if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0)
 					continue;
 
 				// Cost
@@ -2365,7 +2365,7 @@ public class NavMeshQuery {
 
 				Node neighbourNode = m_nodePool.getNode(neighbourRef);
 
-				if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0) // TODO: (PP) move it higer?
+				if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0)
 					continue;
 
 				// Cost
@@ -2761,7 +2761,7 @@ public class NavMeshQuery {
 			}
 
 			// Hit test walls.
-			for (int i = 0, j = (int) bestPoly.vertCount - 1; i < (int) bestPoly.vertCount; j = i++) {
+			for (int i = 0, j = bestPoly.vertCount - 1; i < bestPoly.vertCount; j = i++) {
 				// Skip non-solid edges.
 				if ((bestPoly.neis[j] & NavMesh.DT_EXT_LINK) != 0) {
 					// Tile border.

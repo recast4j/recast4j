@@ -75,26 +75,26 @@ public class NavMeshCreateParams {
 	/// @note The tile grid/layer data can be left at zero if the destination is a single tile mesh.
 	/// @{
 
-	int userId;	///< The user defined id of the tile.
-	int tileX;				///< The tile's x-grid location within the multi-tile destination mesh. (Along the x-axis.)
-	int tileY;				///< The tile's y-grid location within the multi-tile desitation mesh. (Along the z-axis.)
-	int tileLayer;			///< The tile's layer within the layered destination mesh. [Limit: >= 0] (Along the y-axis.)
-	float[] bmin;			///< The minimum bounds of the tile. [(x, y, z)] [Unit: wu]
-	float[] bmax;			///< The maximum bounds of the tile. [(x, y, z)] [Unit: wu]
+	public int userId;	///< The user defined id of the tile.
+	public int tileX;				///< The tile's x-grid location within the multi-tile destination mesh. (Along the x-axis.)
+	public int tileY;				///< The tile's y-grid location within the multi-tile desitation mesh. (Along the z-axis.)
+	public int tileLayer;			///< The tile's layer within the layered destination mesh. [Limit: >= 0] (Along the y-axis.)
+	public float[] bmin;			///< The minimum bounds of the tile. [(x, y, z)] [Unit: wu]
+	public float[] bmax;			///< The maximum bounds of the tile. [(x, y, z)] [Unit: wu]
 
 	/// @}
 	/// @name General Configuration Attributes
 	/// @{
 
-	float walkableHeight;	///< The agent height. [Unit: wu]
-	float walkableRadius;	///< The agent radius. [Unit: wu]
-	float walkableClimb;	///< The agent maximum traversable ledge. (Up/Down) [Unit: wu]
-	float cs;				///< The xz-plane cell size of the polygon mesh. [Limit: > 0] [Unit: wu]
-	float ch;				///< The y-axis cell height of the polygon mesh. [Limit: > 0] [Unit: wu]
+	public float walkableHeight;	///< The agent height. [Unit: wu]
+	public float walkableRadius;	///< The agent radius. [Unit: wu]
+	public float walkableClimb;	///< The agent maximum traversable ledge. (Up/Down) [Unit: wu]
+	public float cs;				///< The xz-plane cell size of the polygon mesh. [Limit: > 0] [Unit: wu]
+	public float ch;				///< The y-axis cell height of the polygon mesh. [Limit: > 0] [Unit: wu]
 
 	/// True if a bounding volume tree should be built for the tile.
 	/// @note The BVTree is not normally needed for layered navigation meshes.
-	boolean buildBvTree;
+	public boolean buildBvTree;
 
 	/// @}
 
