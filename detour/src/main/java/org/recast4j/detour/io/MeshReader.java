@@ -26,6 +26,7 @@ import org.recast4j.detour.BVNode;
 import org.recast4j.detour.Link;
 import org.recast4j.detour.MeshData;
 import org.recast4j.detour.MeshHeader;
+import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.OffMeshConnection;
 import org.recast4j.detour.Poly;
 import org.recast4j.detour.PolyDetail;
@@ -99,7 +100,7 @@ public class MeshReader {
 	private Poly[] readPolys(ByteBuffer buf, MeshHeader header) {
 		Poly[] polys = new Poly[header.polyCount];
 		for (int i = 0; i < polys.length; i++) {
-			polys[i] = new Poly(i);
+			polys[i] = new Poly(i, NavMesh.getMaxVertsPerPoly());
 			polys[i].firstLink = buf.getInt();
 			for (int j = 0; j < polys[i].verts.length; j++) {
 				polys[i].verts[j] = buf.getShort() & 0xFFFF;

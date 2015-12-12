@@ -29,9 +29,9 @@ public class Poly {
 	/** Index to first link in linked list. (Or #DT_NULL_LINK if there is no link.) */
 	public int firstLink;
 	/** The indices of the polygon's vertices. The actual vertices are located in MeshTile::verts. */
-	public final int[] verts = new int[NavMesh.DT_VERTS_PER_POLYGON];
+	public final int[] verts;
 	/** Packed data representing neighbor polygons references and flags for each edge. */
-	public final int[] neis = new int[NavMesh.DT_VERTS_PER_POLYGON];
+	public final int[] neis;
 	/** The user defined polygon flags. */
 	public int flags;
 	/** The number of vertices in the polygon. */
@@ -43,8 +43,10 @@ public class Poly {
 	 */
 	public int areaAndtype;
 
-	public Poly(int index) {
+	public Poly(int index, int maxVertsPerPoly) {
 		this.index = index;
+		verts = new int[maxVertsPerPoly];
+		neis = new int[maxVertsPerPoly];
 	}
 
 	/** Sets the user defined area id. [Limit: < #DT_MAX_AREAS] */

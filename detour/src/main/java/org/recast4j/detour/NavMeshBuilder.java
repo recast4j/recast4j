@@ -248,16 +248,12 @@ public class NavMeshBuilder {
 		return 0xff;
 	}
 
-	private static final int DT_VERTS_PER_POLYGON = 6;
-
 	/// Builds navigation mesh tile data from the provided tile creation data.
 	/// @ingroup detour
 	/// @param[in] params Tile creation data.
-	/// @param[out] outData The resulting tile data.
-	/// @param[out] outDataSize The size of the tile data array.
 	/// @return True if the tile data was successfully created.
-	public static MeshData createNavMeshData(NavMeshCreateParams params) {// , unsigned char** outData, int* outDataSize)
-		if (params.nvp > DT_VERTS_PER_POLYGON)
+	public static MeshData createNavMeshData(NavMeshCreateParams params) {
+		if (params.nvp > NavMesh.getMaxVertsPerPoly())
 			return null;
 		if (params.vertCount >= 0xffff)
 			return null;
@@ -277,7 +273,8 @@ public class NavMeshBuilder {
 		if (params.offMeshConCount > 0) {
 			offMeshConClass = new int[params.offMeshConCount * 2];
 
-			// Find tight heigh bounds, used for culling out off-mesh start locations.
+			// Find tight heigh bounds, used for culling out off-mesh start
+			// locations.
 			float hmin = Float.MAX_VALUE;
 			float hmax = -Float.MAX_VALUE;
 
@@ -311,13 +308,15 @@ public class NavMeshBuilder {
 				offMeshConClass[i * 2 + 0] = classifyOffMeshPoint(p0, bmin, bmax);
 				offMeshConClass[i * 2 + 1] = classifyOffMeshPoint(p1, bmin, bmax);
 
-				// Zero out off-mesh start positions which are not even potentially touching the mesh.
+				// Zero out off-mesh start positions which are not even
+				// potentially touching the mesh.
 				if (offMeshConClass[i * 2 + 0] == 0xff) {
 					if (p0.get(1) < bmin[1] || p0.get(1) > bmax[1])
 						offMeshConClass[i * 2 + 0] = 0;
 				}
 
-				// Count how many links should be allocated for off-mesh connections.
+				// Count how many links should be allocated for off-mesh
+				// connections.
 				if (offMeshConClass[i * 2 + 0] == 0xff)
 					offMeshConLinkCount++;
 				if (offMeshConClass[i * 2 + 1] == 0xff)
@@ -356,7 +355,8 @@ public class NavMeshBuilder {
 		int uniqueDetailVertCount = 0;
 		int detailTriCount = 0;
 		if (params.detailMeshes != null) {
-			// Has detail mesh, count unique detail vertex count and use input detail tri count.
+			// Has detail mesh, count unique detail vertex count and use input
+			// detail tri count.
 			detailTriCount = params.detailTriCount;
 			for (int i = 0; i < params.polyCount; ++i) {
 				int p = i * nvp * 2;
@@ -447,7 +447,7 @@ public class NavMeshBuilder {
 		// Mesh polys
 		int src = 0;
 		for (int i = 0; i < params.polyCount; ++i) {
-			Poly p = new Poly(i);
+			Poly p = new Poly(i, NavMesh.getMaxVertsPerPoly());
 			navPolys[i] = p;
 			p.vertCount = 0;
 			p.flags = params.polyFlags[i];
@@ -484,7 +484,7 @@ public class NavMeshBuilder {
 		for (int i = 0; i < params.offMeshConCount; ++i) {
 			// Only store connections which start from this tile.
 			if (offMeshConClass[i * 2 + 0] == 0xff) {
-				Poly p = new Poly(offMeshPolyBase + n);
+				Poly p = new Poly(offMeshPolyBase + n, NavMesh.getMaxVertsPerPoly());
 				navPolys[offMeshPolyBase + n] = p;
 				p.vertCount = 2;
 				p.verts[0] = offMeshVertsBase + n * 2;
@@ -497,8 +497,10 @@ public class NavMeshBuilder {
 		}
 
 		// Store detail meshes and vertices.
-		// The nav polygon vertices are stored as the first vertices on each mesh.
-		// We compress the mesh data by skipping them and using the navmesh coordinates.
+		// The nav polygon vertices are stored as the first vertices on each
+		// mesh.
+		// We compress the mesh data by skipping them and using the navmesh
+		// coordinates.
 		if (params.detailMeshes != null) {
 			int vbase = 0;
 			for (int i = 0; i < params.polyCount; ++i) {
@@ -511,7 +513,8 @@ public class NavMeshBuilder {
 				dtl.vertCount = (ndv - nv);
 				dtl.triBase = params.detailMeshes[i * 4 + 2];
 				dtl.triCount = params.detailMeshes[i * 4 + 3];
-				// Copy vertices except the first 'nv' verts which are equal to nav poly verts.
+				// Copy vertices except the first 'nv' verts which are equal to
+				// nav poly verts.
 				if (ndv - nv != 0) {
 					System.arraycopy(params.detailVerts, (vb + nv) * 3, navDVerts, vbase * 3, 3 * (ndv - nv));
 					vbase += ndv - nv;

@@ -45,7 +45,7 @@ public class NavMesh {
 	static int DT_POLY_BITS = 20;
 
 	/** The maximum number of vertices per navigation polygon. */
-	public static int DT_VERTS_PER_POLYGON = 6;
+	private static int DT_VERTS_PER_POLYGON = 6;
 
 	/// A flag that indicates that an entity links to an external entity.
 	/// (E.g. A polygon edge is a portal that links to another polygon.)
@@ -79,6 +79,7 @@ public class NavMesh {
 	MeshTile[] m_posLookup; /// < Tile hash lookup.
 	MeshTile m_nextFree; /// < Freelist of tiles.
 	MeshTile[] m_tiles; /// < List of tiles.
+	int m_maxVertPerPoly;
 
 	/**
 	 * The maximum number of tiles supported by the navigation mesh.
@@ -261,6 +262,7 @@ public class NavMesh {
 		m_tileHeight = params.tileHeight;
 		// Init tiles
 		m_maxTiles = params.maxTiles;
+		m_maxVertPerPoly = params.maxVertPerPoly;
 		m_tileLutSize = nextPow2(params.maxTiles / 4);
 		if (m_tileLutSize == 0)
 			m_tileLutSize = 1;
@@ -969,9 +971,9 @@ public class NavMesh {
 		}
 
 		// Clamp point to be inside the polygon.
-		float[] verts = new float[DT_VERTS_PER_POLYGON * 3];
-		float[] edged = new float[DT_VERTS_PER_POLYGON];
-		float[] edget = new float[DT_VERTS_PER_POLYGON];
+		float[] verts = new float[getMaxVertsPerPoly() * 3];
+		float[] edged = new float[getMaxVertsPerPoly()];
+		float[] edget = new float[getMaxVertsPerPoly()];
 		int nv = poly.vertCount;
 		for (int i = 0; i < nv; ++i)
 			System.arraycopy(tile.data.verts, poly.verts[i] * 3, verts, i * 3, 3);
@@ -1107,7 +1109,7 @@ public class NavMesh {
 		return getTilesAt(nx, ny);
 	}
 
-	List<MeshTile> getTilesAt(int x, int y) {
+	public List<MeshTile> getTilesAt(int x, int y) {
 		List<MeshTile> tiles = new ArrayList<>();
 		// Find tile based on hash.
 		int h = computeTileHash(x, y, m_tileLutMask);
@@ -1135,7 +1137,7 @@ public class NavMesh {
 		return 0;
 	}
 
-	MeshTile getTileByRef(long ref) {
+	public MeshTile getTileByRef(long ref) {
 		if (ref == 0)
 			return null;
 		int tileIndex = decodePolyIdTile(ref);
@@ -1216,6 +1218,10 @@ public class NavMesh {
 		vCopy(endPos, tile.data.verts, poly.verts[idx1] * 3);
 		return new Tupple2<float[], float[]>(startPos, endPos);
 
+	}
+
+	public static int getMaxVertsPerPoly() {
+		return DT_VERTS_PER_POLYGON;
 	}
 
 }

@@ -439,7 +439,7 @@ public class TileCache {
 		params.polyAreas = polyMesh.areas;
 		params.polyFlags = polyMesh.flags;
 		params.polyCount = polyMesh.npolys;
-		params.nvp = NavMesh.DT_VERTS_PER_POLYGON;
+		params.nvp = NavMesh.getMaxVertsPerPoly();
 		params.walkableHeight = m_params.walkableHeight;
 		params.walkableRadius = m_params.walkableRadius;
 		params.walkableClimb = m_params.walkableClimb;
