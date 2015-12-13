@@ -763,7 +763,6 @@ public class Crowd {
 					else
 						ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_FAILED;
 					ag.targetReplanTime = 0.0f;
-					System.err.println("asas");
 				} else if (status != null && status.isSuccess()) {
 					List<Long> path = ag.corridor.getPath();
 					if (path.isEmpty()) {

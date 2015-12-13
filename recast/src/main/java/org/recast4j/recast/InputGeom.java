@@ -62,4 +62,8 @@ public class InputGeom {
 		return faces;
 	}
 
+	public ChunkyTriMesh getChunkyMesh() {
+		return new ChunkyTriMesh(vertices, faces, faces.length / 3, 256);
+	}
+
 }

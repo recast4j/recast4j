@@ -265,7 +265,7 @@ public class RecastRasterization {
 	 * 
 	 * @see Heightfield
 	 */
-	public static void rasterizeTriangles(Context ctx, float[] verts, int nv, int[] tris, int[] areas, int nt,
+	public static void rasterizeTriangles(Context ctx, float[] verts, int[] tris, int[] areas, int nt,
 			Heightfield solid, int flagMergeThr) {
 
 		ctx.startTimer("RASTERIZE_TRIANGLES");

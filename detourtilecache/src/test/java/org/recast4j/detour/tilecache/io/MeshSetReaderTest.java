@@ -21,7 +21,7 @@ public class MeshSetReaderTest {
 		NavMesh mesh = reader.read(is, ByteOrder.LITTLE_ENDIAN, true);
 		assertEquals(128, mesh.getMaxTiles());
 		assertEquals(0x8000, mesh.getParams().maxPolys);
-		assertEquals(9, 6, mesh.getParams().tileWidth);
+		assertEquals(9.6, mesh.getParams().tileWidth, 0.001);
 		List<MeshTile> tiles = mesh.getTilesAt(6, 9);
 		assertEquals(1, tiles.size());
 		assertEquals(2, tiles.get(0).data.polys.length);

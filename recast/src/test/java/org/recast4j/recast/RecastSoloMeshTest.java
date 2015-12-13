@@ -1,6 +1,21 @@
-package org.recast4j.recast;
+/*
+Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
 
-import static org.recast4j.recast.RecastVectors.copy;
+This software is provided 'as-is', without any express or implied
+warranty.  In no event will the authors be held liable for any damages
+arising from the use of this software.
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
+1. The origin of this software must not be misrepresented; you must not
+ claim that you wrote the original software. If you use this software
+ in a product, an acknowledgment in the product documentation would be
+ appreciated but is not required.
+2. Altered source versions must be plainly marked as such, and must not be
+ misrepresented as being the original software.
+3. This notice may not be removed or altered from any source distribution.
+*/
+package org.recast4j.recast;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -21,7 +36,7 @@ public class RecastSoloMeshTest {
 	private int m_regionMergeSize;
 	private float m_edgeMaxLen;
 	private float m_edgeMaxError;
-	private float m_vertsPerPoly;
+	private int m_vertsPerPoly;
 	private float m_detailSampleDist;
 	private PartitionType m_partitionType;
 	private float m_detailSampleMaxError;
@@ -37,7 +52,7 @@ public class RecastSoloMeshTest {
 		m_regionMergeSize = 20;
 		m_edgeMaxLen = 12.0f;
 		m_edgeMaxError = 1.3f;
-		m_vertsPerPoly = 6.0f;
+		m_vertsPerPoly = 6;
 		m_detailSampleDist = 6.0f;
 		m_detailSampleMaxError = 1.0f;
 		m_partitionType = PartitionType.WATERSHED;
@@ -82,54 +97,25 @@ public class RecastSoloMeshTest {
 		testBuild("nav_test.obj", PartitionType.LAYERS, 0, 19, 32, 312, 150, 150, 768, 529);
 	}
 
-	public void testBuild(String filename, PartitionType partitionType, int expDistance, int expRegions, int expContours, int expVerts,
-			int expPolys, int expDetMeshes, int expDetVerts, int expDetTRis) {
+	public void testBuild(String filename, PartitionType partitionType, int expDistance, int expRegions,
+			int expContours, int expVerts, int expPolys, int expDetMeshes, int expDetVerts, int expDetTRis) {
 		resetCommonSettings();
 		m_partitionType = partitionType;
 		ObjImporter importer = new ObjImporter();
-		InputGeom m_geom = importer.load(getClass().getResourceAsStream(filename));
+		InputGeom geom = importer.load(getClass().getResourceAsStream(filename));
 		long time = System.nanoTime();
-		float[] bmin = m_geom.getMeshBoundsMin();
-		float[] bmax = m_geom.getMeshBoundsMax();
-		float[] verts = m_geom.getVerts();
-		int nverts = verts.length / 3;
-		int[] tris = m_geom.getTris();
+		float[] bmin = geom.getMeshBoundsMin();
+		float[] bmax = geom.getMeshBoundsMax();
+		float[] verts = geom.getVerts();
+		int[] tris = geom.getTris();
 		int ntris = tris.length / 3;
 		//
 		// Step 1. Initialize build config.
 		//
 
 		// Init build configuration from GUI
-		RecastConfig m_cfg = new RecastConfig();
-		m_cfg.cs = m_cellSize;
-		m_cfg.ch = m_cellHeight;
-		m_cfg.walkableSlopeAngle = m_agentMaxSlope;
-		m_cfg.walkableHeight = (int) Math.ceil(m_agentHeight / m_cfg.ch);
-		m_cfg.walkableClimb = (int) Math.floor(m_agentMaxClimb / m_cfg.ch);
-		m_cfg.walkableRadius = (int) Math.ceil(m_agentRadius / m_cfg.cs);
-		m_cfg.maxEdgeLen = (int) (m_edgeMaxLen / m_cellSize);
-		m_cfg.maxSimplificationError = m_edgeMaxError;
-		m_cfg.minRegionArea = m_regionMinSize * m_regionMinSize; // Note:
-																	// area
-																	// =
-																	// size*size
-		m_cfg.mergeRegionArea = m_regionMergeSize * m_regionMergeSize; // Note:
-																		// area
-																		// =
-																		// size*size
-		m_cfg.maxVertsPerPoly = (int) m_vertsPerPoly;
-		m_cfg.detailSampleDist = m_detailSampleDist < 0.9f ? 0 : m_cellSize * m_detailSampleDist;
-		m_cfg.detailSampleMaxError = m_cellHeight * m_detailSampleMaxError;
-
-		// Set the area where the navigation will be build.
-		// Here the bounds of the input mesh are used, but the
-		// area could be specified by an user defined box, etc.
-		copy(m_cfg.bmin, bmin);
-		copy(m_cfg.bmax, bmax);
-
-		int[] wh = Recast.calcGridSize(m_cfg.bmin, m_cfg.bmax, m_cfg.cs);
-		m_cfg.width = wh[0];
-		m_cfg.height = wh[1];
+		RecastConfig m_cfg = new RecastConfig(m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb,
+				m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, bmin, bmax);
 
 		Context m_ctx = new Context();
 		//
@@ -149,12 +135,11 @@ public class RecastSoloMeshTest {
 		// If your input data is multiple meshes, you can transform them here,
 		// calculate
 		// the are type for each of the meshes and rasterize them.
-		int[] m_triareas = Recast.markWalkableTriangles(m_ctx, m_cfg.walkableSlopeAngle, verts, nverts, tris, ntris);
-		RecastRasterization.rasterizeTriangles(m_ctx, verts, nverts, tris, m_triareas, ntris, m_solid,
-				m_cfg.walkableClimb);
-				//
-				// Step 3. Filter walkables surfaces.
-				//
+		int[] m_triareas = Recast.markWalkableTriangles(m_ctx, m_cfg.walkableSlopeAngle, verts, tris, ntris);
+		RecastRasterization.rasterizeTriangles(m_ctx, verts, tris, m_triareas, ntris, m_solid, m_cfg.walkableClimb);
+		//
+		// Step 3. Filter walkables surfaces.
+		//
 
 		// Once all geometry is rasterized, we do initial pass of filtering to
 		// remove unwanted overhangs caused by the conservative rasterization
@@ -267,7 +252,7 @@ public class RecastSoloMeshTest {
 		Assert.assertEquals("Mesh Detail Verts", expDetVerts, m_dmesh.nverts);
 		Assert.assertEquals("Mesh Detail Tris", expDetTRis, m_dmesh.ntris);
 		long time2 = System.nanoTime();
-		System.out.println(filename + " : " + partitionType + "  " + (time2 - time) / 1000000 + " ms" );
+		System.out.println(filename + " : " + partitionType + "  " + (time2 - time) / 1000000 + " ms");
 		saveObj(filename.substring(0, filename.lastIndexOf('.')) + "_" + partitionType + ".obj", m_dmesh);
 	}
 
