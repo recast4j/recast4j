@@ -34,7 +34,7 @@ public class Recast {
 		// Calculate bounding box.
 	}
 
-	static int[] calcGridSize(float[] bmin, float[] bmax, float cs) {
+	public static int[] calcGridSize(float[] bmin, float[] bmax, float cs) {
 		return new int[] { (int) ((bmax[0] - bmin[0]) / cs + 0.5f), (int) ((bmax[2] - bmin[2]) / cs + 0.5f) };
 	}
 

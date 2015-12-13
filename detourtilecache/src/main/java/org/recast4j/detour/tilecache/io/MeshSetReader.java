@@ -25,11 +25,11 @@ import java.nio.ByteOrder;
 import org.recast4j.detour.MeshData;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.io.IOUtils;
-import org.recast4j.detour.io.MeshReader;
+import org.recast4j.detour.io.MeshDataReader;
 
 public class MeshSetReader {
 
-	private final MeshReader meshReader = new MeshReader();
+	private final MeshDataReader meshReader = new MeshDataReader();
 
 	public NavMesh read(InputStream is, ByteOrder order, boolean cCompatibility) throws IOException {
 		// Read header.
@@ -56,18 +56,12 @@ public class MeshSetReader {
 		header.params.tileHeight = bb.getFloat();
 		header.params.maxTiles = bb.getInt();
 		header.params.maxPolys = bb.getInt();
-		System.out.println(header.numTiles);
-		System.out.println(header.params.tileWidth);
-		System.out.println(header.params.tileHeight);
-		System.out.println(header.params.maxTiles);
-		System.out.println(header.params.maxPolys);
-		
+
 		NavMesh mesh = new NavMesh();
 		mesh.init(header.params);
-		
+
 		// Read tiles.
-		for (int i = 0; i < header.numTiles; ++i)
-		{
+		for (int i = 0; i < header.numTiles; ++i) {
 			NavMeshTileHeader tileHeader = new NavMeshTileHeader();
 			tileHeader.tileRef = bb.getLong();
 			tileHeader.dataSize = bb.getInt();
@@ -83,110 +77,5 @@ public class MeshSetReader {
 		}
 		return mesh;
 	}
-	
+
 }
-/*
-
-void Sample_TileMesh::saveAll(const char* path, const dtNavMesh* mesh)
-{
-	if (!mesh) return;
-	
-	FILE* fp = fopen(path, "wb");
-	if (!fp)
-		return;
-	
-	// Store header.
-	NavMeshSetHeader header;
-	header.magic = NAVMESHSET_MAGIC;
-	header.version = NAVMESHSET_VERSION;
-	header.numTiles = 0;
-	for (int i = 0; i < mesh->getMaxTiles(); ++i)
-	{
-		const dtMeshTile* tile = mesh->getTile(i);
-		if (!tile || !tile->header || !tile->dataSize) continue;
-		header.numTiles++;
-	}
-	memcpy(&header.params, mesh->getParams(), sizeof(dtNavMeshParams));
-	fwrite(&header, sizeof(NavMeshSetHeader), 1, fp);
-
-	// Store tiles.
-	for (int i = 0; i < mesh->getMaxTiles(); ++i)
-	{
-		const dtMeshTile* tile = mesh->getTile(i);
-		if (!tile || !tile->header || !tile->dataSize) continue;
-
-		NavMeshTileHeader tileHeader;
-		tileHeader.tileRef = mesh->getTileRef(tile);
-		tileHeader.dataSize = tile->dataSize;
-		fwrite(&tileHeader, sizeof(tileHeader), 1, fp);
-
-		fwrite(tile->data, tile->dataSize, 1, fp);
-	}
-
-	fclose(fp);
-}
-
-dtNavMesh* Sample_TileMesh::loadAll(const char* path)
-{
-	FILE* fp = fopen(path, "rb");
-	if (!fp) return 0;
-	
-	// Read header.
-	NavMeshSetHeader header;
-	size_t readLen = fread(&header, sizeof(NavMeshSetHeader), 1, fp);
-	if (readLen != 1)
-	{
-		fclose(fp);
-		return 0;
-	}
-	if (header.magic != NAVMESHSET_MAGIC)
-	{
-		fclose(fp);
-		return 0;
-	}
-	if (header.version != NAVMESHSET_VERSION)
-	{
-		fclose(fp);
-		return 0;
-	}
-	
-	dtNavMesh* mesh = dtAllocNavMesh();
-	if (!mesh)
-	{
-		fclose(fp);
-		return 0;
-	}
-	dtStatus status = mesh->init(&header.params);
-	if (dtStatusFailed(status))
-	{
-		fclose(fp);
-		return 0;
-	}
-		
-	// Read tiles.
-	for (int i = 0; i < header.numTiles; ++i)
-	{
-		NavMeshTileHeader tileHeader;
-		readLen = fread(&tileHeader, sizeof(tileHeader), 1, fp);
-		if (readLen != 1)
-			return 0;
-
-		if (!tileHeader.tileRef || !tileHeader.dataSize)
-			break;
-
-		unsigned char* data = (unsigned char*)dtAlloc(tileHeader.dataSize, DT_ALLOC_PERM);
-		if (!data) break;
-		memset(data, 0, tileHeader.dataSize);
-		readLen = fread(data, tileHeader.dataSize, 1, fp);
-		if (readLen != 1)
-			return 0;
-
-		mesh->addTile(data, tileHeader.dataSize, DT_TILE_FREE_DATA, tileHeader.tileRef, 0);
-	}
-	
-	fclose(fp);
-	
-	return mesh;
-}
-
-*/

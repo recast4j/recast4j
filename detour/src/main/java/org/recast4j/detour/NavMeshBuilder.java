@@ -18,10 +18,10 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
+import static org.recast4j.detour.DetourCommon.vCopy;
+
 import java.util.Arrays;
 import java.util.Comparator;
-
-import static org.recast4j.detour.DetourCommon.vCopy;
 
 public class NavMeshBuilder {
 
@@ -204,13 +204,11 @@ public class NavMeshBuilder {
 					it.bmax[2] = z;
 			}
 			// Remap y
-			it.bmin[1] = (int) Math.floor((float) it.bmin[1] * ch / cs);
-			it.bmax[1] = (int) Math.floor((float) it.bmax[1] * ch / cs);
+			it.bmin[1] = (int) Math.floor(it.bmin[1] * ch / cs);
+			it.bmax[1] = (int) Math.floor(it.bmax[1] * ch / cs);
 		}
 
-		int curNode = subdivide(items, npolys, 0, npolys, 0, nodes);
-
-		return curNode;
+		return subdivide(items, npolys, 0, npolys, 0, nodes);
 	}
 
 	static final int XP = 1 << 0;
@@ -417,7 +415,7 @@ public class NavMeshBuilder {
 		header.walkableRadius = params.walkableRadius;
 		header.walkableClimb = params.walkableClimb;
 		header.offMeshConCount = storedOffMeshConCount;
-		header.bvNodeCount = 0;
+		header.bvNodeCount = bvTreeSize;
 
 		int offMeshVertsBase = params.vertCount;
 		int offMeshPolyBase = params.polyCount;
@@ -552,6 +550,7 @@ public class NavMeshBuilder {
 		// Store and create BVtree.
 		// TODO: take detail mesh into account! use byte per bbox extent?
 		if (params.buildBvTree) {
+			// Do not set header.bvNodeCount set to make it work look exactly the same as in original Detour  
 			header.bvNodeCount = createBVTree(params.verts, params.vertCount, params.polys, params.polyCount, nvp,
 					params.cs, params.ch, navBvtree);
 

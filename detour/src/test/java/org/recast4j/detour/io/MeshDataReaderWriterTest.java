@@ -29,7 +29,7 @@ import org.junit.Test;
 import org.recast4j.detour.MeshData;
 import org.recast4j.detour.RecastTestMeshBuilder;
 
-public class MeshReaderWriterTest {
+public class MeshDataReaderWriterTest {
 
 	private MeshData meshData;
 
@@ -37,26 +37,35 @@ public class MeshReaderWriterTest {
 	public void setUp() {
 		RecastTestMeshBuilder rcBuilder = new RecastTestMeshBuilder();
 		meshData = rcBuilder.getMeshData();
-		// meshData.offMeshCons
 	}
 
 	@Test
 	public void testCCompatibility() throws IOException {
-		test(true);
+		test(true, ByteOrder.BIG_ENDIAN);
 	}
 
 	@Test
 	public void testCompact() throws IOException {
-		test(false);
+		test(false, ByteOrder.BIG_ENDIAN);
 	}
 
-	public void test(boolean cCompatibility) throws IOException {
+	@Test
+	public void testCCompatibilityLE() throws IOException {
+		test(true, ByteOrder.LITTLE_ENDIAN);
+	}
+
+	@Test
+	public void testCompactLE() throws IOException {
+		test(false, ByteOrder.LITTLE_ENDIAN);
+	}
+
+	public void test(boolean cCompatibility, ByteOrder order) throws IOException {
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
-		MeshWriter writer = new MeshWriter();
-		writer.write(os, meshData, ByteOrder.BIG_ENDIAN, cCompatibility);
+		MeshDataWriter writer = new MeshDataWriter();
+		writer.write(os, meshData, order, cCompatibility);
 		ByteArrayInputStream bais = new ByteArrayInputStream(os.toByteArray());
-		MeshReader reader = new MeshReader();
-		MeshData readData = reader.read(bais, ByteOrder.BIG_ENDIAN, cCompatibility);
+		MeshDataReader reader = new MeshDataReader();
+		MeshData readData = reader.read(bais, order, cCompatibility);
 
 		System.out.println("verts: " + meshData.header.vertCount);
 		System.out.println("polys: " + meshData.header.polyCount);

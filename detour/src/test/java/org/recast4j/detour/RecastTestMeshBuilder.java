@@ -28,18 +28,35 @@ import org.recast4j.recast.RecastConstants.PartitionType;
 public class RecastTestMeshBuilder {
 
 	private MeshData meshData;
+	private final static float m_cellSize = 0.3f;
+	private final static float m_cellHeight = 0.2f;
+	private final static float m_agentHeight = 2.0f;
+	private final static float m_agentRadius = 0.6f;
+	private final static float m_agentMaxClimb = 0.9f;
+	private final static float m_agentMaxSlope = 45.0f;
+	private final static int m_regionMinSize = 8;
+	private final static int m_regionMergeSize = 20;
+	private final static float m_edgeMaxLen = 12.0f;
+	private final static float m_edgeMaxError = 1.3f;
+	private final static int m_vertsPerPoly = 6;
+	private final static float m_detailSampleDist = 6.0f;
+	private final static float m_detailSampleMaxError = 1.0f;
 
 	public RecastTestMeshBuilder() {
 		this(new ObjImporter().load(RecastBuilder.class.getResourceAsStream("dungeon.obj")), PartitionType.WATERSHED,
-				0.3f, 0.2f, 2.0f, 0.6f, 0.9f, 45.0f, 8, 20, 12.0f, 1.3f, 6, 6.0f, 1.0f, 0.0f);
+				m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope,
+				m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist,
+				m_detailSampleMaxError);
 	}
 
 	public RecastTestMeshBuilder(InputGeom m_geom, PartitionType m_partitionType, float m_cellSize, float m_cellHeight,
 			float m_agentHeight, float m_agentRadius, float m_agentMaxClimb, float m_agentMaxSlope, int m_regionMinSize,
 			int m_regionMergeSize, float m_edgeMaxLen, float m_edgeMaxError, int m_vertsPerPoly,
-			float m_detailSampleDist, float m_detailSampleMaxError, float m_tileSize) {
-		RecastConfig cfg = new RecastConfig(m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, m_geom.getMeshBoundsMin(), m_geom.getMeshBoundsMax());
-		RecastBuilder rcBuilder = new RecastBuilder(m_geom, m_partitionType);
+			float m_detailSampleDist, float m_detailSampleMaxError) {
+		RecastConfig cfg = new RecastConfig(m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb,
+				m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly,
+				m_detailSampleDist, m_detailSampleMaxError, m_geom.getMeshBoundsMin(), m_geom.getMeshBoundsMax());
+		RecastBuilder rcBuilder = new RecastBuilder(m_geom);
 		rcBuilder.build(cfg);
 		PolyMesh m_pmesh = rcBuilder.getMesh();
 		for (int i = 0; i < m_pmesh.npolys; ++i) {
@@ -67,7 +84,7 @@ public class RecastTestMeshBuilder {
 		params.cs = m_cellSize;
 		params.ch = m_cellHeight;
 		params.buildBvTree = true;
-		
+
 		params.offMeshConVerts = new float[6];
 		params.offMeshConVerts[0] = 0.1f;
 		params.offMeshConVerts[1] = 0.2f;

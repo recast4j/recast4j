@@ -20,106 +20,111 @@ package org.recast4j.recast;
 
 import static org.recast4j.recast.RecastVectors.copy;
 
+import org.recast4j.recast.RecastConstants.PartitionType;
+
 public class RecastConfig {
+	public final PartitionType partitionType;
+
 	/** The width of the field along the x-axis. [Limit: >= 0] [Units: vx] **/
-	final int width;
+	public final int width;
 
 	/** The height of the field along the z-axis. [Limit: >= 0] [Units: vx] **/
-	final int height;
+	public final int height;
 
 	/** The width/height size of tile's on the xz-plane. [Limit: >= 0] [Units: vx] **/
-	final int tileSize;
+	public final int tileSize;
 
 	/** The size of the non-navigable border around the heightfield. [Limit: >=0] [Units: vx] **/
-	final int borderSize;
+	public final int borderSize;
 
 	/** The xz-plane cell size to use for fields. [Limit: > 0] [Units: wu] **/
-	final float cs;
+	public final float cs;
 
 	/** The y-axis cell size to use for fields. [Limit: > 0] [Units: wu] **/
-	final float ch;
+	public final float ch;
 
 	/** The minimum bounds of the field's AABB. [(x, y, z)] [Units: wu] **/
-	final float[] bmin = new float[3];
+	public final float[] bmin = new float[3];
 
 	/** The maximum bounds of the field's AABB. [(x, y, z)] [Units: wu] **/
-	final float[] bmax = new float[3];
+	public final float[] bmax = new float[3];
 
 	/** The maximum slope that is considered walkable. [Limits: 0 <= value < 90] [Units: Degrees] **/
-	final float walkableSlopeAngle;
+	public final float walkableSlopeAngle;
 
 	/**
 	 * Minimum floor to 'ceiling' height that will still allow the floor area to be considered walkable. [Limit: >= 3]
 	 * [Units: vx]
 	 **/
-	final int walkableHeight;
+	public final int walkableHeight;
 
 	/** Maximum ledge height that is considered to still be traversable. [Limit: >=0] [Units: vx] **/
-	final int walkableClimb;
+	public final int walkableClimb;
 
 	/**
 	 * The distance to erode/shrink the walkable area of the heightfield away from obstructions. [Limit: >=0] [Units:
 	 * vx]
 	 **/
-	final int walkableRadius;
+	public final int walkableRadius;
 
 	/** The maximum allowed length for contour edges along the border of the mesh. [Limit: >=0] [Units: vx] **/
-	final int maxEdgeLen;
+	public final int maxEdgeLen;
 
 	/**
 	 * The maximum distance a simplfied contour's border edges should deviate the original raw contour. [Limit: >=0]
 	 * [Units: vx]
 	 **/
-	final float maxSimplificationError;
+	public final float maxSimplificationError;
 
 	/** The minimum number of cells allowed to form isolated island areas. [Limit: >=0] [Units: vx] **/
-	final int minRegionArea;
+	public final int minRegionArea;
 
 	/**
 	 * Any regions with a span count smaller than this value will, if possible, be merged with larger regions. [Limit:
 	 * >=0] [Units: vx]
 	 **/
-	final int mergeRegionArea;
+	public final int mergeRegionArea;
 
 	/**
 	 * The maximum number of vertices allowed for polygons generated during the contour to polygon conversion process.
 	 * [Limit: >= 3]
 	 **/
-	final int maxVertsPerPoly;
+	public final int maxVertsPerPoly;
 
 	/**
 	 * Sets the sampling distance to use when generating the detail mesh. (For height detail only.) [Limits: 0 or >=
 	 * 0.9] [Units: wu]
 	 **/
-	final float detailSampleDist;
+	public final float detailSampleDist;
 
 	/**
 	 * The maximum distance the detail mesh surface should deviate from heightfield data. (For height detail only.)
 	 * [Limit: >=0] [Units: wu]
 	 **/
-	final float detailSampleMaxError;
+	public final float detailSampleMaxError;
 
-	public RecastConfig(float cellSize, float cellHeight, float agentHeight, float agentRadius, float agentMaxClimb,
+	public RecastConfig(PartitionType partitionType, float cellSize, float cellHeight, float agentHeight, float agentRadius, float agentMaxClimb,
 			float agentMaxSlope, int regionMinSize, int regionMergeSize, float edgeMaxLen, float edgeMaxError,
 			int vertsPerPoly, float detailSampleDist, float detailSampleMaxError, float[] bmin, float[] bmax) {
-		this(cellSize, cellHeight, agentHeight, agentRadius, agentMaxClimb, agentMaxSlope, regionMinSize,
+		this(partitionType, cellSize, cellHeight, agentHeight, agentRadius, agentMaxClimb, agentMaxSlope, regionMinSize,
 				regionMergeSize, edgeMaxLen, edgeMaxError, vertsPerPoly, detailSampleDist, detailSampleMaxError, bmin,
 				bmax, 0, 0, 0, false);
 	}
 
-	public RecastConfig(float cellSize, float cellHeight, float agentHeight, float agentRadius, float agentMaxClimb,
+	public RecastConfig(PartitionType partitionType, float cellSize, float cellHeight, float agentHeight, float agentRadius, float agentMaxClimb,
 			float agentMaxSlope, int regionMinSize, int regionMergeSize, float edgeMaxLen, float edgeMaxError,
 			int vertsPerPoly, float detailSampleDist, float detailSampleMaxError, float[] bmin, float[] bmax,
 			int tileSize, int tx, int ty) {
-		this(cellSize, cellHeight, agentHeight, agentRadius, agentMaxClimb, agentMaxSlope, regionMinSize,
+		this(partitionType, cellSize, cellHeight, agentHeight, agentRadius, agentMaxClimb, agentMaxSlope, regionMinSize,
 				regionMergeSize, edgeMaxLen, edgeMaxError, vertsPerPoly, detailSampleDist, detailSampleMaxError, bmin,
 				bmax, tileSize, tx, ty, true);
 	}
 
-	private RecastConfig(float cellSize, float cellHeight, float agentHeight, float agentRadius, float agentMaxClimb,
+	private RecastConfig(PartitionType partitionType, float cellSize, float cellHeight, float agentHeight, float agentRadius, float agentMaxClimb,
 			float agentMaxSlope, int regionMinSize, int regionMergeSize, float edgeMaxLen, float edgeMaxError,
 			int vertsPerPoly, float detailSampleDist, float detailSampleMaxError, float[] bmin, float[] bmax,
 			int tileSize, int tx, int ty, boolean tiled) {
+		this.partitionType = partitionType;
 		this.cs = cellSize;
 		this.ch = cellHeight;
 		this.walkableSlopeAngle = agentMaxSlope;

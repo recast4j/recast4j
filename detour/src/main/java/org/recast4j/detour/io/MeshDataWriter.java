@@ -25,7 +25,7 @@ import org.recast4j.detour.Link;
 import org.recast4j.detour.MeshData;
 import org.recast4j.detour.MeshHeader;
 
-public class MeshWriter extends DetourWriter {
+public class MeshDataWriter extends DetourWriter {
 
 	public void write(OutputStream stream, MeshData data, ByteOrder order, boolean cCompatibility) throws IOException {
 		MeshHeader header = data.header;

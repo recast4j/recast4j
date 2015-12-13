@@ -26,37 +26,20 @@ import org.recast4j.recast.RecastConstants.PartitionType;
 
 public class RecastSoloMeshTest {
 
-	private float m_cellSize;
-	private float m_cellHeight;
-	private float m_agentHeight;
-	private float m_agentRadius;
-	private float m_agentMaxClimb;
-	private float m_agentMaxSlope;
-	private int m_regionMinSize;
-	private int m_regionMergeSize;
-	private float m_edgeMaxLen;
-	private float m_edgeMaxError;
-	private int m_vertsPerPoly;
-	private float m_detailSampleDist;
-	private PartitionType m_partitionType;
-	private float m_detailSampleMaxError;
-
-	void resetCommonSettings() {
-		m_cellSize = 0.3f;
-		m_cellHeight = 0.2f;
-		m_agentHeight = 2.0f;
-		m_agentRadius = 0.6f;
-		m_agentMaxClimb = 0.9f;
-		m_agentMaxSlope = 45.0f;
-		m_regionMinSize = 8;
-		m_regionMergeSize = 20;
-		m_edgeMaxLen = 12.0f;
-		m_edgeMaxError = 1.3f;
-		m_vertsPerPoly = 6;
-		m_detailSampleDist = 6.0f;
-		m_detailSampleMaxError = 1.0f;
-		m_partitionType = PartitionType.WATERSHED;
-	}
+	private float m_cellSize = 0.3f;
+	private float m_cellHeight = 0.2f;
+	private float m_agentHeight = 2.0f;
+	private float m_agentRadius = 0.6f;
+	private float m_agentMaxClimb = 0.9f;
+	private float m_agentMaxSlope = 45.0f;
+	private int m_regionMinSize = 8;
+	private int m_regionMergeSize = 20;
+	private float m_edgeMaxLen = 12.0f;
+	private float m_edgeMaxError = 1.3f;
+	private int m_vertsPerPoly = 6;
+	private float m_detailSampleDist = 6.0f;
+	private float m_detailSampleMaxError = 1.0f;
+	private PartitionType m_partitionType = PartitionType.WATERSHED;
 
 	@Test
 	public void testPerformance() {
@@ -99,7 +82,6 @@ public class RecastSoloMeshTest {
 
 	public void testBuild(String filename, PartitionType partitionType, int expDistance, int expRegions,
 			int expContours, int expVerts, int expPolys, int expDetMeshes, int expDetVerts, int expDetTRis) {
-		resetCommonSettings();
 		m_partitionType = partitionType;
 		ObjImporter importer = new ObjImporter();
 		InputGeom geom = importer.load(getClass().getResourceAsStream(filename));
@@ -114,7 +96,7 @@ public class RecastSoloMeshTest {
 		//
 
 		// Init build configuration from GUI
-		RecastConfig m_cfg = new RecastConfig(m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb,
+		RecastConfig m_cfg = new RecastConfig(partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb,
 				m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, bmin, bmax);
 
 		Context m_ctx = new Context();

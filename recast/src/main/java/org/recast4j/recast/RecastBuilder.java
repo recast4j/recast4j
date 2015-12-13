@@ -26,13 +26,11 @@ import org.recast4j.recast.RecastConstants.PartitionType;
 public class RecastBuilder {
 
 	private InputGeom m_geom;
-	private PartitionType m_partitionType;
 	private PolyMesh m_pmesh;
 	private PolyMeshDetail m_dmesh;
 
-	public RecastBuilder(InputGeom m_geom, PartitionType m_partitionType) {
+	public RecastBuilder(InputGeom m_geom) {
 		this.m_geom = m_geom;
-		this.m_partitionType = m_partitionType;
 	}
 
 	public void build(RecastConfig m_cfg) {
@@ -57,6 +55,7 @@ public class RecastBuilder {
 		// the are type for each of the meshes and rasterize them.
 		float[] verts = m_geom.getVerts();
 		boolean tiled = m_cfg.tileSize > 0;
+		int totaltris = 0;
 		if (tiled) {
 			ChunkyTriMesh chunkyMesh = m_geom.getChunkyMesh();
 			float[] tbmin = new float[2];
@@ -66,7 +65,6 @@ public class RecastBuilder {
 			tbmax[0] = m_cfg.bmax[0];
 			tbmax[1] = m_cfg.bmax[2];
 			List<ChunkyTriMeshNode> nodes = chunkyMesh.getChunksOverlappingRect(tbmin, tbmax);
-			int totaltris = 0;
 			for (ChunkyTriMeshNode node : nodes) {
 				int[] tris = node.tris;
 				int ntris = tris.length / 3;
@@ -79,6 +77,7 @@ public class RecastBuilder {
 			int[] tris = m_geom.getTris();
 			int ntris = tris.length / 3;
 			int[] m_triareas = Recast.markWalkableTriangles(m_ctx, m_cfg.walkableSlopeAngle, verts, tris, ntris);
+			totaltris = ntris;
 			RecastRasterization.rasterizeTriangles(m_ctx, verts, tris, m_triareas, ntris, m_solid, m_cfg.walkableClimb);
 		}
 		//
@@ -150,13 +149,13 @@ public class RecastBuilder {
 		// * good choice to use for tiled navmesh with medium and small sized
 		// tiles
 
-		if (m_partitionType == PartitionType.WATERSHED) {
+		if (m_cfg.partitionType == PartitionType.WATERSHED) {
 			// Prepare for region partitioning, by calculating distance field
 			// along the walkable surface.
 			RecastRegion.buildDistanceField(m_ctx, m_chf);
 			// Partition the walkable surface into simple regions without holes.
 			RecastRegion.buildRegions(m_ctx, m_chf, m_cfg.borderSize, m_cfg.minRegionArea, m_cfg.mergeRegionArea);
-		} else if (m_partitionType == PartitionType.MONOTONE) {
+		} else if (m_cfg.partitionType == PartitionType.MONOTONE) {
 			// Partition the walkable surface into simple regions without holes.
 			// Monotone partitioning does not need distancefield.
 			RecastRegion.buildRegionsMonotone(m_ctx, m_chf, m_cfg.borderSize, m_cfg.minRegionArea, m_cfg.mergeRegionArea);

@@ -182,8 +182,7 @@ public class NavMesh {
 		return tile.links.size() - 1;
 	}
 
-	private void freeLink(MeshTile tile, int link)
-	{
+	private void freeLink(MeshTile tile, int link) {
 		tile.links.remove(link);
 	}
 
@@ -476,7 +475,6 @@ public class NavMesh {
 		return getTileRef(tile);
 	}
 
-	// FIXME: Implement
 	/// Removes the specified tile from the navigation mesh.
 	/// @param[in] ref The reference of the tile to remove.
 	/// @param[out] data Data associated with deleted tile.
@@ -489,10 +487,9 @@ public class NavMesh {
 	/// it can be added back to the navigation mesh at a later point.
 	///
 	/// @see #addTile
-	public MeshData removeTile(long ref)
-	{
+	public MeshData removeTile(long ref) {
 		if (ref == 0) {
-			throw new RuntimeException("Invalid tile ref");
+			return null;
 		}
 		int tileIndex = decodePolyIdTile(ref);
 		int tileSalt = decodePolyIdSalt(ref);
@@ -501,15 +498,13 @@ public class NavMesh {
 		MeshTile tile = m_tiles[tileIndex];
 		if (tile.salt != tileSalt)
 			throw new RuntimeException("Invalid tile salt");
-		
+
 		// Remove tile from hash lookup.
-		int h = computeTileHash(tile.data.header.x,tile.data.header.y,m_tileLutMask);
+		int h = computeTileHash(tile.data.header.x, tile.data.header.y, m_tileLutMask);
 		MeshTile prev = null;
 		MeshTile cur = m_posLookup[h];
-		while (cur != null)
-		{
-			if (cur == tile)
-			{
+		while (cur != null) {
+			if (cur == tile) {
 				if (prev != null)
 					prev.next = cur.next;
 				else
@@ -519,21 +514,20 @@ public class NavMesh {
 			prev = cur;
 			cur = cur.next;
 		}
-		
+
 		// Remove connections to neighbour tiles.
 		// Create connections with neighbour tiles.
-		
+
 		// Connect with layers in current tile.
 		List<MeshTile> nneis = getTilesAt(tile.data.header.x, tile.data.header.y);
-		for (MeshTile j : nneis)
-		{
-			if (j == tile) continue;
+		for (MeshTile j : nneis) {
+			if (j == tile)
+				continue;
 			unconnectExtLinks(j, tile);
 		}
-		
+
 		// Connect with neighbour tiles.
-		for (int i = 0; i < 8; ++i)
-		{
+		for (int i = 0; i < 8; ++i) {
 			nneis = getNeighbourTilesAt(tile.data.header.x, tile.data.header.y, i);
 			for (MeshTile j : nneis)
 				unconnectExtLinks(j, tile);
@@ -546,7 +540,7 @@ public class NavMesh {
 		tile.links.clear();
 
 		// Update salt, salt should never be zero.
-		tile.salt = (tile.salt+1) & ((1<<DT_SALT_BITS)-1);
+		tile.salt = (tile.salt + 1) & ((1 << DT_SALT_BITS) - 1);
 		if (tile.salt == 0)
 			tile.salt++;
 
@@ -557,8 +551,6 @@ public class NavMesh {
 		return data;
 	}
 
-
-	
 	/// Builds internal polygons links for a tile.
 	void connectIntLinks(MeshTile tile) {
 		if (tile == null)
@@ -593,22 +585,18 @@ public class NavMesh {
 		}
 	}
 
-	void unconnectExtLinks(MeshTile tile, MeshTile target)
-	{
-		if (tile == null || target == null) return;
+	void unconnectExtLinks(MeshTile tile, MeshTile target) {
+		if (tile == null || target == null)
+			return;
 
 		int targetNum = decodePolyIdTile(getTileRef(target));
 
-		for (int i = 0; i < tile.data.header.polyCount; ++i)
-		{
+		for (int i = 0; i < tile.data.header.polyCount; ++i) {
 			Poly poly = tile.data.polys[i];
 			int j = poly.firstLink;
 			int pj = DT_NULL_LINK;
-			while (j != DT_NULL_LINK)
-			{
-				if (tile.links.get(j).side != 0xff &&
-					decodePolyIdTile(tile.links.get(j).ref) == targetNum)
-				{
+			while (j != DT_NULL_LINK) {
+				if (tile.links.get(j).side != 0xff && decodePolyIdTile(tile.links.get(j).ref) == targetNum) {
 					// Revove link.
 					int nj = tile.links.get(j).next;
 					if (pj == DT_NULL_LINK)
@@ -617,9 +605,7 @@ public class NavMesh {
 						tile.links.get(pj).next = nj;
 					freeLink(tile, j);
 					j = nj;
-				}
-				else
-				{
+				} else {
 					// Advance
 					pj = j;
 					j = tile.links.get(j).next;
@@ -1150,7 +1136,7 @@ public class NavMesh {
 		return tile;
 	}
 
-	long getTileRef(MeshTile tile) {
+	public long getTileRef(MeshTile tile) {
 		if (tile == null)
 			return 0;
 		int it = tile.index;

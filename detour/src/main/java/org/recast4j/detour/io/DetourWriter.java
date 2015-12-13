@@ -37,6 +37,16 @@ public abstract class DetourWriter {
 		}
 	}
 
+	protected void write(OutputStream stream, long value, ByteOrder order) throws IOException {
+		if (order == ByteOrder.BIG_ENDIAN) {
+			write(stream, (int)(value >>> 32), order);
+			write(stream, (int)(value & 0xFFFFFFFF), order);
+		} else {
+			write(stream, (int)(value & 0xFFFFFFFF), order);
+			write(stream, (int)(value >>> 32), order);
+		}
+	}
+
 	protected void write(OutputStream stream, int value, ByteOrder order) throws IOException {
 		if (order == ByteOrder.BIG_ENDIAN) {
 			stream.write((value >> 24) & 0xFF);

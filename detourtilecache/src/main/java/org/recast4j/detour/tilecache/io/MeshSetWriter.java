@@ -17,6 +17,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour.tilecache.io;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteOrder;
@@ -24,20 +25,23 @@ import java.nio.ByteOrder;
 import org.recast4j.detour.MeshTile;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.io.DetourWriter;
+import org.recast4j.detour.io.MeshDataWriter;
 
 public class MeshSetWriter extends DetourWriter {
 
-	public void write (OutputStream stream, NavMesh mesh, ByteOrder order, boolean cCompatibility) throws IOException {
+	private final MeshDataWriter writer = new MeshDataWriter();
+
+	public void write(OutputStream stream, NavMesh mesh, ByteOrder order, boolean cCompatibility) throws IOException {
 		// Read header.
 		write(stream, NavMeshSetHeader.NAVMESHSET_MAGIC, order);
 		write(stream, NavMeshSetHeader.NAVMESHSET_VERSION, order);
 		int numTiles = 0;
-		for (int i = 0; i < mesh.getMaxTiles(); ++i)
-		{
+		for (int i = 0; i < mesh.getMaxTiles(); ++i) {
 			MeshTile tile = mesh.getTile(i);
-			if (tile == null || tile.data == null || tile.data.header == null) continue;
+			if (tile == null || tile.data == null || tile.data.header == null)
+				continue;
 			numTiles++;
-		}	
+		}
 		write(stream, numTiles, order);
 		write(stream, mesh.getParams().orig[0], order);
 		write(stream, mesh.getParams().orig[1], order);
@@ -46,6 +50,25 @@ public class MeshSetWriter extends DetourWriter {
 		write(stream, mesh.getParams().tileHeight, order);
 		write(stream, mesh.getParams().maxTiles, order);
 		write(stream, mesh.getParams().maxPolys, order);
-		
+
+		// Store tiles.
+		for (int i = 0; i < mesh.getMaxTiles(); ++i) {
+			MeshTile tile = mesh.getTile(i);
+			if (tile == null || tile.data == null || tile.data.header == null)
+				continue;
+
+			NavMeshTileHeader tileHeader = new NavMeshTileHeader();
+			tileHeader.tileRef = mesh.getTileRef(tile);
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			writer.write(baos, tile.data, order, cCompatibility);
+			byte[] ba = baos.toByteArray();
+			tileHeader.dataSize = ba.length;
+			write(stream, tileHeader.tileRef, order);
+			write(stream, tileHeader.dataSize, order);
+			if (cCompatibility) {
+				write(stream, 0, order); // C struct padding
+			}
+			stream.write(ba);
+		}
 	}
 }

@@ -31,7 +31,7 @@ import org.recast4j.detour.OffMeshConnection;
 import org.recast4j.detour.Poly;
 import org.recast4j.detour.PolyDetail;
 
-public class MeshReader {
+public class MeshDataReader {
 
 	final static int DT_POLY_DETAIL_SIZE = 10;
 
@@ -167,13 +167,6 @@ public class MeshReader {
 			cons[i].userId = buf.getInt();
 		}
 		return cons;
-	}
-
-	private void align4(ByteBuffer buf) {
-		int toSkip = (-buf.position()) & 3;
-		for (int i = 0; i < toSkip; i++) {
-			buf.get();
-		}
 	}
 
 }
