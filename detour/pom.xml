@@ -39,13 +39,12 @@
 		<dependency>
 			<groupId>org.recast4j</groupId>
 			<artifactId>recast</artifactId>
-			<type>test-jar</type>
 			<version>1.0.0-SNAPSHOT</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.recast4j</groupId>
 			<artifactId>recast</artifactId>
+			<type>test-jar</type>
 			<version>1.0.0-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
