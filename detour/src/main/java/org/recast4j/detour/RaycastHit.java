@@ -33,4 +33,6 @@ public class RaycastHit {
 	public final List<Long> path = new ArrayList<>();
 	/** The cost of the path until hit. */
 	public float pathCost;
+	/** The index of the edge on the final polygon where the wall was hit. */
+	public int hitEdgeIndex;
 }

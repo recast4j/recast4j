@@ -1154,8 +1154,6 @@ public class NavMeshQuery {
 	/// Finalizes and returns the results of a sliced path query.
 	///  @param[out]	path		An ordered list of polygon references representing the path. (Start to end.) 
 	///  							[(polyRef) * @p pathCount]
-	///  @param[out]	pathCount	The number of polygons returned in the @p path array.
-	///  @param[in]		maxPath		The max number of polygons the path array can hold. [Limit: >= 1]
 	/// @returns The status flags for the query.
 	public FindPathResult finalizeSlicedFindPath() {
 
@@ -1218,8 +1216,6 @@ public class NavMeshQuery {
 	///  @param[in]		existingSize	The number of polygon in the @p existing array.
 	///  @param[out]	path			An ordered list of polygon references representing the path. (Start to end.) 
 	///  								[(polyRef) * @p pathCount]
-	///  @param[out]	pathCount		The number of polygons returned in the @p path array.
-	///  @param[in]		maxPath			The max number of polygons the @p path array can hold. [Limit: >= 1]
 	/// @returns The status flags for the query.
 	public FindPathResult finalizeSlicedFindPathPartial(List<Long> existing) {
 
@@ -1367,11 +1363,7 @@ public class NavMeshQuery {
 	///  @param[in]		startPos			Path start position. [(x, y, z)]
 	///  @param[in]		endPos				Path end position. [(x, y, z)]
 	///  @param[in]		path				An array of polygon references that represent the path corridor.
-	///  @param[in]		pathSize			The number of polygons in the @p path array.
 	///  @param[out]	straightPath		Points describing the straight path. [(x, y, z) * @p straightPathCount].
-	///  @param[out]	straightPathFlags	Flags describing each point. (See: #dtStraightPathFlags) [opt]
-	///  @param[out]	straightPathRefs	The reference id of the polygon that is being entered at each point. [opt]
-	///  @param[out]	straightPathCount	The number of points in the straight path.
 	///  @param[in]		maxStraightPath		The maximum number of points the straight path arrays can hold.  [Limit: > 0]
 	///  @param[in]		options				Query options. (see: #dtStraightPathOptions)
 	/// @returns The status flags for the query.
@@ -1932,6 +1924,9 @@ public class NavMeshQuery {
 				// Could not hit the polygon, keep the old t and report hit.
 				return hit;
 			}
+
+			hit.hitEdgeIndex = iresult.segMax;
+
 			// Keep track of furthest t so far.
 			if (iresult.tmax > hit.t)
 				hit.t = iresult.tmax;
