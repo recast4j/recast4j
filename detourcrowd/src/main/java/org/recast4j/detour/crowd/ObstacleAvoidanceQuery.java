@@ -248,7 +248,7 @@ public class ObstacleAvoidanceQuery {
 		// (see how the penalty is calculated below to understnad)
 		float minPen = minPenalty - vpen - vcpen;
 		float tThresold = (float) (((double) m_params.weightToi / (double) minPen - 0.1)
-				* (double) m_params.horizTime);
+				* m_params.horizTime);
 		if (tThresold - m_params.horizTime > -Float.MIN_VALUE)
 			return minPenalty; // already too much
 
@@ -354,7 +354,7 @@ public class ObstacleAvoidanceQuery {
 
 		float cvx = dvel[0] * m_params.velBias;
 		float cvz = dvel[2] * m_params.velBias;
-		float cs = vmax * 2 * (1 - m_params.velBias) / (float) (m_params.gridSize - 1);
+		float cs = vmax * 2 * (1 - m_params.velBias) / (m_params.gridSize - 1);
 		float half = (m_params.gridSize - 1) * cs * 0.5f;
 
 		float minPenalty = Float.MAX_VALUE;
@@ -421,9 +421,9 @@ public class ObstacleAvoidanceQuery {
 		float[] pat = new float[(DT_MAX_PATTERN_DIVS * DT_MAX_PATTERN_RINGS + 1) * 2];
 		int npat = 0;
 
-		int ndivs = (int) m_params.adaptiveDivs;
-		int nrings = (int) m_params.adaptiveRings;
-		int depth = (int) m_params.adaptiveDepth;
+		int ndivs = m_params.adaptiveDivs;
+		int nrings = m_params.adaptiveRings;
+		int depth = m_params.adaptiveDepth;
 
 		int nd = clamp(ndivs, 1, DT_MAX_PATTERN_DIVS);
 		int nr = clamp(nrings, 1, DT_MAX_PATTERN_RINGS);
@@ -448,8 +448,8 @@ public class ObstacleAvoidanceQuery {
 
 		for (int j = 0; j < nr; ++j) {
 			float r = (float) (nr - j) / (float) nr;
-			pat[npat * 2 + 0] = ddir[(j % 1) * 3] * r;
-			pat[npat * 2 + 1] = ddir[(j % 1) * 3 + 2] * r;
+			pat[npat * 2 + 0] = ddir[(j % 2) * 3] * r;
+			pat[npat * 2 + 1] = ddir[(j % 2) * 3 + 2] * r;
 			int last1 = npat * 2;
 			int last2 = last1;
 			npat++;
