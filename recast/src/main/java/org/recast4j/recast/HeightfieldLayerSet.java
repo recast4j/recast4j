@@ -8,8 +8,8 @@ public class HeightfieldLayerSet {
 	/// Represents a heightfield layer within a layer set.
 	/// @see rcHeightfieldLayerSet
 	public static class HeightfieldLayer {
-		public float[] bmin;				///< The minimum bounds in world space. [(x, y, z)]
-		public float[] bmax;				///< The maximum bounds in world space. [(x, y, z)]
+		public final float[] bmin = new float[3];				///< The minimum bounds in world space. [(x, y, z)]
+		public final float[] bmax = new float[3];				///< The maximum bounds in world space. [(x, y, z)]
 		public float cs;					///< The size of each cell. (On the xz-plane.)
 		public float ch;					///< The height of each cell. (The minimum increment along the y-axis.)
 		public int width;					///< The width of the heightfield. (Along the x-axis in cell units.)
