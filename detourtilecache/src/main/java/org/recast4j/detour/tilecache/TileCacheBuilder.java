@@ -20,12 +20,15 @@ package org.recast4j.detour.tilecache;
 
 import static org.recast4j.detour.DetourCommon.sqr;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Arrays;
 
 import org.recast4j.detour.Tupple2;
-import org.recast4j.detour.tilecache.io.TileCacheReader;
+import org.recast4j.detour.tilecache.io.TileCacheLayerHeaderReader;
+import org.recast4j.detour.tilecache.io.TileCacheLayerHeaderWriter;
 
 public class TileCacheBuilder {
 
@@ -76,7 +79,7 @@ public class TileCacheBuilder {
 		int[] poly = new int[2];
 	};
 
-	TileCacheReader reader;
+	TileCacheLayerHeaderReader reader;
 
 	void buildTileCacheRegions(TileCacheLayer layer, int walkableClimb) {
 
@@ -995,7 +998,7 @@ public class TileCacheBuilder {
 		}
 		return true;
 	}
-	
+
 	// Returns true iff the diagonal (i,j) is strictly internal to the
 	// polygon P in the neighborhood of the i endpoint.
 	private boolean inCone(int i, int j, int n, int[] verts, int[] indices) {
@@ -1517,180 +1520,163 @@ public class TileCacheBuilder {
 
 	}
 
-	TileCachePolyMesh buildTileCachePolyMesh(TileCacheContourSet lcset)
-{
-TileCachePolyMesh mesh = new TileCachePolyMesh();
+	TileCachePolyMesh buildTileCachePolyMesh(TileCacheContourSet lcset) {
+		TileCachePolyMesh mesh = new TileCachePolyMesh();
 
-int maxVertices = 0;
-int maxTris = 0;
-int maxVertsPerCont = 0;
-for (int i = 0; i < lcset.nconts; ++i)
-{
-// Skip null contours.
-if (lcset.conts[i].nverts < 3) continue;
-maxVertices += lcset.conts[i].nverts;
-maxTris += lcset.conts[i].nverts - 2;
-maxVertsPerCont = Math.max(maxVertsPerCont, lcset.conts[i].nverts);
-}
+		int maxVertices = 0;
+		int maxTris = 0;
+		int maxVertsPerCont = 0;
+		for (int i = 0; i < lcset.nconts; ++i) {
+			// Skip null contours.
+			if (lcset.conts[i].nverts < 3)
+				continue;
+			maxVertices += lcset.conts[i].nverts;
+			maxTris += lcset.conts[i].nverts - 2;
+			maxVertsPerCont = Math.max(maxVertsPerCont, lcset.conts[i].nverts);
+		}
 
-// TODO: warn about too many vertices?
+		// TODO: warn about too many vertices?
 
-mesh.nvp = MAX_VERTS_PER_POLY;
+		mesh.nvp = MAX_VERTS_PER_POLY;
 
-int[] vflags = new int[maxVertices];
+		int[] vflags = new int[maxVertices];
 
-mesh.verts = new int[maxVertices * 3];
-mesh.polys = new int[maxTris*MAX_VERTS_PER_POLY*2];
-mesh.areas = new int[maxTris];
-//Just allocate and clean the mesh flags array. The user is resposible for filling it.
-mesh.flags = new int[maxTris];
+		mesh.verts = new int[maxVertices * 3];
+		mesh.polys = new int[maxTris * MAX_VERTS_PER_POLY * 2];
+		mesh.areas = new int[maxTris];
+		// Just allocate and clean the mesh flags array. The user is resposible
+		// for filling it.
+		mesh.flags = new int[maxTris];
 
-mesh.nverts = 0;
-mesh.npolys = 0;
+		mesh.nverts = 0;
+		mesh.npolys = 0;
 
-int[] firstVert = new int[VERTEX_BUCKET_COUNT2];
-for (int i = 0; i < VERTEX_BUCKET_COUNT2; ++i)
-firstVert[i] = DT_TILECACHE_NULL_IDX;
+		int[] firstVert = new int[VERTEX_BUCKET_COUNT2];
+		for (int i = 0; i < VERTEX_BUCKET_COUNT2; ++i)
+			firstVert[i] = DT_TILECACHE_NULL_IDX;
 
-int[] nextVert = new int[maxVertices];
-int[] indices = new int[maxVertsPerCont];
-int[] tris = new int[maxVertsPerCont];
-int[] polys = new int[maxVertsPerCont*MAX_VERTS_PER_POLY];
-Arrays.fill(polys, 0xFFFF);
+		int[] nextVert = new int[maxVertices];
+		int[] indices = new int[maxVertsPerCont];
+		int[] tris = new int[maxVertsPerCont];
+		int[] polys = new int[maxVertsPerCont * MAX_VERTS_PER_POLY];
+		Arrays.fill(polys, 0xFFFF);
 
-for (int i = 0; i < lcset.nconts; ++i)
-{
-TileCacheContour cont = lcset.conts[i];
+		for (int i = 0; i < lcset.nconts; ++i) {
+			TileCacheContour cont = lcset.conts[i];
 
-// Skip null contours.
-if (cont.nverts < 3)
-continue;
+			// Skip null contours.
+			if (cont.nverts < 3)
+				continue;
 
-// Triangulate contour
-for (int j = 0; j < cont.nverts; ++j)
-indices[j] = j;
+			// Triangulate contour
+			for (int j = 0; j < cont.nverts; ++j)
+				indices[j] = j;
 
-int ntris = triangulate(cont.nverts, cont.verts, indices, tris);
-if (ntris <= 0)
-{
-// TODO: issue warning!
-ntris = -ntris;
-}
+			int ntris = triangulate(cont.nverts, cont.verts, indices, tris);
+			if (ntris <= 0) {
+				// TODO: issue warning!
+				ntris = -ntris;
+			}
 
-// Add and merge vertices.
-for (int j = 0; j < cont.nverts; ++j)
-{
-int v = j*4;
-indices[j] = addVertex(cont.verts[v], cont.verts[v+1], cont.verts[v+2],
-			   mesh.verts, firstVert, nextVert, mesh.nverts);
-if ((cont.verts[v+3] & 0x80) != 0)
-{
-// This vertex should be removed.
-vflags[indices[j]] = 1;
-}
-}
+			// Add and merge vertices.
+			for (int j = 0; j < cont.nverts; ++j) {
+				int v = j * 4;
+				indices[j] = addVertex(cont.verts[v], cont.verts[v + 1], cont.verts[v + 2], mesh.verts, firstVert,
+						nextVert, mesh.nverts);
+				if ((cont.verts[v + 3] & 0x80) != 0) {
+					// This vertex should be removed.
+					vflags[indices[j]] = 1;
+				}
+			}
 
-// Build initial polygons.
-int npolys = 0;
+			// Build initial polygons.
+			int npolys = 0;
 
-for (int j = 0; j < ntris; ++j)
-{
-int t = j*3;
-if (tris[t] != tris[t+1] && tris[t] != tris[t+2] && tris[t+1] != tris[t+2])
-{
-polys[npolys*MAX_VERTS_PER_POLY+0] = indices[tris[t]];
-polys[npolys*MAX_VERTS_PER_POLY+1] = indices[tris[t+1]];
-polys[npolys*MAX_VERTS_PER_POLY+2] = indices[tris[t+2]];
-npolys++;
-}
-}
-if (npolys == 0)
-continue;
+			for (int j = 0; j < ntris; ++j) {
+				int t = j * 3;
+				if (tris[t] != tris[t + 1] && tris[t] != tris[t + 2] && tris[t + 1] != tris[t + 2]) {
+					polys[npolys * MAX_VERTS_PER_POLY + 0] = indices[tris[t]];
+					polys[npolys * MAX_VERTS_PER_POLY + 1] = indices[tris[t + 1]];
+					polys[npolys * MAX_VERTS_PER_POLY + 2] = indices[tris[t + 2]];
+					npolys++;
+				}
+			}
+			if (npolys == 0)
+				continue;
 
-// Merge polygons.
-int maxVertsPerPoly =MAX_VERTS_PER_POLY ;
-if (maxVertsPerPoly > 3)
-{
-for(;;)
-{
-// Find best polygons to merge.
-int bestMergeVal = 0;
-int bestPa = 0, bestPb = 0, bestEa = 0, bestEb = 0;
+			// Merge polygons.
+			int maxVertsPerPoly = MAX_VERTS_PER_POLY;
+			if (maxVertsPerPoly > 3) {
+				for (;;) {
+					// Find best polygons to merge.
+					int bestMergeVal = 0;
+					int bestPa = 0, bestPb = 0, bestEa = 0, bestEb = 0;
 
-for (int j = 0; j < npolys-1; ++j)
-{
-int pj = j*MAX_VERTS_PER_POLY;
-for (int k = j+1; k < npolys; ++k)
-{
-	int pk = k*MAX_VERTS_PER_POLY;
-	int[] pm = getPolyMergeValue(polys, pj, pk, mesh.verts);
-	int v = pm[0];
-	int ea = pm[1];
-	int eb = pm[2];
-	if (v > bestMergeVal)
-	{
-		bestMergeVal = v;
-		bestPa = j;
-		bestPb = k;
-		bestEa = ea;
-		bestEb = eb;
+					for (int j = 0; j < npolys - 1; ++j) {
+						int pj = j * MAX_VERTS_PER_POLY;
+						for (int k = j + 1; k < npolys; ++k) {
+							int pk = k * MAX_VERTS_PER_POLY;
+							int[] pm = getPolyMergeValue(polys, pj, pk, mesh.verts);
+							int v = pm[0];
+							int ea = pm[1];
+							int eb = pm[2];
+							if (v > bestMergeVal) {
+								bestMergeVal = v;
+								bestPa = j;
+								bestPb = k;
+								bestEa = ea;
+								bestEb = eb;
+							}
+						}
+					}
+
+					if (bestMergeVal > 0) {
+						// Found best, merge.
+						int pa = bestPa * MAX_VERTS_PER_POLY;
+						int pb = bestPb * MAX_VERTS_PER_POLY;
+						mergePolys(polys, pa, pb, bestEa, bestEb);
+						System.arraycopy(polys, (npolys - 1) * MAX_VERTS_PER_POLY, polys, pb, MAX_VERTS_PER_POLY);
+						npolys--;
+					} else {
+						// Could not merge any polygons, stop.
+						break;
+					}
+				}
+			}
+
+			// Store polygons.
+			for (int j = 0; j < npolys; ++j) {
+				int p = mesh.npolys * MAX_VERTS_PER_POLY * 2;
+				int q = j * MAX_VERTS_PER_POLY;
+				for (int k = 0; k < MAX_VERTS_PER_POLY; ++k)
+					mesh.polys[p + k] = polys[q + k];
+				mesh.areas[mesh.npolys] = cont.area;
+				mesh.npolys++;
+				if (mesh.npolys > maxTris)
+					throw new RuntimeException("Buffer too small");
+			}
+		}
+
+		// Remove edge vertices.
+		for (int i = 0; i < mesh.nverts; ++i) {
+			if (vflags[i] != 0) {
+				if (!canRemoveVertex(mesh, (short) i))
+					continue;
+				removeVertex(mesh, (short) i, maxTris);
+				// Remove vertex
+				// Note: mesh.nverts is already decremented inside
+				// removeVertex()!
+				for (int j = i; j < mesh.nverts; ++j)
+					vflags[j] = vflags[j + 1];
+				--i;
+			}
+		}
+
+		// Calculate adjacency.
+		buildMeshAdjacency(mesh.polys, mesh.npolys, mesh.verts, mesh.nverts, lcset);
+
+		return mesh;
 	}
-}
-}
-
-if (bestMergeVal > 0)
-{
-// Found best, merge.
-int pa = bestPa*MAX_VERTS_PER_POLY;
-int pb = bestPb*MAX_VERTS_PER_POLY;
-mergePolys(polys, pa, pb, bestEa, bestEb);
-System.arraycopy(polys, (npolys - 1) * MAX_VERTS_PER_POLY, polys, pb, MAX_VERTS_PER_POLY);
-npolys--;
-}
-else
-{
-// Could not merge any polygons, stop.
-break;
-}
-}
-}
-
-// Store polygons.
-for (int j = 0; j < npolys; ++j)
-{
-int p = mesh.npolys*MAX_VERTS_PER_POLY*2;
-int q = j*MAX_VERTS_PER_POLY;
-for (int k = 0; k < MAX_VERTS_PER_POLY; ++k)
-	mesh.polys[p+k] = polys[q+k];
-mesh.areas[mesh.npolys] = cont.area;
-mesh.npolys++;
-if (mesh.npolys > maxTris)
-	throw new RuntimeException("Buffer too small");
-}
-}
-
-
-// Remove edge vertices.
-for (int i = 0; i < mesh.nverts; ++i)
-{
-if (vflags[i] != 0)
-{
-if (!canRemoveVertex(mesh, (short)i))
-continue;
-removeVertex(mesh, (short)i, maxTris);
-// Remove vertex
-// Note: mesh.nverts is already decremented inside removeVertex()!
-for (int j = i; j < mesh.nverts; ++j)
-vflags[j] = vflags[j+1];
---i;
-}
-}
-
-// Calculate adjacency.
-buildMeshAdjacency(mesh.polys, mesh.npolys, mesh.verts, mesh.nverts, lcset);
-
-return mesh;
-}
 
 	public void markCylinderArea(TileCacheLayer layer, float[] orig, float cs, float ch, float[] pos, float radius,
 			float height, int areaId) {
@@ -1752,6 +1738,63 @@ return mesh;
 
 	}
 
+	public byte[] buildTileCacheLayer(TileCacheLayerHeader header) {
+		int gridSize = header.width * header.height;
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		TileCacheLayerHeaderWriter hw = new TileCacheLayerHeaderWriter();
+		try {
+			hw.write(baos, header, ByteOrder.BIG_ENDIAN);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		baos.write(gridSize);
+		return baos.toByteArray();
+	}
+	/*
+	 * dtStatus dtBuildTileCacheLayer(dtTileCacheCompressor* comp,
+							   dtTileCacheLayerHeader* header,
+							   const unsigned char* heights,
+							   const unsigned char* areas,
+							   const unsigned char* cons,
+							   unsigned char** outData, int* outDataSize)
+{
+	const int headerSize = dtAlign4(sizeof(dtTileCacheLayerHeader));
+	const int gridSize = (int)header->width * (int)header->height;
+	const int maxDataSize = headerSize + comp->maxCompressedSize(gridSize*3);
+	unsigned char* data = (unsigned char*)dtAlloc(maxDataSize, DT_ALLOC_PERM);
+	if (!data)
+		return DT_FAILURE | DT_OUT_OF_MEMORY;
+	memset(data, 0, maxDataSize);
+	
+	// Store header
+	memcpy(data, header, sizeof(dtTileCacheLayerHeader));
+	
+	// Concatenate grid data for compression.
+	const int bufferSize = gridSize*3;
+	unsigned char* buffer = (unsigned char*)dtAlloc(bufferSize, DT_ALLOC_TEMP);
+	if (!buffer)
+		return DT_FAILURE | DT_OUT_OF_MEMORY;
+	memcpy(buffer, heights, gridSize);
+	memcpy(buffer+gridSize, areas, gridSize);
+	memcpy(buffer+gridSize*2, cons, gridSize);
+	
+	// Compress
+	unsigned char* compressed = data + headerSize;
+	const int maxCompressedSize = maxDataSize - headerSize;
+	int compressedSize = 0;
+	dtStatus status = comp->compress(buffer, bufferSize, compressed, maxCompressedSize, &compressedSize);
+	if (dtStatusFailed(status))
+		return status;
+
+	*outData = data;
+	*outDataSize = headerSize + compressedSize;
+	
+	dtFree(buffer);
+	
+	return DT_SUCCESS;
+}
+
+	 */
 	TileCacheLayer decompressTileCacheLayer(TileCacheCompressor comp, byte[] compressed) {
 		ByteBuffer buf = ByteBuffer.wrap(compressed);
 		TileCacheLayer layer = new TileCacheLayer();

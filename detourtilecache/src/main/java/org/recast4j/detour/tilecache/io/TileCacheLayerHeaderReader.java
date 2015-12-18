@@ -22,19 +22,16 @@ import java.nio.ByteBuffer;
 
 import org.recast4j.detour.tilecache.TileCacheLayerHeader;
 
-public class TileCacheReader {
+public class TileCacheLayerHeaderReader {
 
-	static final int DT_TILECACHE_MAGIC = 'D'<<24 | 'T'<<16 | 'L'<<8 | 'R'; ///< 'DTLR';
-	static final int DT_TILECACHE_VERSION = 1;
-	
 	public TileCacheLayerHeader readLayerHeader(ByteBuffer data) throws IOException {
 		TileCacheLayerHeader header = new TileCacheLayerHeader();
 		header.magic = data.getInt();
 		header.version = data.getInt();
 
-		if (header.magic != DT_TILECACHE_MAGIC)
+		if (header.magic != TileCacheLayerHeader.DT_TILECACHE_MAGIC)
 			throw new IOException("Invalid magic");
-		if (header.version != DT_TILECACHE_VERSION)
+		if (header.version != TileCacheLayerHeader.DT_TILECACHE_VERSION)
 			throw new IOException("Invalid version");
 
 		header.tx = data.getInt();

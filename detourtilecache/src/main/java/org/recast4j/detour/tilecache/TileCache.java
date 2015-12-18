@@ -32,7 +32,7 @@ import org.recast4j.detour.MeshData;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshBuilder;
 import org.recast4j.detour.NavMeshCreateParams;
-import org.recast4j.detour.tilecache.io.TileCacheReader;
+import org.recast4j.detour.tilecache.io.TileCacheLayerHeaderReader;
 
 public class TileCache {
 
@@ -58,7 +58,7 @@ public class TileCache {
 	List<Long> m_update = new ArrayList<>();
 
 	private final TileCacheBuilder builder = new TileCacheBuilder();
-	private final TileCacheReader tileReader = new TileCacheReader();
+	private final TileCacheLayerHeaderReader tileReader = new TileCacheLayerHeaderReader();
 
 	private boolean contains(List<Long> a, long v) {
 		return a.contains(v);

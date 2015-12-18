@@ -8,9 +8,9 @@ import java.io.IOException;
 import java.nio.ByteOrder;
 
 import org.junit.Test;
-import org.recast4j.detour.DetourBuilder;
 import org.recast4j.detour.MeshData;
 import org.recast4j.detour.NavMesh;
+import org.recast4j.detour.TestDetourBuilder;
 import org.recast4j.recast.InputGeom;
 import org.recast4j.recast.ObjImporter;
 import org.recast4j.recast.Recast;
@@ -71,8 +71,8 @@ public class MeshSetReaderWriterTest {
 						m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen,
 						m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, bmin, bmax,
 						m_tileSize, x, y);
-				DetourBuilder db = new DetourBuilder(geom);
-				MeshData data = db.build(cfg, m_agentHeight, m_agentRadius, m_agentMaxClimb, x, y);
+				TestDetourBuilder db = new TestDetourBuilder();
+				MeshData data = db.build(geom, cfg, m_agentHeight, m_agentRadius, m_agentMaxClimb, x, y);
 				if (data != null) {
 					mesh.removeTile(mesh.getTileRefAt(x, y, 0));
 					mesh.addTile(data, 0, 0);

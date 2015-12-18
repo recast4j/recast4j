@@ -19,6 +19,10 @@ freely, subject to the following restrictions:
 package org.recast4j.detour.tilecache;
 
 public class TileCacheLayerHeader {
+
+	public static final int DT_TILECACHE_MAGIC = 'D'<<24 | 'T'<<16 | 'L'<<8 | 'R'; ///< 'DTLR';
+	public static final int DT_TILECACHE_VERSION = 1;
+
 	public int magic; /// < Data magic
 	public int version; /// < Data version
 	public int tx, ty, tlayer;
