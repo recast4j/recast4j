@@ -195,11 +195,11 @@ public class RecastLayers {
 				// Update overlapping regions.
 				for (int i = 0; i < lregs.size() - 1; ++i) {
 					for (int j = i + 1; j < lregs.size(); ++j) {
-						if (lregs.get(i) != lregs.get(j)) {
+						if (lregs.get(i).intValue() != lregs.get(j).intValue()) {
 							LayerRegion ri = regs[lregs.get(i)];
 							LayerRegion rj = regs[lregs.get(j)];
-							addUnique(ri.layers, lregs.get(i));
-							addUnique(rj.layers, lregs.get(j));
+							addUnique(ri.layers, lregs.get(j));
+							addUnique(rj.layers, lregs.get(i));
 						}
 					}
 				}
