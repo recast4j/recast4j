@@ -18,6 +18,9 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
+import static org.recast4j.recast.RecastConstants.RC_NOT_CONNECTED;
+import static org.recast4j.recast.RecastConstants.RC_NULL_AREA;
+
 import java.util.Arrays;
 
 public class RecastArea {
@@ -42,17 +45,17 @@ public class RecastArea {
 			for (int x = 0; x < w; ++x) {
 				CompactCell c = chf.cells[x + y * w];
 				for (int i = c.index, ni = c.index + c.count; i < ni; ++i) {
-					if (chf.areas[i] == RecastConstants.RC_NULL_AREA) {
+					if (chf.areas[i] == RC_NULL_AREA) {
 						dist[i] = 0;
 					} else {
 						CompactSpan s = chf.spans[i];
 						int nc = 0;
 						for (int dir = 0; dir < 4; ++dir) {
-							if (RecastCommon.GetCon(s, dir) != RecastConstants.RC_NOT_CONNECTED) {
+							if (RecastCommon.GetCon(s, dir) != RC_NOT_CONNECTED) {
 								int nx = x + RecastCommon.GetDirOffsetX(dir);
 								int ny = y + RecastCommon.GetDirOffsetY(dir);
 								int nidx = chf.cells[nx + ny * w].index + RecastCommon.GetCon(s, dir);
-								if (chf.areas[nidx] != RecastConstants.RC_NULL_AREA) {
+								if (chf.areas[nidx] != RC_NULL_AREA) {
 									nc++;
 								}
 							}
@@ -74,7 +77,7 @@ public class RecastArea {
 				for (int i = c.index, ni = c.index + c.count; i < ni; ++i) {
 					CompactSpan s = chf.spans[i];
 
-					if (RecastCommon.GetCon(s, 0) != RecastConstants.RC_NOT_CONNECTED) {
+					if (RecastCommon.GetCon(s, 0) != RC_NOT_CONNECTED) {
 						// (-1,0)
 						int ax = x + RecastCommon.GetDirOffsetX(0);
 						int ay = y + RecastCommon.GetDirOffsetY(0);
@@ -85,7 +88,7 @@ public class RecastArea {
 							dist[i] = nd;
 
 						// (-1,-1)
-						if (RecastCommon.GetCon(as, 3) != RecastConstants.RC_NOT_CONNECTED) {
+						if (RecastCommon.GetCon(as, 3) != RC_NOT_CONNECTED) {
 							int aax = ax + RecastCommon.GetDirOffsetX(3);
 							int aay = ay + RecastCommon.GetDirOffsetY(3);
 							int aai = chf.cells[aax + aay * w].index + RecastCommon.GetCon(as, 3);
@@ -94,7 +97,7 @@ public class RecastArea {
 								dist[i] = nd;
 						}
 					}
-					if (RecastCommon.GetCon(s, 3) != RecastConstants.RC_NOT_CONNECTED) {
+					if (RecastCommon.GetCon(s, 3) != RC_NOT_CONNECTED) {
 						// (0,-1)
 						int ax = x + RecastCommon.GetDirOffsetX(3);
 						int ay = y + RecastCommon.GetDirOffsetY(3);
@@ -105,7 +108,7 @@ public class RecastArea {
 							dist[i] = nd;
 
 						// (1,-1)
-						if (RecastCommon.GetCon(as, 2) != RecastConstants.RC_NOT_CONNECTED) {
+						if (RecastCommon.GetCon(as, 2) != RC_NOT_CONNECTED) {
 							int aax = ax + RecastCommon.GetDirOffsetX(2);
 							int aay = ay + RecastCommon.GetDirOffsetY(2);
 							int aai = chf.cells[aax + aay * w].index + RecastCommon.GetCon(as, 2);
@@ -125,7 +128,7 @@ public class RecastArea {
 				for (int i = c.index, ni = c.index + c.count; i < ni; ++i) {
 					CompactSpan s = chf.spans[i];
 
-					if (RecastCommon.GetCon(s, 2) != RecastConstants.RC_NOT_CONNECTED) {
+					if (RecastCommon.GetCon(s, 2) != RC_NOT_CONNECTED) {
 						// (1,0)
 						int ax = x + RecastCommon.GetDirOffsetX(2);
 						int ay = y + RecastCommon.GetDirOffsetY(2);
@@ -136,7 +139,7 @@ public class RecastArea {
 							dist[i] = nd;
 
 						// (1,1)
-						if (RecastCommon.GetCon(as, 1) != RecastConstants.RC_NOT_CONNECTED) {
+						if (RecastCommon.GetCon(as, 1) != RC_NOT_CONNECTED) {
 							int aax = ax + RecastCommon.GetDirOffsetX(1);
 							int aay = ay + RecastCommon.GetDirOffsetY(1);
 							int aai = chf.cells[aax + aay * w].index + RecastCommon.GetCon(as, 1);
@@ -145,7 +148,7 @@ public class RecastArea {
 								dist[i] = nd;
 						}
 					}
-					if (RecastCommon.GetCon(s, 1) != RecastConstants.RC_NOT_CONNECTED) {
+					if (RecastCommon.GetCon(s, 1) != RC_NOT_CONNECTED) {
 						// (0,1)
 						int ax = x + RecastCommon.GetDirOffsetX(1);
 						int ay = y + RecastCommon.GetDirOffsetY(1);
@@ -156,7 +159,7 @@ public class RecastArea {
 							dist[i] = nd;
 
 						// (-1,1)
-						if (RecastCommon.GetCon(as, 0) != RecastConstants.RC_NOT_CONNECTED) {
+						if (RecastCommon.GetCon(as, 0) != RC_NOT_CONNECTED) {
 							int aax = ax + RecastCommon.GetDirOffsetX(0);
 							int aay = ay + RecastCommon.GetDirOffsetY(0);
 							int aai = chf.cells[aax + aay * w].index + RecastCommon.GetCon(as, 0);
@@ -172,7 +175,7 @@ public class RecastArea {
 		int thr = radius * 2;
 		for (int i = 0; i < chf.spanCount; ++i)
 			if (dist[i] < thr)
-				chf.areas[i] = RecastConstants.RC_NULL_AREA;
+				chf.areas[i] = RC_NULL_AREA;
 
 		ctx.stopTimer("ERODE_AREA");
 	}
@@ -197,7 +200,7 @@ public class RecastArea {
 				CompactCell c = chf.cells[x + y * w];
 				for (int i = c.index, ni = c.index + c.count; i < ni; ++i) {
 					CompactSpan s = chf.spans[i];
-					if (chf.areas[i] == RecastConstants.RC_NULL_AREA) {
+					if (chf.areas[i] == RC_NULL_AREA) {
 						areas[i] = chf.areas[i];
 						continue;
 					}
@@ -207,20 +210,20 @@ public class RecastArea {
 						nei[j] = chf.areas[i];
 
 					for (int dir = 0; dir < 4; ++dir) {
-						if (RecastCommon.GetCon(s, dir) != RecastConstants.RC_NOT_CONNECTED) {
+						if (RecastCommon.GetCon(s, dir) != RC_NOT_CONNECTED) {
 							int ax = x + RecastCommon.GetDirOffsetX(dir);
 							int ay = y + RecastCommon.GetDirOffsetY(dir);
 							int ai = chf.cells[ax + ay * w].index + RecastCommon.GetCon(s, dir);
-							if (chf.areas[ai] != RecastConstants.RC_NULL_AREA)
+							if (chf.areas[ai] != RC_NULL_AREA)
 								nei[dir * 2 + 0] = chf.areas[ai];
 
 							CompactSpan as = chf.spans[ai];
 							int dir2 = (dir + 1) & 0x3;
-							if (RecastCommon.GetCon(as, dir2) != RecastConstants.RC_NOT_CONNECTED) {
+							if (RecastCommon.GetCon(as, dir2) != RC_NOT_CONNECTED) {
 								int ax2 = ax + RecastCommon.GetDirOffsetX(dir2);
 								int ay2 = ay + RecastCommon.GetDirOffsetY(dir2);
 								int ai2 = chf.cells[ax2 + ay2 * w].index + RecastCommon.GetCon(as, dir2);
-								if (chf.areas[ai2] != RecastConstants.RC_NULL_AREA)
+								if (chf.areas[ai2] != RC_NULL_AREA)
 									nei[dir * 2 + 1] = chf.areas[ai2];
 							}
 						}
@@ -276,7 +279,7 @@ public class RecastArea {
 				for (int i = c.index, ni = c.index + c.count; i < ni; ++i) {
 					CompactSpan s = chf.spans[i];
 					if (s.y >= miny && s.y <= maxy) {
-						if (chf.areas[i] != RecastConstants.RC_NULL_AREA)
+						if (chf.areas[i] != RC_NULL_AREA)
 							chf.areas[i] = areaId;
 					}
 				}
@@ -287,10 +290,10 @@ public class RecastArea {
 
 	}
 
-	static boolean pointInPoly(int nvert, float[] verts, float[] p) {
+	static boolean pointInPoly(float[] verts, float[] p) {
 		boolean c = false;
 		int i, j;
-		for (i = 0, j = nvert - 1; i < nvert; j = i++) {
+		for (i = 0, j = verts.length - 1; i < verts.length; j = i++) {
 			int vi = i * 3;
 			int vj = j * 3;
 			if (((verts[vi + 2] > p[2]) != (verts[vj + 2] > p[2]))
@@ -309,14 +312,14 @@ public class RecastArea {
 	/// projected onto the xz-plane at @p hmin, then extruded to @p hmax.
 	/// 
 	/// @see rcCompactHeightfield, rcMedianFilterWalkableArea
-	public static void markConvexPolyArea(Context ctx, float[] verts, int nverts, float hmin, float hmax, int areaId,
+	public static void markConvexPolyArea(Context ctx, float[] verts, float hmin, float hmax, int areaId,
 			CompactHeightfield chf) {
 		ctx.startTimer("MARK_CONVEXPOLY_AREA");
 
 		float bmin[] = new float[3], bmax[] = new float[3];
 		RecastVectors.copy(bmin, verts, 0);
 		RecastVectors.copy(bmax, verts, 0);
-		for (int i = 1; i < nverts; ++i) {
+		for (int i = 1; i < verts.length; ++i) {
 			RecastVectors.min(bmin, verts, i * 3);
 			RecastVectors.max(bmax, verts, i * 3);
 		}
@@ -354,7 +357,7 @@ public class RecastArea {
 				CompactCell c = chf.cells[x + z * chf.width];
 				for (int i = c.index, ni = c.index + c.count; i < ni; ++i) {
 					CompactSpan s = chf.spans[i];
-					if (chf.areas[i] == RecastConstants.RC_NULL_AREA)
+					if (chf.areas[i] == RC_NULL_AREA)
 						continue;
 					if (s.y >= miny && s.y <= maxy) {
 						float p[] = new float[3];
@@ -362,7 +365,7 @@ public class RecastArea {
 						p[1] = 0;
 						p[2] = chf.bmin[2] + (z + 0.5f) * chf.cs;
 
-						if (pointInPoly(nverts, verts, p)) {
+						if (pointInPoly(verts, p)) {
 							chf.areas[i] = areaId;
 						}
 					}
@@ -490,7 +493,7 @@ public class RecastArea {
 				for (int i = c.index, ni = c.index + c.count; i < ni; ++i) {
 					CompactSpan s = chf.spans[i];
 
-					if (chf.areas[i] == RecastConstants.RC_NULL_AREA)
+					if (chf.areas[i] == RC_NULL_AREA)
 						continue;
 
 					if (s.y >= miny && s.y <= maxy) {

@@ -18,6 +18,14 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
+import static org.recast4j.recast.RecastConstants.RC_AREA_BORDER;
+import static org.recast4j.recast.RecastConstants.RC_BORDER_REG;
+import static org.recast4j.recast.RecastConstants.RC_BORDER_VERTEX;
+import static org.recast4j.recast.RecastConstants.RC_CONTOUR_REG_MASK;
+import static org.recast4j.recast.RecastConstants.RC_CONTOUR_TESS_AREA_EDGES;
+import static org.recast4j.recast.RecastConstants.RC_CONTOUR_TESS_WALL_EDGES;
+import static org.recast4j.recast.RecastConstants.RC_NOT_CONNECTED;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -54,14 +62,14 @@ public class RecastContour {
 		// border vertices which are in between two areas to be removed.
 		regs[0] = chf.spans[i].reg | (chf.areas[i] << 16);
 
-		if (RecastCommon.GetCon(s, dir) != RecastConstants.RC_NOT_CONNECTED) {
+		if (RecastCommon.GetCon(s, dir) != RC_NOT_CONNECTED) {
 			int ax = x + RecastCommon.GetDirOffsetX(dir);
 			int ay = y + RecastCommon.GetDirOffsetY(dir);
 			int ai = chf.cells[ax + ay * chf.width].index + RecastCommon.GetCon(s, dir);
 			CompactSpan as = chf.spans[ai];
 			ch = Math.max(ch, as.y);
 			regs[1] = chf.spans[ai].reg | (chf.areas[ai] << 16);
-			if (RecastCommon.GetCon(as, dirp) != RecastConstants.RC_NOT_CONNECTED) {
+			if (RecastCommon.GetCon(as, dirp) != RC_NOT_CONNECTED) {
 				int ax2 = ax + RecastCommon.GetDirOffsetX(dirp);
 				int ay2 = ay + RecastCommon.GetDirOffsetY(dirp);
 				int ai2 = chf.cells[ax2 + ay2 * chf.width].index + RecastCommon.GetCon(as, dirp);
@@ -70,14 +78,14 @@ public class RecastContour {
 				regs[2] = chf.spans[ai2].reg | (chf.areas[ai2] << 16);
 			}
 		}
-		if (RecastCommon.GetCon(s, dirp) != RecastConstants.RC_NOT_CONNECTED) {
+		if (RecastCommon.GetCon(s, dirp) != RC_NOT_CONNECTED) {
 			int ax = x + RecastCommon.GetDirOffsetX(dirp);
 			int ay = y + RecastCommon.GetDirOffsetY(dirp);
 			int ai = chf.cells[ax + ay * chf.width].index + RecastCommon.GetCon(s, dirp);
 			CompactSpan as = chf.spans[ai];
 			ch = Math.max(ch, as.y);
 			regs[3] = chf.spans[ai].reg | (chf.areas[ai] << 16);
-			if (RecastCommon.GetCon(as, dir) != RecastConstants.RC_NOT_CONNECTED) {
+			if (RecastCommon.GetCon(as, dir) != RC_NOT_CONNECTED) {
 				int ax2 = ax + RecastCommon.GetDirOffsetX(dir);
 				int ay2 = ay + RecastCommon.GetDirOffsetY(dir);
 				int ai2 = chf.cells[ax2 + ay2 * chf.width].index + RecastCommon.GetCon(as, dir);
@@ -96,8 +104,8 @@ public class RecastContour {
 
 			// The vertex is a border vertex there are two same exterior cells in a row,
 			// followed by two interior cells and none of the regions are out of bounds.
-			boolean twoSameExts = (regs[a] & regs[b] & RecastConstants.RC_BORDER_REG) != 0 && regs[a] == regs[b];
-			boolean twoInts = ((regs[c] | regs[d]) & RecastConstants.RC_BORDER_REG) == 0;
+			boolean twoSameExts = (regs[a] & regs[b] & RC_BORDER_REG) != 0 && regs[a] == regs[b];
+			boolean twoInts = ((regs[c] | regs[d]) & RC_BORDER_REG) == 0;
 			boolean intsSameArea = (regs[c] >> 16) == (regs[d] >> 16);
 			boolean noZeros = regs[a] != 0 && regs[b] != 0 && regs[c] != 0 && regs[d] != 0;
 			if (twoSameExts && twoInts && intsSameArea && noZeros) {
@@ -143,7 +151,7 @@ public class RecastContour {
 				}
 				int r = 0;
 				CompactSpan s = chf.spans[i];
-				if (RecastCommon.GetCon(s, dir) != RecastConstants.RC_NOT_CONNECTED) {
+				if (RecastCommon.GetCon(s, dir) != RC_NOT_CONNECTED) {
 					int ax = x + RecastCommon.GetDirOffsetX(dir);
 					int ay = y + RecastCommon.GetDirOffsetY(dir);
 					int ai = chf.cells[ax + ay * chf.width].index + RecastCommon.GetCon(s, dir);
@@ -152,9 +160,9 @@ public class RecastContour {
 						isAreaBorder = true;
 				}
 				if (isBorderVertex)
-					r |= RecastConstants.RC_BORDER_VERTEX;
+					r |= RC_BORDER_VERTEX;
 				if (isAreaBorder)
-					r |= RecastConstants.RC_AREA_BORDER;
+					r |= RC_AREA_BORDER;
 				points.add(px);
 				points.add(py);
 				points.add(pz);
@@ -167,7 +175,7 @@ public class RecastContour {
 				int nx = x + RecastCommon.GetDirOffsetX(dir);
 				int ny = y + RecastCommon.GetDirOffsetY(dir);
 				CompactSpan s = chf.spans[i];
-				if (RecastCommon.GetCon(s, dir) != RecastConstants.RC_NOT_CONNECTED) {
+				if (RecastCommon.GetCon(s, dir) != RC_NOT_CONNECTED) {
 					CompactCell nc = chf.cells[nx + ny * chf.width];
 					ni = nc.index + RecastCommon.GetCon(s, dir);
 				}
@@ -212,7 +220,7 @@ public class RecastContour {
 		// Add initial points.
 		boolean hasConnections = false;
 		for (int i = 0; i < points.size(); i += 4) {
-			if ((points.get(i + 3) & RecastConstants.RC_CONTOUR_REG_MASK) != 0) {
+			if ((points.get(i + 3) & RC_CONTOUR_REG_MASK) != 0) {
 				hasConnections = true;
 				break;
 			}
@@ -224,10 +232,10 @@ public class RecastContour {
 			for (int i = 0, ni = points.size() / 4; i < ni; ++i) {
 				int ii = (i + 1) % ni;
 				boolean differentRegs = (points.get(i * 4 + 3)
-						& RecastConstants.RC_CONTOUR_REG_MASK) != (points.get(ii * 4 + 3)
-								& RecastConstants.RC_CONTOUR_REG_MASK);
+						& RC_CONTOUR_REG_MASK) != (points.get(ii * 4 + 3)
+								& RC_CONTOUR_REG_MASK);
 				boolean areaBorders = (points.get(i * 4 + 3)
-						& RecastConstants.RC_AREA_BORDER) != (points.get(ii * 4 + 3) & RecastConstants.RC_AREA_BORDER);
+						& RC_AREA_BORDER) != (points.get(ii * 4 + 3) & RC_AREA_BORDER);
 				if (differentRegs || areaBorders) {
 					simplified.add(points.get(i * 4 + 0));
 					simplified.add(points.get(i * 4 + 1));
@@ -314,8 +322,8 @@ public class RecastContour {
 				bz = temp;
 			}
 			// Tessellate only outer edges or edges between areas.
-			if ((points.get(ci * 4 + 3) & RecastConstants.RC_CONTOUR_REG_MASK) == 0
-					|| (points.get(ci * 4 + 3) & RecastConstants.RC_AREA_BORDER) != 0) {
+			if ((points.get(ci * 4 + 3) & RC_CONTOUR_REG_MASK) == 0
+					|| (points.get(ci * 4 + 3) & RC_AREA_BORDER) != 0) {
 				while (ci != endi) {
 					float d = distancePtSeg(points.get(ci * 4 + 0), points.get(ci * 4 + 2), ax, az, bx, bz);
 					if (d > maxd) {
@@ -339,7 +347,7 @@ public class RecastContour {
 		}
 		// Split too long edges.
 		if (maxEdgeLen > 0 && (buildFlags
-				& (RecastConstants.RC_CONTOUR_TESS_WALL_EDGES | RecastConstants.RC_CONTOUR_TESS_AREA_EDGES)) != 0) {
+				& (RC_CONTOUR_TESS_WALL_EDGES | RC_CONTOUR_TESS_AREA_EDGES)) != 0) {
 			for (int i = 0; i < simplified.size() / 4;) {
 				int ii = (i + 1) % (simplified.size() / 4);
 
@@ -358,12 +366,12 @@ public class RecastContour {
 				// Tessellate only outer edges or edges between areas.
 				boolean tess = false;
 				// Wall edges.
-				if ((buildFlags & RecastConstants.RC_CONTOUR_TESS_WALL_EDGES) != 0
-						&& (points.get(ci * 4 + 3) & RecastConstants.RC_CONTOUR_REG_MASK) == 0)
+				if ((buildFlags & RC_CONTOUR_TESS_WALL_EDGES) != 0
+						&& (points.get(ci * 4 + 3) & RC_CONTOUR_REG_MASK) == 0)
 					tess = true;
 				// Edges between areas.
-				if ((buildFlags & RecastConstants.RC_CONTOUR_TESS_AREA_EDGES) != 0
-						&& (points.get(ci * 4 + 3) & RecastConstants.RC_AREA_BORDER) != 0)
+				if ((buildFlags & RC_CONTOUR_TESS_AREA_EDGES) != 0
+						&& (points.get(ci * 4 + 3) & RC_AREA_BORDER) != 0)
 					tess = true;
 
 				if (tess) {
@@ -404,8 +412,8 @@ public class RecastContour {
 			simplified
 					.set(i * 4 + 3,
 							(points.get(ai * 4 + 3)
-									& (RecastConstants.RC_CONTOUR_REG_MASK | RecastConstants.RC_AREA_BORDER))
-									| (points.get(bi * 4 + 3) & RecastConstants.RC_BORDER_VERTEX));
+									& (RC_CONTOUR_REG_MASK | RC_AREA_BORDER))
+									| (points.get(bi * 4 + 3) & RC_BORDER_VERTEX));
 		}
 
 	}
@@ -710,13 +718,13 @@ public class RecastContour {
 				for (int i = c.index, ni = c.index + c.count; i < ni; ++i) {
 					int res = 0;
 					CompactSpan s = chf.spans[i];
-					if (chf.spans[i].reg == 0 || (chf.spans[i].reg & RecastConstants.RC_BORDER_REG) != 0) {
+					if (chf.spans[i].reg == 0 || (chf.spans[i].reg & RC_BORDER_REG) != 0) {
 						flags[i] = 0;
 						continue;
 					}
 					for (int dir = 0; dir < 4; ++dir) {
 						int r = 0;
-						if (RecastCommon.GetCon(s, dir) != RecastConstants.RC_NOT_CONNECTED) {
+						if (RecastCommon.GetCon(s, dir) != RC_NOT_CONNECTED) {
 							int ax = x + RecastCommon.GetDirOffsetX(dir);
 							int ay = y + RecastCommon.GetDirOffsetY(dir);
 							int ai = chf.cells[ax + ay * w].index + RecastCommon.GetCon(s, dir);
@@ -744,7 +752,7 @@ public class RecastContour {
 						continue;
 					}
 					int reg = chf.spans[i].reg;
-					if (reg == 0 || (reg & RecastConstants.RC_BORDER_REG) != 0)
+					if (reg == 0 || (reg & RC_BORDER_REG) != 0)
 						continue;
 					int area = chf.areas[i];
 

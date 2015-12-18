@@ -18,6 +18,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class InputGeom {
@@ -64,6 +65,10 @@ public class InputGeom {
 
 	public ChunkyTriMesh getChunkyMesh() {
 		return new ChunkyTriMesh(vertices, faces, faces.length / 3, 256);
+	}
+
+	public List<ConvexVolume> getConvexVolumes() {
+		return new ArrayList<>();
 	}
 
 }

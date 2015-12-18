@@ -18,6 +18,9 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
+import static org.recast4j.recast.RecastConstants.RC_MESH_NULL_IDX;
+import static org.recast4j.recast.RecastConstants.RC_NOT_CONNECTED;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -837,7 +840,7 @@ public class RecastMeshDetail {
 			CompactSpan cs = chf.spans[ci];
 
 			for (int dir = 0; dir < 4; ++dir) {
-				if (RecastCommon.GetCon(cs, dir) == RecastConstants.RC_NOT_CONNECTED)
+				if (RecastCommon.GetCon(cs, dir) == RC_NOT_CONNECTED)
 					continue;
 
 				int ax = cx + RecastCommon.GetDirOffsetX(dir);
@@ -908,7 +911,7 @@ public class RecastMeshDetail {
 						// add the current location as flood fill start
 						boolean border = false;
 						for (int dir = 0; dir < 4; ++dir) {
-							if (RecastCommon.GetCon(s, dir) != RecastConstants.RC_NOT_CONNECTED) {
+							if (RecastCommon.GetCon(s, dir) != RC_NOT_CONNECTED) {
 								int ax = x + RecastCommon.GetDirOffsetX(dir);
 								int ay = y + RecastCommon.GetDirOffsetY(dir);
 								int ai = chf.cells[ax + ay * chf.width].index + RecastCommon.GetCon(s, dir);
@@ -949,7 +952,7 @@ public class RecastMeshDetail {
 
 			CompactSpan cs = chf.spans[ci];
 			for (int dir = 0; dir < 4; ++dir) {
-				if (RecastCommon.GetCon(cs, dir) == RecastConstants.RC_NOT_CONNECTED)
+				if (RecastCommon.GetCon(cs, dir) == RC_NOT_CONNECTED)
 					continue;
 
 				int ax = cx + RecastCommon.GetDirOffsetX(dir);
@@ -1030,7 +1033,7 @@ public class RecastMeshDetail {
 			bounds[i * 4 + 2] = chf.height;
 			bounds[i * 4 + 3] = 0;
 			for (int j = 0; j < nvp; ++j) {
-				if (mesh.polys[p + j] == RecastConstants.RC_MESH_NULL_IDX)
+				if (mesh.polys[p + j] == RC_MESH_NULL_IDX)
 					break;
 				int v = mesh.polys[p + j] * 3;
 				bounds[i * 4 + 0] = Math.min(bounds[i * 4 + 0], mesh.verts[v + 0]);
@@ -1069,7 +1072,7 @@ public class RecastMeshDetail {
 			// Store polygon vertices for processing.
 			int npoly = 0;
 			for (int j = 0; j < nvp; ++j) {
-				if (mesh.polys[p + j] == RecastConstants.RC_MESH_NULL_IDX)
+				if (mesh.polys[p + j] == RC_MESH_NULL_IDX)
 					break;
 				int v = mesh.polys[p + j] * 3;
 				poly[j * 3 + 0] = mesh.verts[v + 0] * cs;

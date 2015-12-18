@@ -18,6 +18,10 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
+import static org.recast4j.recast.RecastConstants.RC_BORDER_REG;
+import static org.recast4j.recast.RecastConstants.RC_NOT_CONNECTED;
+import static org.recast4j.recast.RecastConstants.RC_NULL_AREA;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,7 +30,7 @@ public class RecastRegion {
 
 	static final int RC_NULL_NEI = 0xffff;
 
-	private static class SweepSpan {
+	static class SweepSpan {
 		int rid; // row id
 		int id; // region id
 		int ns; // number samples
@@ -52,7 +56,7 @@ public class RecastRegion {
 
 					int nc = 0;
 					for (int dir = 0; dir < 4; ++dir) {
-						if (RecastCommon.GetCon(s, dir) != RecastConstants.RC_NOT_CONNECTED) {
+						if (RecastCommon.GetCon(s, dir) != RC_NOT_CONNECTED) {
 							int ax = x + RecastCommon.GetDirOffsetX(dir);
 							int ay = y + RecastCommon.GetDirOffsetY(dir);
 							int ai = chf.cells[ax + ay * w].index + RecastCommon.GetCon(s, dir);
@@ -73,7 +77,7 @@ public class RecastRegion {
 				for (int i = c.index, ni = c.index + c.count; i < ni; ++i) {
 					CompactSpan s = chf.spans[i];
 
-					if (RecastCommon.GetCon(s, 0) != RecastConstants.RC_NOT_CONNECTED) {
+					if (RecastCommon.GetCon(s, 0) != RC_NOT_CONNECTED) {
 						// (-1,0)
 						int ax = x + RecastCommon.GetDirOffsetX(0);
 						int ay = y + RecastCommon.GetDirOffsetY(0);
@@ -83,7 +87,7 @@ public class RecastRegion {
 							src[i] = src[ai] + 2;
 
 						// (-1,-1)
-						if (RecastCommon.GetCon(as, 3) != RecastConstants.RC_NOT_CONNECTED) {
+						if (RecastCommon.GetCon(as, 3) != RC_NOT_CONNECTED) {
 							int aax = ax + RecastCommon.GetDirOffsetX(3);
 							int aay = ay + RecastCommon.GetDirOffsetY(3);
 							int aai = chf.cells[aax + aay * w].index + RecastCommon.GetCon(as, 3);
@@ -91,7 +95,7 @@ public class RecastRegion {
 								src[i] = src[aai] + 3;
 						}
 					}
-					if (RecastCommon.GetCon(s, 3) != RecastConstants.RC_NOT_CONNECTED) {
+					if (RecastCommon.GetCon(s, 3) != RC_NOT_CONNECTED) {
 						// (0,-1)
 						int ax = x + RecastCommon.GetDirOffsetX(3);
 						int ay = y + RecastCommon.GetDirOffsetY(3);
@@ -101,7 +105,7 @@ public class RecastRegion {
 							src[i] = src[ai] + 2;
 
 						// (1,-1)
-						if (RecastCommon.GetCon(as, 2) != RecastConstants.RC_NOT_CONNECTED) {
+						if (RecastCommon.GetCon(as, 2) != RC_NOT_CONNECTED) {
 							int aax = ax + RecastCommon.GetDirOffsetX(2);
 							int aay = ay + RecastCommon.GetDirOffsetY(2);
 							int aai = chf.cells[aax + aay * w].index + RecastCommon.GetCon(as, 2);
@@ -120,7 +124,7 @@ public class RecastRegion {
 				for (int i = c.index, ni = c.index + c.count; i < ni; ++i) {
 					CompactSpan s = chf.spans[i];
 
-					if (RecastCommon.GetCon(s, 2) != RecastConstants.RC_NOT_CONNECTED) {
+					if (RecastCommon.GetCon(s, 2) != RC_NOT_CONNECTED) {
 						// (1,0)
 						int ax = x + RecastCommon.GetDirOffsetX(2);
 						int ay = y + RecastCommon.GetDirOffsetY(2);
@@ -130,7 +134,7 @@ public class RecastRegion {
 							src[i] = src[ai] + 2;
 
 						// (1,1)
-						if (RecastCommon.GetCon(as, 1) != RecastConstants.RC_NOT_CONNECTED) {
+						if (RecastCommon.GetCon(as, 1) != RC_NOT_CONNECTED) {
 							int aax = ax + RecastCommon.GetDirOffsetX(1);
 							int aay = ay + RecastCommon.GetDirOffsetY(1);
 							int aai = chf.cells[aax + aay * w].index + RecastCommon.GetCon(as, 1);
@@ -138,7 +142,7 @@ public class RecastRegion {
 								src[i] = src[aai] + 3;
 						}
 					}
-					if (RecastCommon.GetCon(s, 1) != RecastConstants.RC_NOT_CONNECTED) {
+					if (RecastCommon.GetCon(s, 1) != RC_NOT_CONNECTED) {
 						// (0,1)
 						int ax = x + RecastCommon.GetDirOffsetX(1);
 						int ay = y + RecastCommon.GetDirOffsetY(1);
@@ -148,7 +152,7 @@ public class RecastRegion {
 							src[i] = src[ai] + 2;
 
 						// (-1,1)
-						if (RecastCommon.GetCon(as, 0) != RecastConstants.RC_NOT_CONNECTED) {
+						if (RecastCommon.GetCon(as, 0) != RC_NOT_CONNECTED) {
 							int aax = ax + RecastCommon.GetDirOffsetX(0);
 							int aay = ay + RecastCommon.GetDirOffsetY(0);
 							int aai = chf.cells[aax + aay * w].index + RecastCommon.GetCon(as, 0);
@@ -187,7 +191,7 @@ public class RecastRegion {
 
 					int d = cd;
 					for (int dir = 0; dir < 4; ++dir) {
-						if (RecastCommon.GetCon(s, dir) != RecastConstants.RC_NOT_CONNECTED) {
+						if (RecastCommon.GetCon(s, dir) != RC_NOT_CONNECTED) {
 							int ax = x + RecastCommon.GetDirOffsetX(dir);
 							int ay = y + RecastCommon.GetDirOffsetY(dir);
 							int ai = chf.cells[ax + ay * w].index + RecastCommon.GetCon(s, dir);
@@ -195,7 +199,7 @@ public class RecastRegion {
 
 							CompactSpan as = chf.spans[ai];
 							int dir2 = (dir + 1) & 0x3;
-							if (RecastCommon.GetCon(as, dir2) != RecastConstants.RC_NOT_CONNECTED) {
+							if (RecastCommon.GetCon(as, dir2) != RC_NOT_CONNECTED) {
 								int ax2 = ax + RecastCommon.GetDirOffsetX(dir2);
 								int ay2 = ay + RecastCommon.GetDirOffsetY(dir2);
 								int ai2 = chf.cells[ax2 + ay2 * w].index + RecastCommon.GetCon(as, dir2);
@@ -242,14 +246,14 @@ public class RecastRegion {
 			int ar = 0;
 			for (int dir = 0; dir < 4; ++dir) {
 				// 8 connected
-				if (RecastCommon.GetCon(cs, dir) != RecastConstants.RC_NOT_CONNECTED) {
+				if (RecastCommon.GetCon(cs, dir) != RC_NOT_CONNECTED) {
 					int ax = cx + RecastCommon.GetDirOffsetX(dir);
 					int ay = cy + RecastCommon.GetDirOffsetY(dir);
 					int ai = chf.cells[ax + ay * w].index + RecastCommon.GetCon(cs, dir);
 					if (chf.areas[ai] != area)
 						continue;
 					int nr = srcReg[ai];
-					if ((nr & RecastConstants.RC_BORDER_REG) != 0) // Do not take borders into account.
+					if ((nr & RC_BORDER_REG) != 0) // Do not take borders into account.
 						continue;
 					if (nr != 0 && nr != r) {
 						ar = nr;
@@ -259,7 +263,7 @@ public class RecastRegion {
 					CompactSpan as = chf.spans[ai];
 
 					int dir2 = (dir + 1) & 0x3;
-					if (RecastCommon.GetCon(as, dir2) != RecastConstants.RC_NOT_CONNECTED) {
+					if (RecastCommon.GetCon(as, dir2) != RC_NOT_CONNECTED) {
 						int ax2 = ax + RecastCommon.GetDirOffsetX(dir2);
 						int ay2 = ay + RecastCommon.GetDirOffsetY(dir2);
 						int ai2 = chf.cells[ax2 + ay2 * w].index + RecastCommon.GetCon(as, dir2);
@@ -282,7 +286,7 @@ public class RecastRegion {
 
 			// Expand neighbours.
 			for (int dir = 0; dir < 4; ++dir) {
-				if (RecastCommon.GetCon(cs, dir) != RecastConstants.RC_NOT_CONNECTED) {
+				if (RecastCommon.GetCon(cs, dir) != RC_NOT_CONNECTED) {
 					int ax = cx + RecastCommon.GetDirOffsetX(dir);
 					int ay = cy + RecastCommon.GetDirOffsetY(dir);
 					int ai = chf.cells[ax + ay * w].index + RecastCommon.GetCon(cs, dir);
@@ -314,7 +318,7 @@ public class RecastRegion {
 				for (int x = 0; x < w; ++x) {
 					CompactCell c = chf.cells[x + y * w];
 					for (int i = c.index, ni = c.index + c.count; i < ni; ++i) {
-						if (chf.dist[i] >= level && srcReg[i] == 0 && chf.areas[i] != RecastConstants.RC_NULL_AREA) {
+						if (chf.dist[i] >= level && srcReg[i] == 0 && chf.areas[i] != RC_NULL_AREA) {
 							stack.add(x);
 							stack.add(y);
 							stack.add(i);
@@ -352,14 +356,14 @@ public class RecastRegion {
 				int area = chf.areas[i];
 				CompactSpan s = chf.spans[i];
 				for (int dir = 0; dir < 4; ++dir) {
-					if (RecastCommon.GetCon(s, dir) == RecastConstants.RC_NOT_CONNECTED)
+					if (RecastCommon.GetCon(s, dir) == RC_NOT_CONNECTED)
 						continue;
 					int ax = x + RecastCommon.GetDirOffsetX(dir);
 					int ay = y + RecastCommon.GetDirOffsetY(dir);
 					int ai = chf.cells[ax + ay * w].index + RecastCommon.GetCon(s, dir);
 					if (chf.areas[ai] != area)
 						continue;
-					if (srcReg[ai] > 0 && (srcReg[ai] & RecastConstants.RC_BORDER_REG) == 0) {
+					if (srcReg[ai] > 0 && (srcReg[ai] & RC_BORDER_REG) == 0) {
 						if (srcDist[ai] + 2 < d2) {
 							r = srcReg[ai];
 							d2 = srcDist[ai] + 2;
@@ -412,7 +416,7 @@ public class RecastRegion {
 			for (int x = 0; x < w; ++x) {
 				CompactCell c = chf.cells[x + y * w];
 				for (int i = c.index, ni = c.index + c.count; i < ni; ++i) {
-					if (chf.areas[i] == RecastConstants.RC_NULL_AREA || srcReg[i] != 0)
+					if (chf.areas[i] == RC_NULL_AREA || srcReg[i] != 0)
 						continue;
 
 					int level = chf.dist[i] >> loglevelsPerStack;
@@ -441,7 +445,7 @@ public class RecastRegion {
 		}
 	}
 
-	private static class Region {
+	static class Region {
 		int spanCount; // Number of spans belonging to this region
 		int id; // ID of the region
 		int areaType; // Are type.
@@ -570,7 +574,7 @@ public class RecastRegion {
 	private static boolean isSolidEdge(CompactHeightfield chf, int[] srcReg, int x, int y, int i, int dir) {
 		CompactSpan s = chf.spans[i];
 		int r = 0;
-		if (RecastCommon.GetCon(s, dir) != RecastConstants.RC_NOT_CONNECTED) {
+		if (RecastCommon.GetCon(s, dir) != RC_NOT_CONNECTED) {
 			int ax = x + RecastCommon.GetDirOffsetX(dir);
 			int ay = y + RecastCommon.GetDirOffsetY(dir);
 			int ai = chf.cells[ax + ay * chf.width].index + RecastCommon.GetCon(s, dir);
@@ -588,7 +592,7 @@ public class RecastRegion {
 
 		CompactSpan ss = chf.spans[i];
 		int curReg = 0;
-		if (RecastCommon.GetCon(ss, dir) != RecastConstants.RC_NOT_CONNECTED) {
+		if (RecastCommon.GetCon(ss, dir) != RC_NOT_CONNECTED) {
 			int ax = x + RecastCommon.GetDirOffsetX(dir);
 			int ay = y + RecastCommon.GetDirOffsetY(dir);
 			int ai = chf.cells[ax + ay * chf.width].index + RecastCommon.GetCon(ss, dir);
@@ -603,7 +607,7 @@ public class RecastRegion {
 			if (isSolidEdge(chf, srcReg, x, y, i, dir)) {
 				// Choose the edge corner
 				int r = 0;
-				if (RecastCommon.GetCon(s, dir) != RecastConstants.RC_NOT_CONNECTED) {
+				if (RecastCommon.GetCon(s, dir) != RC_NOT_CONNECTED) {
 					int ax = x + RecastCommon.GetDirOffsetX(dir);
 					int ay = y + RecastCommon.GetDirOffsetY(dir);
 					int ai = chf.cells[ax + ay * chf.width].index + RecastCommon.GetCon(s, dir);
@@ -619,7 +623,7 @@ public class RecastRegion {
 				int ni = -1;
 				int nx = x + RecastCommon.GetDirOffsetX(dir);
 				int ny = y + RecastCommon.GetDirOffsetY(dir);
-				if (RecastCommon.GetCon(s, dir) != RecastConstants.RC_NOT_CONNECTED) {
+				if (RecastCommon.GetCon(s, dir) != RC_NOT_CONNECTED) {
 					CompactCell nc = chf.cells[nx + ny * chf.width];
 					ni = nc.index + RecastCommon.GetCon(s, dir);
 				}
@@ -715,7 +719,7 @@ public class RecastRegion {
 		List<Integer> trace = new ArrayList<>(32);
 		for (int i = 0; i < nreg; ++i) {
 			Region reg = regions[i];
-			if (reg.id == 0 || (reg.id & RecastConstants.RC_BORDER_REG) != 0)
+			if (reg.id == 0 || (reg.id & RC_BORDER_REG) != 0)
 				continue;
 			if (reg.spanCount == 0)
 				continue;
@@ -742,14 +746,14 @@ public class RecastRegion {
 				trace.add(ri);
 
 				for (int j = 0; j < creg.connections.size(); ++j) {
-					if ((creg.connections.get(j) & RecastConstants.RC_BORDER_REG) != 0) {
+					if ((creg.connections.get(j) & RC_BORDER_REG) != 0) {
 						connectsToBorder = true;
 						continue;
 					}
 					Region neireg = regions[creg.connections.get(j)];
 					if (neireg.visited)
 						continue;
-					if (neireg.id == 0 || (neireg.id & RecastConstants.RC_BORDER_REG) != 0)
+					if (neireg.id == 0 || (neireg.id & RC_BORDER_REG) != 0)
 						continue;
 					// Visit
 					stack.add(neireg.id);
@@ -776,7 +780,7 @@ public class RecastRegion {
 			mergeCount = 0;
 			for (int i = 0; i < nreg; ++i) {
 				Region reg = regions[i];
-				if (reg.id == 0 || (reg.id & RecastConstants.RC_BORDER_REG) != 0)
+				if (reg.id == 0 || (reg.id & RC_BORDER_REG) != 0)
 					continue;
 				if (reg.overlap)
 					continue;
@@ -793,10 +797,10 @@ public class RecastRegion {
 				int smallest = 0xfffffff;
 				int mergeId = reg.id;
 				for (int j = 0; j < reg.connections.size(); ++j) {
-					if ((reg.connections.get(j) & RecastConstants.RC_BORDER_REG) != 0)
+					if ((reg.connections.get(j) & RC_BORDER_REG) != 0)
 						continue;
 					Region mreg = regions[reg.connections.get(j)];
-					if (mreg.id == 0 || (mreg.id & RecastConstants.RC_BORDER_REG) != 0 || mreg.overlap)
+					if (mreg.id == 0 || (mreg.id & RC_BORDER_REG) != 0 || mreg.overlap)
 						continue;
 					if (mreg.spanCount < smallest && canMergeWithRegion(reg, mreg) && canMergeWithRegion(mreg, reg)) {
 						smallest = mreg.spanCount;
@@ -812,7 +816,7 @@ public class RecastRegion {
 					if (mergeRegions(target, reg)) {
 						// Fixup regions pointing to current region.
 						for (int j = 0; j < nreg; ++j) {
-							if (regions[j].id == 0 || (regions[j].id & RecastConstants.RC_BORDER_REG) != 0)
+							if (regions[j].id == 0 || (regions[j].id & RC_BORDER_REG) != 0)
 								continue;
 							// If another region was already merged into current region
 							// change the nid of the previous region too.
@@ -833,7 +837,7 @@ public class RecastRegion {
 			regions[i].remap = false;
 			if (regions[i].id == 0)
 				continue; // Skip nil regions.
-			if ((regions[i].id & RecastConstants.RC_BORDER_REG) != 0)
+			if ((regions[i].id & RC_BORDER_REG) != 0)
 				continue; // Skip external regions.
 			regions[i].remap = true;
 		}
@@ -855,7 +859,7 @@ public class RecastRegion {
 
 		// Remap regions.
 		for (int i = 0; i < chf.spanCount; ++i) {
-			if ((srcReg[i] & RecastConstants.RC_BORDER_REG) == 0)
+			if ((srcReg[i] & RC_BORDER_REG) == 0)
 				srcReg[i] = regions[srcReg[i]].id;
 		}
 
@@ -909,14 +913,14 @@ public class RecastRegion {
 
 					// Update neighbours
 					for (int dir = 0; dir < 4; ++dir) {
-						if (RecastCommon.GetCon(s, dir) != RecastConstants.RC_NOT_CONNECTED) {
+						if (RecastCommon.GetCon(s, dir) != RC_NOT_CONNECTED) {
 							int ax = x + RecastCommon.GetDirOffsetX(dir);
 							int ay = y + RecastCommon.GetDirOffsetY(dir);
 							int ai = chf.cells[ax + ay * w].index + RecastCommon.GetCon(s, dir);
 							int rai = srcReg[ai];
 							if (rai > 0 && rai < nreg && rai != ri)
 								addUniqueConnection(reg, rai);
-							if ((rai & RecastConstants.RC_BORDER_REG) != 0)
+							if ((rai & RC_BORDER_REG) != 0)
 								reg.connectsToBorder = true;
 						}
 					}
@@ -1014,7 +1018,7 @@ public class RecastRegion {
 			regions[i].remap = false;
 			if (regions[i].id == 0)
 				continue; // Skip nil regions.
-			if ((regions[i].id & RecastConstants.RC_BORDER_REG) != 0)
+			if ((regions[i].id & RC_BORDER_REG) != 0)
 				continue; // Skip external regions.
 			regions[i].remap = true;
 		}
@@ -1036,7 +1040,7 @@ public class RecastRegion {
 
 		// Remap regions.
 		for (int i = 0; i < chf.spanCount; ++i) {
-			if ((srcReg[i] & RecastConstants.RC_BORDER_REG) == 0)
+			if ((srcReg[i] & RC_BORDER_REG) == 0)
 				srcReg[i] = regions[srcReg[i]].id;
 		}
 
@@ -1085,7 +1089,7 @@ public class RecastRegion {
 			for (int x = minx; x < maxx; ++x) {
 				CompactCell c = chf.cells[x + y * w];
 				for (int i = c.index, ni = c.index + c.count; i < ni; ++i) {
-					if (chf.areas[i] != RecastConstants.RC_NULL_AREA)
+					if (chf.areas[i] != RC_NULL_AREA)
 						srcReg[i] = regId;
 				}
 			}
@@ -1133,13 +1137,13 @@ public class RecastRegion {
 			int bw = Math.min(w, borderSize);
 			int bh = Math.min(h, borderSize);
 			// Paint regions
-			paintRectRegion(0, bw, 0, h, id | RecastConstants.RC_BORDER_REG, chf, srcReg);
+			paintRectRegion(0, bw, 0, h, id | RC_BORDER_REG, chf, srcReg);
 			id++;
-			paintRectRegion(w - bw, w, 0, h, id | RecastConstants.RC_BORDER_REG, chf, srcReg);
+			paintRectRegion(w - bw, w, 0, h, id | RC_BORDER_REG, chf, srcReg);
 			id++;
-			paintRectRegion(0, w, 0, bh, id | RecastConstants.RC_BORDER_REG, chf, srcReg);
+			paintRectRegion(0, w, 0, bh, id | RC_BORDER_REG, chf, srcReg);
 			id++;
-			paintRectRegion(0, w, h - bh, h, id | RecastConstants.RC_BORDER_REG, chf, srcReg);
+			paintRectRegion(0, w, h - bh, h, id | RC_BORDER_REG, chf, srcReg);
 			id++;
 
 			chf.borderSize = borderSize;
@@ -1158,16 +1162,16 @@ public class RecastRegion {
 
 				for (int i = c.index, ni = c.index + c.count; i < ni; ++i) {
 					CompactSpan s = chf.spans[i];
-					if (chf.areas[i] == RecastConstants.RC_NULL_AREA)
+					if (chf.areas[i] == RC_NULL_AREA)
 						continue;
 
 					// -x
 					int previd = 0;
-					if (RecastCommon.GetCon(s, 0) != RecastConstants.RC_NOT_CONNECTED) {
+					if (RecastCommon.GetCon(s, 0) != RC_NOT_CONNECTED) {
 						int ax = x + RecastCommon.GetDirOffsetX(0);
 						int ay = y + RecastCommon.GetDirOffsetY(0);
 						int ai = chf.cells[ax + ay * w].index + RecastCommon.GetCon(s, 0);
-						if ((srcReg[ai] & RecastConstants.RC_BORDER_REG) == 0 && chf.areas[i] == chf.areas[ai])
+						if ((srcReg[ai] & RC_BORDER_REG) == 0 && chf.areas[i] == chf.areas[ai])
 							previd = srcReg[ai];
 					}
 
@@ -1179,11 +1183,11 @@ public class RecastRegion {
 					}
 
 					// -y
-					if (RecastCommon.GetCon(s, 3) != RecastConstants.RC_NOT_CONNECTED) {
+					if (RecastCommon.GetCon(s, 3) != RC_NOT_CONNECTED) {
 						int ax = x + RecastCommon.GetDirOffsetX(3);
 						int ay = y + RecastCommon.GetDirOffsetY(3);
 						int ai = chf.cells[ax + ay * w].index + RecastCommon.GetCon(s, 3);
-						if (srcReg[ai] != 0 && (srcReg[ai] & RecastConstants.RC_BORDER_REG) == 0
+						if (srcReg[ai] != 0 && (srcReg[ai] & RC_BORDER_REG) == 0
 								&& chf.areas[i] == chf.areas[ai]) {
 							int nr = srcReg[ai];
 							if (sweeps[previd].nei == 0 || sweeps[previd].nei == nr) {
@@ -1293,13 +1297,13 @@ public class RecastRegion {
 			int bw = Math.min(w, borderSize);
 			int bh = Math.min(h, borderSize);
 			// Paint regions
-			paintRectRegion(0, bw, 0, h, regionId | RecastConstants.RC_BORDER_REG, chf, srcReg);
+			paintRectRegion(0, bw, 0, h, regionId | RC_BORDER_REG, chf, srcReg);
 			regionId++;
-			paintRectRegion(w - bw, w, 0, h, regionId | RecastConstants.RC_BORDER_REG, chf, srcReg);
+			paintRectRegion(w - bw, w, 0, h, regionId | RC_BORDER_REG, chf, srcReg);
 			regionId++;
-			paintRectRegion(0, w, 0, bh, regionId | RecastConstants.RC_BORDER_REG, chf, srcReg);
+			paintRectRegion(0, w, 0, bh, regionId | RC_BORDER_REG, chf, srcReg);
 			regionId++;
-			paintRectRegion(0, w, h - bh, h, regionId | RecastConstants.RC_BORDER_REG, chf, srcReg);
+			paintRectRegion(0, w, h - bh, h, regionId | RC_BORDER_REG, chf, srcReg);
 			regionId++;
 
 			chf.borderSize = borderSize;
@@ -1404,13 +1408,13 @@ public class RecastRegion {
 			int bw = Math.min(w, borderSize);
 			int bh = Math.min(h, borderSize);
 			// Paint regions
-			paintRectRegion(0, bw, 0, h, id | RecastConstants.RC_BORDER_REG, chf, srcReg);
+			paintRectRegion(0, bw, 0, h, id | RC_BORDER_REG, chf, srcReg);
 			id++;
-			paintRectRegion(w - bw, w, 0, h, id | RecastConstants.RC_BORDER_REG, chf, srcReg);
+			paintRectRegion(w - bw, w, 0, h, id | RC_BORDER_REG, chf, srcReg);
 			id++;
-			paintRectRegion(0, w, 0, bh, id | RecastConstants.RC_BORDER_REG, chf, srcReg);
+			paintRectRegion(0, w, 0, bh, id | RC_BORDER_REG, chf, srcReg);
 			id++;
-			paintRectRegion(0, w, h - bh, h, id | RecastConstants.RC_BORDER_REG, chf, srcReg);
+			paintRectRegion(0, w, h - bh, h, id | RC_BORDER_REG, chf, srcReg);
 			id++;
 
 			chf.borderSize = borderSize;
@@ -1429,16 +1433,16 @@ public class RecastRegion {
 
 				for (int i = c.index, ni = c.index + c.count; i < ni; ++i) {
 					CompactSpan s = chf.spans[i];
-					if (chf.areas[i] == RecastConstants.RC_NULL_AREA)
+					if (chf.areas[i] == RC_NULL_AREA)
 						continue;
 
 					// -x
 					int previd = 0;
-					if (RecastCommon.GetCon(s, 0) != RecastConstants.RC_NOT_CONNECTED) {
+					if (RecastCommon.GetCon(s, 0) != RC_NOT_CONNECTED) {
 						int ax = x + RecastCommon.GetDirOffsetX(0);
 						int ay = y + RecastCommon.GetDirOffsetY(0);
 						int ai = chf.cells[ax + ay * w].index + RecastCommon.GetCon(s, 0);
-						if ((srcReg[ai] & RecastConstants.RC_BORDER_REG) == 0 && chf.areas[i] == chf.areas[ai])
+						if ((srcReg[ai] & RC_BORDER_REG) == 0 && chf.areas[i] == chf.areas[ai])
 							previd = srcReg[ai];
 					}
 
@@ -1450,11 +1454,11 @@ public class RecastRegion {
 					}
 
 					// -y
-					if (RecastCommon.GetCon(s, 3) != RecastConstants.RC_NOT_CONNECTED) {
+					if (RecastCommon.GetCon(s, 3) != RC_NOT_CONNECTED) {
 						int ax = x + RecastCommon.GetDirOffsetX(3);
 						int ay = y + RecastCommon.GetDirOffsetY(3);
 						int ai = chf.cells[ax + ay * w].index + RecastCommon.GetCon(s, 3);
-						if (srcReg[ai] != 0 && (srcReg[ai] & RecastConstants.RC_BORDER_REG) == 0
+						if (srcReg[ai] != 0 && (srcReg[ai] & RC_BORDER_REG) == 0
 								&& chf.areas[i] == chf.areas[ai]) {
 							int nr = srcReg[ai];
 							if (sweeps[previd].nei == 0 || sweeps[previd].nei == nr) {

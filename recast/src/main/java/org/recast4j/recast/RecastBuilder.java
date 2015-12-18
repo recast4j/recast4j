@@ -25,91 +25,28 @@ import org.recast4j.recast.RecastConstants.PartitionType;
 
 public class RecastBuilder {
 
-	private InputGeom m_geom;
-	private PolyMesh m_pmesh;
-	private PolyMeshDetail m_dmesh;
+	public class RecastBuilderResult {
+		private final PolyMesh pmesh;
+		private final PolyMeshDetail dmesh;
 
-	public RecastBuilder(InputGeom m_geom) {
-		this.m_geom = m_geom;
+		public RecastBuilderResult(PolyMesh pmesh, PolyMeshDetail dmesh) {
+			this.pmesh = pmesh;
+			this.dmesh = dmesh;
+		}
+
+		public PolyMesh getMesh() {
+			return pmesh;
+		}
+
+		public PolyMeshDetail getMeshDetail() {
+			return dmesh;
+		}
 	}
 
-	public void build(RecastConfig m_cfg) {
+	public RecastBuilderResult build(InputGeom geom, RecastConfig cfg) {
 
-		Context m_ctx = new Context();
-		//
-		// Step 2. Rasterize input polygon soup.
-		//
-
-		// Allocate voxel heightfield where we rasterize our input data to.
-		Heightfield m_solid = new Heightfield(m_cfg.width, m_cfg.height, m_cfg.bmin, m_cfg.bmax, m_cfg.cs, m_cfg.ch);
-
-		// Allocate array that can hold triangle area types.
-		// If you have multiple meshes you need to process, allocate
-		// and array which can hold the max number of triangles you need to
-		// process.
-
-		// Find triangles which are walkable based on their slope and rasterize
-		// them.
-		// If your input data is multiple meshes, you can transform them here,
-		// calculate
-		// the are type for each of the meshes and rasterize them.
-		float[] verts = m_geom.getVerts();
-		boolean tiled = m_cfg.tileSize > 0;
-		int totaltris = 0;
-		if (tiled) {
-			ChunkyTriMesh chunkyMesh = m_geom.getChunkyMesh();
-			float[] tbmin = new float[2];
-			float[] tbmax = new float[2];
-			tbmin[0] = m_cfg.bmin[0];
-			tbmin[1] = m_cfg.bmin[2];
-			tbmax[0] = m_cfg.bmax[0];
-			tbmax[1] = m_cfg.bmax[2];
-			List<ChunkyTriMeshNode> nodes = chunkyMesh.getChunksOverlappingRect(tbmin, tbmax);
-			for (ChunkyTriMeshNode node : nodes) {
-				int[] tris = node.tris;
-				int ntris = tris.length / 3;
-				totaltris += ntris;
-				int[] m_triareas = Recast.markWalkableTriangles(m_ctx, m_cfg.walkableSlopeAngle, verts, tris, ntris);
-				RecastRasterization.rasterizeTriangles(m_ctx, verts, tris, m_triareas, ntris, m_solid,
-						m_cfg.walkableClimb);
-			}
-		} else {
-			int[] tris = m_geom.getTris();
-			int ntris = tris.length / 3;
-			int[] m_triareas = Recast.markWalkableTriangles(m_ctx, m_cfg.walkableSlopeAngle, verts, tris, ntris);
-			totaltris = ntris;
-			RecastRasterization.rasterizeTriangles(m_ctx, verts, tris, m_triareas, ntris, m_solid, m_cfg.walkableClimb);
-		}
-		//
-		// Step 3. Filter walkables surfaces.
-		//
-
-		// Once all geometry is rasterized, we do initial pass of filtering to
-		// remove unwanted overhangs caused by the conservative rasterization
-		// as well as filter spans where the character cannot possibly stand.
-		RecastFilter.filterLowHangingWalkableObstacles(m_ctx, m_cfg.walkableClimb, m_solid);
-		RecastFilter.filterLedgeSpans(m_ctx, m_cfg.walkableHeight, m_cfg.walkableClimb, m_solid);
-		RecastFilter.filterWalkableLowHeightSpans(m_ctx, m_cfg.walkableHeight, m_solid);
-
-		//
-		// Step 4. Partition walkable surface to simple regions.
-		//
-
-		// Compact the heightfield so that it is faster to handle from now on.
-		// This will result more cache coherent data as well as the neighbours
-		// between walkable cells will be calculated.
-		CompactHeightfield m_chf = Recast.buildCompactHeightfield(m_ctx, m_cfg.walkableHeight, m_cfg.walkableClimb,
-				m_solid);
-
-		// Erode the walkable area by agent radius.
-		RecastArea.erodeWalkableArea(m_ctx, m_cfg.walkableRadius, m_chf);
-
-		// (Optional) Mark areas.
-		/*
-		 * ConvexVolume vols = m_geom->getConvexVolumes(); for (int i = 0; i < m_geom->getConvexVolumeCount(); ++i)
-		 * rcMarkConvexPolyArea(m_ctx, vols[i].verts, vols[i].nverts, vols[i].hmin, vols[i].hmax, (unsigned
-		 * char)vols[i].area, *m_chf);
-		 */
+		Context ctx = new Context();
+		CompactHeightfield chf = buildCompactHeightfield(geom, cfg, ctx);
 
 		// Partition the heightfield so that we can use simple algorithm later
 		// to triangulate the walkable areas.
@@ -149,19 +86,19 @@ public class RecastBuilder {
 		// * good choice to use for tiled navmesh with medium and small sized
 		// tiles
 
-		if (m_cfg.partitionType == PartitionType.WATERSHED) {
+		if (cfg.partitionType == PartitionType.WATERSHED) {
 			// Prepare for region partitioning, by calculating distance field
 			// along the walkable surface.
-			RecastRegion.buildDistanceField(m_ctx, m_chf);
+			RecastRegion.buildDistanceField(ctx, chf);
 			// Partition the walkable surface into simple regions without holes.
-			RecastRegion.buildRegions(m_ctx, m_chf, m_cfg.borderSize, m_cfg.minRegionArea, m_cfg.mergeRegionArea);
-		} else if (m_cfg.partitionType == PartitionType.MONOTONE) {
+			RecastRegion.buildRegions(ctx, chf, cfg.borderSize, cfg.minRegionArea, cfg.mergeRegionArea);
+		} else if (cfg.partitionType == PartitionType.MONOTONE) {
 			// Partition the walkable surface into simple regions without holes.
 			// Monotone partitioning does not need distancefield.
-			RecastRegion.buildRegionsMonotone(m_ctx, m_chf, m_cfg.borderSize, m_cfg.minRegionArea, m_cfg.mergeRegionArea);
+			RecastRegion.buildRegionsMonotone(ctx, chf, cfg.borderSize, cfg.minRegionArea, cfg.mergeRegionArea);
 		} else {
 			// Partition the walkable surface into simple regions without holes.
-			RecastRegion.buildLayerRegions(m_ctx, m_chf, m_cfg.borderSize, m_cfg.minRegionArea);
+			RecastRegion.buildLayerRegions(ctx, chf, cfg.borderSize, cfg.minRegionArea);
 		}
 
 		//
@@ -169,31 +106,102 @@ public class RecastBuilder {
 		//
 
 		// Create contours.
-		ContourSet m_cset = RecastContour.buildContours(m_ctx, m_chf, m_cfg.maxSimplificationError, m_cfg.maxEdgeLen,
+		ContourSet cset = RecastContour.buildContours(ctx, chf, cfg.maxSimplificationError, cfg.maxEdgeLen,
 				RecastConstants.RC_CONTOUR_TESS_WALL_EDGES);
 
 		//
 		// Step 6. Build polygons mesh from contours.
 		//
 
-		m_pmesh = RecastMesh.buildPolyMesh(m_ctx, m_cset, m_cfg.maxVertsPerPoly);
+		PolyMesh pmesh = RecastMesh.buildPolyMesh(ctx, cset, cfg.maxVertsPerPoly);
 
 		//
 		// Step 7. Create detail mesh which allows to access approximate height
 		// on each polygon.
 		//
 
-		m_dmesh = RecastMeshDetail.buildPolyMeshDetail(m_ctx, m_pmesh, m_chf, m_cfg.detailSampleDist,
-				m_cfg.detailSampleMaxError);
-
+		PolyMeshDetail dmesh = RecastMeshDetail.buildPolyMeshDetail(ctx, pmesh, chf, cfg.detailSampleDist,
+				cfg.detailSampleMaxError);
+		return new RecastBuilderResult(pmesh, dmesh);
 	}
 
-	public PolyMesh getMesh() {
-		return m_pmesh;
+	private CompactHeightfield buildCompactHeightfield(InputGeom geom, RecastConfig cfg, Context ctx) {
+		//
+		// Step 2. Rasterize input polygon soup.
+		//
+
+		// Allocate voxel heightfield where we rasterize our input data to.
+		Heightfield solid = new Heightfield(cfg.width, cfg.height, cfg.bmin, cfg.bmax, cfg.cs, cfg.ch);
+
+		// Allocate array that can hold triangle area types.
+		// If you have multiple meshes you need to process, allocate
+		// and array which can hold the max number of triangles you need to
+		// process.
+
+		// Find triangles which are walkable based on their slope and rasterize
+		// them.
+		// If your input data is multiple meshes, you can transform them here,
+		// calculate
+		// the are type for each of the meshes and rasterize them.
+		float[] verts = geom.getVerts();
+		boolean tiled = cfg.tileSize > 0;
+		int totaltris = 0;
+		if (tiled) {
+			ChunkyTriMesh chunkyMesh = geom.getChunkyMesh();
+			float[] tbmin = new float[2];
+			float[] tbmax = new float[2];
+			tbmin[0] = cfg.bmin[0];
+			tbmin[1] = cfg.bmin[2];
+			tbmax[0] = cfg.bmax[0];
+			tbmax[1] = cfg.bmax[2];
+			List<ChunkyTriMeshNode> nodes = chunkyMesh.getChunksOverlappingRect(tbmin, tbmax);
+			for (ChunkyTriMeshNode node : nodes) {
+				int[] tris = node.tris;
+				int ntris = tris.length / 3;
+				totaltris += ntris;
+				int[] m_triareas = Recast.markWalkableTriangles(ctx, cfg.walkableSlopeAngle, verts, tris, ntris);
+				RecastRasterization.rasterizeTriangles(ctx, verts, tris, m_triareas, ntris, solid, cfg.walkableClimb);
+			}
+		} else {
+			int[] tris = geom.getTris();
+			int ntris = tris.length / 3;
+			int[] m_triareas = Recast.markWalkableTriangles(ctx, cfg.walkableSlopeAngle, verts, tris, ntris);
+			totaltris = ntris;
+			RecastRasterization.rasterizeTriangles(ctx, verts, tris, m_triareas, ntris, solid, cfg.walkableClimb);
+		}
+		//
+		// Step 3. Filter walkables surfaces.
+		//
+
+		// Once all geometry is rasterized, we do initial pass of filtering to
+		// remove unwanted overhangs caused by the conservative rasterization
+		// as well as filter spans where the character cannot possibly stand.
+		RecastFilter.filterLowHangingWalkableObstacles(ctx, cfg.walkableClimb, solid);
+		RecastFilter.filterLedgeSpans(ctx, cfg.walkableHeight, cfg.walkableClimb, solid);
+		RecastFilter.filterWalkableLowHeightSpans(ctx, cfg.walkableHeight, solid);
+
+		//
+		// Step 4. Partition walkable surface to simple regions.
+		//
+
+		// Compact the heightfield so that it is faster to handle from now on.
+		// This will result more cache coherent data as well as the neighbours
+		// between walkable cells will be calculated.
+		CompactHeightfield chf = Recast.buildCompactHeightfield(ctx, cfg.walkableHeight, cfg.walkableClimb, solid);
+
+		// Erode the walkable area by agent radius.
+		RecastArea.erodeWalkableArea(ctx, cfg.walkableRadius, chf);
+		// (Optional) Mark areas.
+		for (ConvexVolume vol : geom.getConvexVolumes()) {
+			RecastArea.markConvexPolyArea(ctx, vol.verts, vol.hmin, vol.hmax, vol.area, chf);
+		}
+		return chf;
 	}
 
-	public PolyMeshDetail getMeshDetail() {
-		return m_dmesh;
+	public HeightfieldLayerSet buildLayers(InputGeom geom, RecastConfig cfg) {
+		Context ctx = new Context();
+		CompactHeightfield chf = buildCompactHeightfield(geom, cfg, ctx);
+		return RecastLayers.buildHeightfieldLayers(ctx, chf, cfg.borderSize, cfg.walkableHeight);
 	}
 
 }

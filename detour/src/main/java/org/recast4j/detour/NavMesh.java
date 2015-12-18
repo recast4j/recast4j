@@ -710,11 +710,11 @@ public class NavMesh {
 			p[0] = targetCon.pos[3];
 			p[1] = targetCon.pos[4];
 			p[2] = targetCon.pos[5];
-			Tupple2<Long, float[]> nearest = findNearestPolyInTile(tile, p, ext);
-			long ref = nearest.first;
+			FindNearestPolyResult nearest = findNearestPolyInTile(tile, p, ext);
+			long ref = nearest.getNearestRef();
 			if (ref == 0)
 				continue;
-			float[] nearestPt = nearest.second;
+			float[] nearestPt = nearest.getNearestPos();
 			// findNearestPoly may return too optimistic results, further check
 			// to make sure.
 
@@ -892,12 +892,12 @@ public class NavMesh {
 			float[] ext = new float[] { con.rad, tile.data.header.walkableClimb, con.rad };
 
 			// Find polygon to connect to.
-			Tupple2<Long, float[]> nearestPoly = findNearestPolyInTile(tile, con.pos, ext);
-			long ref = nearestPoly.first;
+			FindNearestPolyResult nearestPoly = findNearestPolyInTile(tile, con.pos, ext);
+			long ref = nearestPoly.getNearestRef();
 			if (ref == 0)
 				continue;
 			float[] p = con.pos; // First vertex
-			float[] nearestPt = nearestPoly.second;
+			float[] nearestPt = nearestPoly.getNearestPos();
 			// findNearestPoly may return too optimistic results, further check
 			// to make sure.
 			float dx = nearestPt[0] - p[0];
@@ -941,7 +941,7 @@ public class NavMesh {
 	 * @param pos
 	 * @return
 	 */
-	Tupple2<Boolean, float[]> closestPointOnPoly(long ref, float[] pos) {
+	ClosesPointOnPolyResult closestPointOnPoly(long ref, float[] pos) {
 		Tupple2<MeshTile, Poly> tileAndPoly = getTileAndPolyByRefUnsafe(ref);
 		MeshTile tile = tileAndPoly.first;
 		Poly poly = tileAndPoly.second;
@@ -953,7 +953,7 @@ public class NavMesh {
 			float d1 = vDist(pos, tile.data.verts, v1);
 			float u = d0 / (d0 + d1);
 			float[] closest = vLerp(tile.data.verts, v0, v1, u);
-			return new Tupple2<>(false, closest);
+			return new ClosesPointOnPolyResult(false, closest);
 		}
 
 		// Clamp point to be inside the polygon.
@@ -1007,10 +1007,10 @@ public class NavMesh {
 				}
 			}
 		}
-		return new Tupple2<>(posOverPoly, closest);
+		return new ClosesPointOnPolyResult(posOverPoly, closest);
 	}
 
-	Tupple2<Long, float[]> findNearestPolyInTile(MeshTile tile, float[] center, float[] extents) {
+	FindNearestPolyResult findNearestPolyInTile(MeshTile tile, float[] center, float[] extents) {
 		float[] nearestPt = null;
 		float[] bmin = vSub(center, extents);
 		float[] bmax = vAdd(center, extents);
@@ -1024,9 +1024,9 @@ public class NavMesh {
 		for (int i = 0; i < polys.size(); ++i) {
 			long ref = polys.get(i);
 			float d;
-			Tupple2<Boolean, float[]> cpp = closestPointOnPoly(ref, center);
-			boolean posOverPoly = cpp.first;
-			float[] closestPtPoly = cpp.second;
+			ClosesPointOnPolyResult cpp = closestPointOnPoly(ref, center);
+			boolean posOverPoly = cpp.isPosOverPoly();
+			float[] closestPtPoly = cpp.getClosest();
 
 			// If a point is directly over a polygon and closer than
 			// climb height, favor that instead of straight line nearest point.
@@ -1043,7 +1043,7 @@ public class NavMesh {
 				nearest = ref;
 			}
 		}
-		return new Tupple2<>(nearest, nearestPt);
+		return new FindNearestPolyResult(nearest, nearestPt);
 	}
 
 	MeshTile getTileAt(int x, int y, int layer) {

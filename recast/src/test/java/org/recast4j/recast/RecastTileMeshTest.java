@@ -3,6 +3,7 @@ package org.recast4j.recast;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
+import org.recast4j.recast.RecastBuilder.RecastBuilderResult;
 import org.recast4j.recast.RecastConstants.PartitionType;
 
 public class RecastTileMeshTest {
@@ -30,37 +31,37 @@ public class RecastTileMeshTest {
 	public void testBuild(String filename) {
 		ObjImporter importer = new ObjImporter();
 		InputGeom geom = importer.load(getClass().getResourceAsStream(filename));
-		RecastBuilder builder = new RecastBuilder(geom);
+		RecastBuilder builder = new RecastBuilder();
 		RecastConfig cfg = new RecastConfig(m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, 
 				m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 32, 7, 8);
-		builder.build(cfg);
-		assertEquals(1, builder.getMesh().npolys);
-		assertEquals(5, builder.getMesh().nverts);
+		RecastBuilderResult rcResult = builder.build(geom, cfg);
+		assertEquals(1, rcResult.getMesh().npolys);
+		assertEquals(5, rcResult.getMesh().nverts);
 		cfg = new RecastConfig(m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, 
 				m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 32, 6, 9);
-		builder.build(cfg);
-		assertEquals(2, builder.getMesh().npolys);
-		assertEquals(7, builder.getMesh().nverts);
+		rcResult = builder.build(geom, cfg);
+		assertEquals(2, rcResult.getMesh().npolys);
+		assertEquals(7, rcResult.getMesh().nverts);
 		cfg = new RecastConfig(m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, 
 				m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 32, 2, 9);
-		builder.build(cfg);
-		assertEquals(2, builder.getMesh().npolys);
-		assertEquals(9, builder.getMesh().nverts);
+		rcResult = builder.build(geom, cfg);
+		assertEquals(2, rcResult.getMesh().npolys);
+		assertEquals(9, rcResult.getMesh().nverts);
 		cfg = new RecastConfig(m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, 
 				m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 32, 4, 3);
-		builder.build(cfg);
-		assertEquals(3, builder.getMesh().npolys);
-		assertEquals(6, builder.getMesh().nverts);
+		rcResult = builder.build(geom, cfg);
+		assertEquals(3, rcResult.getMesh().npolys);
+		assertEquals(6, rcResult.getMesh().nverts);
 		cfg = new RecastConfig(m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, 
 				m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 32, 2, 8);
-		builder.build(cfg);
-		assertEquals(5, builder.getMesh().npolys);
-		assertEquals(17, builder.getMesh().nverts);
+		rcResult = builder.build(geom, cfg);
+		assertEquals(5, rcResult.getMesh().npolys);
+		assertEquals(17, rcResult.getMesh().nverts);
 		cfg = new RecastConfig(m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, 
 				m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 32, 0, 8);
-		builder.build(cfg);
-		assertEquals(6, builder.getMesh().npolys);
-		assertEquals(15, builder.getMesh().nverts);
+		rcResult = builder.build(geom, cfg);
+		assertEquals(6, rcResult.getMesh().npolys);
+		assertEquals(15, rcResult.getMesh().nverts);
 	}
 
 }

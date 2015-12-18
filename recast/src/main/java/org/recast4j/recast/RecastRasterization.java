@@ -18,6 +18,8 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
+import static org.recast4j.recast.RecastConstants.RC_SPAN_MAX_HEIGHT;
+
 public class RecastRasterization {
 
 	private static boolean overlapBounds(float[] amin, float[] amax, float[] bmin, float[] bmax) {
@@ -234,9 +236,9 @@ public class RecastRasterization {
 					smax = by;
 
 				// Snap the span to the heightfield height grid.
-				int ismin = RecastCommon.clamp((int) Math.floor(smin * ich), 0, RecastConstants.RC_SPAN_MAX_HEIGHT);
+				int ismin = RecastCommon.clamp((int) Math.floor(smin * ich), 0, RC_SPAN_MAX_HEIGHT);
 				int ismax = RecastCommon.clamp((int) Math.ceil(smax * ich), ismin + 1,
-						RecastConstants.RC_SPAN_MAX_HEIGHT);
+						RC_SPAN_MAX_HEIGHT);
 
 				addSpan(hf, x, y, ismin, ismax, area, flagMergeThr);
 			}

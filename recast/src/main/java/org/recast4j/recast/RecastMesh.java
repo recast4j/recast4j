@@ -18,6 +18,9 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
+import static org.recast4j.recast.RecastConstants.RC_BORDER_VERTEX;
+import static org.recast4j.recast.RecastConstants.RC_MESH_NULL_IDX;
+
 import java.util.Arrays;
 
 public class RecastMesh {
@@ -43,15 +46,15 @@ public class RecastMesh {
 		Edge[] edges = new Edge[maxEdgeCount];
 
 		for (int i = 0; i < nverts; i++)
-			firstEdge[i] = RecastConstants.RC_MESH_NULL_IDX;
+			firstEdge[i] = RC_MESH_NULL_IDX;
 
 		for (int i = 0; i < npolys; ++i) {
 			int t = i * vertsPerPoly * 2;
 			for (int j = 0; j < vertsPerPoly; ++j) {
-				if (polys[t + j] == RecastConstants.RC_MESH_NULL_IDX)
+				if (polys[t + j] == RC_MESH_NULL_IDX)
 					break;
 				int v0 = polys[t + j];
-				int v1 = (j + 1 >= vertsPerPoly || polys[t + j + 1] == RecastConstants.RC_MESH_NULL_IDX) ? polys[t + 0]
+				int v1 = (j + 1 >= vertsPerPoly || polys[t + j + 1] == RC_MESH_NULL_IDX) ? polys[t + 0]
 						: polys[t + j + 1];
 				if (v0 < v1) {
 					Edge edge = new Edge();
@@ -73,13 +76,13 @@ public class RecastMesh {
 		for (int i = 0; i < npolys; ++i) {
 			int t = i * vertsPerPoly * 2;
 			for (int j = 0; j < vertsPerPoly; ++j) {
-				if (polys[t + j] == RecastConstants.RC_MESH_NULL_IDX)
+				if (polys[t + j] == RC_MESH_NULL_IDX)
 					break;
 				int v0 = polys[t + j];
-				int v1 = (j + 1 >= vertsPerPoly || polys[t + j + 1] == RecastConstants.RC_MESH_NULL_IDX) ? polys[t + 0]
+				int v1 = (j + 1 >= vertsPerPoly || polys[t + j + 1] == RC_MESH_NULL_IDX) ? polys[t + 0]
 						: polys[t + j + 1];
 				if (v0 > v1) {
-					for (int e = firstEdge[v1]; e != RecastConstants.RC_MESH_NULL_IDX; e = firstEdge[nextEdge + e]) {
+					for (int e = firstEdge[v1]; e != RC_MESH_NULL_IDX; e = firstEdge[nextEdge + e]) {
 						Edge edge = edges[e];
 						if (edge.vert[1] == v0 && edge.poly[0] == edge.poly[1]) {
 							edge.poly[1] = i;
@@ -396,7 +399,7 @@ public class RecastMesh {
 
 	private static int countPolyVerts(int[] p, int j, int nvp) {
 		for (int i = 0; i < nvp; ++i)
-			if (p[i + j] == RecastConstants.RC_MESH_NULL_IDX)
+			if (p[i + j] == RC_MESH_NULL_IDX)
 				return i;
 		return nvp;
 	}
@@ -475,7 +478,7 @@ public class RecastMesh {
 		int nb = countPolyVerts(polys, pb, nvp);
 
 		// Merge polygons.
-		Arrays.fill(polys, tmp, tmp + nvp, RecastConstants.RC_MESH_NULL_IDX);
+		Arrays.fill(polys, tmp, tmp + nvp, RC_MESH_NULL_IDX);
 		int n = 0;
 		// Add pa
 		for (int i = 0; i < na - 1; ++i) {
@@ -638,7 +641,7 @@ public class RecastMesh {
 				if (p != p2) {
 					System.arraycopy(mesh.polys, p2, mesh.polys, p, nvp);
 				}
-				Arrays.fill(mesh.polys, p + nvp, p + nvp + nvp, RecastConstants.RC_MESH_NULL_IDX);
+				Arrays.fill(mesh.polys, p + nvp, p + nvp + nvp, RC_MESH_NULL_IDX);
 				mesh.regs[i] = mesh.regs[mesh.npolys - 1];
 				mesh.areas[i] = mesh.areas[mesh.npolys - 1];
 				mesh.npolys--;
@@ -748,7 +751,7 @@ public class RecastMesh {
 
 		// Build initial polygons.
 		int npolys = 0;
-		Arrays.fill(polys, 0, ntris * nvp, RecastConstants.RC_MESH_NULL_IDX);
+		Arrays.fill(polys, 0, ntris * nvp, RC_MESH_NULL_IDX);
 		for (int j = 0; j < ntris; ++j) {
 			int t = j * 3;
 			if (tris[t + 0] != tris[t + 1] && tris[t + 0] != tris[t + 2] && tris[t + 1] != tris[t + 2]) {
@@ -812,7 +815,7 @@ public class RecastMesh {
 			if (mesh.npolys >= maxTris)
 				break;
 			int p = mesh.npolys * nvp * 2;
-			Arrays.fill(mesh.polys, p, p + nvp * 2, RecastConstants.RC_MESH_NULL_IDX);
+			Arrays.fill(mesh.polys, p, p + nvp * 2, RC_MESH_NULL_IDX);
 			for (int j = 0; j < nvp; ++j)
 				mesh.polys[p + j] = polys[i * nvp + j];
 			mesh.regs[mesh.npolys] = pregs[i];
@@ -858,7 +861,7 @@ public class RecastMesh {
 
 		mesh.verts = new int[maxVertices * 3];
 		mesh.polys = new int[maxTris * nvp * 2];
-		Arrays.fill(mesh.polys, RecastConstants.RC_MESH_NULL_IDX);
+		Arrays.fill(mesh.polys, RC_MESH_NULL_IDX);
 		mesh.regs = new int[maxTris];
 		mesh.areas = new int[maxTris];
 
@@ -903,7 +906,7 @@ public class RecastMesh {
 						nextVert, mesh.nverts);
 				indices[j] = inv[0];
 				mesh.nverts = inv[1];
-				if ((cont.verts[v + 3] & RecastConstants.RC_BORDER_VERTEX) != 0) {
+				if ((cont.verts[v + 3] & RC_BORDER_VERTEX) != 0) {
 					// This vertex should be removed.
 					vflags[indices[j]] = 1;
 				}
@@ -911,7 +914,7 @@ public class RecastMesh {
 
 			// Build initial polygons.
 			int npolys = 0;
-			Arrays.fill(polys, RecastConstants.RC_MESH_NULL_IDX);
+			Arrays.fill(polys, RC_MESH_NULL_IDX);
 			for (int j = 0; j < ntris; ++j) {
 				int t = j * 3;
 				if (tris[t + 0] != tris[t + 1] && tris[t + 0] != tris[t + 2] && tris[t + 1] != tris[t + 2]) {
@@ -1007,13 +1010,13 @@ public class RecastMesh {
 			for (int i = 0; i < mesh.npolys; ++i) {
 				int p = i * 2 * nvp;
 				for (int j = 0; j < nvp; ++j) {
-					if (mesh.polys[p + j] == RecastConstants.RC_MESH_NULL_IDX)
+					if (mesh.polys[p + j] == RC_MESH_NULL_IDX)
 						break;
 					// Skip connected edges.
-					if (mesh.polys[p + nvp + j] != RecastConstants.RC_MESH_NULL_IDX)
+					if (mesh.polys[p + nvp + j] != RC_MESH_NULL_IDX)
 						continue;
 					int nj = j + 1;
-					if (nj >= nvp || mesh.polys[p + nj] == RecastConstants.RC_MESH_NULL_IDX)
+					if (nj >= nvp || mesh.polys[p + nj] == RC_MESH_NULL_IDX)
 						nj = 0;
 					int va = mesh.polys[p + j] * 3;
 					int vb = mesh.polys[p + nj] * 3;
@@ -1077,7 +1080,7 @@ public class RecastMesh {
 
 		mesh.npolys = 0;
 		mesh.polys = new int[maxPolys * 2 * mesh.nvp];
-		Arrays.fill(mesh.polys, 0, mesh.polys.length, RecastConstants.RC_MESH_NULL_IDX);
+		Arrays.fill(mesh.polys, 0, mesh.polys.length, RC_MESH_NULL_IDX);
 		mesh.regs = new int[maxPolys];
 		mesh.areas = new int[maxPolys];
 		mesh.flags = new int[maxPolys];
@@ -1119,7 +1122,7 @@ public class RecastMesh {
 				mesh.flags[mesh.npolys] = pmesh.flags[j];
 				mesh.npolys++;
 				for (int k = 0; k < mesh.nvp; ++k) {
-					if (pmesh.polys[src + k] == RecastConstants.RC_MESH_NULL_IDX)
+					if (pmesh.polys[src + k] == RC_MESH_NULL_IDX)
 						break;
 					mesh.polys[tgt + k] = vremap[pmesh.polys[src + k]];
 				}

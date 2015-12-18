@@ -32,7 +32,6 @@ import static org.recast4j.detour.DetourCommon.vSet;
 import static org.recast4j.detour.DetourCommon.vSub;
 
 import org.recast4j.detour.Tupple2;
-import org.recast4j.detour.Tupple3;
 import org.recast4j.detour.crowd.debug.ObstacleAvoidanceDebugData;
 
 public class ObstacleAvoidanceQuery {
@@ -196,23 +195,23 @@ public class ObstacleAvoidanceQuery {
 		}
 	}
 
-	Tupple3<Boolean, Float, Float> sweepCircleCircle(float[] c0, float r0, float[] v, float[] c1, float r1) {
+	SweepCircleCircleResult sweepCircleCircle(float[] c0, float r0, float[] v, float[] c1, float r1) {
 		final float EPS = 0.0001f;
 		float[] s = vSub(c1, c0);
 		float r = r0 + r1;
 		float c = vDot2D(s, s) - r * r;
 		float a = vDot2D(v, v);
 		if (a < EPS)
-			return new Tupple3<Boolean, Float, Float>(false, 0f, 0f); // not moving
+			return new SweepCircleCircleResult(false, 0f, 0f); // not moving
 
 		// Overlap, calc time to exit.
 		float b = vDot2D(v, s);
 		float d = b * b - a * c;
 		if (d < 0.0f)
-			return new Tupple3<Boolean, Float, Float>(false, 0f, 0f); // no intersection.
+			return new SweepCircleCircleResult(false, 0f, 0f); // no intersection.
 		a = 1.0f / a;
 		float rd = (float) Math.sqrt(d);
-		return new Tupple3<Boolean, Float, Float>(true, (b - rd) * a, (b + rd) * a);
+		return new SweepCircleCircleResult(true, (b - rd) * a, (b + rd) * a);
 	}
 
 	Tupple2<Boolean, Float> isectRaySeg(float[] ap, float[] u, float[] bp, float[] bq) {
@@ -269,10 +268,10 @@ public class ObstacleAvoidanceQuery {
 			side += clamp(Math.min(vDot2D(cir.dp, vab) * 0.5f + 0.5f, vDot2D(cir.np, vab) * 2), 0.0f, 1.0f);
 			nside++;
 
-			Tupple3<Boolean, Float, Float> sres = sweepCircleCircle(pos, rad, vab, cir.p, cir.rad);
-			if (!sres.first)
+			SweepCircleCircleResult sres = sweepCircleCircle(pos, rad, vab, cir.p, cir.rad);
+			if (!sres.intersection)
 				continue;
-			float htmin = sres.second, htmax = sres.third;
+			float htmin = sres.htmin, htmax = sres.htmax;
 
 			// Handle overlapping obstacles.
 			if (htmin < 0.0f && htmax > 0.0f) {

@@ -38,9 +38,9 @@ public class CompactHeightfield {
 	/** The maximum region id of any span within the field. */
 	public int maxRegions;
 	/** The minimum bounds in world space. [(x, y, z)] */
-	public float[] bmin;
+	public final float[] bmin = new float[3];
 	/** The maximum bounds in world space. [(x, y, z)] */
-	public float[] bmax;
+	public final float[] bmax = new float[3];
 	/** The size of each cell. (On the xz-plane.) */
 	public float cs;
 	/** The height of each cell. (The minimum increment along the y-axis.) */

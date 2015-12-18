@@ -22,6 +22,7 @@ import org.recast4j.recast.ObjImporter;
 import org.recast4j.recast.PolyMesh;
 import org.recast4j.recast.PolyMeshDetail;
 import org.recast4j.recast.RecastBuilder;
+import org.recast4j.recast.RecastBuilder.RecastBuilderResult;
 import org.recast4j.recast.RecastConfig;
 import org.recast4j.recast.RecastConstants.PartitionType;
 
@@ -56,13 +57,13 @@ public class RecastTestMeshBuilder {
 		RecastConfig cfg = new RecastConfig(m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb,
 				m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly,
 				m_detailSampleDist, m_detailSampleMaxError, m_geom.getMeshBoundsMin(), m_geom.getMeshBoundsMax());
-		RecastBuilder rcBuilder = new RecastBuilder(m_geom);
-		rcBuilder.build(cfg);
-		PolyMesh m_pmesh = rcBuilder.getMesh();
+		RecastBuilder rcBuilder = new RecastBuilder();
+		RecastBuilderResult rcResult = rcBuilder.build(m_geom, cfg);
+		PolyMesh m_pmesh = rcResult.getMesh();
 		for (int i = 0; i < m_pmesh.npolys; ++i) {
 			m_pmesh.flags[i] = 1;
 		}
-		PolyMeshDetail m_dmesh = rcBuilder.getMeshDetail();
+		PolyMeshDetail m_dmesh = rcResult.getMeshDetail();
 		NavMeshCreateParams params = new NavMeshCreateParams();
 		params.verts = m_pmesh.verts;
 		params.vertCount = m_pmesh.nverts;

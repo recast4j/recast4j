@@ -18,6 +18,11 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
+import static org.recast4j.recast.RecastConstants.RC_NOT_CONNECTED;
+import static org.recast4j.recast.RecastConstants.RC_NULL_AREA;
+import static org.recast4j.recast.RecastConstants.RC_WALKABLE_AREA;
+import static org.recast4j.recast.RecastVectors.copy;
+
 public class Recast {
 
 	void calcBounds(float[] verts, int nv, float[] bmin, float[] bmax) {
@@ -55,7 +60,7 @@ public class Recast {
 			calcTriNormal(verts, tris[tri], tris[tri + 1], tris[tri + 2], norm);
 			// Check if the face is walkable.
 			if (norm[1] > walkableThr)
-				areas[i] = RecastConstants.RC_WALKABLE_AREA;
+				areas[i] = RC_WALKABLE_AREA;
 		}
 		return areas;
 	}
@@ -87,7 +92,7 @@ public class Recast {
 			calcTriNormal(verts, tris[tri], tris[tri + 1], tris[tri + 2], norm);
 			// Check if the face is walkable.
 			if (norm[1] <= walkableThr)
-				areas[i] = RecastConstants.RC_NULL_AREA;
+				areas[i] = RC_NULL_AREA;
 		}
 	}
 
@@ -98,7 +103,7 @@ public class Recast {
 		for (int y = 0; y < h; ++y) {
 			for (int x = 0; x < w; ++x) {
 				for (Span s = hf.spans[x + y * w]; s != null; s = s.next) {
-					if (s.area != RecastConstants.RC_NULL_AREA)
+					if (s.area != RC_NULL_AREA)
 						spanCount++;
 				}
 			}
@@ -132,8 +137,8 @@ public class Recast {
 		chf.walkableHeight = walkableHeight;
 		chf.walkableClimb = walkableClimb;
 		chf.maxRegions = 0;
-		chf.bmin = hf.bmin;
-		chf.bmax = hf.bmax;
+		copy(chf.bmin, hf.bmin);
+		copy(chf.bmax, hf.bmax);
 		chf.bmax[1] += walkableHeight * hf.ch;
 		chf.cs = hf.cs;
 		chf.ch = hf.ch;
@@ -159,7 +164,7 @@ public class Recast {
 				c.index = idx;
 				c.count = 0;
 				while (s != null) {
-					if (s.area != RecastConstants.RC_NULL_AREA) {
+					if (s.area != RC_NULL_AREA) {
 						int bot = s.smax;
 						int top = s.next != null ? (int) s.next.smin : MAX_HEIGHT;
 						chf.spans[idx].y = RecastCommon.clamp(bot, 0, 0xffff);
@@ -174,7 +179,7 @@ public class Recast {
 		}
 
 		// Find neighbour connections.
-		int MAX_LAYERS = RecastConstants.RC_NOT_CONNECTED - 1;
+		int MAX_LAYERS = RC_NOT_CONNECTED - 1;
 		int tooHighNeighbour = 0;
 		for (int y = 0; y < h; ++y) {
 			for (int x = 0; x < w; ++x) {
@@ -183,7 +188,7 @@ public class Recast {
 					CompactSpan s = chf.spans[i];
 
 					for (int dir = 0; dir < 4; ++dir) {
-						RecastCommon.SetCon(s, dir, RecastConstants.RC_NOT_CONNECTED);
+						RecastCommon.SetCon(s, dir, RC_NOT_CONNECTED);
 						int nx = x + RecastCommon.GetDirOffsetX(dir);
 						int ny = y + RecastCommon.GetDirOffsetY(dir);
 						// First check that the neighbour cell is in bounds.
