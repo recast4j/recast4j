@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package org.recast4j.detour.tilecache.io;
+package org.recast4j.detour.tilecache.io.compress;
 
 /**
  * Core of FastLZ compression algorithm.
@@ -421,7 +421,7 @@ public final class FastLz {
      * Decompression is memory safe and guaranteed not to write the output buffer
      * more than what is specified in outLength.
      */
-    public static int decompress(final byte[] input, final int inOffset, final int inLength,
+    static int decompress(final byte[] input, final int inOffset, final int inLength,
                           final byte[] output, final int outOffset, final int outLength) {
         //int level = ((*(const flzuint8*)input) >> 5) + 1;
         final int level = (input[inOffset] >> 5) + 1;

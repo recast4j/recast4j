@@ -202,7 +202,8 @@ public class TileCache {
 	public long addTile(byte[] data, int flags) throws IOException {
 		// Make sure the data is in right format.
 		ByteBuffer buf = ByteBuffer.wrap(data);
-		TileCacheLayerHeader header = tileReader.readLayerHeader(buf);
+		buf.order(m_params.byteOrder);
+		TileCacheLayerHeader header = tileReader.readLayerHeader(buf, m_params.cCompatibility);
 		// Make sure the location is free.
 		if (getTileAt(header.tx, header.ty, header.tlayer) != null) {
 			return 0;
@@ -237,7 +238,7 @@ public class TileCache {
 		return (i + 3) & (~3);
 	}
 
-	void removeTile(long ref) {
+	public void removeTile(long ref) {
 		if (ref == 0)
 			throw new RuntimeException("Invalid tile ref");
 		int tileIndex = decodeTileIdTile(ref);
@@ -429,7 +430,8 @@ public class TileCache {
 		int walkableClimbVx = (int) (m_params.walkableClimb / m_params.ch);
 
 		// Decompress tile layer data.
-		TileCacheLayer layer = builder.decompressTileCacheLayer(m_tcomp, tile.data);
+		TileCacheLayer layer = builder.decompressTileCacheLayer(m_tcomp, tile.data, m_params.byteOrder,
+				m_params.cCompatibility);
 
 		// Rasterize obstacles.
 		for (int i = 0; i < m_params.maxObstacles; ++i) {
@@ -499,4 +501,13 @@ public class TileCache {
 		bmax[1] = ob.pos[1] + ob.height;
 		bmax[2] = ob.pos[2] + ob.radius;
 	}
+
+	public TileCacheParams getParams() {
+		return m_params;
+	}
+
+	public TileCacheCompressor getCompressor() {
+		return m_tcomp;
+	}
+
 }

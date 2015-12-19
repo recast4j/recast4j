@@ -43,6 +43,16 @@ public class Recast {
 		return new int[] { (int) ((bmax[0] - bmin[0]) / cs + 0.5f), (int) ((bmax[2] - bmin[2]) / cs + 0.5f) };
 	}
 
+	public static int[] calcTileCount(float[] bmin, float[] bmax, float cs, int tileSize) {
+		int[] gwh = Recast.calcGridSize(bmin, bmax, cs);
+		int gw = gwh[0];
+		int gh = gwh[1];
+		int ts = tileSize;
+		int tw = (gw + ts - 1) / ts;
+		int th = (gh + ts - 1) / ts;
+		return new int[]{tw, th};
+	}
+
 	/// @par
 	///
 	/// Only sets the area id's for the walkable triangles.  Does not alter the

@@ -16,17 +16,26 @@ freely, subject to the following restrictions:
  misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
-package org.recast4j.detour.tilecache;
+package org.recast4j.detour.tilecache.io.compress;
 
-import org.recast4j.detour.tilecache.io.FastLz;
+import java.util.Arrays;
 
-public class TileCacheCompressorImpl implements TileCacheCompressor {
+import org.recast4j.detour.tilecache.TileCacheCompressor;
+
+public class FastLzTileCacheCompressor implements TileCacheCompressor {
 
 	@Override
 	public byte[] decompress(byte[] buf, int offset, int len, int outputlen) {
 		byte[] output = new byte[outputlen];
 		FastLz.decompress(buf, offset, len, output, 0, outputlen);
 		return output;
+	}
+
+	@Override
+	public byte[] compress(byte[] buf) {
+		byte[] output = new byte[FastLz.calculateOutputBufferLength(buf.length)];
+		int len = FastLz.compress(buf, 0, buf.length, output, 0, output.length);
+		return Arrays.copyOf(output, len);
 	}
 
 }

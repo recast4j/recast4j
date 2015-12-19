@@ -24,7 +24,7 @@ import org.recast4j.detour.tilecache.TileCacheLayerHeader;
 
 public class TileCacheLayerHeaderReader {
 
-	public TileCacheLayerHeader readLayerHeader(ByteBuffer data) throws IOException {
+	public TileCacheLayerHeader readLayerHeader(ByteBuffer data, boolean cCompatibility) throws IOException {
 		TileCacheLayerHeader header = new TileCacheLayerHeader();
 		header.magic = data.getInt();
 		header.version = data.getInt();
@@ -51,6 +51,9 @@ public class TileCacheLayerHeaderReader {
 		header.maxx = data.get()  & 0xFF;
 		header.miny = data.get()  & 0xFF;
 		header.maxy = data.get()  & 0xFF;
+		if (cCompatibility) {
+			data.getShort();
+		}
 		return header;
 	}
 

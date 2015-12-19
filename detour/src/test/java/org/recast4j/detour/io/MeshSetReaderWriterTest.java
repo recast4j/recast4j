@@ -1,4 +1,4 @@
-package org.recast4j.detour.tilecache.io;
+package org.recast4j.detour.io;
 
 import static org.recast4j.detour.DetourCommon.vCopy;
 
@@ -59,12 +59,9 @@ public class MeshSetReaderWriterTest {
 		
 		float[] bmin = geom.getMeshBoundsMin();
 		float[] bmax = geom.getMeshBoundsMax();
-		int[] gwh = Recast.calcGridSize(bmin, bmax, m_cellSize);
-		int gw = gwh[0];
-		int gh = gwh[1];
-		int ts = m_tileSize;
-		int tw = (gw + ts - 1) / ts;
-		int th = (gh + ts - 1) / ts;
+		int[] twh = Recast.calcTileCount(bmin, bmax, m_cellSize, m_tileSize);
+		int tw = twh[0];
+		int th = twh[1];
 		for (int y = 0; y < th; ++y) {
 			for (int x = 0; x < tw; ++x) {
 				RecastConfig cfg = new RecastConfig(PartitionType.WATERSHED, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,

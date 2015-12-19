@@ -18,6 +18,8 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour.tilecache;
 
+import java.nio.ByteOrder;
+
 public class TileCacheParams {
 	float[] orig = new float[3];
 	float cs, ch;
@@ -28,4 +30,6 @@ public class TileCacheParams {
 	float maxSimplificationError;
 	int maxTiles;
 	int maxObstacles;
+	ByteOrder byteOrder = ByteOrder.LITTLE_ENDIAN;
+	boolean cCompatibility = true;
 }

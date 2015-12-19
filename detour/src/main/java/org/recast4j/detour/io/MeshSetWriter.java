@@ -15,7 +15,7 @@ freely, subject to the following restrictions:
  misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
-package org.recast4j.detour.tilecache.io;
+package org.recast4j.detour.io;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -24,8 +24,6 @@ import java.nio.ByteOrder;
 
 import org.recast4j.detour.MeshTile;
 import org.recast4j.detour.NavMesh;
-import org.recast4j.detour.io.DetourWriter;
-import org.recast4j.detour.io.MeshDataWriter;
 
 public class MeshSetWriter extends DetourWriter {
 

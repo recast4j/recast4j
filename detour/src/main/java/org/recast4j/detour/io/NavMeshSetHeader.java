@@ -1,4 +1,4 @@
-package org.recast4j.detour.tilecache.io;
+package org.recast4j.detour.io;
 
 import org.recast4j.detour.NavMeshParams;
 

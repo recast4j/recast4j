@@ -1738,87 +1738,44 @@ public class TileCacheBuilder {
 
 	}
 
-	public byte[] buildTileCacheLayer(TileCacheLayerHeader header) {
+	public byte[] buildTileCacheLayer(TileCacheCompressor comp, TileCacheLayerHeader header, int[] heights, int[]areas, int[] cons, ByteOrder order, boolean cCompatibility) {
 		int gridSize = header.width * header.height;
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		TileCacheLayerHeaderWriter hw = new TileCacheLayerHeaderWriter();
 		try {
-			hw.write(baos, header, ByteOrder.BIG_ENDIAN);
+			hw.write(baos, header, order, cCompatibility);
+			baos.write(gridSize);
+			byte[] buffer = new byte[gridSize * 3];
+			for (int i = 0; i < gridSize; i++) {
+				buffer[i] = (byte) heights[i];
+				buffer[gridSize + i] = (byte) areas[i];
+				buffer[gridSize * 2 + i] = (byte) cons[i];
+			}
+			baos.write(comp.compress(buffer));
+			return baos.toByteArray();
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw new RuntimeException(e.getMessage(), e);
 		}
-		baos.write(gridSize);
-		return baos.toByteArray();
 	}
-	/*
-	 * dtStatus dtBuildTileCacheLayer(dtTileCacheCompressor* comp,
-							   dtTileCacheLayerHeader* header,
-							   const unsigned char* heights,
-							   const unsigned char* areas,
-							   const unsigned char* cons,
-							   unsigned char** outData, int* outDataSize)
-{
-	const int headerSize = dtAlign4(sizeof(dtTileCacheLayerHeader));
-	const int gridSize = (int)header->width * (int)header->height;
-	const int maxDataSize = headerSize + comp->maxCompressedSize(gridSize*3);
-	unsigned char* data = (unsigned char*)dtAlloc(maxDataSize, DT_ALLOC_PERM);
-	if (!data)
-		return DT_FAILURE | DT_OUT_OF_MEMORY;
-	memset(data, 0, maxDataSize);
-	
-	// Store header
-	memcpy(data, header, sizeof(dtTileCacheLayerHeader));
-	
-	// Concatenate grid data for compression.
-	const int bufferSize = gridSize*3;
-	unsigned char* buffer = (unsigned char*)dtAlloc(bufferSize, DT_ALLOC_TEMP);
-	if (!buffer)
-		return DT_FAILURE | DT_OUT_OF_MEMORY;
-	memcpy(buffer, heights, gridSize);
-	memcpy(buffer+gridSize, areas, gridSize);
-	memcpy(buffer+gridSize*2, cons, gridSize);
-	
-	// Compress
-	unsigned char* compressed = data + headerSize;
-	const int maxCompressedSize = maxDataSize - headerSize;
-	int compressedSize = 0;
-	dtStatus status = comp->compress(buffer, bufferSize, compressed, maxCompressedSize, &compressedSize);
-	if (dtStatusFailed(status))
-		return status;
 
-	*outData = data;
-	*outDataSize = headerSize + compressedSize;
-	
-	dtFree(buffer);
-	
-	return DT_SUCCESS;
-}
-
-	 */
-	TileCacheLayer decompressTileCacheLayer(TileCacheCompressor comp, byte[] compressed) {
+	TileCacheLayer decompressTileCacheLayer(TileCacheCompressor comp, byte[] compressed, ByteOrder order, boolean cCompatibility) {
 		ByteBuffer buf = ByteBuffer.wrap(compressed);
+		buf.order(order);
 		TileCacheLayer layer = new TileCacheLayer();
 		try {
-			layer.header = reader.readLayerHeader(buf);
+			layer.header = reader.readLayerHeader(buf, cCompatibility);
 		} catch (IOException e) {
 			throw new RuntimeException(e.getMessage(), e);
 		}
 
 		int gridSize = layer.header.width * layer.header.height;
-		byte[] grids = comp.decompress(compressed, buf.position(), compressed.length - buf.position(), gridSize * 4);
+		byte[] grids = comp.decompress(compressed, buf.position(), compressed.length - buf.position(), gridSize * 3);
 		layer.heights = Arrays.copyOfRange(grids, 0, gridSize);
 		layer.areas = Arrays.copyOfRange(grids, gridSize, gridSize * 2);
 		layer.cons = Arrays.copyOfRange(grids, gridSize * 2, gridSize * 3);
-		layer.regs = Arrays.copyOfRange(grids, gridSize * 3, gridSize * 4);
+		layer.regs = new byte[gridSize];
 		return layer;
 
-	}
-
-	private void align4(ByteBuffer buf) {
-		int toSkip = (-buf.position()) & 3;
-		for (int i = 0; i < toSkip; i++) {
-			buf.get();
-		}
 	}
 
 }

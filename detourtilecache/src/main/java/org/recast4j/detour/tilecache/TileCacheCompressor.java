@@ -22,4 +22,5 @@ public interface TileCacheCompressor {
 
 	byte[] decompress(byte[] buf, int offset, int len, int outputlen);
 
+	byte[] compress(byte[] buf);
 }

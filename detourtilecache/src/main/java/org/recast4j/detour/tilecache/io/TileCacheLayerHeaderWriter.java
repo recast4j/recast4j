@@ -9,7 +9,7 @@ import org.recast4j.detour.tilecache.TileCacheLayerHeader;
 
 public class TileCacheLayerHeaderWriter extends DetourWriter {
 
-	public void write(OutputStream stream, TileCacheLayerHeader header, ByteOrder order) throws IOException {
+	public void write(OutputStream stream, TileCacheLayerHeader header, ByteOrder order, boolean cCompatibility) throws IOException {
 		write(stream, header.magic, order);
 		write(stream, header.version, order);
 		write(stream, header.tx, order);
@@ -29,6 +29,9 @@ public class TileCacheLayerHeaderWriter extends DetourWriter {
 		stream.write(header.maxx);
 		stream.write(header.miny);
 		stream.write(header.maxy);
+		if (cCompatibility) {
+			write(stream, (short)0, order);
+		}
 	}
 
 }
