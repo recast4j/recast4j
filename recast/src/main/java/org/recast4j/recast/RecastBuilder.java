@@ -43,10 +43,11 @@ public class RecastBuilder {
 		}
 	}
 
-	public RecastBuilderResult build(InputGeom geom, RecastConfig cfg) {
+	public RecastBuilderResult build(InputGeom geom, RecastBuilderConfig bcfg) {
 
+		RecastConfig cfg = bcfg.cfg;
 		Context ctx = new Context();
-		CompactHeightfield chf = buildCompactHeightfield(geom, cfg, ctx);
+		CompactHeightfield chf = buildCompactHeightfield(geom, bcfg, ctx);
 
 		// Partition the heightfield so that we can use simple algorithm later
 		// to triangulate the walkable areas.
@@ -91,14 +92,14 @@ public class RecastBuilder {
 			// along the walkable surface.
 			RecastRegion.buildDistanceField(ctx, chf);
 			// Partition the walkable surface into simple regions without holes.
-			RecastRegion.buildRegions(ctx, chf, cfg.borderSize, cfg.minRegionArea, cfg.mergeRegionArea);
+			RecastRegion.buildRegions(ctx, chf, bcfg.borderSize, cfg.minRegionArea, cfg.mergeRegionArea);
 		} else if (cfg.partitionType == PartitionType.MONOTONE) {
 			// Partition the walkable surface into simple regions without holes.
 			// Monotone partitioning does not need distancefield.
-			RecastRegion.buildRegionsMonotone(ctx, chf, cfg.borderSize, cfg.minRegionArea, cfg.mergeRegionArea);
+			RecastRegion.buildRegionsMonotone(ctx, chf, bcfg.borderSize, cfg.minRegionArea, cfg.mergeRegionArea);
 		} else {
 			// Partition the walkable surface into simple regions without holes.
-			RecastRegion.buildLayerRegions(ctx, chf, cfg.borderSize, cfg.minRegionArea);
+			RecastRegion.buildLayerRegions(ctx, chf, bcfg.borderSize, cfg.minRegionArea);
 		}
 
 		//
@@ -125,13 +126,14 @@ public class RecastBuilder {
 		return new RecastBuilderResult(pmesh, dmesh);
 	}
 
-	private CompactHeightfield buildCompactHeightfield(InputGeom geom, RecastConfig cfg, Context ctx) {
+	private CompactHeightfield buildCompactHeightfield(InputGeom geom, RecastBuilderConfig bcfg, Context ctx) {
+		RecastConfig cfg = bcfg.cfg;
 		//
 		// Step 2. Rasterize input polygon soup.
 		//
 
 		// Allocate voxel heightfield where we rasterize our input data to.
-		Heightfield solid = new Heightfield(cfg.width, cfg.height, cfg.bmin, cfg.bmax, cfg.cs, cfg.ch);
+		Heightfield solid = new Heightfield(bcfg.width, bcfg.height, bcfg.bmin, bcfg.bmax, cfg.cs, cfg.ch);
 
 		// Allocate array that can hold triangle area types.
 		// If you have multiple meshes you need to process, allocate
@@ -150,10 +152,10 @@ public class RecastBuilder {
 			ChunkyTriMesh chunkyMesh = geom.getChunkyMesh();
 			float[] tbmin = new float[2];
 			float[] tbmax = new float[2];
-			tbmin[0] = cfg.bmin[0];
-			tbmin[1] = cfg.bmin[2];
-			tbmax[0] = cfg.bmax[0];
-			tbmax[1] = cfg.bmax[2];
+			tbmin[0] = bcfg.bmin[0];
+			tbmin[1] = bcfg.bmin[2];
+			tbmax[0] = bcfg.bmax[0];
+			tbmax[1] = bcfg.bmax[2];
 			List<ChunkyTriMeshNode> nodes = chunkyMesh.getChunksOverlappingRect(tbmin, tbmax);
 			for (ChunkyTriMeshNode node : nodes) {
 				int[] tris = node.tris;
@@ -198,10 +200,10 @@ public class RecastBuilder {
 		return chf;
 	}
 
-	public HeightfieldLayerSet buildLayers(InputGeom geom, RecastConfig cfg) {
+	public HeightfieldLayerSet buildLayers(InputGeom geom, RecastBuilderConfig cfg) {
 		Context ctx = new Context();
 		CompactHeightfield chf = buildCompactHeightfield(geom, cfg, ctx);
-		return RecastLayers.buildHeightfieldLayers(ctx, chf, cfg.borderSize, cfg.walkableHeight);
+		return RecastLayers.buildHeightfieldLayers(ctx, chf, cfg.borderSize, cfg.cfg.walkableHeight);
 	}
 
 }

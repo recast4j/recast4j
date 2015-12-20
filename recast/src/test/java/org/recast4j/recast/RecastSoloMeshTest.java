@@ -96,16 +96,16 @@ public class RecastSoloMeshTest {
 		//
 
 		// Init build configuration from GUI
-		RecastConfig m_cfg = new RecastConfig(partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb,
-				m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, bmin, bmax);
-
+		RecastConfig cfg = new RecastConfig(partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb,
+				m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, 0);
+		RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, bmin, bmax);
 		Context m_ctx = new Context();
 		//
 		// Step 2. Rasterize input polygon soup.
 		//
 
 		// Allocate voxel heightfield where we rasterize our input data to.
-		Heightfield m_solid = new Heightfield(m_cfg.width, m_cfg.height, m_cfg.bmin, m_cfg.bmax, m_cfg.cs, m_cfg.ch);
+		Heightfield m_solid = new Heightfield(bcfg.width, bcfg.height, bcfg.bmin, bcfg.bmax, cfg.cs, cfg.ch);
 
 		// Allocate array that can hold triangle area types.
 		// If you have multiple meshes you need to process, allocate
@@ -117,8 +117,8 @@ public class RecastSoloMeshTest {
 		// If your input data is multiple meshes, you can transform them here,
 		// calculate
 		// the are type for each of the meshes and rasterize them.
-		int[] m_triareas = Recast.markWalkableTriangles(m_ctx, m_cfg.walkableSlopeAngle, verts, tris, ntris);
-		RecastRasterization.rasterizeTriangles(m_ctx, verts, tris, m_triareas, ntris, m_solid, m_cfg.walkableClimb);
+		int[] m_triareas = Recast.markWalkableTriangles(m_ctx, cfg.walkableSlopeAngle, verts, tris, ntris);
+		RecastRasterization.rasterizeTriangles(m_ctx, verts, tris, m_triareas, ntris, m_solid, cfg.walkableClimb);
 		//
 		// Step 3. Filter walkables surfaces.
 		//
@@ -126,9 +126,9 @@ public class RecastSoloMeshTest {
 		// Once all geometry is rasterized, we do initial pass of filtering to
 		// remove unwanted overhangs caused by the conservative rasterization
 		// as well as filter spans where the character cannot possibly stand.
-		RecastFilter.filterLowHangingWalkableObstacles(m_ctx, m_cfg.walkableClimb, m_solid);
-		RecastFilter.filterLedgeSpans(m_ctx, m_cfg.walkableHeight, m_cfg.walkableClimb, m_solid);
-		RecastFilter.filterWalkableLowHeightSpans(m_ctx, m_cfg.walkableHeight, m_solid);
+		RecastFilter.filterLowHangingWalkableObstacles(m_ctx, cfg.walkableClimb, m_solid);
+		RecastFilter.filterLedgeSpans(m_ctx, cfg.walkableHeight, cfg.walkableClimb, m_solid);
+		RecastFilter.filterWalkableLowHeightSpans(m_ctx, cfg.walkableHeight, m_solid);
 
 		//
 		// Step 4. Partition walkable surface to simple regions.
@@ -137,11 +137,11 @@ public class RecastSoloMeshTest {
 		// Compact the heightfield so that it is faster to handle from now on.
 		// This will result more cache coherent data as well as the neighbours
 		// between walkable cells will be calculated.
-		CompactHeightfield m_chf = Recast.buildCompactHeightfield(m_ctx, m_cfg.walkableHeight, m_cfg.walkableClimb,
+		CompactHeightfield m_chf = Recast.buildCompactHeightfield(m_ctx, cfg.walkableHeight, cfg.walkableClimb,
 				m_solid);
 
 		// Erode the walkable area by agent radius.
-		RecastArea.erodeWalkableArea(m_ctx, m_cfg.walkableRadius, m_chf);
+		RecastArea.erodeWalkableArea(m_ctx, cfg.walkableRadius, m_chf);
 
 		// (Optional) Mark areas.
 		/*
@@ -193,14 +193,14 @@ public class RecastSoloMeshTest {
 			// along the walkable surface.
 			RecastRegion.buildDistanceField(m_ctx, m_chf);
 			// Partition the walkable surface into simple regions without holes.
-			RecastRegion.buildRegions(m_ctx, m_chf, 0, m_cfg.minRegionArea, m_cfg.mergeRegionArea);
+			RecastRegion.buildRegions(m_ctx, m_chf, 0, cfg.minRegionArea, cfg.mergeRegionArea);
 		} else if (m_partitionType == PartitionType.MONOTONE) {
 			// Partition the walkable surface into simple regions without holes.
 			// Monotone partitioning does not need distancefield.
-			RecastRegion.buildRegionsMonotone(m_ctx, m_chf, 0, m_cfg.minRegionArea, m_cfg.mergeRegionArea);
+			RecastRegion.buildRegionsMonotone(m_ctx, m_chf, 0, cfg.minRegionArea, cfg.mergeRegionArea);
 		} else {
 			// Partition the walkable surface into simple regions without holes.
-			RecastRegion.buildLayerRegions(m_ctx, m_chf, 0, m_cfg.minRegionArea);
+			RecastRegion.buildLayerRegions(m_ctx, m_chf, 0, cfg.minRegionArea);
 		}
 
 		Assert.assertEquals("maxDistance", expDistance, m_chf.maxDistance);
@@ -210,7 +210,7 @@ public class RecastSoloMeshTest {
 		//
 
 		// Create contours.
-		ContourSet m_cset = RecastContour.buildContours(m_ctx, m_chf, m_cfg.maxSimplificationError, m_cfg.maxEdgeLen,
+		ContourSet m_cset = RecastContour.buildContours(m_ctx, m_chf, cfg.maxSimplificationError, cfg.maxEdgeLen,
 				RecastConstants.RC_CONTOUR_TESS_WALL_EDGES);
 
 		Assert.assertEquals("Contours", expContours, m_cset.conts.size());
@@ -219,7 +219,7 @@ public class RecastSoloMeshTest {
 		//
 
 		// Build polygon navmesh from the contours.
-		PolyMesh m_pmesh = RecastMesh.buildPolyMesh(m_ctx, m_cset, m_cfg.maxVertsPerPoly);
+		PolyMesh m_pmesh = RecastMesh.buildPolyMesh(m_ctx, m_cset, cfg.maxVertsPerPoly);
 		Assert.assertEquals("Mesh Verts", expVerts, m_pmesh.nverts);
 		Assert.assertEquals("Mesh Polys", expPolys, m_pmesh.npolys);
 
@@ -228,8 +228,8 @@ public class RecastSoloMeshTest {
 		// on each polygon.
 		//
 
-		PolyMeshDetail m_dmesh = RecastMeshDetail.buildPolyMeshDetail(m_ctx, m_pmesh, m_chf, m_cfg.detailSampleDist,
-				m_cfg.detailSampleMaxError);
+		PolyMeshDetail m_dmesh = RecastMeshDetail.buildPolyMeshDetail(m_ctx, m_pmesh, m_chf, cfg.detailSampleDist,
+				cfg.detailSampleMaxError);
 		Assert.assertEquals("Mesh Detail Meshes", expDetMeshes, m_dmesh.nmeshes);
 		Assert.assertEquals("Mesh Detail Verts", expDetVerts, m_dmesh.nverts);
 		Assert.assertEquals("Mesh Detail Tris", expDetTRis, m_dmesh.ntris);

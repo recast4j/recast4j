@@ -5,16 +5,17 @@ import org.recast4j.recast.PolyMesh;
 import org.recast4j.recast.PolyMeshDetail;
 import org.recast4j.recast.RecastBuilder;
 import org.recast4j.recast.RecastBuilder.RecastBuilderResult;
+import org.recast4j.recast.RecastBuilderConfig;
 import org.recast4j.recast.RecastConfig;
 
 public class TestDetourBuilder extends DetourBuilder {
 
-	public MeshData build(InputGeom geom, RecastConfig rcConfig, float agentHeight, float agentRadius, float agentMaxClimb, int x, int y) {
+	public MeshData build(InputGeom geom, RecastBuilderConfig rcConfig, float agentHeight, float agentRadius, float agentMaxClimb, int x, int y) {
 		RecastBuilder rcBuilder = new RecastBuilder();
 		RecastBuilderResult rcResult = rcBuilder.build(geom, rcConfig);
 		PolyMesh pmesh = rcResult.getMesh();
 		PolyMeshDetail dmesh = rcResult.getMeshDetail();
-		NavMeshCreateParams params = getNavMeshCreateParams(rcConfig, pmesh, dmesh, agentHeight, agentRadius, agentMaxClimb);
+		NavMeshCreateParams params = getNavMeshCreateParams(rcConfig.cfg, pmesh, dmesh, agentHeight, agentRadius, agentMaxClimb);
 		return build(params, x, y);
 	}
 

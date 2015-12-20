@@ -116,9 +116,9 @@ public class RecastLayersTest {
 		RecastBuilder builder = new RecastBuilder();
 		RecastConfig cfg = new RecastConfig(m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
 				m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
-				m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, geom.getMeshBoundsMin(),
-				geom.getMeshBoundsMax(), m_tileSize, x, y);
-		HeightfieldLayerSet lset = builder.buildLayers(geom, cfg);
+				m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, m_tileSize);
+		RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), x, y, true);
+		HeightfieldLayerSet lset = builder.buildLayers(geom, bcfg);
 		return lset;
 	}
 }

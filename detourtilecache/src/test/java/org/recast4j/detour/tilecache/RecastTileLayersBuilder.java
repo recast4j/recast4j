@@ -11,6 +11,7 @@ import org.recast4j.recast.HeightfieldLayerSet.HeightfieldLayer;
 import org.recast4j.recast.InputGeom;
 import org.recast4j.recast.Recast;
 import org.recast4j.recast.RecastBuilder;
+import org.recast4j.recast.RecastBuilderConfig;
 import org.recast4j.recast.RecastConfig;
 import org.recast4j.recast.RecastConstants.PartitionType;
 
@@ -26,10 +27,18 @@ public class RecastTileLayersBuilder {
 	private final int m_vertsPerPoly = 6;
 	private final float m_detailSampleDist = 6.0f;
 	private final float m_detailSampleMaxError = 1.0f;
+	private RecastConfig rcConfig;
 
 	public RecastTileLayersBuilder(InputGeom geom, TileCache tc) {
 		this.geom = geom;
 		this.tc = tc;
+		TileCacheParams params = tc.getParams();
+		rcConfig = new RecastConfig(PartitionType.WATERSHED, params.cs, params.ch, 
+				params.walkableHeight, params.walkableRadius, params.walkableClimb,
+				m_agentMaxSlope, m_regionMinSize, 
+				m_regionMergeSize, m_edgeMaxLen,
+				m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, 
+				m_detailSampleMaxError, params.width);
 	}
 
 	public List<byte[]> build(ByteOrder order, boolean cCompatibility) {
@@ -51,16 +60,8 @@ public class RecastTileLayersBuilder {
 		RecastBuilder rcBuilder = new RecastBuilder();
 		float[] bmin = geom.getMeshBoundsMin();
 		float[] bmax = geom.getMeshBoundsMax();
-		TileCacheParams params = tc.getParams();
-		RecastConfig rcConfig = new RecastConfig(PartitionType.WATERSHED, params.cs, params.ch, 
-				params.walkableHeight, params.walkableRadius, params.walkableClimb,
-				m_agentMaxSlope, m_regionMinSize, 
-				m_regionMergeSize, m_edgeMaxLen,
-				m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, 
-				m_detailSampleMaxError, bmin, bmax, params.width, tx,
-				ty);
-
-		HeightfieldLayerSet lset = rcBuilder.buildLayers(geom, rcConfig);
+		RecastBuilderConfig cfg = new RecastBuilderConfig(rcConfig, bmin, bmax, tx, ty, true);
+		HeightfieldLayerSet lset = rcBuilder.buildLayers(geom, cfg);
 		List<byte[]> result = new ArrayList<>();
 		if (lset != null) {
 			TileCacheBuilder builder = new TileCacheBuilder();

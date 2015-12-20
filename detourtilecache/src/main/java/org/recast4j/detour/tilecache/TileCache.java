@@ -510,4 +510,11 @@ public class TileCache {
 		return m_tcomp;
 	}
 
+	public int getTileCount() {
+		return m_params.maxTiles;
+	}
+
+	public CompressedTile getTile(int i) {
+		return m_tiles[i];
+	}
 }

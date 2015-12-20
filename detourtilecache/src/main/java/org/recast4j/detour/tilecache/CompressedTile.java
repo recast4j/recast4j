@@ -22,7 +22,7 @@ public class CompressedTile {
 	final int index;
 	int salt; /// < Counter describing modifications to the tile.
 	TileCacheLayerHeader header;
-	byte[] data;
+	public byte[] data;
 	int compressed; // offset of compressed data
 	int flags;
 	CompressedTile next;

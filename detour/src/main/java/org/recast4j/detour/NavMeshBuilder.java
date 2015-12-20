@@ -251,8 +251,6 @@ public class NavMeshBuilder {
 	/// @param[in] params Tile creation data.
 	/// @return True if the tile data was successfully created.
 	public static MeshData createNavMeshData(NavMeshCreateParams params) {
-		if (params.nvp > NavMesh.getMaxVertsPerPoly())
-			return null;
 		if (params.vertCount >= 0xffff)
 			return null;
 		if (params.vertCount == 0 || params.verts == null)
@@ -445,7 +443,7 @@ public class NavMeshBuilder {
 		// Mesh polys
 		int src = 0;
 		for (int i = 0; i < params.polyCount; ++i) {
-			Poly p = new Poly(i, NavMesh.getMaxVertsPerPoly());
+			Poly p = new Poly(i, nvp);
 			navPolys[i] = p;
 			p.vertCount = 0;
 			p.flags = params.polyFlags[i];

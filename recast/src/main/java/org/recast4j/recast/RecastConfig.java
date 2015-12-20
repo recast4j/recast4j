@@ -18,36 +18,19 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
-import static org.recast4j.recast.RecastVectors.copy;
-
 import org.recast4j.recast.RecastConstants.PartitionType;
 
 public class RecastConfig {
 	public final PartitionType partitionType;
 
-	/** The width of the field along the x-axis. [Limit: >= 0] [Units: vx] **/
-	public final int width;
-
-	/** The height of the field along the z-axis. [Limit: >= 0] [Units: vx] **/
-	public final int height;
-
 	/** The width/height size of tile's on the xz-plane. [Limit: >= 0] [Units: vx] **/
 	public final int tileSize;
-
-	/** The size of the non-navigable border around the heightfield. [Limit: >=0] [Units: vx] **/
-	public final int borderSize;
 
 	/** The xz-plane cell size to use for fields. [Limit: > 0] [Units: wu] **/
 	public final float cs;
 
 	/** The y-axis cell size to use for fields. [Limit: > 0] [Units: wu] **/
 	public final float ch;
-
-	/** The minimum bounds of the field's AABB. [(x, y, z)] [Units: wu] **/
-	public final float[] bmin = new float[3];
-
-	/** The maximum bounds of the field's AABB. [(x, y, z)] [Units: wu] **/
-	public final float[] bmax = new float[3];
 
 	/** The maximum slope that is considered walkable. [Limits: 0 <= value < 90] [Units: Degrees] **/
 	public final float walkableSlopeAngle;
@@ -103,27 +86,10 @@ public class RecastConfig {
 	 **/
 	public final float detailSampleMaxError;
 
-	public RecastConfig(PartitionType partitionType, float cellSize, float cellHeight, float agentHeight, float agentRadius, float agentMaxClimb,
-			float agentMaxSlope, int regionMinSize, int regionMergeSize, float edgeMaxLen, float edgeMaxError,
-			int vertsPerPoly, float detailSampleDist, float detailSampleMaxError, float[] bmin, float[] bmax) {
-		this(partitionType, cellSize, cellHeight, agentHeight, agentRadius, agentMaxClimb, agentMaxSlope, regionMinSize,
-				regionMergeSize, edgeMaxLen, edgeMaxError, vertsPerPoly, detailSampleDist, detailSampleMaxError, bmin,
-				bmax, 0, 0, 0, false);
-	}
-
-	public RecastConfig(PartitionType partitionType, float cellSize, float cellHeight, float agentHeight, float agentRadius, float agentMaxClimb,
-			float agentMaxSlope, int regionMinSize, int regionMergeSize, float edgeMaxLen, float edgeMaxError,
-			int vertsPerPoly, float detailSampleDist, float detailSampleMaxError, float[] bmin, float[] bmax,
-			int tileSize, int tx, int ty) {
-		this(partitionType, cellSize, cellHeight, agentHeight, agentRadius, agentMaxClimb, agentMaxSlope, regionMinSize,
-				regionMergeSize, edgeMaxLen, edgeMaxError, vertsPerPoly, detailSampleDist, detailSampleMaxError, bmin,
-				bmax, tileSize, tx, ty, true);
-	}
-
-	private RecastConfig(PartitionType partitionType, float cellSize, float cellHeight, float agentHeight, float agentRadius, float agentMaxClimb,
-			float agentMaxSlope, int regionMinSize, int regionMergeSize, float edgeMaxLen, float edgeMaxError,
-			int vertsPerPoly, float detailSampleDist, float detailSampleMaxError, float[] bmin, float[] bmax,
-			int tileSize, int tx, int ty, boolean tiled) {
+	public RecastConfig(PartitionType partitionType, float cellSize, float cellHeight, float agentHeight,
+			float agentRadius, float agentMaxClimb, float agentMaxSlope, int regionMinSize, int regionMergeSize,
+			float edgeMaxLen, float edgeMaxError, int vertsPerPoly, float detailSampleDist, float detailSampleMaxError,
+			int tileSize) {
 		this.partitionType = partitionType;
 		this.cs = cellSize;
 		this.ch = cellHeight;
@@ -139,51 +105,6 @@ public class RecastConfig {
 		this.detailSampleDist = detailSampleDist < 0.9f ? 0 : cellSize * detailSampleDist;
 		this.detailSampleMaxError = cellHeight * detailSampleMaxError;
 		this.tileSize = tileSize;
-		copy(this.bmin, bmin);
-		copy(this.bmax, bmax);
-		if (tileSize > 0) {
-			float ts = tileSize * cellSize;
-			this.bmin[0] += tx * ts;
-			this.bmin[2] += ty * ts;
-			this.bmax[0] = this.bmin[0] + ts;
-			this.bmax[2] = this.bmin[2] + ts;
-
-			// Expand the heighfield bounding box by border size to find the extents of geometry we need to build this
-			// tile.
-			//
-			// This is done in order to make sure that the navmesh tiles connect correctly at the borders,
-			// and the obstacles close to the border work correctly with the dilation process.
-			// No polygons (or contours) will be created on the border area.
-			//
-			// IMPORTANT!
-			//
-			// :''''''''':
-			// : +-----+ :
-			// : | | :
-			// : | |<--- tile to build
-			// : | | :
-			// : +-----+ :<-- geometry needed
-			// :.........:
-			//
-			// You should use this bounding box to query your input geometry.
-			//
-			// For example if you build a navmesh for terrain, and want the navmesh tiles to match the terrain tile size
-			// you will need to pass in data from neighbour terrain tiles too! In a simple case, just pass in all the 8
-			// neighbours,
-			// or use the bounding box below to only pass in a sliver of each of the 8 neighbours.
-			this.borderSize = this.walkableRadius + 3; // Reserve enough padding.
-			this.bmin[0] -= this.borderSize * this.cs;
-			this.bmin[2] -= this.borderSize * this.cs;
-			this.bmax[0] += this.borderSize * this.cs;
-			this.bmax[2] += this.borderSize * this.cs;
-			this.width = this.tileSize + this.borderSize * 2;
-			this.height = this.tileSize + this.borderSize * 2;
-		} else {
-			int[] wh = Recast.calcGridSize(this.bmin, this.bmax, this.cs);
-			this.width = wh[0];
-			this.height = wh[1];
-			this.borderSize = 0;
-		}
-
 	}
-};
+	
+}

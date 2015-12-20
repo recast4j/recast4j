@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteOrder;
 
+import org.recast4j.detour.NavMeshParams;
+
 public abstract class DetourWriter {
 
 	protected void write(OutputStream stream, float value, ByteOrder order) throws IOException {
@@ -60,5 +62,15 @@ public abstract class DetourWriter {
 			stream.write((value >> 24) & 0xFF);
 		}
 	}
-	
+
+	protected void write(OutputStream stream, NavMeshParams params, ByteOrder order) throws IOException {
+		write(stream, params.orig[0], order);
+		write(stream, params.orig[1], order);
+		write(stream, params.orig[2], order);
+		write(stream, params.tileWidth, order);
+		write(stream, params.tileHeight, order);
+		write(stream, params.maxTiles, order);
+		write(stream, params.maxPolys, order);
+	}
+
 }
