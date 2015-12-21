@@ -1556,7 +1556,6 @@ public class TileCacheBuilder {
 		int[] indices = new int[maxVertsPerCont];
 		int[] tris = new int[maxVertsPerCont * 3];
 		int[] polys = new int[maxVertsPerCont * MAX_VERTS_PER_POLY];
-		Arrays.fill(polys, 0xFFFF);
 
 		for (int i = 0; i < lcset.nconts; ++i) {
 			TileCacheContour cont = lcset.conts[i];
@@ -1589,7 +1588,7 @@ public class TileCacheBuilder {
 
 			// Build initial polygons.
 			int npolys = 0;
-
+			Arrays.fill(polys, 0xFFFF);
 			for (int j = 0; j < ntris; ++j) {
 				int t = j * 3;
 				if (tris[t] != tris[t + 1] && tris[t] != tris[t + 2] && tris[t + 1] != tris[t + 2]) {

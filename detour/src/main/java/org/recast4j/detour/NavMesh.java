@@ -80,6 +80,7 @@ public class NavMesh {
 	MeshTile m_nextFree; /// < Freelist of tiles.
 	MeshTile[] m_tiles; /// < List of tiles.
 	int m_maxVertPerPoly;
+	private int m_tileCount;
 
 	/**
 	 * The maximum number of tiles supported by the navigation mesh.
@@ -399,6 +400,7 @@ public class NavMesh {
 				tile = m_nextFree;
 				m_nextFree = tile.next;
 				tile.next = null;
+				m_tileCount++;
 			}
 		} else {
 			// Try to relocate the tile to specific index with same salt.
@@ -547,7 +549,7 @@ public class NavMesh {
 		// Add to free list.
 		tile.next = m_nextFree;
 		m_nextFree = tile;
-
+		m_tileCount--;
 		return data;
 	}
 
@@ -1210,4 +1212,7 @@ public class NavMesh {
 		return m_params.maxVertPerPoly;
 	}
 
+	public int getTileCount() {
+		return m_tileCount;
+	}
 }
