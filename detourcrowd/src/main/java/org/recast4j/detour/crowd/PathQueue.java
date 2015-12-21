@@ -35,28 +35,15 @@ public class PathQueue {
 	static final int DT_PATHQ_INVALID = 0;
 	private static final int MAX_KEEP_ALIVE = 2; // in update ticks.
 
-	PathQuery[] m_queue = new PathQuery[MAX_QUEUE];
-	long m_nextHandle = 1;
-	int m_queueHead;
-	NavMeshQuery m_navquery;
-
-	protected PathQueue() {
-		for (int i = 0; i < MAX_QUEUE; ++i) {
-			m_queue[i] = new PathQuery();
-		}
-	}
-
-	protected void purge() {
-		m_navquery = null;
-		for (int i = 0; i < MAX_QUEUE; ++i) {
-			m_queue[i].path = null;
-		}
-	}
+	private PathQuery[] m_queue = new PathQuery[MAX_QUEUE];
+	private long m_nextHandle = 1;
+	private int m_queueHead;
+	private NavMeshQuery m_navquery;
 
 	protected PathQueue(int maxSearchNodeCount, NavMesh nav) {
-		purge();
 		m_navquery = new NavMeshQuery(nav);
 		for (int i = 0; i < MAX_QUEUE; ++i) {
+			m_queue[i] = new PathQuery();
 			m_queue[i].ref = DT_PATHQ_INVALID;
 			m_queue[i].path = new ArrayList<Long>(256);
 		}
