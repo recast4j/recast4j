@@ -28,6 +28,7 @@ import org.recast4j.detour.NavMesh;
 public class MeshSetReader {
 
 	private final MeshDataReader meshReader = new MeshDataReader();
+	private final NavMeshParamReader paramReader = new NavMeshParamReader();
 
 	public NavMesh read(InputStream is, ByteOrder order, boolean cCompatibility) throws IOException {
 		// Read header.
@@ -36,7 +37,7 @@ public class MeshSetReader {
 		return read(bb, cCompatibility);
 	}
 
-	private NavMesh read(ByteBuffer bb, boolean cCompatibility) throws IOException {
+	public NavMesh read(ByteBuffer bb, boolean cCompatibility) throws IOException {
 		NavMeshSetHeader header = new NavMeshSetHeader();
 		header.magic = bb.getInt();
 		if (header.magic != NavMeshSetHeader.NAVMESHSET_MAGIC) {
@@ -47,14 +48,7 @@ public class MeshSetReader {
 			throw new IOException("Invalid version");
 		}
 		header.numTiles = bb.getInt();
-		header.params.orig[0] = bb.getFloat();
-		header.params.orig[1] = bb.getFloat();
-		header.params.orig[2] = bb.getFloat();
-		header.params.tileWidth = bb.getFloat();
-		header.params.tileHeight = bb.getFloat();
-		header.params.maxTiles = bb.getInt();
-		header.params.maxPolys = bb.getInt();
-
+		header.params = paramReader.read(bb);
 		NavMesh mesh = new NavMesh();
 		mesh.init(header.params);
 
@@ -70,10 +64,11 @@ public class MeshSetReader {
 			if (cCompatibility) {
 				bb.getInt(); // C struct padding
 			}
-			MeshData data = meshReader.read(bb, cCompatibility);
+			MeshData data = meshReader.read(bb, header.params.maxVertPerPoly, cCompatibility);
 			mesh.addTile(data, i, tileHeader.tileRef);
 		}
 		return mesh;
 	}
+
 
 }

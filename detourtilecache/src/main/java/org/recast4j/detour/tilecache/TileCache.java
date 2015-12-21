@@ -46,6 +46,7 @@ public class TileCache {
 	private int m_saltBits; /// < Number of salt bits in the tile ID.
 	private int m_tileBits; /// < Number of tile bits in the tile ID.
 
+	NavMesh m_navmesh;
 	TileCacheParams m_params;
 
 	TileCacheCompressor m_tcomp;
@@ -98,8 +99,9 @@ public class TileCache {
 		return (int) (ref & tileMask);
 	}
 
-	public void init(TileCacheParams params, TileCacheCompressor tcomp, TileCacheMeshProcess tmprocs) {
+	public void init(TileCacheParams params, NavMesh navmesh, TileCacheCompressor tcomp, TileCacheMeshProcess tmprocs) {
 		m_params = params;
+		m_navmesh = navmesh;
 		m_tcomp = tcomp;
 		m_tmproc = tmprocs;
 		m_obstacles = new TileCacheObstacle[m_params.maxObstacles];
@@ -342,7 +344,7 @@ public class TileCache {
 		return results;
 	}
 
-	void update(NavMesh navmesh) {
+	void update() {
 		if (m_update.isEmpty()) {
 			// Process requests.
 			for (ObstacleRequest req : m_reqs) {
@@ -388,7 +390,7 @@ public class TileCache {
 		// Process updates
 		for (long ref : m_update) {
 			// Build mesh
-			buildNavMeshTile(ref, navmesh);
+			buildNavMeshTile(ref);
 
 			// Update obstacle states.
 			for (int i = 0; i < m_params.maxObstacles; ++i) {
@@ -419,7 +421,7 @@ public class TileCache {
 
 	}
 
-	void buildNavMeshTile(long ref, NavMesh navmesh) {
+	public void buildNavMeshTile(long ref) {
 		int idx = decodeTileIdTile(ref);
 		if (idx > m_params.maxTiles)
 			throw new RuntimeException("Invalid tile index");
@@ -459,7 +461,7 @@ public class TileCache {
 		params.polyAreas = polyMesh.areas;
 		params.polyFlags = polyMesh.flags;
 		params.polyCount = polyMesh.npolys;
-		params.nvp = NavMesh.getMaxVertsPerPoly();
+		params.nvp = m_navmesh.getMaxVertsPerPoly();
 		params.walkableHeight = m_params.walkableHeight;
 		params.walkableRadius = m_params.walkableRadius;
 		params.walkableClimb = m_params.walkableClimb;
@@ -469,17 +471,17 @@ public class TileCache {
 		params.cs = m_params.cs;
 		params.ch = m_params.ch;
 		params.buildBvTree = false;
-		vCopy(params.bmin, tile.header.bmin);
-		vCopy(params.bmax, tile.header.bmax);
+		params.bmin = tile.header.bmin;
+		params.bmax = tile.header.bmax;
 		if (m_tmproc != null) {
 			m_tmproc.process(params, polyMesh.areas, polyMesh.flags);
 		}
 		MeshData meshData = NavMeshBuilder.createNavMeshData(params);
 		// Remove existing tile.
-		navmesh.removeTile(navmesh.getTileRefAt(tile.header.tx, tile.header.ty, tile.header.tlayer));
+		m_navmesh.removeTile(m_navmesh.getTileRefAt(tile.header.tx, tile.header.ty, tile.header.tlayer));
 		// Add new tile, or leave the location empty. if (navData) { // Let the
 		if (meshData != null) {
-			navmesh.addTile(meshData, 0, 0);
+			m_navmesh.addTile(meshData, 0, 0);
 		}
 	}
 
@@ -516,5 +518,9 @@ public class TileCache {
 
 	public CompressedTile getTile(int i) {
 		return m_tiles[i];
+	}
+
+	public NavMesh getNavMesh() {
+		return m_navmesh;
 	}
 }

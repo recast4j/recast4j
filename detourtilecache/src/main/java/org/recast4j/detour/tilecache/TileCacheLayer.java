@@ -22,9 +22,9 @@ public class TileCacheLayer {
 	
 	TileCacheLayerHeader header;
 	int regCount;					///< Region count.
-	byte[] heights; // char 
-	byte[] areas;   // char
-	byte[] cons;    // char
-	byte[] regs;    // char
+	short[] heights; // char 
+	short[] areas;   // char
+	short[] cons;    // char
+	short[] regs;    // char
 	
 }

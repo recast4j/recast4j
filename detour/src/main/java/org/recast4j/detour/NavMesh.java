@@ -45,7 +45,7 @@ public class NavMesh {
 	static int DT_POLY_BITS = 20;
 
 	/** The maximum number of vertices per navigation polygon. */
-	private static int DT_VERTS_PER_POLYGON = 6;
+	public static int DT_VERTS_PER_POLYGON = 6;
 
 	/// A flag that indicates that an entity links to an external entity.
 	/// (E.g. A polygon edge is a portal that links to another polygon.)
@@ -1206,8 +1206,8 @@ public class NavMesh {
 
 	}
 
-	public static int getMaxVertsPerPoly() {
-		return DT_VERTS_PER_POLYGON;
+	public int getMaxVertsPerPoly() {
+		return m_params.maxVertPerPoly;
 	}
 
 }

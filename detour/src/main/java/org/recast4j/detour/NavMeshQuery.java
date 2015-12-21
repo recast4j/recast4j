@@ -162,8 +162,8 @@ public class NavMeshQuery {
 			return new FindRandomPointResult(Status.FAILURE, 0, null);
 
 		// Randomly pick point on polygon.
-		float[] verts = new float[3 * NavMesh.getMaxVertsPerPoly()];
-		float[] areas = new float[NavMesh.getMaxVertsPerPoly()];
+		float[] verts = new float[3 * m_nav.getMaxVertsPerPoly()];
+		float[] areas = new float[m_nav.getMaxVertsPerPoly()];
 		System.arraycopy(tile.data.verts, poly.verts[0] * 3, verts, 0, 3);
 		for (int j = 1; j < poly.vertCount; ++j) {
 			System.arraycopy(tile.data.verts, poly.verts[j] * 3, verts, j * 3, 3);
@@ -325,8 +325,8 @@ public class NavMeshQuery {
 			return new FindRandomPointResult(Status.FAILURE, 0, null);
 
 		// Randomly pick point on polygon.
-		float[] verts = new float[3 * NavMesh.getMaxVertsPerPoly()];
-		float[] areas = new float[NavMesh.getMaxVertsPerPoly()];
+		float[] verts = new float[3 * m_nav.getMaxVertsPerPoly()];
+		float[] areas = new float[m_nav.getMaxVertsPerPoly()];
 		System.arraycopy(randomTile.data.verts, randomPoly.verts[0] * 3, verts, 0, 3);
 		for (int j = 1; j < randomPoly.vertCount; ++j) {
 			System.arraycopy(randomTile.data.verts, randomPoly.verts[j] * 3, verts, j * 3, 3);
@@ -374,9 +374,9 @@ public class NavMeshQuery {
 		}
 
 		// Clamp point to be inside the polygon.
-		float[] verts = new float[NavMesh.getMaxVertsPerPoly() * 3];
-		float[] edged = new float[NavMesh.getMaxVertsPerPoly()];
-		float[] edget = new float[NavMesh.getMaxVertsPerPoly()];
+		float[] verts = new float[m_nav.getMaxVertsPerPoly() * 3];
+		float[] edged = new float[m_nav.getMaxVertsPerPoly()];
+		float[] edget = new float[m_nav.getMaxVertsPerPoly()];
 		int nv = poly.vertCount;
 		for (int i = 0; i < nv; ++i)
 			System.arraycopy(tile.data.verts, poly.verts[i] * 3, verts, i * 3, 3);
@@ -450,9 +450,9 @@ public class NavMeshQuery {
 		Poly poly = tileAndPoly.second;
 
 		// Collect vertices.
-		float[] verts = new float[NavMesh.getMaxVertsPerPoly() * 3];
-		float[] edged = new float[NavMesh.getMaxVertsPerPoly()];
-		float[] edget = new float[NavMesh.getMaxVertsPerPoly()];
+		float[] verts = new float[m_nav.getMaxVertsPerPoly() * 3];
+		float[] edged = new float[m_nav.getMaxVertsPerPoly()];
+		float[] edget = new float[m_nav.getMaxVertsPerPoly()];
 		int nv = poly.vertCount;
 		for (int i = 0; i < nv; ++i)
 			System.arraycopy(tile.data.verts, poly.verts[i] * 3, verts, i * 3, 3);
@@ -1586,7 +1586,7 @@ public class NavMeshQuery {
 		float[] searchPos = vLerp(startPos, endPos, 0.5f);
 		float searchRadSqr = sqr(vDist(startPos, endPos) / 2.0f + 0.001f);
 
-		float[] verts = new float[NavMesh.getMaxVertsPerPoly() * 3];
+		float[] verts = new float[m_nav.getMaxVertsPerPoly() * 3];
 
 		while (!stack.isEmpty()) {
 			// Pop front.
@@ -1886,7 +1886,7 @@ public class NavMeshQuery {
 
 		RaycastHit hit = new RaycastHit();
 
-		float[] verts = new float[NavMesh.getMaxVertsPerPoly() * 3 + 3];
+		float[] verts = new float[m_nav.getMaxVertsPerPoly() * 3 + 3];
 
 		float[] curPos = new float[3], lastPos = new float[3];
 		VectorPtr curPosV = new VectorPtr(curPos);
@@ -2450,8 +2450,8 @@ public class NavMeshQuery {
 
 		float radiusSqr = sqr(radius);
 
-		float[] pa = new float[NavMesh.getMaxVertsPerPoly() * 3];
-		float[] pb = new float[NavMesh.getMaxVertsPerPoly() * 3];
+		float[] pa = new float[m_nav.getMaxVertsPerPoly() * 3];
+		float[] pb = new float[m_nav.getMaxVertsPerPoly() * 3];
 
 		while (!stack.isEmpty()) {
 			// Pop front.

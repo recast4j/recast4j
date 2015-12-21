@@ -32,5 +32,5 @@ public class NavMeshParams {
 							/// can contain.
 	public int maxPolys; /// < The maximum number of polygons each tile can
 							/// contain.
-	public int maxVertPerPoly = 6;
+	public int maxVertPerPoly = NavMesh.DT_VERTS_PER_POLYGON;
 }

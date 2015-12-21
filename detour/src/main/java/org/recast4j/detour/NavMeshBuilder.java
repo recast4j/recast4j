@@ -480,7 +480,7 @@ public class NavMeshBuilder {
 		for (int i = 0; i < params.offMeshConCount; ++i) {
 			// Only store connections which start from this tile.
 			if (offMeshConClass[i * 2 + 0] == 0xff) {
-				Poly p = new Poly(offMeshPolyBase + n, NavMesh.getMaxVertsPerPoly());
+				Poly p = new Poly(offMeshPolyBase + n, nvp);
 				navPolys[offMeshPolyBase + n] = p;
 				p.vertCount = 2;
 				p.verts[0] = offMeshVertsBase + n * 2;
@@ -522,7 +522,8 @@ public class NavMeshBuilder {
 			// Create dummy detail mesh by triangulating polys.
 			int tbase = 0;
 			for (int i = 0; i < params.polyCount; ++i) {
-				PolyDetail dtl = navDMeshes[i];
+				PolyDetail dtl = new PolyDetail();
+				navDMeshes[i] = dtl;
 				int nv = navPolys[i].vertCount;
 				dtl.vertBase = 0;
 				dtl.vertCount = 0;

@@ -132,10 +132,4 @@ public class MeshDataWriter extends DetourWriter {
 		}
 	}
 
-	private void align4(OutputStream stream, int size) throws IOException {
-		int toSkip = ((size + 3) & ~3) - size;
-		for (int i = 0; i < toSkip; i++) {
-			stream.write(0);
-		}
-	}
 }

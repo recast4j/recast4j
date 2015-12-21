@@ -21,15 +21,17 @@ package org.recast4j.detour.tilecache;
 import java.nio.ByteOrder;
 
 public class TileCacheParams {
-	float[] orig = new float[3];
-	float cs, ch;
-	int width, height;
-	float walkableHeight;
-	float walkableRadius;
-	float walkableClimb;
-	float maxSimplificationError;
-	int maxTiles;
-	int maxObstacles;
-	ByteOrder byteOrder = ByteOrder.LITTLE_ENDIAN;
-	boolean cCompatibility = true;
+	public float[] orig = new float[3];
+	public float cs, ch;
+	public int width, height;
+	public float walkableHeight;
+	public float walkableRadius;
+	public float walkableClimb;
+	public float maxSimplificationError;
+	public int maxTiles;
+	public int maxObstacles;
+	public ByteOrder byteOrder = ByteOrder.LITTLE_ENDIAN;
+	public boolean cCompatibility = true;
+
+	
 }

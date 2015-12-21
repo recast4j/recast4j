@@ -26,7 +26,6 @@ import org.recast4j.detour.BVNode;
 import org.recast4j.detour.Link;
 import org.recast4j.detour.MeshData;
 import org.recast4j.detour.MeshHeader;
-import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.OffMeshConnection;
 import org.recast4j.detour.Poly;
 import org.recast4j.detour.PolyDetail;
@@ -35,13 +34,13 @@ public class MeshDataReader {
 
 	final static int DT_POLY_DETAIL_SIZE = 10;
 
-	public MeshData read(InputStream stream, ByteOrder order, boolean cCompatibility) throws IOException {
+	public MeshData read(InputStream stream, int maxVertPerPoly, ByteOrder order, boolean cCompatibility) throws IOException {
 		ByteBuffer buf = IOUtils.toByteBuffer(stream);
 		buf.order(order);
-		return read(buf, cCompatibility);
+		return read(buf, maxVertPerPoly, cCompatibility);
 	}
 
-	public MeshData read(ByteBuffer buf, boolean cCompatibility) throws IOException {
+	public MeshData read(ByteBuffer buf, int maxVertPerPoly, boolean cCompatibility) throws IOException {
 		MeshData data = new MeshData();
 		MeshHeader header = new MeshHeader();
 		data.header = header;
@@ -77,7 +76,7 @@ public class MeshDataReader {
 		}
 		header.bvQuantFactor = buf.getFloat();
 		data.verts = readVerts(buf, header.vertCount);
-		data.polys = readPolys(buf, header);
+		data.polys = readPolys(buf, header, maxVertPerPoly);
 		if (cCompatibility) {
 			buf.position(buf.position() + header.maxLinkCount * Link.SIZEOF);
 		}
@@ -97,10 +96,10 @@ public class MeshDataReader {
 		return verts;
 	}
 
-	private Poly[] readPolys(ByteBuffer buf, MeshHeader header) {
+	private Poly[] readPolys(ByteBuffer buf, MeshHeader header, int maxVertPerPoly) {
 		Poly[] polys = new Poly[header.polyCount];
 		for (int i = 0; i < polys.length; i++) {
-			polys[i] = new Poly(i, NavMesh.getMaxVertsPerPoly());
+			polys[i] = new Poly(i, maxVertPerPoly);
 			polys[i].firstLink = buf.getInt();
 			for (int j = 0; j < polys[i].verts.length; j++) {
 				polys[i].verts[j] = buf.getShort() & 0xFFFF;

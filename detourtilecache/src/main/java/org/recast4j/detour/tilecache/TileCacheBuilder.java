@@ -79,14 +79,14 @@ public class TileCacheBuilder {
 		int[] poly = new int[2];
 	};
 
-	TileCacheLayerHeaderReader reader;
+	TileCacheLayerHeaderReader reader = new TileCacheLayerHeaderReader();
 
 	void buildTileCacheRegions(TileCacheLayer layer, int walkableClimb) {
 
 		int w = layer.header.width;
 		int h = layer.header.height;
 
-		Arrays.fill(layer.regs, (byte) 0xFF);
+		Arrays.fill(layer.regs, (short)0x00FF);
 		int nsweeps = w;
 		LayerSweepSpan[] sweeps = new LayerSweepSpan[nsweeps];
 		for (int i = 0; i < sweeps.length; i++) {
@@ -169,7 +169,7 @@ public class TileCacheBuilder {
 			for (int x = 0; x < w; ++x) {
 				int idx = x + y * w;
 				if (layer.regs[idx] != 0xff)
-					layer.regs[idx] = (byte) sweeps[layer.regs[idx]].id;
+					layer.regs[idx] = (short) sweeps[layer.regs[idx]].id;
 			}
 		}
 
@@ -254,7 +254,7 @@ public class TileCacheBuilder {
 
 		for (int i = 0; i < w * h; ++i) {
 			if (layer.regs[i] != 0xff)
-				layer.regs[i] = (byte) regs[layer.regs[i]].regId;
+				layer.regs[i] = (short) regs[layer.regs[i]].regId;
 		}
 
 	}
@@ -342,7 +342,6 @@ public class TileCacheBuilder {
 		int bx = ax + getDirOffsetX(dir);
 		int by = ay + getDirOffsetY(dir);
 		int ib = bx + by * w;
-
 		return layer.regs[ib];
 	}
 
@@ -379,7 +378,6 @@ public class TileCacheBuilder {
 
 		int dir = startDir;
 		int maxIter = w * h;
-
 		int iter = 0;
 		while (iter < maxIter) {
 			int rn = getNeighbourReg(layer, x, y, dir);
@@ -715,14 +713,12 @@ public class TileCacheBuilder {
 
 		// Could not find, create new.
 		i = nv;
-		nv++;
 		int v = i * 3;
 		verts[v] = x;
 		verts[v + 1] = y;
 		verts[v + 2] = z;
 		nextVert[i] = firstVert[bucket];
 		firstVert[bucket] = i;
-
 		return i;
 	}
 
@@ -741,7 +737,9 @@ public class TileCacheBuilder {
 		int edgeCount = 0;
 
 		Edge[] edges = new Edge[maxEdgeCount];
-
+		for (int i = 0; i < maxEdgeCount; i++) {
+			edges[i] = new Edge();
+		}
 		for (int i = 0; i < nverts; i++)
 			firstEdge[i] = DT_TILECACHE_NULL_IDX;
 
@@ -1024,7 +1022,6 @@ public class TileCacheBuilder {
 	private int triangulate(int n, int[] verts, int[] indices, int[] tris) {
 		int ntris = 0;
 		int dst = 0;// tris;
-
 		// The last bit of the index is used to indicate if the vertex can be
 		// removed.
 		for (int i = 0; i < n; i++) {
@@ -1557,7 +1554,7 @@ public class TileCacheBuilder {
 
 		int[] nextVert = new int[maxVertices];
 		int[] indices = new int[maxVertsPerCont];
-		int[] tris = new int[maxVertsPerCont];
+		int[] tris = new int[maxVertsPerCont * 3];
 		int[] polys = new int[maxVertsPerCont * MAX_VERTS_PER_POLY];
 		Arrays.fill(polys, 0xFFFF);
 
@@ -1583,6 +1580,7 @@ public class TileCacheBuilder {
 				int v = j * 4;
 				indices[j] = addVertex(cont.verts[v], cont.verts[v + 1], cont.verts[v + 2], mesh.verts, firstVert,
 						nextVert, mesh.nverts);
+				mesh.nverts++;
 				if ((cont.verts[v + 3] & 0x80) != 0) {
 					// This vertex should be removed.
 					vflags[indices[j]] = 1;
@@ -1732,7 +1730,7 @@ public class TileCacheBuilder {
 				int y = layer.heights[x + z * w];
 				if (y < miny || y > maxy)
 					continue;
-				layer.areas[x + z * w] = (byte) areaId;
+				layer.areas[x + z * w] = (short) areaId;
 			}
 		}
 
@@ -1770,10 +1768,15 @@ public class TileCacheBuilder {
 
 		int gridSize = layer.header.width * layer.header.height;
 		byte[] grids = comp.decompress(compressed, buf.position(), compressed.length - buf.position(), gridSize * 3);
-		layer.heights = Arrays.copyOfRange(grids, 0, gridSize);
-		layer.areas = Arrays.copyOfRange(grids, gridSize, gridSize * 2);
-		layer.cons = Arrays.copyOfRange(grids, gridSize * 2, gridSize * 3);
-		layer.regs = new byte[gridSize];
+		layer.heights = new short[gridSize];
+		layer.areas = new short[gridSize];
+		layer.cons = new short[gridSize];
+		layer.regs = new short[gridSize];
+		for (int i = 0; i < gridSize; i++) {
+			layer.heights[i] = (short) (grids[i] & 0xFF);
+			layer.areas[i] = (short) (grids[i + gridSize] & 0xFF);
+			layer.cons[i] = (short) (grids[i + gridSize * 2] & 0xFF);
+		}
 		return layer;
 
 	}
