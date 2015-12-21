@@ -34,7 +34,6 @@ import static org.recast4j.detour.DetourCommon.vLerp;
 import static org.recast4j.detour.DetourCommon.vMax;
 import static org.recast4j.detour.DetourCommon.vMin;
 import static org.recast4j.detour.DetourCommon.vSub;
-import static org.recast4j.recast.RecastVectors.copy;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -282,7 +281,7 @@ public class NavMesh {
 
 	private static NavMeshParams getNavMeshParams(MeshData data) {
 		NavMeshParams params = new NavMeshParams();
-		copy(params.orig, data.header.bmin);
+		vCopy(params.orig, data.header.bmin);
 		params.tileWidth = data.header.bmax[0] - data.header.bmin[0];
 		params.tileHeight = data.header.bmax[2] - data.header.bmin[2];
 		params.maxTiles = 1;
