@@ -246,10 +246,14 @@ public class NavMeshBuilder {
 		return 0xff;
 	}
 
-	/// Builds navigation mesh tile data from the provided tile creation data.
-	/// @ingroup detour
-	/// @param[in] params Tile creation data.
-	/// @return True if the tile data was successfully created.
+	/**
+	 * Builds navigation mesh tile data from the provided tile creation data.
+	 * 
+	 * @param params
+	 *            Tile creation data.
+	 * 
+	 * @return created tile data
+	 */
 	public static MeshData createNavMeshData(NavMeshCreateParams params) {
 		if (params.vertCount >= 0xffff)
 			return null;

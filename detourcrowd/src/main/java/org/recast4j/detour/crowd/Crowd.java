@@ -276,8 +276,7 @@ void dtFreeCrowd(dtCrowd* ptr);
 This is the core class of the @ref crowd module.  See the @ref crowd documentation for a summary
 of the crowd features.
 A common method for setting up the crowd is as follows:
--# Allocate the crowd using #dtAllocCrowd.
--# Initialize the crowd using #init().
+-# Allocate the crowd
 -# Set the avoidance configurations using #setObstacleAvoidanceParams().
 -# Add agents using #addAgent() and make an initial movement request using #requestMoveTarget().
 A common process for managing the crowd is as follows:
@@ -418,15 +417,14 @@ public class Crowd {
 	///  @param[in]		maxAgentRadius	The maximum radius of any agent that will be added to the crowd. [Limit: > 0]
 	///  @param[in]		nav				The navigation mesh to use for planning.
 	/// @return True if the initialization succeeded.
-	public void init(int maxAgents, float maxAgentRadius, NavMesh nav) {
+	public Crowd(int maxAgents, float maxAgentRadius, NavMesh nav) {
 
 		m_maxAgents = maxAgents;
 		m_maxAgentRadius = maxAgentRadius;
 		vSet(m_ext, m_maxAgentRadius * 2.0f, m_maxAgentRadius * 1.5f, m_maxAgentRadius * 2.0f);
 
 		m_grid = new ProximityGrid(m_maxAgents * 4, maxAgentRadius * 3);
-		m_obstacleQuery = new ObstacleAvoidanceQuery();
-		m_obstacleQuery.init(6, 8);
+		m_obstacleQuery = new ObstacleAvoidanceQuery(6, 8);
 
 		for (int i = 0; i < DT_CROWD_MAX_QUERY_FILTER_TYPE; i++) {
 			m_filters[i] = new QueryFilter();
@@ -437,14 +435,12 @@ public class Crowd {
 		}
 
 		// Allocate temp buffer for merging paths.
-		m_pathq = new PathQueue();
-		m_pathq.init(MAX_PATHQUEUE_NODES, nav);
+		m_pathq = new PathQueue(MAX_PATHQUEUE_NODES, nav);
 		m_agents = new CrowdAgent[m_maxAgents];
 		m_activeAgents = new ArrayList<>();
 		for (int i = 0; i < m_maxAgents; ++i) {
 			m_agents[i] = new CrowdAgent(i);
 			m_agents[i].active = false;
-			m_agents[i].corridor.init();
 		}
 
 		// The navquery is mostly used for local searches, no need for large

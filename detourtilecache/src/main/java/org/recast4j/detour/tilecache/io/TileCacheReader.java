@@ -37,10 +37,8 @@ public class TileCacheReader {
 		header.numTiles = bb.getInt();
 		header.meshParams = paramReader.read(bb);
 		header.cacheParams = readCacheParams(bb, cCompatibility);
-		NavMesh mesh = new NavMesh();
-		mesh.init(header.meshParams);
-		TileCache tc = new TileCache();
-		tc.init(header.cacheParams, mesh, compressor, null);
+		NavMesh mesh = new NavMesh(header.meshParams);
+		TileCache tc = new TileCache(header.cacheParams, mesh, compressor, null);
 		// Read tiles.
 		for (int i = 0; i < header.numTiles; ++i) {
 			long tileRef = bb.getInt();

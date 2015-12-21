@@ -49,8 +49,7 @@ public class MeshSetReader {
 		}
 		header.numTiles = bb.getInt();
 		header.params = paramReader.read(bb);
-		NavMesh mesh = new NavMesh();
-		mesh.init(header.params);
+		NavMesh mesh = new NavMesh(header.params);
 
 		// Read tiles.
 		for (int i = 0; i < header.numTiles; ++i) {

@@ -19,7 +19,6 @@ public class AbstractTileCacheTest {
 	private final int m_tileSize = 48;
 
 	public TileCache getTileCache(InputGeom geom, TileCacheCompressor compressor) {
-		TileCache tc = new TileCache();
 		TileCacheParams params = new TileCacheParams();
 		int[] twh = Recast.calcTileCount(geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), m_cellSize, m_tileSize);
 		params.ch = m_cellHeight;
@@ -32,14 +31,14 @@ public class AbstractTileCacheTest {
 		params.maxSimplificationError = m_edgeMaxError;
 		params.maxTiles = twh[0] * twh[1] * EXPECTED_LAYERS_PER_TILE;
 		params.maxObstacles = 128;
-		NavMesh navMesh = new NavMesh();
 		NavMeshParams navMeshParams = new NavMeshParams();
 		copy(navMeshParams.orig, geom.getMeshBoundsMin());
 		navMeshParams.tileWidth = m_tileSize;
 		navMeshParams.tileHeight = m_tileSize;
 		navMeshParams.maxTiles = 256;
 		navMeshParams.maxPolys = 16384;
-		tc.init(params, navMesh, compressor, null);
+		NavMesh navMesh = new NavMesh(navMeshParams);
+		TileCache tc = new TileCache(params, navMesh, compressor, null);
 		return tc;
 	}
 

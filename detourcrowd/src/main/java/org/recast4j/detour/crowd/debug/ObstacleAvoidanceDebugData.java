@@ -14,7 +14,7 @@ public class ObstacleAvoidanceDebugData {
 	float[] m_tpen;
 
 
-	void init(int maxSamples) {
+	public ObstacleAvoidanceDebugData(int maxSamples) {
 		m_maxSamples = maxSamples;
 		m_vel = new float[3 * m_maxSamples];
 		m_pen = new float[m_maxSamples];

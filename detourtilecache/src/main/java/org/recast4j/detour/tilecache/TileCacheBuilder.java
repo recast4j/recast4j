@@ -35,6 +35,9 @@ public class TileCacheBuilder {
 	static final int DT_TILECACHE_NULL_AREA = 0;
 	static final int DT_TILECACHE_WALKABLE_AREA = 63;
 	static final int DT_TILECACHE_NULL_IDX = 0xffff;
+	static final int MAX_VERTS_PER_POLY = 6; // TODO: use the
+	// DT_VERTS_PER_POLYGON
+	static final int MAX_REM_EDGES = 48; // TODO: make this an expression.
 
 	class LayerSweepSpan {
 		int ns; // number samples
@@ -721,10 +724,6 @@ public class TileCacheBuilder {
 		firstVert[bucket] = i;
 		return i;
 	}
-
-	static final int MAX_VERTS_PER_POLY = 6; // TODO: use the
-												// DT_VERTS_PER_POLYGON
-	static final int MAX_REM_EDGES = 48; // TODO: make this an expression.
 
 	private void buildMeshAdjacency(int[] polys, int npolys, int[] verts, int nverts, TileCacheContourSet lcset) {
 		// Based on code by Eric Lengyel from:

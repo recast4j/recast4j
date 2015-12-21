@@ -53,7 +53,7 @@ public class PathQueue {
 		}
 	}
 
-	protected void init(int maxSearchNodeCount, NavMesh nav) {
+	protected PathQueue(int maxSearchNodeCount, NavMesh nav) {
 		purge();
 		m_navquery = new NavMeshQuery(nav);
 		for (int i = 0; i < MAX_QUEUE; ++i) {

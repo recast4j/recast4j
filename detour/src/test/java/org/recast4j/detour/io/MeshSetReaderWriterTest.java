@@ -54,8 +54,7 @@ public class MeshSetReaderWriterTest {
 		header.params.maxTiles = m_maxTiles;
 		header.params.maxPolys = m_maxPolysPerTile;		
 		header.numTiles = 0;
-		NavMesh mesh = new NavMesh();
-		mesh.init(header.params);
+		NavMesh mesh = new NavMesh(header.params);
 		
 		float[] bmin = geom.getMeshBoundsMin();
 		float[] bmax = geom.getMeshBoundsMax();

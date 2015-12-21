@@ -27,11 +27,11 @@ import java.nio.ByteOrder;
 import org.junit.Before;
 import org.junit.Test;
 import org.recast4j.detour.MeshData;
-import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.RecastTestMeshBuilder;
 
 public class MeshDataReaderWriterTest {
 
+	private static final int VERTS_PER_POLYGON = 6;
 	private MeshData meshData;
 
 	@Before
@@ -66,7 +66,7 @@ public class MeshDataReaderWriterTest {
 		writer.write(os, meshData, order, cCompatibility);
 		ByteArrayInputStream bais = new ByteArrayInputStream(os.toByteArray());
 		MeshDataReader reader = new MeshDataReader();
-		MeshData readData = reader.read(bais, NavMesh.DT_VERTS_PER_POLYGON, order, cCompatibility);
+		MeshData readData = reader.read(bais, VERTS_PER_POLYGON, order, cCompatibility);
 
 		System.out.println("verts: " + meshData.header.vertCount);
 		System.out.println("polys: " + meshData.header.polyCount);

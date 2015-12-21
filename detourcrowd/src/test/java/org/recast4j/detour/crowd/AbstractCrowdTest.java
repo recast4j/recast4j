@@ -54,11 +54,9 @@ public class AbstractCrowdTest {
 	@Before
 	public void setUp() {
 		nmd = new RecastTestMeshBuilder().getMeshData();
-		navmesh = new NavMesh();
-		navmesh.init(nmd, 0);
+		navmesh = new NavMesh(nmd, 0);
 		query = new NavMeshQuery(navmesh);
-		crowd = new Crowd();
-		crowd.init(50, 0.6f, navmesh);
+		crowd = new Crowd(50, 0.6f, navmesh);
 		ObstacleAvoidanceParams params = new ObstacleAvoidanceParams();
 		params.velBias = 0.5f;
 		params.adaptiveDivs = 5;

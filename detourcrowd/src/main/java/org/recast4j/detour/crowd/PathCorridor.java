@@ -49,9 +49,9 @@ import org.recast4j.detour.VectorPtr;
  * 
  * Example of a common use case:
  * 
- * -# Construct the corridor object and call #init() to allocate its path
- * buffer. -# Obtain a path from a #dtNavMeshQuery object. -# Use #reset() to
- * set the agent's current position. (At the beginning of the path.) -# Use
+ * -# Construct the corridor object and call 
+ * -# Obtain a path from a #dtNavMeshQuery object. 
+ * -# Use #reset() to set the agent's current position. (At the beginning of the path.) -# Use
  * #setCorridor() to load the path and target. -# Use #findCorners() to plan
  * movement. (This handles dynamic path straightening.) -# Use #movePosition()
  * to feed agent movement back into the corridor. (The corridor will
@@ -190,7 +190,7 @@ public class PathCorridor {
 	/**
 	 * Allocates the corridor's path buffer.
 	 */
-	public void init() {
+	public PathCorridor() {
 		m_path = new ArrayList<>();
 	}
 

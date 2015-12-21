@@ -103,7 +103,7 @@ public class ObstacleAvoidanceQuery {
 	private ObstacleSegment[] m_segments;
 	private int m_nsegments;
 
-	public void init(int maxCircles, int maxSegments) {
+	public ObstacleAvoidanceQuery(int maxCircles, int maxSegments) {
 		m_maxCircles = maxCircles;
 		m_ncircles = 0;
 		m_circles = new ObstacleCircle[m_maxCircles];

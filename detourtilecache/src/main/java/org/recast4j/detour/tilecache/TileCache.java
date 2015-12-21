@@ -99,7 +99,7 @@ public class TileCache {
 		return (int) (ref & tileMask);
 	}
 
-	public void init(TileCacheParams params, NavMesh navmesh, TileCacheCompressor tcomp, TileCacheMeshProcess tmprocs) {
+	public TileCache(TileCacheParams params, NavMesh navmesh, TileCacheCompressor tcomp, TileCacheMeshProcess tmprocs) {
 		m_params = params;
 		m_navmesh = navmesh;
 		m_tcomp = tcomp;
@@ -452,6 +452,7 @@ public class TileCache {
 		TileCachePolyMesh polyMesh = builder.buildTileCachePolyMesh(lcset);
 		// Early out if the mesh tile is empty.
 		if (polyMesh.npolys == 0) {
+			m_navmesh.removeTile(m_navmesh.getTileRefAt(tile.header.tx,tile.header.ty,tile.header.tlayer));
 			return;
 		}
 		NavMeshCreateParams params = new NavMeshCreateParams();

@@ -43,8 +43,7 @@ public abstract class AbstractDetourTest {
 	public void setUp() {
 
 		nmd = new RecastTestMeshBuilder().getMeshData();
-		navmesh = new NavMesh();
-		navmesh.init(nmd, 0);
+		navmesh = new NavMesh(nmd, 0);
 		query = new NavMeshQuery(navmesh);
 
 	}
