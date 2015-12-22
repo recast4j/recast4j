@@ -71,7 +71,7 @@ public class TileCacheBuilder {
 		int npoly() {
 			return poly.size();
 		}
-		
+
 		public void clear() {
 			nverts = 0;
 			verts.clear();
@@ -91,7 +91,7 @@ public class TileCacheBuilder {
 		int w = layer.header.width;
 		int h = layer.header.height;
 
-		Arrays.fill(layer.regs, (short)0x00FF);
+		Arrays.fill(layer.regs, (short) 0x00FF);
 		int nsweeps = w;
 		LayerSweepSpan[] sweeps = new LayerSweepSpan[nsweeps];
 		for (int i = 0; i < sweeps.length; i++) {
@@ -307,7 +307,8 @@ public class TileCacheBuilder {
 					cont.verts.set(pb + 1, y);
 					cont.verts.set(pb + 2, z);
 					return;
-				} else if (cont.verts.get(pa + 2).intValue() == cont.verts.get(pb + 2).intValue() && cont.verts.get(pb + 2) == z) {
+				} else if (cont.verts.get(pa + 2).intValue() == cont.verts.get(pb + 2).intValue()
+						&& cont.verts.get(pb + 2) == z) {
 					// The verts are aligned aling z-axis, update x.
 					cont.verts.set(pb, x);
 					cont.verts.set(pb + 1, y);
@@ -552,7 +553,7 @@ public class TileCacheBuilder {
 			int src = cont.poly.get(j) * 4;
 			int dst = cont.nverts * 4;
 			cont.verts.set(dst, cont.verts.get(src));
-			cont.verts.set(dst+ 1, cont.verts.get(src + 1));
+			cont.verts.set(dst + 1, cont.verts.get(src + 1));
 			cont.verts.set(dst + 2, cont.verts.get(src + 2));
 			cont.verts.set(dst + 3, cont.verts.get(src + 3));
 			cont.nverts++;
@@ -646,9 +647,11 @@ public class TileCacheBuilder {
 						int dst = j * 4;
 						int v = j * 4;
 						int vn = i * 4;
-						int nei = temp.verts.get(vn + 3); // The neighbour reg is
-														// stored at segment
-														// vertex of a segment.
+						int nei = temp.verts.get(vn + 3); // The neighbour reg
+															// is
+															// stored at segment
+															// vertex of a
+															// segment.
 						Tupple2<Integer, Boolean> res = getCornerHeight(layer, temp.verts.get(v), temp.verts.get(v + 1),
 								temp.verts.get(v + 2), walkableClimb);
 						int lh = res.first;
@@ -1712,7 +1715,8 @@ public class TileCacheBuilder {
 
 	}
 
-	public byte[] buildTileCacheLayer(TileCacheCompressor comp, TileCacheLayerHeader header, int[] heights, int[]areas, int[] cons, ByteOrder order, boolean cCompatibility) {
+	public byte[] buildTileCacheLayer(TileCacheCompressor comp, TileCacheLayerHeader header, int[] heights, int[] areas,
+			int[] cons, ByteOrder order, boolean cCompatibility) {
 		int gridSize = header.width * header.height;
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		TileCacheLayerHeaderWriter hw = new TileCacheLayerHeaderWriter();
@@ -1731,12 +1735,32 @@ public class TileCacheBuilder {
 		}
 	}
 
-	TileCacheLayer decompressTileCacheLayer(TileCacheCompressor comp, byte[] compressed, ByteOrder order, boolean cCompatibility) {
+	public byte[] compressTileCacheLayer(TileCacheCompressor comp, TileCacheLayer layer, ByteOrder order, boolean cCompatibility) {
+		int gridSize = layer.header.width * layer.header.height;
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		TileCacheLayerHeaderWriter hw = new TileCacheLayerHeaderWriter();
+		try {
+			hw.write(baos, layer.header, order, cCompatibility);
+			byte[] buffer = new byte[gridSize * 3];
+			for (int i = 0; i < gridSize; i++) {
+				buffer[i] = (byte) layer.heights[i];
+				buffer[gridSize + i] = (byte) layer.areas[i];
+				buffer[gridSize * 2 + i] = (byte) layer.cons[i];
+			}
+			baos.write(comp.compress(buffer));
+			return baos.toByteArray();
+		} catch (IOException e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+	}
+
+	public TileCacheLayer decompressTileCacheLayer(TileCacheCompressor comp, byte[] compressed, ByteOrder order,
+			boolean cCompatibility) {
 		ByteBuffer buf = ByteBuffer.wrap(compressed);
 		buf.order(order);
 		TileCacheLayer layer = new TileCacheLayer();
 		try {
-			layer.header = reader.readLayerHeader(buf, cCompatibility);
+			layer.header = reader.read(buf, cCompatibility);
 		} catch (IOException e) {
 			throw new RuntimeException(e.getMessage(), e);
 		}

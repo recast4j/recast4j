@@ -11,6 +11,7 @@ import org.recast4j.detour.io.NavMeshParamReader;
 import org.recast4j.detour.tilecache.TileCache;
 import org.recast4j.detour.tilecache.TileCacheCompressor;
 import org.recast4j.detour.tilecache.TileCacheParams;
+import org.recast4j.detour.tilecache.TileCacheStorageParams;
 
 public class TileCacheReader {
 
@@ -38,7 +39,7 @@ public class TileCacheReader {
 		header.meshParams = paramReader.read(bb);
 		header.cacheParams = readCacheParams(bb, cCompatibility);
 		NavMesh mesh = new NavMesh(header.meshParams);
-		TileCache tc = new TileCache(header.cacheParams, mesh, compressor, null);
+		TileCache tc = new TileCache(header.cacheParams, new TileCacheStorageParams(bb.order(), cCompatibility), mesh, compressor, null);
 		// Read tiles.
 		for (int i = 0; i < header.numTiles; ++i) {
 			long tileRef = bb.getInt();
@@ -71,8 +72,6 @@ public class TileCacheReader {
 		params.maxSimplificationError = bb.getFloat();
 		params.maxTiles = bb.getInt();
 		params.maxObstacles = bb.getInt();
-		params.byteOrder = bb.order();
-		params.cCompatibility = cCompatibility;
 		return params;
 	}
 }

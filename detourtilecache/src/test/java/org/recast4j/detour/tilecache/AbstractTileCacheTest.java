@@ -2,6 +2,8 @@ package org.recast4j.detour.tilecache;
 
 import static org.recast4j.recast.RecastVectors.copy;
 
+import java.nio.ByteOrder;
+
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshParams;
 import org.recast4j.recast.InputGeom;
@@ -18,7 +20,8 @@ public class AbstractTileCacheTest {
 	private final float m_edgeMaxError = 1.3f;
 	private final int m_tileSize = 48;
 
-	public TileCache getTileCache(InputGeom geom, TileCacheCompressor compressor) {
+	public TileCache getTileCache(InputGeom geom, TileCacheCompressor compressor, ByteOrder order,
+			boolean cCompatibility) {
 		TileCacheParams params = new TileCacheParams();
 		int[] twh = Recast.calcTileCount(geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), m_cellSize, m_tileSize);
 		params.ch = m_cellHeight;
@@ -38,7 +41,7 @@ public class AbstractTileCacheTest {
 		navMeshParams.maxTiles = 256;
 		navMeshParams.maxPolys = 16384;
 		NavMesh navMesh = new NavMesh(navMeshParams);
-		TileCache tc = new TileCache(params, navMesh, compressor, null);
+		TileCache tc = new TileCache(params, new TileCacheStorageParams(order, cCompatibility), navMesh, compressor, null);
 		return tc;
 	}
 

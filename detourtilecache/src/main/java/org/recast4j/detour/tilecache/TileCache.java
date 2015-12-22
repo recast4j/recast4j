@@ -41,18 +41,19 @@ public class TileCache {
 
 	CompressedTile[] m_posLookup; /// < Tile hash lookup.
 	CompressedTile m_nextFreeTile; /// < Freelist of tiles.
-	CompressedTile[] m_tiles; /// < List of tiles.
+	CompressedTile[] m_tiles; /// < List of tiles. // TODO: replace with list
 
 	private int m_saltBits; /// < Number of salt bits in the tile ID.
 	private int m_tileBits; /// < Number of tile bits in the tile ID.
 
 	NavMesh m_navmesh;
 	TileCacheParams m_params;
+	TileCacheStorageParams m_storageParams;
 
 	TileCacheCompressor m_tcomp;
 	TileCacheMeshProcess m_tmproc;
 
-	TileCacheObstacle[] m_obstacles;
+	TileCacheObstacle[] m_obstacles;  // TODO: replace with list
 	TileCacheObstacle m_nextFreeObstacle;
 
 	List<ObstacleRequest> m_reqs = new ArrayList<>();
@@ -99,8 +100,10 @@ public class TileCache {
 		return (int) (ref & tileMask);
 	}
 
-	public TileCache(TileCacheParams params, NavMesh navmesh, TileCacheCompressor tcomp, TileCacheMeshProcess tmprocs) {
+	public TileCache(TileCacheParams params, TileCacheStorageParams storageParams, NavMesh navmesh,
+			TileCacheCompressor tcomp, TileCacheMeshProcess tmprocs) {
 		m_params = params;
+		m_storageParams = storageParams;
 		m_navmesh = navmesh;
 		m_tcomp = tcomp;
 		m_tmproc = tmprocs;
@@ -204,8 +207,8 @@ public class TileCache {
 	public long addTile(byte[] data, int flags) throws IOException {
 		// Make sure the data is in right format.
 		ByteBuffer buf = ByteBuffer.wrap(data);
-		buf.order(m_params.byteOrder);
-		TileCacheLayerHeader header = tileReader.readLayerHeader(buf, m_params.cCompatibility);
+		buf.order(m_storageParams.byteOrder);
+		TileCacheLayerHeader header = tileReader.read(buf, m_storageParams.cCompatibility);
 		// Make sure the location is free.
 		if (getTileAt(header.tx, header.ty, header.tlayer) != null) {
 			return 0;
@@ -432,8 +435,7 @@ public class TileCache {
 		int walkableClimbVx = (int) (m_params.walkableClimb / m_params.ch);
 
 		// Decompress tile layer data.
-		TileCacheLayer layer = builder.decompressTileCacheLayer(m_tcomp, tile.data, m_params.byteOrder,
-				m_params.cCompatibility);
+		TileCacheLayer layer = decompressTile(tile);
 
 		// Rasterize obstacles.
 		for (int i = 0; i < m_params.maxObstacles; ++i) {
@@ -452,7 +454,7 @@ public class TileCache {
 		TileCachePolyMesh polyMesh = builder.buildTileCachePolyMesh(lcset);
 		// Early out if the mesh tile is empty.
 		if (polyMesh.npolys == 0) {
-			m_navmesh.removeTile(m_navmesh.getTileRefAt(tile.header.tx,tile.header.ty,tile.header.tlayer));
+			m_navmesh.removeTile(m_navmesh.getTileRefAt(tile.header.tx, tile.header.ty, tile.header.tlayer));
 			return;
 		}
 		NavMeshCreateParams params = new NavMeshCreateParams();
@@ -484,6 +486,12 @@ public class TileCache {
 		if (meshData != null) {
 			m_navmesh.addTile(meshData, 0, 0);
 		}
+	}
+
+	public TileCacheLayer decompressTile(CompressedTile tile) {
+		TileCacheLayer layer = builder.decompressTileCacheLayer(m_tcomp, tile.data, m_storageParams.byteOrder,
+				m_storageParams.cCompatibility);
+		return layer;
 	}
 
 	void calcTightTileBounds(TileCacheLayerHeader header, float[] bmin, float[] bmax) {

@@ -18,7 +18,11 @@ import org.recast4j.recast.RecastConstants.PartitionType;
 public class RecastTileLayersBuilder {
 
 	private final InputGeom geom;
-	private final TileCache tc;
+	private final float m_cellSize = 0.3f;
+	private final float m_cellHeight = 0.2f;
+	private final float m_agentHeight = 2.0f;
+	private final float m_agentRadius = 0.6f;
+	private final float m_agentMaxClimb = 0.9f;
 	private final float m_agentMaxSlope = 45.0f;
 	private final int m_regionMinSize = 8;
 	private final int m_regionMergeSize = 20;
@@ -28,35 +32,34 @@ public class RecastTileLayersBuilder {
 	private final float m_detailSampleDist = 6.0f;
 	private final float m_detailSampleMaxError = 1.0f;
 	private RecastConfig rcConfig;
+	private final int m_tileSize = 48;
 
-	public RecastTileLayersBuilder(InputGeom geom, TileCache tc) {
+	public RecastTileLayersBuilder(InputGeom geom) {
 		this.geom = geom;
-		this.tc = tc;
-		TileCacheParams params = tc.getParams();
-		rcConfig = new RecastConfig(PartitionType.WATERSHED, params.cs, params.ch, 
-				params.walkableHeight, params.walkableRadius, params.walkableClimb,
+		rcConfig = new RecastConfig(PartitionType.WATERSHED, m_cellSize, m_cellHeight, 
+				m_agentHeight, m_agentRadius, m_agentMaxClimb,
 				m_agentMaxSlope, m_regionMinSize, 
 				m_regionMergeSize, m_edgeMaxLen,
 				m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, 
-				m_detailSampleMaxError, params.width);
+				m_detailSampleMaxError, m_tileSize);
 	}
 
-	public List<byte[]> build(ByteOrder order, boolean cCompatibility) {
+	public List<byte[]> build(TileCacheCompressor compressor, ByteOrder order, boolean cCompatibility) {
 		List<byte[]> layers = new ArrayList<>();
 		float[] bmin = geom.getMeshBoundsMin();
 		float[] bmax = geom.getMeshBoundsMax();
-		int[] twh = Recast.calcTileCount(bmin, bmax, tc.getParams().cs, tc.getParams().width);
+		int[] twh = Recast.calcTileCount(bmin, bmax, m_cellSize, m_tileSize);
 		int tw = twh[0];
 		int th = twh[1];
 		for (int y = 0; y < th; ++y) {
 			for (int x = 0; x < tw; ++x) {
-				layers.addAll(build(x, y, order, cCompatibility));
+				layers.addAll(build(x, y, compressor, order, cCompatibility));
 			}
 		}
 		return layers;
 	}
 
-	public List<byte[]> build(int tx, int ty, ByteOrder order, boolean cCompatibility) {
+	public List<byte[]> build(int tx, int ty, TileCacheCompressor compressor, ByteOrder order, boolean cCompatibility) {
 		RecastBuilder rcBuilder = new RecastBuilder();
 		float[] bmin = geom.getMeshBoundsMin();
 		float[] bmax = geom.getMeshBoundsMax();
@@ -89,7 +92,7 @@ public class RecastTileLayersBuilder {
 				header.maxy = layer.maxy;
 				header.hmin = layer.hmin;
 				header.hmax = layer.hmax;
-				result.add(builder.buildTileCacheLayer(tc.getCompressor(), header, layer.heights, layer.areas, layer.cons,
+				result.add(builder.buildTileCacheLayer(compressor, header, layer.heights, layer.areas, layer.cons,
 						order, cCompatibility));
 			}
 		}

@@ -30,7 +30,7 @@ public class TileCacheLayerHeaderWriter extends DetourWriter {
 		stream.write(header.miny);
 		stream.write(header.maxy);
 		if (cCompatibility) {
-			write(stream, (short)0, order);
+			write(stream, (short)0, order);  // C struct padding
 		}
 	}
 

@@ -1,7 +1,9 @@
-package org.recast4j.detour.tilecache;
+package org.recast4j.detour.tilecache.io;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteOrder;
 import java.util.List;
@@ -10,45 +12,46 @@ import org.junit.Test;
 import org.recast4j.detour.MeshData;
 import org.recast4j.detour.MeshHeader;
 import org.recast4j.detour.MeshTile;
+import org.recast4j.detour.tilecache.AbstractTileCacheTest;
+import org.recast4j.detour.tilecache.RecastTileLayersBuilder;
+import org.recast4j.detour.tilecache.TileCache;
+import org.recast4j.detour.tilecache.TileCacheCompressor;
 import org.recast4j.detour.tilecache.io.compress.FastLzTileCacheCompressor;
 import org.recast4j.detour.tilecache.io.compress.LZ4TileCacheCompressor;
 import org.recast4j.recast.InputGeom;
 import org.recast4j.recast.ObjImporter;
 import org.recast4j.recast.RecastBuilder;
 
-public class TileCacheTest extends AbstractTileCacheTest {
+public class TileCacheReaderWriterTest extends AbstractTileCacheTest {
+	
+	private final TileCacheReader reader = new TileCacheReader();
+	private final TileCacheWriter writer = new TileCacheWriter();
 
 	@Test
 	public void testFastLz() throws IOException {
-		testDungeon(new FastLzTileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, false);
-		testDungeon(new FastLzTileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, true);
-		testDungeon(new FastLzTileCacheCompressor(), ByteOrder.BIG_ENDIAN, false);
-		testDungeon(new FastLzTileCacheCompressor(), ByteOrder.BIG_ENDIAN, true);
+		testDungeon(new FastLzTileCacheCompressor(), false);
+		testDungeon(new FastLzTileCacheCompressor(), true);
 	}
 
 	@Test
 	public void testLZ4() throws IOException {
-		testDungeon(new LZ4TileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, false);
-		testDungeon(new LZ4TileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, true);
-		testDungeon(new LZ4TileCacheCompressor(), ByteOrder.BIG_ENDIAN, false);
-		testDungeon(new LZ4TileCacheCompressor(), ByteOrder.BIG_ENDIAN, true);
+		testDungeon(new LZ4TileCacheCompressor(), true);
+		testDungeon(new LZ4TileCacheCompressor(), false);
 	}
 
-	private void testDungeon(TileCacheCompressor compressor, ByteOrder order, boolean cCompatibility) throws IOException {
+	private void testDungeon(TileCacheCompressor compressor, boolean cCompatibility) throws IOException {
 		InputGeom geom = new ObjImporter().load(RecastBuilder.class.getResourceAsStream("dungeon.obj"));
-		TileCache tc = getTileCache(geom, compressor, order, cCompatibility);
 		RecastTileLayersBuilder layerBuilder = new RecastTileLayersBuilder(geom);
-		List<byte[]> layers = layerBuilder.build(compressor, order, cCompatibility);
-		int cacheLayerCount = 0;
-		int cacheCompressedSize = 0;
-		int cacheRawSize = 0;
+		List<byte[]> layers = layerBuilder.build(compressor, ByteOrder.LITTLE_ENDIAN, cCompatibility);
+		TileCache tc = getTileCache(geom, compressor, ByteOrder.LITTLE_ENDIAN, cCompatibility);
 		for (byte[] data : layers) {
 			long ref = tc.addTile(data, 0);
 			tc.buildNavMeshTile(ref);
-			cacheLayerCount++;
-			cacheCompressedSize += data.length;
-			cacheRawSize += 4 * 48 * 48 + 56;
 		}
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		writer.write(baos, tc, compressor, ByteOrder.LITTLE_ENDIAN, cCompatibility);
+		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+		tc = reader.read(bais, compressor, ByteOrder.LITTLE_ENDIAN, cCompatibility);
 		assertEquals(256, tc.getNavMesh().getMaxTiles());
 		assertEquals(16384, tc.getNavMesh().getParams().maxPolys);
 		assertEquals(14.4f, tc.getNavMesh().getParams().tileWidth, 0.001f);
@@ -119,8 +122,6 @@ public class TileCacheTest extends AbstractTileCacheTest {
 		assertEquals(1, data.detailMeshes.length);
 		assertEquals(0, data.detailVerts.length);
 		assertEquals(4 * 3, data.detailTris.length);
-		System.out.println("Compressor: " + compressor.getClass().getSimpleName() + " C Compatibility: " + cCompatibility + " Layers: " + cacheLayerCount + " Raw Size: " + cacheRawSize + " Compressed: "
-				+ cacheCompressedSize);
 	}
 
 }
