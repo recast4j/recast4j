@@ -28,6 +28,7 @@ import org.recast4j.detour.NavMesh;
 public class MeshSetWriter extends DetourWriter {
 
 	private final MeshDataWriter writer = new MeshDataWriter();
+	private final NavMeshParamWriter paramWriter = new NavMeshParamWriter();
 
 	public void write(OutputStream stream, NavMesh mesh, ByteOrder order, boolean cCompatibility) throws IOException {
 		// Write header.
@@ -41,7 +42,7 @@ public class MeshSetWriter extends DetourWriter {
 			numTiles++;
 		}
 		write(stream, numTiles, order);
-		write(stream, mesh.getParams(), order);
+		paramWriter.write(stream, mesh.getParams(), order);
 
 		// Store tiles.
 		for (int i = 0; i < mesh.getMaxTiles(); ++i) {

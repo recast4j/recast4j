@@ -33,8 +33,8 @@ public class AbstractTileCacheTest {
 		params.maxObstacles = 128;
 		NavMeshParams navMeshParams = new NavMeshParams();
 		copy(navMeshParams.orig, geom.getMeshBoundsMin());
-		navMeshParams.tileWidth = m_tileSize;
-		navMeshParams.tileHeight = m_tileSize;
+		navMeshParams.tileWidth = m_tileSize * m_cellSize;
+		navMeshParams.tileHeight = m_tileSize * m_cellSize;
 		navMeshParams.maxTiles = 256;
 		navMeshParams.maxPolys = 16384;
 		NavMesh navMesh = new NavMesh(navMeshParams);

@@ -24,7 +24,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.recast4j.detour.Tupple2;
 import org.recast4j.detour.tilecache.io.TileCacheLayerHeaderReader;
@@ -56,24 +58,24 @@ public class TileCacheBuilder {
 	};
 
 	class TempContour {
-		int[] verts;
+		List<Integer> verts;
 		int nverts;
-		int cverts;
-		int[] poly;
-		int npoly;
-		int cpoly;
+		List<Integer> poly;
 
-		// FIXME: (PP) switch to List
-		TempContour(int[] vbuf, int nvbuf, int[] pbuf, int npbuf) {
-
-			verts = vbuf;
+		TempContour() {
+			verts = new ArrayList<>();
 			nverts = 0;
-			cverts = nvbuf;
-			poly = pbuf;
-			npoly = 0;
-			cpoly = npbuf;
+			poly = new ArrayList<>();
 		}
 
+		int npoly() {
+			return poly.size();
+		}
+		
+		public void clear() {
+			nverts = 0;
+			verts.clear();
+		}
 	};
 
 	class Edge {
@@ -294,37 +296,30 @@ public class TileCacheBuilder {
 		return count == 1;
 	}
 
-	private boolean appendVertex(TempContour cont, int x, int y, int z, int r) {
+	private void appendVertex(TempContour cont, int x, int y, int z, int r) {
 		// Try to merge with existing segments.
 		if (cont.nverts > 1) {
 			int pa = (cont.nverts - 2) * 4;
 			int pb = (cont.nverts - 1) * 4;
-			if (cont.verts[pb + 3] == r) {
-				if (cont.verts[pa] == cont.verts[pb] && cont.verts[pb] == x) {
+			if (cont.verts.get(pb + 3) == r) {
+				if (cont.verts.get(pa).intValue() == cont.verts.get(pb).intValue() && cont.verts.get(pb) == x) {
 					// The verts are aligned aling x-axis, update z.
-					cont.verts[pb + 1] = y;
-					cont.verts[pb + 2] = z;
-					return true;
-				} else if (cont.verts[pa + 2] == cont.verts[pb + 2] && cont.verts[pb + 2] == z) {
+					cont.verts.set(pb + 1, y);
+					cont.verts.set(pb + 2, z);
+					return;
+				} else if (cont.verts.get(pa + 2).intValue() == cont.verts.get(pb + 2).intValue() && cont.verts.get(pb + 2) == z) {
 					// The verts are aligned aling z-axis, update x.
-					cont.verts[pb] = x;
-					cont.verts[pb + 1] = y;
-					return true;
+					cont.verts.set(pb, x);
+					cont.verts.set(pb + 1, y);
+					return;
 				}
 			}
 		}
-
-		// Add new point.
-		if (cont.nverts + 1 > cont.cverts)
-			return false;
-
-		cont.verts[cont.nverts * 4] = x;
-		cont.verts[cont.nverts * 4 + 1] = y;
-		cont.verts[cont.nverts * 4 + 2] = z;
-		cont.verts[cont.nverts * 4 + 3] = r;
+		cont.verts.add(x);
+		cont.verts.add(y);
+		cont.verts.add(z);
+		cont.verts.add(r);
 		cont.nverts++;
-
-		return true;
 	}
 
 	private int getNeighbourReg(TileCacheLayer layer, int ax, int ay, int dir) {
@@ -358,11 +353,11 @@ public class TileCacheBuilder {
 		return offset[dir & 0x03];
 	}
 
-	private boolean walkContour(TileCacheLayer layer, int x, int y, TempContour cont) {
+	private void walkContour(TileCacheLayer layer, int x, int y, TempContour cont) {
 		int w = layer.header.width;
 		int h = layer.header.height;
 
-		cont.nverts = 0;
+		cont.clear();
 
 		int startX = x;
 		int startY = y;
@@ -377,7 +372,7 @@ public class TileCacheBuilder {
 			}
 		}
 		if (startDir == -1)
-			return true;
+			return;
 
 		int dir = startDir;
 		int maxIter = w * h;
@@ -407,9 +402,7 @@ public class TileCacheBuilder {
 				}
 
 				// Try to merge with previous vertex.
-				if (!appendVertex(cont, px, layer.heights[x + y * w], pz, rn))
-					return false;
-
+				appendVertex(cont, px, layer.heights[x + y * w], pz, rn);
 				ndir = (dir + 1) & 0x3; // Rotate CW
 			} else {
 				// Move to next.
@@ -431,10 +424,10 @@ public class TileCacheBuilder {
 		// Remove last vertex if it is duplicate of the first one.
 		int pa = (cont.nverts - 1) * 4;
 		int pb = 0;
-		if (cont.verts[pa] == cont.verts[pb] && cont.verts[pa + 2] == cont.verts[pb + 2])
+		if (cont.verts.get(pa).intValue() == cont.verts.get(pb).intValue()
+				&& cont.verts.get(pa + 2).intValue() == cont.verts.get(pb + 2).intValue())
 			cont.nverts--;
 
-		return true;
 	}
 
 	private float distancePtSeg(int x, int z, int px, int pz, int qx, int qz) {
@@ -458,29 +451,29 @@ public class TileCacheBuilder {
 	}
 
 	private void simplifyContour(TempContour cont, float maxError) {
-		cont.npoly = 0;
+		cont.poly.clear();
 
 		for (int i = 0; i < cont.nverts; ++i) {
 			int j = (i + 1) % cont.nverts;
 			// Check for start of a wall segment.
 			int ra = j * 4 + 3;
 			int rb = i * 4 + 3;
-			if (cont.verts[ra] != cont.verts[rb])
-				cont.poly[cont.npoly++] = (short) i;
+			if (cont.verts.get(ra).intValue() != cont.verts.get(rb).intValue())
+				cont.poly.add(i);
 		}
-		if (cont.npoly < 2) {
+		if (cont.npoly() < 2) {
 			// If there is no transitions at all,
 			// create some initial points for the simplification process.
 			// Find lower-left and upper-right vertices of the contour.
-			int llx = cont.verts[0];
-			int llz = cont.verts[2];
+			int llx = cont.verts.get(0);
+			int llz = cont.verts.get(2);
 			int lli = 0;
-			int urx = cont.verts[0];
-			int urz = cont.verts[2];
+			int urx = cont.verts.get(0);
+			int urz = cont.verts.get(2);
 			int uri = 0;
 			for (int i = 1; i < cont.nverts; ++i) {
-				int x = cont.verts[i * 4 + 0];
-				int z = cont.verts[i * 4 + 2];
+				int x = cont.verts.get(i * 4 + 0);
+				int z = cont.verts.get(i * 4 + 2);
 				if (x < llx || (x == llx && z < llz)) {
 					llx = x;
 					llz = z;
@@ -492,23 +485,23 @@ public class TileCacheBuilder {
 					uri = i;
 				}
 			}
-			cont.npoly = 0;
-			cont.poly[cont.npoly++] = lli;
-			cont.poly[cont.npoly++] = uri;
+			cont.poly.clear();
+			cont.poly.add(lli);
+			cont.poly.add(uri);
 		}
 
 		// Add points until all raw points are within
 		// error tolerance to the simplified shape.
-		for (int i = 0; i < cont.npoly;) {
-			int ii = (i + 1) % cont.npoly;
+		for (int i = 0; i < cont.npoly();) {
+			int ii = (i + 1) % cont.npoly();
 
-			int ai = cont.poly[i];
-			int ax = cont.verts[ai * 4 + 0];
-			int az = cont.verts[ai * 4 + 2];
+			int ai = cont.poly.get(i);
+			int ax = cont.verts.get(ai * 4);
+			int az = cont.verts.get(ai * 4 + 2);
 
-			int bi = cont.poly[ii];
-			int bx = cont.verts[bi * 4 + 0];
-			int bz = cont.verts[bi * 4 + 2];
+			int bi = cont.poly.get(ii);
+			int bx = cont.verts.get(bi * 4);
+			int bz = cont.verts.get(bi * 4 + 2);
 
 			// Find maximum deviation from the segment.
 			float maxd = 0;
@@ -530,7 +523,7 @@ public class TileCacheBuilder {
 
 			// Tessellate only outer edges or edges between areas.
 			while (ci != endi) {
-				float d = distancePtSeg(cont.verts[ci * 4 + 0], cont.verts[ci * 4 + 2], ax, az, bx, bz);
+				float d = distancePtSeg(cont.verts.get(ci * 4), cont.verts.get(ci * 4 + 2), ax, az, bx, bz);
 				if (d > maxd) {
 					maxd = d;
 					maxi = ci;
@@ -541,10 +534,7 @@ public class TileCacheBuilder {
 			// If the max deviation is larger than accepted error,
 			// add new point, else continue to next segment.
 			if (maxi != -1 && maxd > (maxError * maxError)) {
-				cont.npoly++;
-				for (int j = cont.npoly - 1; j > i; --j)
-					cont.poly[j] = cont.poly[j - 1];
-				cont.poly[i + 1] = maxi;
+				cont.poly.add(i + 1, maxi);
 			} else {
 				++i;
 			}
@@ -552,19 +542,19 @@ public class TileCacheBuilder {
 
 		// Remap vertices
 		int start = 0;
-		for (int i = 1; i < cont.npoly; ++i)
-			if (cont.poly[i] < cont.poly[start])
+		for (int i = 1; i < cont.npoly(); ++i)
+			if (cont.poly.get(i) < cont.poly.get(start))
 				start = i;
 
 		cont.nverts = 0;
-		for (int i = 0; i < cont.npoly; ++i) {
-			int j = (start + i) % cont.npoly;
-			int src = cont.poly[j] * 4;
+		for (int i = 0; i < cont.npoly(); ++i) {
+			int j = (start + i) % cont.npoly();
+			int src = cont.poly.get(j) * 4;
 			int dst = cont.nverts * 4;
-			cont.verts[dst] = cont.verts[src];
-			cont.verts[dst + 1] = cont.verts[src + 1];
-			cont.verts[dst + 2] = cont.verts[src + 2];
-			cont.verts[dst + 3] = cont.verts[src + 3];
+			cont.verts.set(dst, cont.verts.get(src));
+			cont.verts.set(dst+ 1, cont.verts.get(src + 1));
+			cont.verts.set(dst + 2, cont.verts.get(src + 2));
+			cont.verts.set(dst + 3, cont.verts.get(src + 3));
 			cont.nverts++;
 		}
 	}
@@ -625,10 +615,7 @@ public class TileCacheBuilder {
 		}
 
 		// Allocate temp buffer for contour tracing.
-		int maxTempVerts = (w + h) * 2 * 2; // Twice around the layer.
-		int[] tempVerts = new int[maxTempVerts * 4];
-		int[] tempPoly = new int[maxTempVerts];
-		TempContour temp = new TempContour(tempVerts, maxTempVerts, tempPoly, maxTempVerts);
+		TempContour temp = new TempContour();
 
 		// Find contours.
 		for (int y = 0; y < h; ++y) {
@@ -646,16 +633,7 @@ public class TileCacheBuilder {
 				cont.reg = ri;
 				cont.area = layer.areas[idx];
 
-				if (!walkContour(layer, x, y, temp)) {
-					// Too complex contour.
-					// Note: If you hit here ofte, try increasing
-					// 'maxTempVerts'.
-					throw new RuntimeException("Too complex contour"); // FIXME:
-																		// (PP)
-																		// use
-																		// List
-																		// instead
-				}
+				walkContour(layer, x, y, temp);
 
 				simplifyContour(temp, maxError);
 
@@ -668,16 +646,16 @@ public class TileCacheBuilder {
 						int dst = j * 4;
 						int v = j * 4;
 						int vn = i * 4;
-						int nei = temp.verts[vn + 3]; // The neighbour reg is
+						int nei = temp.verts.get(vn + 3); // The neighbour reg is
 														// stored at segment
 														// vertex of a segment.
-						Tupple2<Integer, Boolean> res = getCornerHeight(layer, temp.verts[v], temp.verts[v + 1],
-								temp.verts[v + 2], walkableClimb);
+						Tupple2<Integer, Boolean> res = getCornerHeight(layer, temp.verts.get(v), temp.verts.get(v + 1),
+								temp.verts.get(v + 2), walkableClimb);
 						int lh = res.first;
 						boolean shouldRemove = res.second;
-						cont.verts[dst + 0] = temp.verts[v];
+						cont.verts[dst + 0] = temp.verts.get(v);
 						cont.verts[dst + 1] = lh;
-						cont.verts[dst + 2] = temp.verts[v + 2];
+						cont.verts[dst + 2] = temp.verts.get(v + 2);
 
 						// Store portal direction and remove status to the
 						// fourth component.
@@ -1237,7 +1215,7 @@ public class TileCacheBuilder {
 
 		// Check that there is enough memory for the test.
 		int maxEdges = numTouchedVerts * 2;
-		if (maxEdges > MAX_REM_EDGES)
+		if (maxEdges > MAX_REM_EDGES) // FIXME: Use list instead
 			return false;
 
 		// Find edges which share the removed vertex.
@@ -1740,7 +1718,6 @@ public class TileCacheBuilder {
 		TileCacheLayerHeaderWriter hw = new TileCacheLayerHeaderWriter();
 		try {
 			hw.write(baos, header, order, cCompatibility);
-			baos.write(gridSize);
 			byte[] buffer = new byte[gridSize * 3];
 			for (int i = 0; i < gridSize; i++) {
 				buffer[i] = (byte) heights[i];
