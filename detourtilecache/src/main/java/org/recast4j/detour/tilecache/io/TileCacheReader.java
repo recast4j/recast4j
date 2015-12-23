@@ -50,7 +50,6 @@ public class TileCacheReader {
 			byte[] data = new byte[dataSize];
 			bb.get(data);
 			long tile = tc.addTile(data, 0);
-
 			if (tile != 0)
 				tc.buildNavMeshTile(tile);
 		}

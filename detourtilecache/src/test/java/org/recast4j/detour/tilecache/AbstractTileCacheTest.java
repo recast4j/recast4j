@@ -1,5 +1,6 @@
 package org.recast4j.detour.tilecache;
 
+import static org.recast4j.detour.DetourCommon.vCopy;
 import static org.recast4j.recast.RecastVectors.copy;
 
 import java.nio.ByteOrder;
@@ -26,6 +27,7 @@ public class AbstractTileCacheTest {
 		int[] twh = Recast.calcTileCount(geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), m_cellSize, m_tileSize);
 		params.ch = m_cellHeight;
 		params.cs = m_cellSize;
+		vCopy(params.orig, geom.getMeshBoundsMin());
 		params.height = m_tileSize;
 		params.width = m_tileSize;
 		params.walkableHeight = m_agentHeight;

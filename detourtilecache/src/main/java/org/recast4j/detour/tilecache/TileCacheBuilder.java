@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.Tupple2;
 import org.recast4j.detour.tilecache.io.TileCacheLayerHeaderReader;
 import org.recast4j.detour.tilecache.io.TileCacheLayerHeaderWriter;
@@ -37,8 +38,7 @@ public class TileCacheBuilder {
 	static final int DT_TILECACHE_NULL_AREA = 0;
 	static final int DT_TILECACHE_WALKABLE_AREA = 63;
 	static final int DT_TILECACHE_NULL_IDX = 0xffff;
-	static final int MAX_VERTS_PER_POLY = 6; // TODO: use the
-	// DT_VERTS_PER_POLYGON
+	static final int MAX_VERTS_PER_POLY = NavMesh.DT_VERTS_PER_POLYGON;
 	static final int MAX_REM_EDGES = 48; // TODO: make this an expression.
 
 	class LayerSweepSpan {
@@ -1559,7 +1559,7 @@ public class TileCacheBuilder {
 				int v = j * 4;
 				indices[j] = addVertex(cont.verts[v], cont.verts[v + 1], cont.verts[v + 2], mesh.verts, firstVert,
 						nextVert, mesh.nverts);
-				mesh.nverts++;
+				mesh.nverts = Math.max(mesh.nverts, indices[j] + 1);
 				if ((cont.verts[v + 3] & 0x80) != 0) {
 					// This vertex should be removed.
 					vflags[indices[j]] = 1;
@@ -1637,9 +1637,9 @@ public class TileCacheBuilder {
 		// Remove edge vertices.
 		for (int i = 0; i < mesh.nverts; ++i) {
 			if (vflags[i] != 0) {
-				if (!canRemoveVertex(mesh, (short) i))
+				if (!canRemoveVertex(mesh, i))
 					continue;
-				removeVertex(mesh, (short) i, maxTris);
+				removeVertex(mesh, i, maxTris);
 				// Remove vertex
 				// Note: mesh.nverts is already decremented inside
 				// removeVertex()!

@@ -16,8 +16,33 @@ public class MeshSetReaderTest {
 	private final MeshSetReader reader = new MeshSetReader();
 
 	@Test
-	public void testCCompatibility() throws IOException {
+	public void testNavmesh() throws IOException {
 		InputStream is = getClass().getClassLoader().getResourceAsStream("all_tiles_navmesh.bin");
+		NavMesh mesh = reader.read(is, ByteOrder.LITTLE_ENDIAN, true);
+		assertEquals(128, mesh.getMaxTiles());
+		assertEquals(0x8000, mesh.getParams().maxPolys);
+		assertEquals(9.6, mesh.getParams().tileWidth, 0.001);
+		List<MeshTile> tiles = mesh.getTilesAt(4, 7);
+		assertEquals(1, tiles.size());
+		assertEquals(7, tiles.get(0).data.polys.length);
+		assertEquals(22 * 3, tiles.get(0).data.verts.length);
+		tiles = mesh.getTilesAt(1, 6);
+		assertEquals(1, tiles.size());
+		assertEquals(7, tiles.get(0).data.polys.length);
+		assertEquals(26 * 3, tiles.get(0).data.verts.length);
+		tiles = mesh.getTilesAt(6, 2);
+		assertEquals(1, tiles.size());
+		assertEquals(1, tiles.get(0).data.polys.length);
+		assertEquals(4 * 3, tiles.get(0).data.verts.length);
+		tiles = mesh.getTilesAt(7, 6);
+		assertEquals(1, tiles.size());
+		assertEquals(8, tiles.get(0).data.polys.length);
+		assertEquals(24 * 3, tiles.get(0).data.verts.length);
+	}
+
+	@Test
+	public void testDungeon() throws IOException {
+		InputStream is = getClass().getClassLoader().getResourceAsStream("dungeon_all_tiles_navmesh.bin");
 		NavMesh mesh = reader.read(is, ByteOrder.LITTLE_ENDIAN, true);
 		assertEquals(128, mesh.getMaxTiles());
 		assertEquals(0x8000, mesh.getParams().maxPolys);

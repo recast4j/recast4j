@@ -77,6 +77,9 @@ public class TileCacheTest extends AbstractTileCacheTest {
 		assertEquals(8, data.detailMeshes.length);
 		assertEquals(0, data.detailVerts.length);
 		assertEquals(4 * 14, data.detailTris.length);
+		assertEquals(14.997294f, data.verts[1], 0.0001f);
+		assertEquals(15.484785f, data.verts[6], 0.0001f);
+		assertEquals(15.484785f, data.verts[9], 0.0001f);
 		//Tile8:  Tris: 3, Verts: 8 Detail Meshed: 3 Detail Verts: 0 Detail Tris: 6 
 		tile = tc.getNavMesh().getTile(8);
 		data = tile.data;

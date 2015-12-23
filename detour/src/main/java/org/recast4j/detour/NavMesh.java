@@ -65,8 +65,7 @@ public class NavMesh {
 	/// The limit is given as a multiple of the character radius
 	static float DT_RAY_CAST_LIMIT_PROPORTIONS = 50.0f;
 
-	NavMeshParams m_params; /// < Current initialization params. TODO: do not
-							/// store this info twice.
+	NavMeshParams m_params; /// < Current initialization params. TODO: do not store this info twice.
 	private float[] m_orig; /// < Origin of the tile (0,0)
 	// float m_orig[3]; ///< Origin of the tile (0,0)
 	float m_tileWidth, m_tileHeight; /// < Dimensions of each tile.
@@ -177,14 +176,20 @@ public class NavMesh {
 	}
 
 	private int allocLink(MeshTile tile) {
-		Link link = new Link();
-		link.next = DT_NULL_LINK;
-		tile.links.add(link);
-		return tile.links.size() - 1;
+		if (tile.linksFreeList == DT_NULL_LINK) {
+			Link link = new Link();
+			link.next = DT_NULL_LINK;
+			tile.links.add(link);
+			return tile.links.size() - 1;
+		}
+		int link = tile.linksFreeList;
+		tile.linksFreeList = tile.links.get(link).next;
+		return link;
 	}
 
 	private void freeLink(MeshTile tile, int link) {
-		tile.links.remove(link);
+		tile.links.get(link).next = tile.linksFreeList;
+		tile.linksFreeList = link;
 	}
 
 	/**

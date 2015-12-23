@@ -30,8 +30,10 @@ public class MeshTile {
 	int salt;
 	/** The tile data. */
 	public MeshData data;
-	/** The tile links. [Size: MeshHeader::maxLinkCount] */
+	/** The tile links. */
 	final List<Link> links = new ArrayList<>();
+	/** Index to the next free link. */
+	int linksFreeList = NavMesh.DT_NULL_LINK;
 	/** Tile flags. (See: #dtTileFlags) */
 	int flags;
 	/** The next free tile, or the next tile in the spatial grid. */

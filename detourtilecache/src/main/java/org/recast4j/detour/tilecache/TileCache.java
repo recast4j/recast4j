@@ -41,7 +41,7 @@ public class TileCache {
 
 	CompressedTile[] m_posLookup; /// < Tile hash lookup.
 	CompressedTile m_nextFreeTile; /// < Freelist of tiles.
-	CompressedTile[] m_tiles; /// < List of tiles. // TODO: replace with list
+	CompressedTile[] m_tiles; /// < List of tiles. // TODO: (PP) replace with list
 
 	private int m_saltBits; /// < Number of salt bits in the tile ID.
 	private int m_tileBits; /// < Number of tile bits in the tile ID.
@@ -53,7 +53,7 @@ public class TileCache {
 	TileCacheCompressor m_tcomp;
 	TileCacheMeshProcess m_tmproc;
 
-	TileCacheObstacle[] m_obstacles;  // TODO: replace with list
+	TileCacheObstacle[] m_obstacles;  // TODO: (PP) replace with list
 	TileCacheObstacle m_nextFreeObstacle;
 
 	List<ObstacleRequest> m_reqs = new ArrayList<>();

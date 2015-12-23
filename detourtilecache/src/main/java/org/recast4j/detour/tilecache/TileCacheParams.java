@@ -19,7 +19,7 @@ freely, subject to the following restrictions:
 package org.recast4j.detour.tilecache;
 
 public class TileCacheParams {
-	public float[] orig = new float[3];
+	public final float[] orig = new float[3];
 	public float cs, ch;
 	public int width, height;
 	public float walkableHeight;

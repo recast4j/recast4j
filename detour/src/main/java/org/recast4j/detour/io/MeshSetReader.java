@@ -56,7 +56,6 @@ public class MeshSetReader {
 			NavMeshTileHeader tileHeader = new NavMeshTileHeader();
 			tileHeader.tileRef = bb.getLong();
 			tileHeader.dataSize = bb.getInt();
-			System.out.println("ref = " + tileHeader.tileRef + "  " + tileHeader.dataSize);
 			if (tileHeader.tileRef == 0 || tileHeader.dataSize == 0) {
 				break;
 			}

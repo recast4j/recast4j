@@ -18,7 +18,8 @@ public class TileCacheReaderTest {
 	private final TileCacheReader reader = new TileCacheReader();
 
 	@Test
-	public void testCCompatibility() throws IOException {
+	public void testNavmesh() throws IOException {
+		
 		InputStream is = getClass().getClassLoader().getResourceAsStream("all_tiles_tilecache.bin");
 		TileCache tc = reader.read(is, new FastLzTileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, true);
 		assertEquals(256, tc.getNavMesh().getMaxTiles());
@@ -35,7 +36,103 @@ public class TileCacheReaderTest {
 		assertEquals(6*7*4, tc.getParams().maxTiles);
 		assertEquals(128, tc.getParams().maxObstacles);
 		assertEquals(168, tc.getTileCount());
+		//Tile0:  Tris: 1, Verts: 4 Detail Meshed: 1 Detail Verts: 0 Detail Tris: 2 
+		//Verts: -2.269517, 28.710686, 28.710686
+		MeshTile tile = tc.getNavMesh().getTile(0);
+		MeshData data = tile.data;
+		MeshHeader header = data.header;
+		assertEquals(4, header.vertCount);
+		assertEquals(1, header.polyCount);
+		assertEquals(1, header.detailMeshCount);
+		assertEquals(0, header.detailVertCount);
+		assertEquals(2, header.detailTriCount);
+		assertEquals(1, data.polys.length);
+		assertEquals(3 * 4, data.verts.length);
+		assertEquals(1, data.detailMeshes.length);
+		assertEquals(0, data.detailVerts.length);
+		assertEquals(4 * 2, data.detailTris.length);
+		assertEquals(-2.269517f, data.verts[1], 0.0001f);
+		assertEquals(28.710686f, data.verts[6], 0.0001f);
+		assertEquals(28.710686f, data.verts[9], 0.0001f);
+		//Tile8:  Tris: 7, Verts: 10 Detail Meshed: 7 Detail Verts: 0 Detail Tris: 10 
+		//Verts: 0.330483, 43.110687, 43.110687
+		tile = tc.getNavMesh().getTile(8);
+		data = tile.data;
+		header = data.header;
+		System.out.println(data.header.x + "  " + data.header.y + "  " + data.header.layer);
+		assertEquals(4, header.x);
+		assertEquals(1, header.y);
+		assertEquals(0, header.layer);
+		assertEquals(10, header.vertCount);
+		assertEquals(7, header.polyCount);
+		assertEquals(7, header.detailMeshCount);
+		assertEquals(0, header.detailVertCount);
+		assertEquals(10, header.detailTriCount);
+		assertEquals(7, data.polys.length);
+		assertEquals(3 * 10, data.verts.length);
+		assertEquals(7, data.detailMeshes.length);
+		assertEquals(0, data.detailVerts.length);
+		assertEquals(4 * 10, data.detailTris.length);
+		assertEquals(0.330483f, data.verts[1], 0.0001f);
+		assertEquals(43.110687f, data.verts[6], 0.0001f);
+		assertEquals(43.110687f, data.verts[9], 0.0001f);
+		//Tile16:  Tris: 13, Verts: 33 Detail Meshed: 13 Detail Verts: 0 Detail Tris: 25 
+		//Verts: 1.130483, 5.610685, 6.510685
+		tile = tc.getNavMesh().getTile(16);
+		data = tile.data;
+		header = data.header;
+		assertEquals(33, header.vertCount);
+		assertEquals(13, header.polyCount);
+		assertEquals(13, header.detailMeshCount);
+		assertEquals(0, header.detailVertCount);
+		assertEquals(25, header.detailTriCount);
+		assertEquals(13, data.polys.length);
+		assertEquals(3 * 33, data.verts.length);
+		assertEquals(13, data.detailMeshes.length);
+		assertEquals(0, data.detailVerts.length);
+		assertEquals(4 * 25, data.detailTris.length);
+		assertEquals(1.130483f, data.verts[1], 0.0001f);
+		assertEquals(5.610685f, data.verts[6], 0.0001f);
+		assertEquals(6.510685f, data.verts[9], 0.0001f);
+		//Tile29:  Tris: 5, Verts: 15 Detail Meshed: 5 Detail Verts: 0 Detail Tris: 11 
+		//Verts: 10.330483, 10.110685, 10.110685
+		tile = tc.getNavMesh().getTile(29);
+		data = tile.data;
+		header = data.header;
+		assertEquals(15, header.vertCount);
+		assertEquals(5, header.polyCount);
+		assertEquals(5, header.detailMeshCount);
+		assertEquals(0, header.detailVertCount);
+		assertEquals(11, header.detailTriCount);
+		assertEquals(5, data.polys.length);
+		assertEquals(3 * 15, data.verts.length);
+		assertEquals(5, data.detailMeshes.length);
+		assertEquals(0, data.detailVerts.length);
+		assertEquals(4 * 11, data.detailTris.length);
+		assertEquals(10.330483f, data.verts[1], 0.0001f);
+		assertEquals(10.110685f, data.verts[6], 0.0001f);
+		assertEquals(10.110685f, data.verts[9], 0.0001f);
+	}
+
+	public void testDungeon() throws IOException {
+		InputStream is = getClass().getClassLoader().getResourceAsStream("dungeon_all_tiles_tilecache.bin");
+		TileCache tc = reader.read(is, new FastLzTileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, true);
+		assertEquals(256, tc.getNavMesh().getMaxTiles());
+		assertEquals(16384, tc.getNavMesh().getParams().maxPolys);
+		assertEquals(14.4f, tc.getNavMesh().getParams().tileWidth, 0.001f);
+		assertEquals(14.4f, tc.getNavMesh().getParams().tileHeight, 0.001f);
+		assertEquals(6, tc.getNavMesh().getMaxVertsPerPoly());
+		assertEquals(0.3f, tc.getParams().cs, 0.0f);
+		assertEquals(0.2f, tc.getParams().ch, 0.0f);
+		assertEquals(0.9f, tc.getParams().walkableClimb, 0.0f);
+		assertEquals(2f, tc.getParams().walkableHeight, 0.0f);
+		assertEquals(0.6f, tc.getParams().walkableRadius, 0.0f);
+		assertEquals(48, tc.getParams().width);
+		assertEquals(6*7*4, tc.getParams().maxTiles);
+		assertEquals(128, tc.getParams().maxObstacles);
+		assertEquals(168, tc.getTileCount());
 		//Tile0:  Tris: 8, Verts: 18 Detail Meshed: 8 Detail Verts: 0 Detail Tris: 14 
+		//Verts: 14.997294, 15.484785, 15.484785
 		MeshTile tile = tc.getNavMesh().getTile(0);
 		MeshData data = tile.data;
 		MeshHeader header = data.header;
@@ -49,7 +146,11 @@ public class TileCacheReaderTest {
 		assertEquals(8, data.detailMeshes.length);
 		assertEquals(0, data.detailVerts.length);
 		assertEquals(4 * 14, data.detailTris.length);
+		assertEquals(14.997294f, data.verts[1], 0.0001f);
+		assertEquals(15.484785f, data.verts[6], 0.0001f);
+		assertEquals(15.484785f, data.verts[9], 0.0001f);
 		//Tile8:  Tris: 3, Verts: 8 Detail Meshed: 3 Detail Verts: 0 Detail Tris: 6 
+		//Verts: 13.597294, 17.584785, 17.584785
 		tile = tc.getNavMesh().getTile(8);
 		data = tile.data;
 		header = data.header;
@@ -63,7 +164,11 @@ public class TileCacheReaderTest {
 		assertEquals(3, data.detailMeshes.length);
 		assertEquals(0, data.detailVerts.length);
 		assertEquals(4 * 6, data.detailTris.length);
+		assertEquals(13.597294f, data.verts[1], 0.0001f);
+		assertEquals(17.584785f, data.verts[6], 0.0001f);
+		assertEquals(17.584785f, data.verts[9], 0.0001f);
 		//Tile16:  Tris: 10, Verts: 20 Detail Meshed: 10 Detail Verts: 0 Detail Tris: 18 
+		//Verts: 6.197294, -22.315216, -22.315216
 		tile = tc.getNavMesh().getTile(16);
 		data = tile.data;
 		header = data.header;
@@ -77,7 +182,11 @@ public class TileCacheReaderTest {
 		assertEquals(10, data.detailMeshes.length);
 		assertEquals(0, data.detailVerts.length);
 		assertEquals(4 * 18, data.detailTris.length);
+		assertEquals(6.197294f, data.verts[1], 0.0001f);
+		assertEquals(-22.315216f, data.verts[6], 0.0001f);
+		assertEquals(-22.315216f, data.verts[9], 0.0001f);
 		//Tile29:  Tris: 1, Verts: 5 Detail Meshed: 1 Detail Verts: 0 Detail Tris: 3 
+		//Verts: 10.197294, 48.484783, 48.484783
 		tile = tc.getNavMesh().getTile(29);
 		data = tile.data;
 		header = data.header;
@@ -91,6 +200,9 @@ public class TileCacheReaderTest {
 		assertEquals(1, data.detailMeshes.length);
 		assertEquals(0, data.detailVerts.length);
 		assertEquals(4 * 3, data.detailTris.length);
+		assertEquals(10.197294f, data.verts[1], 0.0001f);
+		assertEquals(48.484783f, data.verts[6], 0.0001f);
+		assertEquals(48.484783f, data.verts[9], 0.0001f);
 	}
 
 }
