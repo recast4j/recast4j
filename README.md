@@ -5,7 +5,7 @@ Recast4j
 
 Java Port of Recast and Detour navigation mesh toolset.
 
-More informations about [Recast and Detour](https://github.com/recastnavigation/recastnavigation)
+More information about [Recast and Detour](https://github.com/recastnavigation/recastnavigation)
 
 ## License
 
