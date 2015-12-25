@@ -17,15 +17,15 @@ public class TileCacheReader {
 
 	private final NavMeshParamReader paramReader = new NavMeshParamReader();
 
-	public TileCache read(InputStream is, TileCacheCompressor compressor, ByteOrder order, boolean cCompatibility)
+	public TileCache read(InputStream is, int maxVertPerPoly, TileCacheCompressor compressor, ByteOrder order, boolean cCompatibility)
 			throws IOException {
 		// Read header.
 		ByteBuffer bb = IOUtils.toByteBuffer(is);
 		bb.order(order);
-		return read(bb, compressor, cCompatibility);
+		return read(bb, maxVertPerPoly, compressor, cCompatibility);
 	}
 
-	public TileCache read(ByteBuffer bb, TileCacheCompressor compressor, boolean cCompatibility) throws IOException {
+	public TileCache read(ByteBuffer bb, int maxVertPerPoly, TileCacheCompressor compressor, boolean cCompatibility) throws IOException {
 		TileCacheSetHeader header = new TileCacheSetHeader();
 		header.magic = bb.getInt();
 		if (header.magic != TileCacheSetHeader.TILECACHESET_MAGIC) {
@@ -38,7 +38,7 @@ public class TileCacheReader {
 		header.numTiles = bb.getInt();
 		header.meshParams = paramReader.read(bb);
 		header.cacheParams = readCacheParams(bb, cCompatibility);
-		NavMesh mesh = new NavMesh(header.meshParams);
+		NavMesh mesh = new NavMesh(header.meshParams, maxVertPerPoly);
 		TileCache tc = new TileCache(header.cacheParams, new TileCacheStorageParams(bb.order(), cCompatibility), mesh, compressor, null);
 		// Read tiles.
 		for (int i = 0; i < header.numTiles; ++i) {

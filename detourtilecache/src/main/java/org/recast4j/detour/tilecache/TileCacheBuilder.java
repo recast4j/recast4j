@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.Tupple2;
 import org.recast4j.detour.tilecache.io.TileCacheLayerHeaderReader;
 import org.recast4j.detour.tilecache.io.TileCacheLayerHeaderWriter;
@@ -38,7 +37,7 @@ public class TileCacheBuilder {
 	static final int DT_TILECACHE_NULL_AREA = 0;
 	static final int DT_TILECACHE_WALKABLE_AREA = 63;
 	static final int DT_TILECACHE_NULL_IDX = 0xffff;
-	static final int MAX_VERTS_PER_POLY = NavMesh.DT_VERTS_PER_POLYGON;
+	static final int MAX_VERTS_PER_POLY = 6;
 	static final int MAX_REM_EDGES = 48; // TODO: make this an expression.
 
 	class LayerSweepSpan {
@@ -706,11 +705,11 @@ public class TileCacheBuilder {
 		return i;
 	}
 
-	private void buildMeshAdjacency(int[] polys, int npolys, int[] verts, int nverts, TileCacheContourSet lcset) {
+	private void buildMeshAdjacency(int[] polys, int npolys, int[] verts, int nverts, TileCacheContourSet lcset, int maxVertsPerPoly) {
 		// Based on code by Eric Lengyel from:
 		// http://www.terathon.com/code/edges.php
 
-		int maxEdgeCount = npolys * MAX_VERTS_PER_POLY;
+		int maxEdgeCount = npolys * maxVertsPerPoly;
 
 		int[] firstEdge = new int[nverts + maxEdgeCount];
 		int nextEdge = nverts;
@@ -724,12 +723,12 @@ public class TileCacheBuilder {
 			firstEdge[i] = DT_TILECACHE_NULL_IDX;
 
 		for (int i = 0; i < npolys; ++i) {
-			int t = i * MAX_VERTS_PER_POLY * 2;
-			for (int j = 0; j < MAX_VERTS_PER_POLY; ++j) {
+			int t = i * maxVertsPerPoly * 2;
+			for (int j = 0; j < maxVertsPerPoly; ++j) {
 				if (polys[t + j] == DT_TILECACHE_NULL_IDX)
 					break;
 				int v0 = polys[t + j];
-				int v1 = (j + 1 >= MAX_VERTS_PER_POLY || polys[t + j + 1] == DT_TILECACHE_NULL_IDX) ? polys[t]
+				int v1 = (j + 1 >= maxVertsPerPoly || polys[t + j + 1] == DT_TILECACHE_NULL_IDX) ? polys[t]
 						: polys[t + j + 1];
 				if (v0 < v1) {
 					Edge edge = edges[edgeCount];
@@ -748,12 +747,12 @@ public class TileCacheBuilder {
 		}
 
 		for (int i = 0; i < npolys; ++i) {
-			int t = i * MAX_VERTS_PER_POLY * 2;
-			for (int j = 0; j < MAX_VERTS_PER_POLY; ++j) {
+			int t = i * maxVertsPerPoly * 2;
+			for (int j = 0; j < maxVertsPerPoly; ++j) {
 				if (polys[t + j] == DT_TILECACHE_NULL_IDX)
 					break;
 				int v0 = polys[t + j];
-				int v1 = (j + 1 >= MAX_VERTS_PER_POLY || polys[t + j + 1] == DT_TILECACHE_NULL_IDX) ? polys[t]
+				int v1 = (j + 1 >= maxVertsPerPoly || polys[t + j + 1] == DT_TILECACHE_NULL_IDX) ? polys[t]
 						: polys[t + j + 1];
 				if (v0 > v1) {
 					boolean found = false;
@@ -869,13 +868,13 @@ public class TileCacheBuilder {
 		for (int i = 0; i < edgeCount; ++i) {
 			Edge e = edges[i];
 			if (e.poly[0] != e.poly[1]) {
-				int p0 = e.poly[0] * MAX_VERTS_PER_POLY * 2;
-				int p1 = e.poly[1] * MAX_VERTS_PER_POLY * 2;
-				polys[p0 + MAX_VERTS_PER_POLY + e.polyEdge[0]] = e.poly[1];
-				polys[p1 + MAX_VERTS_PER_POLY + e.polyEdge[1]] = e.poly[0];
+				int p0 = e.poly[0] * maxVertsPerPoly * 2;
+				int p1 = e.poly[1] * maxVertsPerPoly * 2;
+				polys[p0 + maxVertsPerPoly + e.polyEdge[0]] = e.poly[1];
+				polys[p1 + maxVertsPerPoly + e.polyEdge[1]] = e.poly[0];
 			} else if (e.polyEdge[1] != 0xff) {
-				int p0 = e.poly[0] * MAX_VERTS_PER_POLY * 2;
-				polys[p0 + MAX_VERTS_PER_POLY + e.polyEdge[0]] = 0x8000 | (short) e.polyEdge[1];
+				int p0 = e.poly[0] * maxVertsPerPoly * 2;
+				polys[p0 + maxVertsPerPoly + e.polyEdge[0]] = 0x8000 | (short) e.polyEdge[1];
 			}
 
 		}
@@ -1078,11 +1077,11 @@ public class TileCacheBuilder {
 		return ntris;
 	}
 
-	private int countPolyVerts(int[] polys, int p) {
-		for (int i = 0; i < MAX_VERTS_PER_POLY; ++i)
+	private int countPolyVerts(int[] polys, int p, int maxVertsPerPoly) {
+		for (int i = 0; i < maxVertsPerPoly; ++i)
 			if (polys[p + i] == DT_TILECACHE_NULL_IDX)
 				return i;
-		return MAX_VERTS_PER_POLY;
+		return maxVertsPerPoly;
 	}
 
 	private boolean uleft(int[] verts, int a, int b, int c) {
@@ -1090,9 +1089,9 @@ public class TileCacheBuilder {
 				- (verts[c] - verts[a]) * (verts[b + 2] - verts[a + 2]) < 0;
 	}
 
-	private int[] getPolyMergeValue(int[] polys, int pa, int pb, int[] verts) {
-		int na = countPolyVerts(polys, pa);
-		int nb = countPolyVerts(polys, pb);
+	private int[] getPolyMergeValue(int[] polys, int pa, int pb, int[] verts, int maxVertsPerPoly) {
+		int na = countPolyVerts(polys, pa, maxVertsPerPoly);
+		int nb = countPolyVerts(polys, pb, maxVertsPerPoly);
 
 		// If the merged polygon would be too big, do not merge.
 		if (na + nb - 2 > MAX_VERTS_PER_POLY)
@@ -1154,11 +1153,11 @@ public class TileCacheBuilder {
 		return new int[] { dx * dx + dy * dy, ea, eb };
 	}
 
-	private void mergePolys(int[] polys, int pa, int pb, int ea, int eb) {
-		int[] tmp = new int[MAX_VERTS_PER_POLY * 2];
+	private void mergePolys(int[] polys, int pa, int pb, int ea, int eb, int maxVertsPerPoly) {
+		int[] tmp = new int[maxVertsPerPoly * 2];
 
-		int na = countPolyVerts(polys, pa);
-		int nb = countPolyVerts(polys, pb);
+		int na = countPolyVerts(polys, pa, maxVertsPerPoly);
+		int nb = countPolyVerts(polys, pb, maxVertsPerPoly);
 
 		// Merge polygons.
 		Arrays.fill(tmp, 0xFFFF);
@@ -1169,31 +1168,28 @@ public class TileCacheBuilder {
 		// Add pb
 		for (int i = 0; i < nb - 1; ++i)
 			tmp[n++] = polys[pb + (eb + 1 + i) % nb];
-		System.arraycopy(tmp, 0, polys, pa, MAX_VERTS_PER_POLY);
+		System.arraycopy(tmp, 0, polys, pa, maxVertsPerPoly);
 	}
 
-	private int pushFront(int v, int[] arr, int an) {
-		an++;
-		for (int i = an - 1; i > 0; --i)
-			arr[i] = arr[i - 1];
-		arr[0] = v;
-		return an;
+	private int pushFront(int v, List<Integer> arr) {
+		arr.add(0, v);
+		return arr.size();
 	}
 
-	private int pushBack(int v, int[] arr, int an) {
-		arr[an] = v;
-		an++;
-		return an;
+	private int pushBack(int v, List<Integer> arr) {
+		arr.add(v);
+		return arr.size();
 	}
 
 	private boolean canRemoveVertex(TileCachePolyMesh mesh, int rem) {
 		// Count number of polygons to remove.
+		int maxVertsPerPoly = mesh.nvp;
 		int numRemovedVerts = 0;
 		int numTouchedVerts = 0;
 		int numRemainingEdges = 0;
 		for (int i = 0; i < mesh.npolys; ++i) {
-			int p = i * MAX_VERTS_PER_POLY * 2;
-			int nv = countPolyVerts(mesh.polys, p);
+			int p = i * mesh.nvp * 2;
+			int nv = countPolyVerts(mesh.polys, p, maxVertsPerPoly);
 			int numRemoved = 0;
 			int numVerts = 0;
 			for (int j = 0; j < nv; ++j) {
@@ -1218,16 +1214,14 @@ public class TileCacheBuilder {
 
 		// Check that there is enough memory for the test.
 		int maxEdges = numTouchedVerts * 2;
-		if (maxEdges > MAX_REM_EDGES) // FIXME: Use list instead
-			return false;
 
 		// Find edges which share the removed vertex.
-		int[] edges = new int[MAX_REM_EDGES];
+		int[] edges = new int[maxEdges];
 		int nedges = 0;
 
 		for (int i = 0; i < mesh.npolys; ++i) {
-			int p = i * MAX_VERTS_PER_POLY * 2;
-			int nv = countPolyVerts(mesh.polys, p);
+			int p = i * mesh.nvp * 2;
+			int nv = countPolyVerts(mesh.polys, p, maxVertsPerPoly);
 
 			// Collect edges which touches the removed vertex.
 			for (int j = 0, k = nv - 1; j < nv; k = j++) {
@@ -1278,10 +1272,11 @@ public class TileCacheBuilder {
 
 	private void removeVertex(TileCachePolyMesh mesh, int rem, int maxTris) {
 		// Count number of polygons to remove.
+		int maxVertsPerPoly = mesh.nvp;
 		int numRemovedVerts = 0;
 		for (int i = 0; i < mesh.npolys; ++i) {
-			int p = i * MAX_VERTS_PER_POLY * 2;
-			int nv = countPolyVerts(mesh.polys, p);
+			int p = i * maxVertsPerPoly * 2;
+			int nv = countPolyVerts(mesh.polys, p, maxVertsPerPoly);
 			for (int j = 0; j < nv; ++j) {
 				if (mesh.polys[p + j] == rem)
 					numRemovedVerts++;
@@ -1289,15 +1284,14 @@ public class TileCacheBuilder {
 		}
 
 		int nedges = 0;
-		int[] edges = new int[MAX_REM_EDGES * 3];
+		List<Integer> edges = new ArrayList<>();
 		int nhole = 0;
-		int[] hole = new int[MAX_REM_EDGES];
-		int nharea = 0;
-		int[] harea = new int[MAX_REM_EDGES];
+		List<Integer> hole = new ArrayList<>();
+		List<Integer> harea = new ArrayList<>();
 
 		for (int i = 0; i < mesh.npolys; ++i) {
-			int p = i * MAX_VERTS_PER_POLY * 2;
-			int nv = countPolyVerts(mesh.polys, p);
+			int p = i * maxVertsPerPoly * 2;
+			int nv = countPolyVerts(mesh.polys, p, maxVertsPerPoly);
 			boolean hasRem = false;
 			for (int j = 0; j < nv; ++j)
 				if (mesh.polys[p + j] == rem)
@@ -1306,21 +1300,16 @@ public class TileCacheBuilder {
 				// Collect edges which does not touch the removed vertex.
 				for (int j = 0, k = nv - 1; j < nv; k = j++) {
 					if (mesh.polys[p + j] != rem && mesh.polys[p + k] != rem) {
-						if (nedges >= MAX_REM_EDGES) { // FIXME: (PP) use lists
-														// instead
-							throw new RuntimeException("Buffer too small");
-						}
-						int e = nedges * 3;
-						edges[e] = mesh.polys[p + k];
-						edges[e + 1] = mesh.polys[p + j];
-						edges[e + 2] = mesh.areas[i];
+						edges.add( mesh.polys[p + k]);
+						edges.add( mesh.polys[p + j]);
+						edges.add( mesh.areas[i]);
 						nedges++;
 					}
 				}
 				// Remove the polygon.
-				int p2 = (mesh.npolys - 1) * MAX_VERTS_PER_POLY * 2;
-				System.arraycopy(mesh.polys, p2, mesh.polys, p, MAX_VERTS_PER_POLY);
-				Arrays.fill(mesh.polys, p + MAX_VERTS_PER_POLY, p + 2 * MAX_VERTS_PER_POLY, 0xFFFF);
+				int p2 = (mesh.npolys - 1) * maxVertsPerPoly * 2;
+				System.arraycopy(mesh.polys, p2, mesh.polys, p, maxVertsPerPoly);
+				Arrays.fill(mesh.polys, p + maxVertsPerPoly, p + 2 * maxVertsPerPoly, 0xFFFF);
 				mesh.areas[i] = mesh.areas[mesh.npolys - 1];
 				mesh.npolys--;
 				--i;
@@ -1337,17 +1326,17 @@ public class TileCacheBuilder {
 
 		// Adjust indices to match the removed vertex layout.
 		for (int i = 0; i < mesh.npolys; ++i) {
-			int p = i * MAX_VERTS_PER_POLY * 2;
-			int nv = countPolyVerts(mesh.polys, p);
+			int p = i * maxVertsPerPoly * 2;
+			int nv = countPolyVerts(mesh.polys, p, maxVertsPerPoly);
 			for (int j = 0; j < nv; ++j)
 				if (mesh.polys[p + j] > rem)
 					mesh.polys[p + j]--;
 		}
 		for (int i = 0; i < nedges; ++i) {
-			if (edges[i * 3 + 0] > rem)
-				edges[i * 3 + 0]--;
-			if (edges[i * 3 + 1] > rem)
-				edges[i * 3 + 1]--;
+			if (edges.get(i * 3) > rem)
+				edges.set(i * 3, edges.get(i * 3) - 1);
+			if (edges.get(i * 3 + 1) > rem)
+				edges.set(i * 3 + 1, edges.get(i * 3 + 1) - 1);
 		}
 
 		if (nedges == 0)
@@ -1355,37 +1344,33 @@ public class TileCacheBuilder {
 
 		// Start with one vertex, keep appending connected
 		// segments to the start and end of the hole.
-		nhole = pushBack(edges[0], hole, nhole);
-		nharea = pushBack(edges[2], harea, nharea);
+		nhole = pushBack(edges.get(0), hole);
+		pushBack(edges.get(2), harea);
 
 		while (nedges != 0) {
 			boolean match = false;
 
 			for (int i = 0; i < nedges; ++i) {
-				int ea = edges[i * 3 + 0];
-				int eb = edges[i * 3 + 1];
-				int a = edges[i * 3 + 2];
+				int ea = edges.get(i * 3);
+				int eb = edges.get(i * 3 + 1);
+				int a = edges.get(i * 3 + 2);
 				boolean add = false;
-				if (hole[0] == eb) {
+				if (hole.get(0) == eb) {
 					// The segment matches the beginning of the hole boundary.
-					if (nhole >= MAX_REM_EDGES)
-						throw new RuntimeException("Buffer too small");
-					nhole = pushFront(ea, hole, nhole);
-					nharea = pushFront(a, harea, nharea);
+					nhole = pushFront(ea, hole);
+					pushFront(a, harea);
 					add = true;
-				} else if (hole[nhole - 1] == ea) {
+				} else if (hole.get(nhole - 1) == ea) {
 					// The segment matches the end of the hole boundary.
-					if (nhole >= MAX_REM_EDGES)
-						throw new RuntimeException("Buffer too small");
-					nhole = pushBack(eb, hole, nhole);
-					nharea = pushBack(a, harea, nharea);
+					nhole = pushBack(eb, hole);
+					pushBack(a, harea);
 					add = true;
 				}
 				if (add) {
 					// The edge segment was added, remove it.
-					edges[i * 3 + 0] = edges[(nedges - 1) * 3 + 0];
-					edges[i * 3 + 1] = edges[(nedges - 1) * 3 + 1];
-					edges[i * 3 + 2] = edges[(nedges - 1) * 3 + 2];
+					edges.set(i * 3, edges.get((nedges - 1) * 3));
+					edges.set(i * 3 + 1, edges.get((nedges - 1) * 3) + 1);
+					edges.set(i * 3 + 2, edges.get((nedges - 1) * 3) + 2);
 					--nedges;
 					match = true;
 					--i;
@@ -1402,12 +1387,12 @@ public class TileCacheBuilder {
 
 		// Generate temp vertex array for triangulation.
 		for (int i = 0; i < nhole; ++i) {
-			int pi = hole[i];
+			int pi = hole.get(i);
 			tverts[i * 4 + 0] = mesh.verts[pi * 3 + 0];
 			tverts[i * 4 + 1] = mesh.verts[pi * 3 + 1];
 			tverts[i * 4 + 2] = mesh.verts[pi * 3 + 2];
 			tverts[i * 4 + 3] = 0;
-			tpoly[i] = (short) i;
+			tpoly[i] = i;
 		}
 
 		// Triangulate the hole.
@@ -1417,22 +1402,19 @@ public class TileCacheBuilder {
 			ntris = -ntris;
 		}
 
-		if (ntris > MAX_REM_EDGES) // FIXME: (PP) Use lists instead
-			throw new RuntimeException("Buffer too small");
-
-		int[] polys = new int[MAX_REM_EDGES * MAX_VERTS_PER_POLY];
-		int[] pareas = new int[MAX_REM_EDGES];
+		int[] polys = new int[ntris * maxVertsPerPoly];
+		int[] pareas = new int[ntris];
 
 		// Build initial polygons.
 		int npolys = 0;
-		Arrays.fill(polys, 0, ntris * MAX_VERTS_PER_POLY, 0xFFFF);
+		Arrays.fill(polys, 0, ntris * maxVertsPerPoly, 0xFFFF);
 		for (int j = 0; j < ntris; ++j) {
 			int t = j * 3;
 			if (tris[t] != tris[t + 1] && tris[t] != tris[t + 2] && tris[t + 1] != tris[t + 2]) {
-				polys[npolys * MAX_VERTS_PER_POLY + 0] = hole[tris[t]];
-				polys[npolys * MAX_VERTS_PER_POLY + 1] = hole[tris[t + 1]];
-				polys[npolys * MAX_VERTS_PER_POLY + 2] = hole[tris[t + 2]];
-				pareas[npolys] = harea[tris[t]];
+				polys[npolys * maxVertsPerPoly + 0] = hole.get(tris[t]);
+				polys[npolys * maxVertsPerPoly + 1] = hole.get(tris[t + 1]);
+				polys[npolys * maxVertsPerPoly + 2] = hole.get(tris[t + 2]);
+				pareas[npolys] = harea.get(tris[t]);
 				npolys++;
 			}
 		}
@@ -1440,7 +1422,6 @@ public class TileCacheBuilder {
 			return;
 
 		// Merge polygons.
-		int maxVertsPerPoly = MAX_VERTS_PER_POLY;
 		if (maxVertsPerPoly > 3) {
 			for (;;) {
 				// Find best polygons to merge.
@@ -1448,10 +1429,10 @@ public class TileCacheBuilder {
 				int bestPa = 0, bestPb = 0, bestEa = 0, bestEb = 0;
 
 				for (int j = 0; j < npolys - 1; ++j) {
-					int pj = j * MAX_VERTS_PER_POLY;
+					int pj = j * maxVertsPerPoly;
 					for (int k = j + 1; k < npolys; ++k) {
-						int pk = k * MAX_VERTS_PER_POLY;
-						int[] pm = getPolyMergeValue(polys, pj, pk, mesh.verts);
+						int pk = k * maxVertsPerPoly;
+						int[] pm = getPolyMergeValue(polys, pj, pk, mesh.verts, maxVertsPerPoly);
 						int v = pm[0];
 						int ea = pm[1];
 						int eb = pm[2];
@@ -1467,10 +1448,10 @@ public class TileCacheBuilder {
 
 				if (bestMergeVal > 0) {
 					// Found best, merge.
-					int pa = bestPa * MAX_VERTS_PER_POLY;
-					int pb = bestPb * MAX_VERTS_PER_POLY;
-					mergePolys(polys, pa, pb, bestEa, bestEb);
-					System.arraycopy(polys, (npolys - 1) * MAX_VERTS_PER_POLY, polys, pb, MAX_VERTS_PER_POLY);
+					int pa = bestPa * maxVertsPerPoly;
+					int pb = bestPb * maxVertsPerPoly;
+					mergePolys(polys, pa, pb, bestEa, bestEb, maxVertsPerPoly);
+					System.arraycopy(polys, (npolys - 1) * maxVertsPerPoly, polys, pb, maxVertsPerPoly);
 					pareas[bestPb] = pareas[npolys - 1];
 					npolys--;
 				} else {
@@ -1484,10 +1465,10 @@ public class TileCacheBuilder {
 		for (int i = 0; i < npolys; ++i) {
 			if (mesh.npolys >= maxTris)
 				break;
-			int p = mesh.npolys * MAX_VERTS_PER_POLY * 2;
-			Arrays.fill(mesh.polys, p, p + MAX_VERTS_PER_POLY * 2, 0xFFFF);
-			for (int j = 0; j < MAX_VERTS_PER_POLY; ++j)
-				mesh.polys[p + j] = polys[i * MAX_VERTS_PER_POLY + j];
+			int p = mesh.npolys * maxVertsPerPoly * 2;
+			Arrays.fill(mesh.polys, p, p + maxVertsPerPoly * 2, 0xFFFF);
+			for (int j = 0; j < maxVertsPerPoly; ++j)
+				mesh.polys[p + j] = polys[i * maxVertsPerPoly + j];
 			mesh.areas[mesh.npolys] = pareas[i];
 			mesh.npolys++;
 			if (mesh.npolys > maxTris) {
@@ -1498,7 +1479,6 @@ public class TileCacheBuilder {
 	}
 
 	TileCachePolyMesh buildTileCachePolyMesh(TileCacheContourSet lcset) {
-		TileCachePolyMesh mesh = new TileCachePolyMesh();
 
 		int maxVertices = 0;
 		int maxTris = 0;
@@ -1514,12 +1494,13 @@ public class TileCacheBuilder {
 
 		// TODO: warn about too many vertices?
 
-		mesh.nvp = MAX_VERTS_PER_POLY;
+		TileCachePolyMesh mesh = new TileCachePolyMesh(MAX_VERTS_PER_POLY);
+		int maxVertsPerPoly = mesh.nvp;
 
 		int[] vflags = new int[maxVertices];
 
 		mesh.verts = new int[maxVertices * 3];
-		mesh.polys = new int[maxTris * MAX_VERTS_PER_POLY * 2];
+		mesh.polys = new int[maxTris * maxVertsPerPoly * 2];
 		mesh.areas = new int[maxTris];
 		// Just allocate and clean the mesh flags array. The user is resposible
 		// for filling it.
@@ -1535,7 +1516,7 @@ public class TileCacheBuilder {
 		int[] nextVert = new int[maxVertices];
 		int[] indices = new int[maxVertsPerCont];
 		int[] tris = new int[maxVertsPerCont * 3];
-		int[] polys = new int[maxVertsPerCont * MAX_VERTS_PER_POLY];
+		int[] polys = new int[maxVertsPerCont * maxVertsPerPoly];
 
 		for (int i = 0; i < lcset.nconts; ++i) {
 			TileCacheContour cont = lcset.conts[i];
@@ -1572,9 +1553,9 @@ public class TileCacheBuilder {
 			for (int j = 0; j < ntris; ++j) {
 				int t = j * 3;
 				if (tris[t] != tris[t + 1] && tris[t] != tris[t + 2] && tris[t + 1] != tris[t + 2]) {
-					polys[npolys * MAX_VERTS_PER_POLY + 0] = indices[tris[t]];
-					polys[npolys * MAX_VERTS_PER_POLY + 1] = indices[tris[t + 1]];
-					polys[npolys * MAX_VERTS_PER_POLY + 2] = indices[tris[t + 2]];
+					polys[npolys * maxVertsPerPoly + 0] = indices[tris[t]];
+					polys[npolys * maxVertsPerPoly + 1] = indices[tris[t + 1]];
+					polys[npolys * maxVertsPerPoly + 2] = indices[tris[t + 2]];
 					npolys++;
 				}
 			}
@@ -1582,7 +1563,6 @@ public class TileCacheBuilder {
 				continue;
 
 			// Merge polygons.
-			int maxVertsPerPoly = MAX_VERTS_PER_POLY;
 			if (maxVertsPerPoly > 3) {
 				for (;;) {
 					// Find best polygons to merge.
@@ -1590,10 +1570,10 @@ public class TileCacheBuilder {
 					int bestPa = 0, bestPb = 0, bestEa = 0, bestEb = 0;
 
 					for (int j = 0; j < npolys - 1; ++j) {
-						int pj = j * MAX_VERTS_PER_POLY;
+						int pj = j * maxVertsPerPoly;
 						for (int k = j + 1; k < npolys; ++k) {
-							int pk = k * MAX_VERTS_PER_POLY;
-							int[] pm = getPolyMergeValue(polys, pj, pk, mesh.verts);
+							int pk = k * maxVertsPerPoly;
+							int[] pm = getPolyMergeValue(polys, pj, pk, mesh.verts, maxVertsPerPoly);
 							int v = pm[0];
 							int ea = pm[1];
 							int eb = pm[2];
@@ -1609,10 +1589,10 @@ public class TileCacheBuilder {
 
 					if (bestMergeVal > 0) {
 						// Found best, merge.
-						int pa = bestPa * MAX_VERTS_PER_POLY;
-						int pb = bestPb * MAX_VERTS_PER_POLY;
-						mergePolys(polys, pa, pb, bestEa, bestEb);
-						System.arraycopy(polys, (npolys - 1) * MAX_VERTS_PER_POLY, polys, pb, MAX_VERTS_PER_POLY);
+						int pa = bestPa * maxVertsPerPoly;
+						int pb = bestPb * maxVertsPerPoly;
+						mergePolys(polys, pa, pb, bestEa, bestEb, maxVertsPerPoly);
+						System.arraycopy(polys, (npolys - 1) * maxVertsPerPoly, polys, pb, maxVertsPerPoly);
 						npolys--;
 					} else {
 						// Could not merge any polygons, stop.
@@ -1623,9 +1603,9 @@ public class TileCacheBuilder {
 
 			// Store polygons.
 			for (int j = 0; j < npolys; ++j) {
-				int p = mesh.npolys * MAX_VERTS_PER_POLY * 2;
-				int q = j * MAX_VERTS_PER_POLY;
-				for (int k = 0; k < MAX_VERTS_PER_POLY; ++k)
+				int p = mesh.npolys * maxVertsPerPoly * 2;
+				int q = j * maxVertsPerPoly;
+				for (int k = 0; k < maxVertsPerPoly; ++k)
 					mesh.polys[p + k] = polys[q + k];
 				mesh.areas[mesh.npolys] = cont.area;
 				mesh.npolys++;
@@ -1650,7 +1630,7 @@ public class TileCacheBuilder {
 		}
 
 		// Calculate adjacency.
-		buildMeshAdjacency(mesh.polys, mesh.npolys, mesh.verts, mesh.nverts, lcset);
+		buildMeshAdjacency(mesh.polys, mesh.npolys, mesh.verts, mesh.nverts, lcset, maxVertsPerPoly);
 
 		return mesh;
 	}

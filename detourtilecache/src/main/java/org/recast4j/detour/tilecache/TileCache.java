@@ -39,25 +39,25 @@ public class TileCache {
 	int m_tileLutSize; /// < Tile hash lookup size (must be pot).
 	int m_tileLutMask; /// < Tile hash lookup mask.
 
-	CompressedTile[] m_posLookup; /// < Tile hash lookup.
-	CompressedTile m_nextFreeTile; /// < Freelist of tiles.
-	CompressedTile[] m_tiles; /// < List of tiles. // TODO: (PP) replace with list
+	private final CompressedTile[] m_posLookup; /// < Tile hash lookup.
+	private CompressedTile m_nextFreeTile; /// < Freelist of tiles.
+	private final CompressedTile[] m_tiles; /// < List of tiles. // TODO: (PP) replace with list
 
 	private int m_saltBits; /// < Number of salt bits in the tile ID.
 	private int m_tileBits; /// < Number of tile bits in the tile ID.
 
-	NavMesh m_navmesh;
-	TileCacheParams m_params;
-	TileCacheStorageParams m_storageParams;
+	private final NavMesh m_navmesh;
+	private final TileCacheParams m_params;
+	private final TileCacheStorageParams m_storageParams;
 
-	TileCacheCompressor m_tcomp;
-	TileCacheMeshProcess m_tmproc;
+	private final TileCacheCompressor m_tcomp;
+	private final TileCacheMeshProcess m_tmproc;
 
-	TileCacheObstacle[] m_obstacles;  // TODO: (PP) replace with list
-	TileCacheObstacle m_nextFreeObstacle;
+	private final List<TileCacheObstacle> m_obstacles = new ArrayList<>();
+	private TileCacheObstacle m_nextFreeObstacle;
 
-	List<ObstacleRequest> m_reqs = new ArrayList<>();
-	List<Long> m_update = new ArrayList<>();
+	private final List<ObstacleRequest> m_reqs = new ArrayList<>();
+	private final List<Long> m_update = new ArrayList<>();
 
 	private final TileCacheBuilder builder = new TileCacheBuilder();
 	private final TileCacheLayerHeaderReader tileReader = new TileCacheLayerHeaderReader();
@@ -107,13 +107,6 @@ public class TileCache {
 		m_navmesh = navmesh;
 		m_tcomp = tcomp;
 		m_tmproc = tmprocs;
-		m_obstacles = new TileCacheObstacle[m_params.maxObstacles];
-		for (int i = m_params.maxObstacles - 1; i >= 0; --i) {
-			m_obstacles[i] = new TileCacheObstacle(i);
-			m_obstacles[i].salt = 1;
-			m_obstacles[i].next = m_nextFreeObstacle;
-			m_nextFreeObstacle = m_obstacles[i];
-		}
 
 		m_tileLutSize = nextPow2(m_params.maxTiles / 4);
 		if (m_tileLutSize == 0) {
@@ -124,7 +117,6 @@ public class TileCache {
 		m_posLookup = new CompressedTile[m_tileLutSize];
 		for (int i = m_params.maxTiles - 1; i >= 0; --i) {
 			m_tiles[i] = new CompressedTile(i);
-			m_tiles[i].salt = 1;
 			m_tiles[i].next = m_nextFreeTile;
 			m_nextFreeTile = m_tiles[i];
 		}
@@ -195,9 +187,9 @@ public class TileCache {
 		if (ref == 0)
 			return null;
 		int idx = decodeObstacleIdObstacle(ref);
-		if (idx >= m_params.maxObstacles)
+		if (idx >= m_obstacles.size())
 			return null;
-		TileCacheObstacle ob = m_obstacles[idx];
+		TileCacheObstacle ob = m_obstacles.get(idx);
 		int salt = decodeObstacleIdSalt(ref);
 		if (ob.salt != salt)
 			return null;
@@ -287,14 +279,7 @@ public class TileCache {
 	}
 
 	public long addObstacle(float[] pos, float radius, float height) {
-		TileCacheObstacle ob = null;
-		if (m_nextFreeObstacle != null) {
-			ob = m_nextFreeObstacle;
-			m_nextFreeObstacle = ob.next;
-			ob.next = null;
-		}
-		if (ob == null)
-			throw new RuntimeException("Out of storage");
+		TileCacheObstacle ob = allocObstacle();
 
 		int salt = ob.salt;
 		ob.reset();
@@ -320,6 +305,17 @@ public class TileCache {
 		req.action = ObstacleRequestAction.REQUEST_REMOVE;
 		req.ref = ref;
 		m_reqs.add(req);
+	}
+
+	private TileCacheObstacle allocObstacle() {
+		TileCacheObstacle o = m_nextFreeObstacle;
+		if (o == null) {
+			o = new TileCacheObstacle(m_obstacles.size());
+			m_obstacles.add(o);
+		} else {
+			m_nextFreeObstacle = o.next;
+		}
+		return o;
 	}
 
 	List<Long> queryTiles(float[] bmin, float[] bmax) {
@@ -352,9 +348,9 @@ public class TileCache {
 			// Process requests.
 			for (ObstacleRequest req : m_reqs) {
 				int idx = decodeObstacleIdObstacle(req.ref);
-				if (idx >= m_params.maxObstacles)
+				if (idx >= m_obstacles.size())
 					continue;
-				TileCacheObstacle ob = m_obstacles[idx];
+				TileCacheObstacle ob = m_obstacles.get(idx);
 				int salt = decodeObstacleIdSalt(req.ref);
 				if (ob.salt != salt)
 					continue;
@@ -396,8 +392,8 @@ public class TileCache {
 			buildNavMeshTile(ref);
 
 			// Update obstacle states.
-			for (int i = 0; i < m_params.maxObstacles; ++i) {
-				TileCacheObstacle ob = m_obstacles[i];
+			for (int i = 0; i < m_obstacles.size(); ++i) {
+				TileCacheObstacle ob = m_obstacles.get(i);
 				if (ob.state == ObstacleState.DT_OBSTACLE_PROCESSING
 						|| ob.state == ObstacleState.DT_OBSTACLE_REMOVING) {
 					// Remove handled tile from pending list.
@@ -438,8 +434,8 @@ public class TileCache {
 		TileCacheLayer layer = decompressTile(tile);
 
 		// Rasterize obstacles.
-		for (int i = 0; i < m_params.maxObstacles; ++i) {
-			TileCacheObstacle ob = m_obstacles[i];
+		for (int i = 0; i < m_obstacles.size(); ++i) {
+			TileCacheObstacle ob = m_obstacles.get(i);
 			if (ob.state == ObstacleState.DT_OBSTACLE_EMPTY || ob.state == ObstacleState.DT_OBSTACLE_REMOVING)
 				continue;
 			if (contains(ob.touched, ref)) {

@@ -33,6 +33,7 @@ public class TileCacheObstacle {
 	TileCacheObstacle next;
 
 	public TileCacheObstacle(int index) {
+		salt = 1;
 		this.index = index;
 	}
 

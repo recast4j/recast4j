@@ -21,7 +21,7 @@ public class TileCacheReaderTest {
 	public void testNavmesh() throws IOException {
 		
 		InputStream is = getClass().getClassLoader().getResourceAsStream("all_tiles_tilecache.bin");
-		TileCache tc = reader.read(is, new FastLzTileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, true);
+		TileCache tc = reader.read(is, 6, new FastLzTileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, true);
 		assertEquals(256, tc.getNavMesh().getMaxTiles());
 		assertEquals(16384, tc.getNavMesh().getParams().maxPolys);
 		assertEquals(14.4f, tc.getNavMesh().getParams().tileWidth, 0.001f);
@@ -116,7 +116,7 @@ public class TileCacheReaderTest {
 
 	public void testDungeon() throws IOException {
 		InputStream is = getClass().getClassLoader().getResourceAsStream("dungeon_all_tiles_tilecache.bin");
-		TileCache tc = reader.read(is, new FastLzTileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, true);
+		TileCache tc = reader.read(is, 6, new FastLzTileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, true);
 		assertEquals(256, tc.getNavMesh().getMaxTiles());
 		assertEquals(16384, tc.getNavMesh().getParams().maxPolys);
 		assertEquals(14.4f, tc.getNavMesh().getParams().tileWidth, 0.001f);

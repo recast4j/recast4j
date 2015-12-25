@@ -42,7 +42,7 @@ public class AbstractTileCacheTest {
 		navMeshParams.tileHeight = m_tileSize * m_cellSize;
 		navMeshParams.maxTiles = 256;
 		navMeshParams.maxPolys = 16384;
-		NavMesh navMesh = new NavMesh(navMeshParams);
+		NavMesh navMesh = new NavMesh(navMeshParams, 6);
 		TileCache tc = new TileCache(params, new TileCacheStorageParams(order, cCompatibility), navMesh, compressor, null);
 		return tc;
 	}

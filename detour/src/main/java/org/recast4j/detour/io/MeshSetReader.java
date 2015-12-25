@@ -30,14 +30,14 @@ public class MeshSetReader {
 	private final MeshDataReader meshReader = new MeshDataReader();
 	private final NavMeshParamReader paramReader = new NavMeshParamReader();
 
-	public NavMesh read(InputStream is, ByteOrder order, boolean cCompatibility) throws IOException {
+	public NavMesh read(InputStream is, int maxVertPerPoly, ByteOrder order, boolean cCompatibility) throws IOException {
 		// Read header.
 		ByteBuffer bb = IOUtils.toByteBuffer(is);
 		bb.order(order);
-		return read(bb, cCompatibility);
+		return read(bb, maxVertPerPoly, cCompatibility);
 	}
 
-	public NavMesh read(ByteBuffer bb, boolean cCompatibility) throws IOException {
+	public NavMesh read(ByteBuffer bb, int maxVertPerPoly, boolean cCompatibility) throws IOException {
 		NavMeshSetHeader header = new NavMeshSetHeader();
 		header.magic = bb.getInt();
 		if (header.magic != NavMeshSetHeader.NAVMESHSET_MAGIC) {
@@ -49,7 +49,7 @@ public class MeshSetReader {
 		}
 		header.numTiles = bb.getInt();
 		header.params = paramReader.read(bb);
-		NavMesh mesh = new NavMesh(header.params);
+		NavMesh mesh = new NavMesh(header.params, maxVertPerPoly);
 
 		// Read tiles.
 		for (int i = 0; i < header.numTiles; ++i) {
@@ -62,7 +62,7 @@ public class MeshSetReader {
 			if (cCompatibility) {
 				bb.getInt(); // C struct padding
 			}
-			MeshData data = meshReader.read(bb, header.params.maxVertPerPoly, cCompatibility);
+			MeshData data = meshReader.read(bb, mesh.getMaxVertsPerPoly(), cCompatibility);
 			mesh.addTile(data, i, tileHeader.tileRef);
 		}
 		return mesh;

@@ -26,4 +26,8 @@ public class TileCachePolyMesh {
 	int[] polys;	///< Polygons of the mesh, nvp*2 elements per polygon.
 	int[] flags;	///< Per polygon flags.
 	int[] areas;	///< Area ID of polygons.
+
+	public TileCachePolyMesh(int nvp) {
+		this.nvp = nvp;
+	}
 }

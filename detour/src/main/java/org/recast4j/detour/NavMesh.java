@@ -44,9 +44,6 @@ public class NavMesh {
 	static int DT_TILE_BITS = 28;
 	static int DT_POLY_BITS = 20;
 
-	/** The maximum number of vertices per navigation polygon. */
-	public static int DT_VERTS_PER_POLYGON = 6;
-
 	/// A flag that indicates that an entity links to an external entity.
 	/// (E.g. A polygon edge is a portal that links to another polygon.)
 	static int DT_EXT_LINK = 0x8000;
@@ -65,20 +62,18 @@ public class NavMesh {
 	/// The limit is given as a multiple of the character radius
 	static float DT_RAY_CAST_LIMIT_PROPORTIONS = 50.0f;
 
-	NavMeshParams m_params; /// < Current initialization params. TODO: do not store this info twice.
+	private final NavMeshParams m_params; /// < Current initialization params. TODO: do not store this info twice.
 	private float[] m_orig; /// < Origin of the tile (0,0)
 	// float m_orig[3]; ///< Origin of the tile (0,0)
 	float m_tileWidth, m_tileHeight; /// < Dimensions of each tile.
 	int m_maxTiles; /// < Max number of tiles.
-	int m_tileLutSize; /// < Tile hash lookup size (must be pot).
-	int m_tileLutMask; /// < Tile hash lookup mask.
-
-	// MeshTile** m_posLookup; ///< Tile hash lookup.
-	// MeshTile[] m_nextFree; ///< Freelist of tiles.
-	MeshTile[] m_posLookup; /// < Tile hash lookup.
+	private final int m_tileLutSize; /// < Tile hash lookup size (must be pot).
+	private final int m_tileLutMask; /// < Tile hash lookup mask.
+	private final MeshTile[] m_posLookup; /// < Tile hash lookup.
 	MeshTile m_nextFree; /// < Freelist of tiles.
-	MeshTile[] m_tiles; /// < List of tiles.
-	int m_maxVertPerPoly;
+	private final MeshTile[] m_tiles; /// < List of tiles.
+	/** The maximum number of vertices per navigation polygon. */
+	private final int m_maxVertPerPoly;
 	private int m_tileCount;
 
 	/**
@@ -255,22 +250,23 @@ public class NavMesh {
 		return m_params;
 	}
 
-	public NavMesh(MeshData data, int flags) {
-		this(getNavMeshParams(data));
+	public NavMesh(MeshData data, int maxVertsPerPoly, int flags) {
+		this(getNavMeshParams(data), maxVertsPerPoly);
 		addTile(data, flags, 0);
 	}
 
-	public NavMesh(NavMeshParams params) {
+	public NavMesh(NavMeshParams params, int maxVertsPerPoly) {
 		this.m_params = params;
 		m_orig = params.orig;
 		m_tileWidth = params.tileWidth;
 		m_tileHeight = params.tileHeight;
 		// Init tiles
 		m_maxTiles = params.maxTiles;
-		m_maxVertPerPoly = params.maxVertPerPoly;
-		m_tileLutSize = nextPow2(params.maxTiles / 4);
-		if (m_tileLutSize == 0)
-			m_tileLutSize = 1;
+		m_maxVertPerPoly = maxVertsPerPoly;
+		int lutsize = nextPow2(params.maxTiles / 4);
+		if (lutsize == 0)
+			lutsize = 1;
+		m_tileLutSize = lutsize;
 		m_tileLutMask = m_tileLutSize - 1;
 		m_tiles = new MeshTile[m_maxTiles];
 		m_posLookup = new MeshTile[m_tileLutSize];
@@ -964,9 +960,9 @@ public class NavMesh {
 		}
 
 		// Clamp point to be inside the polygon.
-		float[] verts = new float[getMaxVertsPerPoly() * 3];
-		float[] edged = new float[getMaxVertsPerPoly()];
-		float[] edget = new float[getMaxVertsPerPoly()];
+		float[] verts = new float[m_maxVertPerPoly * 3];
+		float[] edged = new float[m_maxVertPerPoly];
+		float[] edget = new float[m_maxVertPerPoly];
 		int nv = poly.vertCount;
 		for (int i = 0; i < nv; ++i)
 			System.arraycopy(tile.data.verts, poly.verts[i] * 3, verts, i * 3, 3);
@@ -1214,7 +1210,7 @@ public class NavMesh {
 	}
 
 	public int getMaxVertsPerPoly() {
-		return m_params.maxVertPerPoly;
+		return m_maxVertPerPoly;
 	}
 
 	public int getTileCount() {
