@@ -38,7 +38,7 @@ public class TileCacheBuilder {
 	static final int DT_TILECACHE_WALKABLE_AREA = 63;
 	static final int DT_TILECACHE_NULL_IDX = 0xffff;
 
-	class LayerSweepSpan {
+	private class LayerSweepSpan {
 		int ns; // number samples
 		int id; // region id
 		int nei; // neighbour id
@@ -46,7 +46,7 @@ public class TileCacheBuilder {
 
 	static final int DT_LAYER_MAX_NEIS = 16;
 
-	class LayerMonotoneRegion {
+	private class LayerMonotoneRegion {
 		int area;
 		int[] neis = new int[DT_LAYER_MAX_NEIS];
 		int nneis;
@@ -54,7 +54,7 @@ public class TileCacheBuilder {
 		int areaId;
 	};
 
-	class TempContour {
+	private class TempContour {
 		List<Integer> verts;
 		int nverts;
 		List<Integer> poly;
@@ -75,13 +75,13 @@ public class TileCacheBuilder {
 		}
 	};
 
-	class Edge {
+	private class Edge {
 		int[] vert = new int[2];
 		int[] polyEdge = new int[2];
 		int[] poly = new int[2];
 	};
 
-	TileCacheLayerHeaderReader reader = new TileCacheLayerHeaderReader();
+	private final TileCacheLayerHeaderReader reader = new TileCacheLayerHeaderReader();
 
 	void buildTileCacheRegions(TileCacheLayer layer, int walkableClimb) {
 
