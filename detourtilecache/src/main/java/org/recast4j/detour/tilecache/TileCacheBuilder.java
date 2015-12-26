@@ -37,8 +37,6 @@ public class TileCacheBuilder {
 	static final int DT_TILECACHE_NULL_AREA = 0;
 	static final int DT_TILECACHE_WALKABLE_AREA = 63;
 	static final int DT_TILECACHE_NULL_IDX = 0xffff;
-	static final int MAX_VERTS_PER_POLY = 6;
-	static final int MAX_REM_EDGES = 48; // TODO: make this an expression.
 
 	class LayerSweepSpan {
 		int ns; // number samples
@@ -1094,7 +1092,7 @@ public class TileCacheBuilder {
 		int nb = countPolyVerts(polys, pb, maxVertsPerPoly);
 
 		// If the merged polygon would be too big, do not merge.
-		if (na + nb - 2 > MAX_VERTS_PER_POLY)
+		if (na + nb - 2 > maxVertsPerPoly)
 			return new int[] { -1, 0, 0 };
 
 		// Check if the polygons share an edge.
@@ -1381,9 +1379,9 @@ public class TileCacheBuilder {
 				break;
 		}
 
-		int[] tris = new int[MAX_REM_EDGES * 3];
-		int[] tverts = new int[MAX_REM_EDGES * 3];
-		int[] tpoly = new int[MAX_REM_EDGES * 3];
+		int[] tris = new int[nhole * 3];
+		int[] tverts = new int[nhole * 4];
+		int[] tpoly = new int[nhole];
 
 		// Generate temp vertex array for triangulation.
 		for (int i = 0; i < nhole; ++i) {
@@ -1478,7 +1476,7 @@ public class TileCacheBuilder {
 
 	}
 
-	TileCachePolyMesh buildTileCachePolyMesh(TileCacheContourSet lcset) {
+	TileCachePolyMesh buildTileCachePolyMesh(TileCacheContourSet lcset, int maxVertsPerPoly) {
 
 		int maxVertices = 0;
 		int maxTris = 0;
@@ -1494,8 +1492,7 @@ public class TileCacheBuilder {
 
 		// TODO: warn about too many vertices?
 
-		TileCachePolyMesh mesh = new TileCachePolyMesh(MAX_VERTS_PER_POLY);
-		int maxVertsPerPoly = mesh.nvp;
+		TileCachePolyMesh mesh = new TileCachePolyMesh(maxVertsPerPoly);
 
 		int[] vflags = new int[maxVertices];
 

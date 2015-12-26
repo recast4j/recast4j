@@ -24,6 +24,10 @@ public class TileCacheTest extends AbstractTileCacheTest {
 		testDungeon(new FastLzTileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, true);
 		testDungeon(new FastLzTileCacheCompressor(), ByteOrder.BIG_ENDIAN, false);
 		testDungeon(new FastLzTileCacheCompressor(), ByteOrder.BIG_ENDIAN, true);
+		test(new FastLzTileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, false);
+		test(new FastLzTileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, true);
+		test(new FastLzTileCacheCompressor(), ByteOrder.BIG_ENDIAN, false);
+		test(new FastLzTileCacheCompressor(), ByteOrder.BIG_ENDIAN, true);
 	}
 
 	@Test
@@ -32,6 +36,10 @@ public class TileCacheTest extends AbstractTileCacheTest {
 		testDungeon(new LZ4TileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, true);
 		testDungeon(new LZ4TileCacheCompressor(), ByteOrder.BIG_ENDIAN, false);
 		testDungeon(new LZ4TileCacheCompressor(), ByteOrder.BIG_ENDIAN, true);
+		test(new LZ4TileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, false);
+		test(new LZ4TileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, true);
+		test(new LZ4TileCacheCompressor(), ByteOrder.BIG_ENDIAN, false);
+		test(new LZ4TileCacheCompressor(), ByteOrder.BIG_ENDIAN, true);
 	}
 
 	private void testDungeon(TileCacheCompressor compressor, ByteOrder order, boolean cCompatibility) throws IOException {
@@ -49,6 +57,8 @@ public class TileCacheTest extends AbstractTileCacheTest {
 			cacheCompressedSize += data.length;
 			cacheRawSize += 4 * 48 * 48 + 56;
 		}
+		System.out.println("Compressor: " + compressor.getClass().getSimpleName() + " C Compatibility: " + cCompatibility + " Layers: " + cacheLayerCount + " Raw Size: " + cacheRawSize + " Compressed: "
+				+ cacheCompressedSize);
 		assertEquals(256, tc.getNavMesh().getMaxTiles());
 		assertEquals(16384, tc.getNavMesh().getParams().maxPolys);
 		assertEquals(14.4f, tc.getNavMesh().getParams().tileWidth, 0.001f);
@@ -122,8 +132,24 @@ public class TileCacheTest extends AbstractTileCacheTest {
 		assertEquals(1, data.detailMeshes.length);
 		assertEquals(0, data.detailVerts.length);
 		assertEquals(4 * 3, data.detailTris.length);
+	}
+
+	private void test(TileCacheCompressor compressor, ByteOrder order, boolean cCompatibility) throws IOException {
+		InputGeom geom = new ObjImporter().load(RecastBuilder.class.getResourceAsStream("nav_test.obj"));
+		TileCache tc = getTileCache(geom, compressor, order, cCompatibility);
+		RecastTileLayersBuilder layerBuilder = new RecastTileLayersBuilder(geom);
+		List<byte[]> layers = layerBuilder.build(compressor, order, cCompatibility);
+		int cacheLayerCount = 0;
+		int cacheCompressedSize = 0;
+		int cacheRawSize = 0;
+		for (byte[] data : layers) {
+			long ref = tc.addTile(data, 0);
+			tc.buildNavMeshTile(ref);
+			cacheLayerCount++;
+			cacheCompressedSize += data.length;
+			cacheRawSize += 4 * 48 * 48 + 56;
+		}
 		System.out.println("Compressor: " + compressor.getClass().getSimpleName() + " C Compatibility: " + cCompatibility + " Layers: " + cacheLayerCount + " Raw Size: " + cacheRawSize + " Compressed: "
 				+ cacheCompressedSize);
 	}
-
 }

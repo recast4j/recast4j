@@ -417,6 +417,7 @@ public class TileCache {
 				}
 			}
 		}
+		m_update.clear();
 
 	}
 
@@ -447,7 +448,7 @@ public class TileCache {
 		builder.buildTileCacheRegions(layer, walkableClimbVx);
 		TileCacheContourSet lcset = builder.buildTileCacheContours(layer, walkableClimbVx,
 				m_params.maxSimplificationError);
-		TileCachePolyMesh polyMesh = builder.buildTileCachePolyMesh(lcset);
+		TileCachePolyMesh polyMesh = builder.buildTileCachePolyMesh(lcset, m_navmesh.getMaxVertsPerPoly());
 		// Early out if the mesh tile is empty.
 		if (polyMesh.npolys == 0) {
 			m_navmesh.removeTile(m_navmesh.getTileRefAt(tile.header.tx, tile.header.ty, tile.header.tlayer));

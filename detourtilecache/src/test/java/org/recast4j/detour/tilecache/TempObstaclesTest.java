@@ -31,11 +31,17 @@ public class TempObstaclesTest extends AbstractTileCacheTest {
 		MeshTile tile = tiles.get(0);
 		assertEquals(16, tile.data.header.vertCount);
 		assertEquals(6, tile.data.header.polyCount);
-		tc.addObstacle(new float[] {-1.815208f, 9.998184f, -20.307983f}, 1f, 2f);
+		long o = tc.addObstacle(new float[] {-1.815208f, 9.998184f, -20.307983f}, 1f, 2f);
 		tc.update();
 		tiles = tc.getNavMesh().getTilesAt(1, 4);
 		tile = tiles.get(0);
 		assertEquals(22, tile.data.header.vertCount);
 		assertEquals(11, tile.data.header.polyCount);
+		tc.removeObstacle(o);
+		tc.update();
+		tiles = tc.getNavMesh().getTilesAt(1, 4);
+		tile = tiles.get(0);
+		assertEquals(16, tile.data.header.vertCount);
+		assertEquals(6, tile.data.header.polyCount);
 	}
 }
