@@ -521,19 +521,19 @@ public class NavMesh {
 		// Remove connections to neighbour tiles.
 		// Create connections with neighbour tiles.
 
-		// Connect with layers in current tile.
+		// Disconnect from other layers in current tile.
 		List<MeshTile> nneis = getTilesAt(tile.data.header.x, tile.data.header.y);
 		for (MeshTile j : nneis) {
 			if (j == tile)
 				continue;
-			unconnectExtLinks(j, tile);
+			unconnectLinks(j, tile);
 		}
 
-		// Connect with neighbour tiles.
+		// Disconnect from neighbour tiles.
 		for (int i = 0; i < 8; ++i) {
 			nneis = getNeighbourTilesAt(tile.data.header.x, tile.data.header.y, i);
 			for (MeshTile j : nneis)
-				unconnectExtLinks(j, tile);
+				unconnectLinks(j, tile);
 		}
 		MeshData data = tile.data;
 		// Reset tile.
@@ -588,7 +588,7 @@ public class NavMesh {
 		}
 	}
 
-	void unconnectExtLinks(MeshTile tile, MeshTile target) {
+	void unconnectLinks(MeshTile tile, MeshTile target) {
 		if (tile == null || target == null)
 			return;
 
@@ -599,8 +599,8 @@ public class NavMesh {
 			int j = poly.firstLink;
 			int pj = DT_NULL_LINK;
 			while (j != DT_NULL_LINK) {
-				if (tile.links.get(j).side != 0xff && decodePolyIdTile(tile.links.get(j).ref) == targetNum) {
-					// Revove link.
+				if (decodePolyIdTile(tile.links.get(j).ref) == targetNum) {
+					// Remove link.
 					int nj = tile.links.get(j).next;
 					if (pj == DT_NULL_LINK)
 						poly.firstLink = nj;
