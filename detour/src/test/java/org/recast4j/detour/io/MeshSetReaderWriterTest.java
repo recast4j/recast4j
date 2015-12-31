@@ -79,6 +79,6 @@ public class MeshSetReaderWriterTest {
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
 		writer.write(os, mesh, ByteOrder.LITTLE_ENDIAN, true);
 		ByteArrayInputStream is = new ByteArrayInputStream(os.toByteArray());
-		NavMesh nm = reader.read(is, 6, ByteOrder.LITTLE_ENDIAN, true);
+		NavMesh nm = reader.read(is, 6, true);
 	}
 }

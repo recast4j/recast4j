@@ -34,5 +34,7 @@ public class IOUtils {
 		return ByteBuffer.wrap(baos.toByteArray());
 	}
 
-	
+	public static int swapEndianness(int i) {
+		return ((i >>> 24) & 0xFF) | ((i>>8) & 0xFF00) | ((i<<8) & 0xFF0000) | ((i << 24) & 0xFF000000);
+	}
 }

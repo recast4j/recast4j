@@ -51,7 +51,7 @@ public class TileCacheReaderWriterTest extends AbstractTileCacheTest {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		writer.write(baos, tc, compressor, ByteOrder.LITTLE_ENDIAN, cCompatibility);
 		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-		tc = reader.read(bais, 6, compressor, ByteOrder.LITTLE_ENDIAN, cCompatibility);
+		tc = reader.read(bais, 6, compressor, cCompatibility);
 		assertEquals(256, tc.getNavMesh().getMaxTiles());
 		assertEquals(16384, tc.getNavMesh().getParams().maxPolys);
 		assertEquals(14.4f, tc.getNavMesh().getParams().tileWidth, 0.001f);

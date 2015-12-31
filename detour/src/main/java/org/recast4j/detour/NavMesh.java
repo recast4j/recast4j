@@ -118,7 +118,7 @@ public class NavMesh {
 	 *            The index of the polygon within the tile.
 	 * @return encoded polygon reference
 	 */
-	static long encodePolyId(int salt, int it, int ip) {
+	public static long encodePolyId(int salt, int it, int ip) {
 		return (((long) salt) << (DT_POLY_BITS + DT_TILE_BITS)) | ((long) it << DT_POLY_BITS) | ip;
 	}
 

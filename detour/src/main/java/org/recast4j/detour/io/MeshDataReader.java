@@ -23,7 +23,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import org.recast4j.detour.BVNode;
-import org.recast4j.detour.Link;
 import org.recast4j.detour.MeshData;
 import org.recast4j.detour.MeshHeader;
 import org.recast4j.detour.OffMeshConnection;
@@ -34,19 +33,35 @@ public class MeshDataReader {
 
 	final static int DT_POLY_DETAIL_SIZE = 10;
 
-	public MeshData read(InputStream stream, int maxVertPerPoly, ByteOrder order, boolean cCompatibility) throws IOException {
+	public MeshData read(InputStream stream, int maxVertPerPoly, boolean cCompatibility) throws IOException {
 		ByteBuffer buf = IOUtils.toByteBuffer(stream);
-		buf.order(order);
-		return read(buf, maxVertPerPoly, cCompatibility);
+		return read(buf, maxVertPerPoly, cCompatibility, false);
 	}
 
 	public MeshData read(ByteBuffer buf, int maxVertPerPoly, boolean cCompatibility) throws IOException {
+		return read(buf, maxVertPerPoly, cCompatibility, false);
+	}
+
+	public MeshData read32Bit(InputStream stream, int maxVertPerPoly, boolean cCompatibility) throws IOException {
+		ByteBuffer buf = IOUtils.toByteBuffer(stream);
+		return read(buf, maxVertPerPoly, cCompatibility, true);
+	}
+
+	public MeshData read32Bit(ByteBuffer buf, int maxVertPerPoly, boolean cCompatibility) throws IOException {
+		return read(buf, maxVertPerPoly, cCompatibility, true);
+	}
+
+	MeshData read(ByteBuffer buf, int maxVertPerPoly, boolean cCompatibility, boolean is32Bit) throws IOException {
 		MeshData data = new MeshData();
 		MeshHeader header = new MeshHeader();
 		data.header = header;
 		header.magic = buf.getInt();
 		if (header.magic != MeshHeader.DT_NAVMESH_MAGIC) {
-			throw new IOException("Invalid magic");
+			header.magic = IOUtils.swapEndianness(header.magic);
+			if (header.magic != MeshHeader.DT_NAVMESH_MAGIC) {
+				throw new IOException("Invalid magic");
+			}
+			buf.order(buf.order() == ByteOrder.BIG_ENDIAN ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
 		}
 		header.version = buf.getInt();
 		if (header.version != MeshHeader.DT_NAVMESH_VERSION) {
@@ -78,7 +93,7 @@ public class MeshDataReader {
 		data.verts = readVerts(buf, header.vertCount);
 		data.polys = readPolys(buf, header, maxVertPerPoly);
 		if (cCompatibility) {
-			buf.position(buf.position() + header.maxLinkCount * Link.SIZEOF);
+			buf.position(buf.position() + header.maxLinkCount * getSizeofLink(is32Bit));
 		}
 		data.detailMeshes = readPolyDetails(buf, header, cCompatibility);
 		data.detailVerts = readVerts(buf, header.detailVertCount);
@@ -88,6 +103,13 @@ public class MeshDataReader {
 		return data;
 	}
 
+	public static final int LINK_SIZEOF = 16;
+	public static final int LINK_SIZEOF32BIT = 12;
+
+	static int getSizeofLink(boolean is32Bit) {
+		return is32Bit ? LINK_SIZEOF32BIT : LINK_SIZEOF;
+	}
+	
 	private float[] readVerts(ByteBuffer buf, int count) {
 		float[] verts = new float[count * 3];
 		for (int i = 0; i < verts.length; i++) {

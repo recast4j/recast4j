@@ -17,6 +17,9 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour.io;
 
+import static org.recast4j.detour.DetourCommon.ilog2;
+import static org.recast4j.detour.DetourCommon.nextPow2;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -24,24 +27,40 @@ import java.nio.ByteOrder;
 
 import org.recast4j.detour.MeshData;
 import org.recast4j.detour.NavMesh;
+import org.recast4j.detour.NavMeshParams;
 
 public class MeshSetReader {
 
 	private final MeshDataReader meshReader = new MeshDataReader();
 	private final NavMeshParamReader paramReader = new NavMeshParamReader();
 
-	public NavMesh read(InputStream is, int maxVertPerPoly, ByteOrder order, boolean cCompatibility) throws IOException {
-		// Read header.
+	public NavMesh read(InputStream is, int maxVertPerPoly, boolean cCompatibility) throws IOException {
 		ByteBuffer bb = IOUtils.toByteBuffer(is);
-		bb.order(order);
-		return read(bb, maxVertPerPoly, cCompatibility);
+		return read(bb, maxVertPerPoly, cCompatibility, false);
 	}
 
 	public NavMesh read(ByteBuffer bb, int maxVertPerPoly, boolean cCompatibility) throws IOException {
+		return read(bb, maxVertPerPoly, cCompatibility, false);
+	}
+
+	public NavMesh read32Bit(InputStream is, int maxVertPerPoly, boolean cCompatibility) throws IOException {
+		ByteBuffer bb = IOUtils.toByteBuffer(is);
+		return read(bb, maxVertPerPoly, cCompatibility, true);
+	}
+
+	public NavMesh read32Bit(ByteBuffer bb, int maxVertPerPoly, boolean cCompatibility) throws IOException {
+		return read(bb, maxVertPerPoly, cCompatibility, true);
+	}
+
+	NavMesh read(ByteBuffer bb, int maxVertPerPoly, boolean cCompatibility, boolean is32Bit) throws IOException {
 		NavMeshSetHeader header = new NavMeshSetHeader();
 		header.magic = bb.getInt();
 		if (header.magic != NavMeshSetHeader.NAVMESHSET_MAGIC) {
-			throw new IOException("Invalid magic");
+			header.magic = IOUtils.swapEndianness(header.magic);
+			if (header.magic != NavMeshSetHeader.NAVMESHSET_MAGIC) {
+				throw new IOException("Invalid magic");
+			}
+			bb.order(bb.order() == ByteOrder.BIG_ENDIAN ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
 		}
 		header.version = bb.getInt();
 		if (header.version != NavMeshSetHeader.NAVMESHSET_VERSION) {
@@ -54,19 +73,35 @@ public class MeshSetReader {
 		// Read tiles.
 		for (int i = 0; i < header.numTiles; ++i) {
 			NavMeshTileHeader tileHeader = new NavMeshTileHeader();
-			tileHeader.tileRef = bb.getLong();
+			if (is32Bit) {
+				tileHeader.tileRef = convert32BitRef(bb.getInt(), header.params);
+			} else {
+				tileHeader.tileRef = bb.getLong();
+			}
 			tileHeader.dataSize = bb.getInt();
 			if (tileHeader.tileRef == 0 || tileHeader.dataSize == 0) {
 				break;
 			}
-			if (cCompatibility) {
+			if (cCompatibility && !is32Bit) {
 				bb.getInt(); // C struct padding
 			}
-			MeshData data = meshReader.read(bb, mesh.getMaxVertsPerPoly(), cCompatibility);
+			MeshData data = meshReader.read(bb, mesh.getMaxVertsPerPoly(), cCompatibility, is32Bit);
 			mesh.addTile(data, i, tileHeader.tileRef);
 		}
 		return mesh;
 	}
 
-
+	private long convert32BitRef(int ref, NavMeshParams params) {
+		int m_tileBits = ilog2(nextPow2(params.maxTiles));
+		int m_polyBits = ilog2(nextPow2(params.maxPolys));
+		// Only allow 31 salt bits, since the salt mask is calculated using 32bit uint and it will overflow.
+		int m_saltBits = Math.min(31, 32 - m_tileBits - m_polyBits);
+		int saltMask = (1 << m_saltBits) - 1;
+		int tileMask = (1 << m_tileBits) - 1;
+		int polyMask = (1 << m_polyBits) - 1;
+		int salt = ((ref >> (m_polyBits + m_tileBits)) & saltMask);
+		int it = ((ref >> m_polyBits) & tileMask);
+		int ip = ref & polyMask;
+		return NavMesh.encodePolyId(salt, it, ip);
+	}
 }

@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteOrder;
 import java.util.List;
 
 import org.junit.Test;
@@ -18,7 +17,7 @@ public class MeshSetReaderTest {
 	@Test
 	public void testNavmesh() throws IOException {
 		InputStream is = getClass().getClassLoader().getResourceAsStream("all_tiles_navmesh.bin");
-		NavMesh mesh = reader.read(is, 6, ByteOrder.LITTLE_ENDIAN, true);
+		NavMesh mesh = reader.read(is, 6, true);
 		assertEquals(128, mesh.getMaxTiles());
 		assertEquals(0x8000, mesh.getParams().maxPolys);
 		assertEquals(9.6, mesh.getParams().tileWidth, 0.001);
@@ -43,7 +42,32 @@ public class MeshSetReaderTest {
 	@Test
 	public void testDungeon() throws IOException {
 		InputStream is = getClass().getClassLoader().getResourceAsStream("dungeon_all_tiles_navmesh.bin");
-		NavMesh mesh = reader.read(is, 6, ByteOrder.LITTLE_ENDIAN, true);
+		NavMesh mesh = reader.read(is, 6, true);
+		assertEquals(128, mesh.getMaxTiles());
+		assertEquals(0x8000, mesh.getParams().maxPolys);
+		assertEquals(9.6, mesh.getParams().tileWidth, 0.001);
+		List<MeshTile> tiles = mesh.getTilesAt(6, 9);
+		assertEquals(1, tiles.size());
+		assertEquals(2, tiles.get(0).data.polys.length);
+		assertEquals(7 * 3, tiles.get(0).data.verts.length);
+		tiles = mesh.getTilesAt(2, 9);
+		assertEquals(1, tiles.size());
+		assertEquals(2, tiles.get(0).data.polys.length);
+		assertEquals(9 * 3, tiles.get(0).data.verts.length);
+		tiles = mesh.getTilesAt(4, 3);
+		assertEquals(1, tiles.size());
+		assertEquals(3, tiles.get(0).data.polys.length);
+		assertEquals(6 * 3, tiles.get(0).data.verts.length);
+		tiles = mesh.getTilesAt(2, 8);
+		assertEquals(1, tiles.size());
+		assertEquals(5, tiles.get(0).data.polys.length);
+		assertEquals(17 * 3, tiles.get(0).data.verts.length);
+	}
+
+	@Test
+	public void testDungeon32Bit() throws IOException {
+		InputStream is = getClass().getClassLoader().getResourceAsStream("dungeon_all_tiles_navmesh_32bit.bin");
+		NavMesh mesh = reader.read32Bit(is, 6, true);
 		assertEquals(128, mesh.getMaxTiles());
 		assertEquals(0x8000, mesh.getParams().maxPolys);
 		assertEquals(9.6, mesh.getParams().tileWidth, 0.001);

@@ -25,7 +25,6 @@ package org.recast4j.detour;
  * @see MeshTile
  */
 public class Link {
-	public static final int SIZEOF = 16;
 	/** Neighbour reference. (The neighbor that is linked to.) */
 	long ref;
 	/** Index of the next link. */
@@ -38,4 +37,5 @@ public class Link {
 	int bmin;
 	/** If a boundary link, defines the maximum sub-edge area. */
 	int bmax;
+
 }

@@ -17,11 +17,10 @@ public class TileCacheReader {
 
 	private final NavMeshParamReader paramReader = new NavMeshParamReader();
 
-	public TileCache read(InputStream is, int maxVertPerPoly, TileCacheCompressor compressor, ByteOrder order, boolean cCompatibility)
+	public TileCache read(InputStream is, int maxVertPerPoly, TileCacheCompressor compressor, boolean cCompatibility)
 			throws IOException {
 		// Read header.
 		ByteBuffer bb = IOUtils.toByteBuffer(is);
-		bb.order(order);
 		return read(bb, maxVertPerPoly, compressor, cCompatibility);
 	}
 
@@ -29,7 +28,11 @@ public class TileCacheReader {
 		TileCacheSetHeader header = new TileCacheSetHeader();
 		header.magic = bb.getInt();
 		if (header.magic != TileCacheSetHeader.TILECACHESET_MAGIC) {
-			throw new IOException("Invalid magic");
+			header.magic = IOUtils.swapEndianness(header.magic);
+			if (header.magic != TileCacheSetHeader.TILECACHESET_MAGIC) {
+				throw new IOException("Invalid magic");
+			}
+			bb.order(bb.order() == ByteOrder.BIG_ENDIAN ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
 		}
 		header.version = bb.getInt();
 		if (header.version != TileCacheSetHeader.TILECACHESET_VERSION) {

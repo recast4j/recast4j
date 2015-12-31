@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteOrder;
 
-import org.recast4j.detour.Link;
 import org.recast4j.detour.MeshData;
 import org.recast4j.detour.MeshHeader;
 
@@ -57,7 +56,7 @@ public class MeshDataWriter extends DetourWriter {
 		writeVerts(stream, data.verts, header.vertCount, order);
 		writePolys(stream, data, order);
 		if (cCompatibility) {
-			byte[] linkPlaceholder = new byte[header.maxLinkCount * Link.SIZEOF]; 
+			byte[] linkPlaceholder = new byte[header.maxLinkCount * MeshDataReader.getSizeofLink(false)]; 
 			stream.write(linkPlaceholder);
 		}
 		writePolyDetails(stream, data, order, cCompatibility);
