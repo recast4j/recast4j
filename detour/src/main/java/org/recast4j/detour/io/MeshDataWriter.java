@@ -29,7 +29,7 @@ public class MeshDataWriter extends DetourWriter {
 	public void write(OutputStream stream, MeshData data, ByteOrder order, boolean cCompatibility) throws IOException {
 		MeshHeader header = data.header;
 		write(stream, header.magic, order);
-		write(stream, header.version, order);
+		write(stream, cCompatibility ? MeshHeader.DT_NAVMESH_VERSION : MeshHeader.DT_NAVMESH_VERSION_RECAST4J, order);
 		write(stream, header.x, order);
 		write(stream, header.y, order);
 		write(stream, header.layer, order);
@@ -56,7 +56,7 @@ public class MeshDataWriter extends DetourWriter {
 		writeVerts(stream, data.verts, header.vertCount, order);
 		writePolys(stream, data, order);
 		if (cCompatibility) {
-			byte[] linkPlaceholder = new byte[header.maxLinkCount * MeshDataReader.getSizeofLink(false)]; 
+			byte[] linkPlaceholder = new byte[header.maxLinkCount * MeshDataReader.getSizeofLink(false)];
 			stream.write(linkPlaceholder);
 		}
 		writePolyDetails(stream, data, order, cCompatibility);
@@ -65,7 +65,6 @@ public class MeshDataWriter extends DetourWriter {
 		writeBVTree(stream, data, order);
 		writeOffMeshCons(stream, data, order);
 	}
-
 
 	private void writeVerts(OutputStream stream, float[] verts, int count, ByteOrder order) throws IOException {
 		for (int i = 0; i < count * 3; i++) {
@@ -77,25 +76,26 @@ public class MeshDataWriter extends DetourWriter {
 		for (int i = 0; i < data.header.polyCount; i++) {
 			write(stream, data.polys[i].firstLink, order);
 			for (int j = 0; j < data.polys[i].verts.length; j++) {
-				write(stream, (short)data.polys[i].verts[j], order);
+				write(stream, (short) data.polys[i].verts[j], order);
 			}
 			for (int j = 0; j < data.polys[i].neis.length; j++) {
-				write(stream, (short)data.polys[i].neis[j], order);
+				write(stream, (short) data.polys[i].neis[j], order);
 			}
-			write(stream, (short)data.polys[i].flags, order);
+			write(stream, (short) data.polys[i].flags, order);
 			stream.write(data.polys[i].vertCount);
 			stream.write(data.polys[i].areaAndtype);
 		}
 	}
 
-	private void writePolyDetails(OutputStream stream, MeshData data, ByteOrder order, boolean cCompatibility) throws IOException {
+	private void writePolyDetails(OutputStream stream, MeshData data, ByteOrder order, boolean cCompatibility)
+			throws IOException {
 		for (int i = 0; i < data.header.detailMeshCount; i++) {
 			write(stream, data.detailMeshes[i].vertBase, order);
 			write(stream, data.detailMeshes[i].triBase, order);
 			stream.write(data.detailMeshes[i].vertCount);
 			stream.write(data.detailMeshes[i].triCount);
 			if (cCompatibility) {
-				write(stream, (short)0, order);
+				write(stream, (short) 0, order);
 			}
 		}
 	}
@@ -109,10 +109,10 @@ public class MeshDataWriter extends DetourWriter {
 	private void writeBVTree(OutputStream stream, MeshData data, ByteOrder order) throws IOException {
 		for (int i = 0; i < data.header.bvNodeCount; i++) {
 			for (int j = 0; j < 3; j++) {
-				write(stream, (short)data.bvTree[i].bmin[j], order);
+				write(stream, (short) data.bvTree[i].bmin[j], order);
 			}
 			for (int j = 0; j < 3; j++) {
-				write(stream, (short)data.bvTree[i].bmax[j], order);
+				write(stream, (short) data.bvTree[i].bmax[j], order);
 			}
 			write(stream, data.bvTree[i].i, order);
 		}
@@ -124,7 +124,7 @@ public class MeshDataWriter extends DetourWriter {
 				write(stream, data.offMeshCons[i].pos[j], order);
 			}
 			write(stream, data.offMeshCons[i].rad, order);
-			write(stream, (short)data.offMeshCons[i].poly, order);
+			write(stream, (short) data.offMeshCons[i].poly, order);
 			stream.write(data.offMeshCons[i].flags);
 			stream.write(data.offMeshCons[i].side);
 			write(stream, data.offMeshCons[i].userId, order);

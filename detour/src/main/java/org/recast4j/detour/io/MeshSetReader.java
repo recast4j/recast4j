@@ -34,25 +34,25 @@ public class MeshSetReader {
 	private final MeshDataReader meshReader = new MeshDataReader();
 	private final NavMeshParamReader paramReader = new NavMeshParamReader();
 
-	public NavMesh read(InputStream is, int maxVertPerPoly, boolean cCompatibility) throws IOException {
+	public NavMesh read(InputStream is, int maxVertPerPoly) throws IOException {
 		ByteBuffer bb = IOUtils.toByteBuffer(is);
-		return read(bb, maxVertPerPoly, cCompatibility, false);
+		return read(bb, maxVertPerPoly, false);
 	}
 
-	public NavMesh read(ByteBuffer bb, int maxVertPerPoly, boolean cCompatibility) throws IOException {
-		return read(bb, maxVertPerPoly, cCompatibility, false);
+	public NavMesh read(ByteBuffer bb, int maxVertPerPoly) throws IOException {
+		return read(bb, maxVertPerPoly, false);
 	}
 
-	public NavMesh read32Bit(InputStream is, int maxVertPerPoly, boolean cCompatibility) throws IOException {
+	public NavMesh read32Bit(InputStream is, int maxVertPerPoly) throws IOException {
 		ByteBuffer bb = IOUtils.toByteBuffer(is);
-		return read(bb, maxVertPerPoly, cCompatibility, true);
+		return read(bb, maxVertPerPoly, true);
 	}
 
-	public NavMesh read32Bit(ByteBuffer bb, int maxVertPerPoly, boolean cCompatibility) throws IOException {
-		return read(bb, maxVertPerPoly, cCompatibility, true);
+	public NavMesh read32Bit(ByteBuffer bb, int maxVertPerPoly) throws IOException {
+		return read(bb, maxVertPerPoly, true);
 	}
 
-	NavMesh read(ByteBuffer bb, int maxVertPerPoly, boolean cCompatibility, boolean is32Bit) throws IOException {
+	NavMesh read(ByteBuffer bb, int maxVertPerPoly, boolean is32Bit) throws IOException {
 		NavMeshSetHeader header = new NavMeshSetHeader();
 		header.magic = bb.getInt();
 		if (header.magic != NavMeshSetHeader.NAVMESHSET_MAGIC) {
@@ -64,8 +64,11 @@ public class MeshSetReader {
 		}
 		header.version = bb.getInt();
 		if (header.version != NavMeshSetHeader.NAVMESHSET_VERSION) {
-			throw new IOException("Invalid version");
+			if (header.version != NavMeshSetHeader.NAVMESHSET_VERSION_RECAST4J) {
+				throw new IOException("Invalid version");
+			}
 		}
+		boolean cCompatibility = header.version == NavMeshSetHeader.NAVMESHSET_VERSION;
 		header.numTiles = bb.getInt();
 		header.params = paramReader.read(bb);
 		NavMesh mesh = new NavMesh(header.params, maxVertPerPoly);
@@ -85,7 +88,7 @@ public class MeshSetReader {
 			if (cCompatibility && !is32Bit) {
 				bb.getInt(); // C struct padding
 			}
-			MeshData data = meshReader.read(bb, mesh.getMaxVertsPerPoly(), cCompatibility, is32Bit);
+			MeshData data = meshReader.read(bb, mesh.getMaxVertsPerPoly(), is32Bit);
 			mesh.addTile(data, i, tileHeader.tileRef);
 		}
 		return mesh;

@@ -33,7 +33,7 @@ public class MeshSetWriter extends DetourWriter {
 	public void write(OutputStream stream, NavMesh mesh, ByteOrder order, boolean cCompatibility) throws IOException {
 		// Write header.
 		write(stream, NavMeshSetHeader.NAVMESHSET_MAGIC, order);
-		write(stream, NavMeshSetHeader.NAVMESHSET_VERSION, order);
+		write(stream, cCompatibility ? NavMeshSetHeader.NAVMESHSET_VERSION : NavMeshSetHeader.NAVMESHSET_VERSION_RECAST4J, order);
 		int numTiles = 0;
 		for (int i = 0; i < mesh.getMaxTiles(); ++i) {
 			MeshTile tile = mesh.getTile(i);

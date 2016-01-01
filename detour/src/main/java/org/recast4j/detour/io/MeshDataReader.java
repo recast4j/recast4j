@@ -33,25 +33,25 @@ public class MeshDataReader {
 
 	final static int DT_POLY_DETAIL_SIZE = 10;
 
-	public MeshData read(InputStream stream, int maxVertPerPoly, boolean cCompatibility) throws IOException {
+	public MeshData read(InputStream stream, int maxVertPerPoly) throws IOException {
 		ByteBuffer buf = IOUtils.toByteBuffer(stream);
-		return read(buf, maxVertPerPoly, cCompatibility, false);
+		return read(buf, maxVertPerPoly, false);
 	}
 
-	public MeshData read(ByteBuffer buf, int maxVertPerPoly, boolean cCompatibility) throws IOException {
-		return read(buf, maxVertPerPoly, cCompatibility, false);
+	public MeshData read(ByteBuffer buf, int maxVertPerPoly) throws IOException {
+		return read(buf, maxVertPerPoly, false);
 	}
 
-	public MeshData read32Bit(InputStream stream, int maxVertPerPoly, boolean cCompatibility) throws IOException {
+	public MeshData read32Bit(InputStream stream, int maxVertPerPoly) throws IOException {
 		ByteBuffer buf = IOUtils.toByteBuffer(stream);
-		return read(buf, maxVertPerPoly, cCompatibility, true);
+		return read(buf, maxVertPerPoly, true);
 	}
 
-	public MeshData read32Bit(ByteBuffer buf, int maxVertPerPoly, boolean cCompatibility) throws IOException {
-		return read(buf, maxVertPerPoly, cCompatibility, true);
+	public MeshData read32Bit(ByteBuffer buf, int maxVertPerPoly) throws IOException {
+		return read(buf, maxVertPerPoly, true);
 	}
 
-	MeshData read(ByteBuffer buf, int maxVertPerPoly, boolean cCompatibility, boolean is32Bit) throws IOException {
+	MeshData read(ByteBuffer buf, int maxVertPerPoly, boolean is32Bit) throws IOException {
 		MeshData data = new MeshData();
 		MeshHeader header = new MeshHeader();
 		data.header = header;
@@ -65,8 +65,11 @@ public class MeshDataReader {
 		}
 		header.version = buf.getInt();
 		if (header.version != MeshHeader.DT_NAVMESH_VERSION) {
-			throw new IOException("Invalid version");
+			if (header.version != MeshHeader.DT_NAVMESH_VERSION_RECAST4J) {
+				throw new IOException("Invalid version");
+			}
 		}
+		boolean cCompatibility = header.version == MeshHeader.DT_NAVMESH_VERSION;
 		header.x = buf.getInt();
 		header.y = buf.getInt();
 		header.layer = buf.getInt();

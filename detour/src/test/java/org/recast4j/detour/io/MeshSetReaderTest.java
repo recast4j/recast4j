@@ -17,7 +17,7 @@ public class MeshSetReaderTest {
 	@Test
 	public void testNavmesh() throws IOException {
 		InputStream is = getClass().getClassLoader().getResourceAsStream("all_tiles_navmesh.bin");
-		NavMesh mesh = reader.read(is, 6, true);
+		NavMesh mesh = reader.read(is, 6);
 		assertEquals(128, mesh.getMaxTiles());
 		assertEquals(0x8000, mesh.getParams().maxPolys);
 		assertEquals(9.6, mesh.getParams().tileWidth, 0.001);
@@ -42,7 +42,7 @@ public class MeshSetReaderTest {
 	@Test
 	public void testDungeon() throws IOException {
 		InputStream is = getClass().getClassLoader().getResourceAsStream("dungeon_all_tiles_navmesh.bin");
-		NavMesh mesh = reader.read(is, 6, true);
+		NavMesh mesh = reader.read(is, 6);
 		assertEquals(128, mesh.getMaxTiles());
 		assertEquals(0x8000, mesh.getParams().maxPolys);
 		assertEquals(9.6, mesh.getParams().tileWidth, 0.001);
@@ -67,7 +67,7 @@ public class MeshSetReaderTest {
 	@Test
 	public void testDungeon32Bit() throws IOException {
 		InputStream is = getClass().getClassLoader().getResourceAsStream("dungeon_all_tiles_navmesh_32bit.bin");
-		NavMesh mesh = reader.read32Bit(is, 6, true);
+		NavMesh mesh = reader.read32Bit(is, 6);
 		assertEquals(128, mesh.getMaxTiles());
 		assertEquals(0x8000, mesh.getParams().maxPolys);
 		assertEquals(9.6, mesh.getParams().tileWidth, 0.001);

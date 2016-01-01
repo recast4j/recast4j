@@ -10,7 +10,6 @@ import org.recast4j.detour.MeshData;
 import org.recast4j.detour.MeshHeader;
 import org.recast4j.detour.MeshTile;
 import org.recast4j.detour.tilecache.TileCache;
-import org.recast4j.detour.tilecache.io.compress.FastLzTileCacheCompressor;
 
 public class TileCacheReaderTest {
 
@@ -20,7 +19,7 @@ public class TileCacheReaderTest {
 	public void testNavmesh() throws IOException {
 		
 		InputStream is = getClass().getClassLoader().getResourceAsStream("all_tiles_tilecache.bin");
-		TileCache tc = reader.read(is, 6, new FastLzTileCacheCompressor(), true);
+		TileCache tc = reader.read(is, 6);
 		assertEquals(256, tc.getNavMesh().getMaxTiles());
 		assertEquals(16384, tc.getNavMesh().getParams().maxPolys);
 		assertEquals(14.4f, tc.getNavMesh().getParams().tileWidth, 0.001f);
@@ -115,7 +114,7 @@ public class TileCacheReaderTest {
 
 	public void testDungeon() throws IOException {
 		InputStream is = getClass().getClassLoader().getResourceAsStream("dungeon_all_tiles_tilecache.bin");
-		TileCache tc = reader.read(is, 6, new FastLzTileCacheCompressor(), true);
+		TileCache tc = reader.read(is, 6);
 		assertEquals(256, tc.getNavMesh().getMaxTiles());
 		assertEquals(16384, tc.getNavMesh().getParams().maxPolys);
 		assertEquals(14.4f, tc.getNavMesh().getParams().tileWidth, 0.001f);

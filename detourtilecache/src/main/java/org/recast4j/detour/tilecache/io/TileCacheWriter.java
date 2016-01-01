@@ -12,17 +12,19 @@ import org.recast4j.detour.tilecache.TileCacheBuilder;
 import org.recast4j.detour.tilecache.TileCacheCompressor;
 import org.recast4j.detour.tilecache.TileCacheLayer;
 import org.recast4j.detour.tilecache.TileCacheParams;
+import org.recast4j.detour.tilecache.io.compress.FastLzTileCacheCompressor;
+import org.recast4j.detour.tilecache.io.compress.LZ4TileCacheCompressor;
 
 public class TileCacheWriter extends DetourWriter {
 
 	private final NavMeshParamWriter paramWriter = new NavMeshParamWriter();
 	private final TileCacheBuilder builder = new TileCacheBuilder();
 
-	public void write(OutputStream stream, TileCache cache, TileCacheCompressor compressor, ByteOrder order,
-			boolean cCompatibility) throws IOException {
-		// Write header.
+	public void write(OutputStream stream, TileCache cache, ByteOrder order, boolean cCompatibility)
+			throws IOException {
 		write(stream, TileCacheSetHeader.TILECACHESET_MAGIC, order);
-		write(stream, TileCacheSetHeader.TILECACHESET_VERSION, order);
+		write(stream, cCompatibility ? TileCacheSetHeader.TILECACHESET_VERSION
+				: TileCacheSetHeader.TILECACHESET_VERSION_RECAST4J, order);
 		int numTiles = 0;
 		for (int i = 0; i < cache.getTileCount(); ++i) {
 			CompressedTile tile = cache.getTile(i);
@@ -33,6 +35,8 @@ public class TileCacheWriter extends DetourWriter {
 		write(stream, numTiles, order);
 		paramWriter.write(stream, cache.getNavMesh().getParams(), order);
 		writeCacheParams(stream, cache.getParams(), order);
+		TileCacheCompressor compressor = cCompatibility ? new FastLzTileCacheCompressor()
+				: new LZ4TileCacheCompressor();
 		for (int i = 0; i < cache.getTileCount(); i++) {
 			CompressedTile tile = cache.getTile(i);
 			if (tile == null || tile.data == null)

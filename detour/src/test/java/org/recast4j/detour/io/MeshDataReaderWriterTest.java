@@ -66,7 +66,7 @@ public class MeshDataReaderWriterTest {
 		writer.write(os, meshData, order, cCompatibility);
 		ByteArrayInputStream bais = new ByteArrayInputStream(os.toByteArray());
 		MeshDataReader reader = new MeshDataReader();
-		MeshData readData = reader.read(bais, VERTS_PER_POLYGON, cCompatibility);
+		MeshData readData = reader.read(bais, VERTS_PER_POLYGON);
 
 		System.out.println("verts: " + meshData.header.vertCount);
 		System.out.println("polys: " + meshData.header.polyCount);

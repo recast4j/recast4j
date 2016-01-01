@@ -12,19 +12,19 @@ import org.recast4j.detour.tilecache.TileCache;
 import org.recast4j.detour.tilecache.TileCacheCompressor;
 import org.recast4j.detour.tilecache.TileCacheParams;
 import org.recast4j.detour.tilecache.TileCacheStorageParams;
+import org.recast4j.detour.tilecache.io.compress.FastLzTileCacheCompressor;
+import org.recast4j.detour.tilecache.io.compress.LZ4TileCacheCompressor;
 
 public class TileCacheReader {
 
 	private final NavMeshParamReader paramReader = new NavMeshParamReader();
 
-	public TileCache read(InputStream is, int maxVertPerPoly, TileCacheCompressor compressor, boolean cCompatibility)
-			throws IOException {
-		// Read header.
+	public TileCache read(InputStream is, int maxVertPerPoly) throws IOException {
 		ByteBuffer bb = IOUtils.toByteBuffer(is);
-		return read(bb, maxVertPerPoly, compressor, cCompatibility);
+		return read(bb, maxVertPerPoly);
 	}
 
-	public TileCache read(ByteBuffer bb, int maxVertPerPoly, TileCacheCompressor compressor, boolean cCompatibility) throws IOException {
+	public TileCache read(ByteBuffer bb, int maxVertPerPoly) throws IOException {
 		TileCacheSetHeader header = new TileCacheSetHeader();
 		header.magic = bb.getInt();
 		if (header.magic != TileCacheSetHeader.TILECACHESET_MAGIC) {
@@ -36,13 +36,19 @@ public class TileCacheReader {
 		}
 		header.version = bb.getInt();
 		if (header.version != TileCacheSetHeader.TILECACHESET_VERSION) {
-			throw new IOException("Invalid version");
+			if (header.version != TileCacheSetHeader.TILECACHESET_VERSION_RECAST4J) {
+				throw new IOException("Invalid version");
+			}
 		}
+		boolean cCompatibility = header.version == TileCacheSetHeader.TILECACHESET_VERSION;
 		header.numTiles = bb.getInt();
 		header.meshParams = paramReader.read(bb);
 		header.cacheParams = readCacheParams(bb, cCompatibility);
 		NavMesh mesh = new NavMesh(header.meshParams, maxVertPerPoly);
-		TileCache tc = new TileCache(header.cacheParams, new TileCacheStorageParams(bb.order(), cCompatibility), mesh, compressor, null);
+		TileCacheCompressor compressor = cCompatibility ? new FastLzTileCacheCompressor()
+				: new LZ4TileCacheCompressor();
+		TileCache tc = new TileCache(header.cacheParams, new TileCacheStorageParams(bb.order(), cCompatibility), mesh,
+				compressor, null);
 		// Read tiles.
 		for (int i = 0; i < header.numTiles; ++i) {
 			long tileRef = bb.getInt();

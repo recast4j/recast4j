@@ -21,13 +21,14 @@ package org.recast4j.detour;
 /** Provides high level information related to a dtMeshTile object.*/
 public class MeshHeader {
 	/** A magic number used to detect compatibility of navigation tile data. */
-	public static int DT_NAVMESH_MAGIC = 'D' << 24 | 'N' << 16 | 'A' << 8 | 'V';
+	public static final int DT_NAVMESH_MAGIC = 'D' << 24 | 'N' << 16 | 'A' << 8 | 'V';
 	/** A version number used to detect compatibility of navigation tile data.*/
-	public static int DT_NAVMESH_VERSION = 7;
+	public static final int DT_NAVMESH_VERSION = 7;
+	public static final int DT_NAVMESH_VERSION_RECAST4J = 0x8807;
 	/** A magic number used to detect the compatibility of navigation tile states.*/
-	public static int DT_NAVMESH_STATE_MAGIC = 'D' << 24 | 'N' << 16 | 'M' << 8 | 'S';
+	public static final int DT_NAVMESH_STATE_MAGIC = 'D' << 24 | 'N' << 16 | 'M' << 8 | 'S';
 	/** A version number used to detect compatibility of navigation tile states.*/
-	public static int DT_NAVMESH_STATE_VERSION = 1;
+	public static final int DT_NAVMESH_STATE_VERSION = 1;
 
 	/** < Tile magic number. (Used to identify the data format.)*/
 	public int magic;

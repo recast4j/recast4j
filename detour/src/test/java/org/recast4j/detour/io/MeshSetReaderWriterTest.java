@@ -1,14 +1,17 @@
 package org.recast4j.detour.io;
 
+import static org.junit.Assert.assertEquals;
 import static org.recast4j.detour.DetourCommon.vCopy;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteOrder;
+import java.util.List;
 
 import org.junit.Test;
 import org.recast4j.detour.MeshData;
+import org.recast4j.detour.MeshTile;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.TestDetourBuilder;
 import org.recast4j.recast.InputGeom;
@@ -39,7 +42,7 @@ public class MeshSetReaderWriterTest {
 	private final static int m_tileSize = 32;
 	private final static int m_maxTiles = 128;
 	private final static int m_maxPolysPerTile = 0x8000;
-	
+
 	@Test
 	public void test() throws IOException {
 
@@ -49,13 +52,13 @@ public class MeshSetReaderWriterTest {
 		header.magic = NavMeshSetHeader.NAVMESHSET_MAGIC;
 		header.version = NavMeshSetHeader.NAVMESHSET_VERSION;
 		vCopy(header.params.orig, geom.getMeshBoundsMin());
-		header.params.tileWidth = m_tileSize*m_cellSize;
-		header.params.tileHeight = m_tileSize*m_cellSize;
+		header.params.tileWidth = m_tileSize * m_cellSize;
+		header.params.tileHeight = m_tileSize * m_cellSize;
 		header.params.maxTiles = m_maxTiles;
-		header.params.maxPolys = m_maxPolysPerTile;		
+		header.params.maxPolys = m_maxPolysPerTile;
 		header.numTiles = 0;
 		NavMesh mesh = new NavMesh(header.params, 6);
-		
+
 		float[] bmin = geom.getMeshBoundsMin();
 		float[] bmax = geom.getMeshBoundsMax();
 		int[] twh = Recast.calcTileCount(bmin, bmax, m_cellSize, m_tileSize);
@@ -63,9 +66,9 @@ public class MeshSetReaderWriterTest {
 		int th = twh[1];
 		for (int y = 0; y < th; ++y) {
 			for (int x = 0; x < tw; ++x) {
-				RecastConfig cfg = new RecastConfig(PartitionType.WATERSHED, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
-						m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen,
-						m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError,
+				RecastConfig cfg = new RecastConfig(PartitionType.WATERSHED, m_cellSize, m_cellHeight, m_agentHeight,
+						m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize,
+						m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError,
 						m_tileSize);
 				RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, bmin, bmax, x, y, true);
 				TestDetourBuilder db = new TestDetourBuilder();
@@ -79,6 +82,26 @@ public class MeshSetReaderWriterTest {
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
 		writer.write(os, mesh, ByteOrder.LITTLE_ENDIAN, true);
 		ByteArrayInputStream is = new ByteArrayInputStream(os.toByteArray());
-		NavMesh nm = reader.read(is, 6, true);
+		mesh = reader.read(is, 6);
+		assertEquals(128, mesh.getMaxTiles());
+		assertEquals(0x8000, mesh.getParams().maxPolys);
+		assertEquals(9.6, mesh.getParams().tileWidth, 0.001);
+		List<MeshTile> tiles = mesh.getTilesAt(6, 9);
+		assertEquals(1, tiles.size());
+		assertEquals(2, tiles.get(0).data.polys.length);
+		assertEquals(7 * 3, tiles.get(0).data.verts.length);
+		tiles = mesh.getTilesAt(2, 9);
+		assertEquals(1, tiles.size());
+		assertEquals(2, tiles.get(0).data.polys.length);
+		assertEquals(9 * 3, tiles.get(0).data.verts.length);
+		tiles = mesh.getTilesAt(4, 3);
+		assertEquals(1, tiles.size());
+		assertEquals(3, tiles.get(0).data.polys.length);
+		assertEquals(6 * 3, tiles.get(0).data.verts.length);
+		tiles = mesh.getTilesAt(2, 8);
+		assertEquals(1, tiles.size());
+		assertEquals(5, tiles.get(0).data.polys.length);
+		assertEquals(17 * 3, tiles.get(0).data.verts.length);
+
 	}
 }
