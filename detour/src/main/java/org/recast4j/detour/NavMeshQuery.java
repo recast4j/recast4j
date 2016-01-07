@@ -54,11 +54,11 @@ import org.recast4j.detour.DetourCommon.IntersectResult;
 
 public class NavMeshQuery {
 
-	public static final int DT_FINDPATH_LOW_QUALITY_FAR = 0x01; /// < [provisional] trade quality for performance far
-																/// from the origin. The idea is that by then a new
-																/// query will be issued
-	public static final int DT_FINDPATH_ANY_ANGLE = 0x02; /// < use raycasts during pathfind to "shortcut" (raycast
-															/// still consider costs)
+	/**
+	 * Use raycasts during pathfind to "shortcut" (raycast still consider costs)
+	 * Options for NavMeshQuery::initSlicedFindPath and updateSlicedFindPath
+	 */
+	public static final int DT_FINDPATH_ANY_ANGLE = 0x02;
 
 	/** Raycast should calculate movement cost along the ray and fill RaycastHit::cost */
 	public static final int DT_RAYCAST_USE_COSTS = 0x01;
