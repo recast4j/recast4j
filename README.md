@@ -10,3 +10,45 @@ More information about [Recast and Detour](https://github.com/recastnavigation/r
 ## License
 
 Recast & Detour is licensed under ZLib license, see License.txt for more information.
+
+## Maven
+
+Recast4j snapshots are currently available in Sonatype snapshots repository.
+```
+	<repositories>
+		<repository>
+			<id>snapshots-repo</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+```
+
+The project includes 4 artifacts:
+```
+<dependency>
+	<groupId>org.recast4j</groupId>
+	<artifactId>recast</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+</dependency>
+<dependency>
+	<groupId>org.recast4j</groupId>
+	<artifactId>detour</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+</dependency>
+<dependency>
+	<groupId>org.recast4j</groupId>
+	<artifactId>detour-crowd</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+</dependency>
+<dependency>
+	<groupId>org.recast4j</groupId>
+	<artifactId>detour-tile-cache</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+</dependency>
+```
