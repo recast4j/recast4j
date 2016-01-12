@@ -15,9 +15,6 @@ import org.recast4j.detour.MeshTile;
 import org.recast4j.detour.tilecache.AbstractTileCacheTest;
 import org.recast4j.detour.tilecache.RecastTileLayersBuilder;
 import org.recast4j.detour.tilecache.TileCache;
-import org.recast4j.detour.tilecache.TileCacheCompressor;
-import org.recast4j.detour.tilecache.io.compress.FastLzTileCacheCompressor;
-import org.recast4j.detour.tilecache.io.compress.LZ4TileCacheCompressor;
 import org.recast4j.recast.InputGeom;
 import org.recast4j.recast.ObjImporter;
 import org.recast4j.recast.RecastBuilder;
@@ -29,21 +26,21 @@ public class TileCacheReaderWriterTest extends AbstractTileCacheTest {
 
 	@Test
 	public void testFastLz() throws IOException {
-		testDungeon(new FastLzTileCacheCompressor(), false);
-		testDungeon(new FastLzTileCacheCompressor(), true);
+		testDungeon(false);
+		testDungeon(true);
 	}
 
 	@Test
 	public void testLZ4() throws IOException {
-		testDungeon(new LZ4TileCacheCompressor(), true);
-		testDungeon(new LZ4TileCacheCompressor(), false);
+		testDungeon(true);
+		testDungeon(false);
 	}
 
-	private void testDungeon(TileCacheCompressor compressor, boolean cCompatibility) throws IOException {
+	private void testDungeon(boolean cCompatibility) throws IOException {
 		InputGeom geom = new ObjImporter().load(RecastBuilder.class.getResourceAsStream("dungeon.obj"));
 		RecastTileLayersBuilder layerBuilder = new RecastTileLayersBuilder(geom);
-		List<byte[]> layers = layerBuilder.build(compressor, ByteOrder.LITTLE_ENDIAN, cCompatibility);
-		TileCache tc = getTileCache(geom, compressor, ByteOrder.LITTLE_ENDIAN, cCompatibility);
+		List<byte[]> layers = layerBuilder.build(ByteOrder.LITTLE_ENDIAN, cCompatibility);
+		TileCache tc = getTileCache(geom, ByteOrder.LITTLE_ENDIAN, cCompatibility);
 		for (byte[] data : layers) {
 			long ref = tc.addTile(data, 0);
 			tc.buildNavMeshTile(ref);

@@ -31,6 +31,7 @@ import java.util.List;
 import org.recast4j.detour.Tupple2;
 import org.recast4j.detour.tilecache.io.TileCacheLayerHeaderReader;
 import org.recast4j.detour.tilecache.io.TileCacheLayerHeaderWriter;
+import org.recast4j.detour.tilecache.io.compress.TileCacheCompressorFactory;
 
 public class TileCacheBuilder {
 
@@ -703,7 +704,8 @@ public class TileCacheBuilder {
 		return i;
 	}
 
-	private void buildMeshAdjacency(int[] polys, int npolys, int[] verts, int nverts, TileCacheContourSet lcset, int maxVertsPerPoly) {
+	private void buildMeshAdjacency(int[] polys, int npolys, int[] verts, int nverts, TileCacheContourSet lcset,
+			int maxVertsPerPoly) {
 		// Based on code by Eric Lengyel from:
 		// http://www.terathon.com/code/edges.php
 
@@ -1030,9 +1032,8 @@ public class TileCacheBuilder {
 			if (mini == -1) {
 				// Should not happen.
 				/*
-				 * printf("mini == -1 ntris=%d n=%d\n", ntris, n); for (int i =
-				 * 0; i < n; i++) { printf("%d ", indices[i] & 0x0fffffff); }
-				 * printf("\n");
+				 * printf("mini == -1 ntris=%d n=%d\n", ntris, n); for (int i = 0; i < n; i++) { printf("%d ",
+				 * indices[i] & 0x0fffffff); } printf("\n");
 				 */
 				return -ntris;
 			}
@@ -1298,9 +1299,9 @@ public class TileCacheBuilder {
 				// Collect edges which does not touch the removed vertex.
 				for (int j = 0, k = nv - 1; j < nv; k = j++) {
 					if (mesh.polys[p + j] != rem && mesh.polys[p + k] != rem) {
-						edges.add( mesh.polys[p + k]);
-						edges.add( mesh.polys[p + j]);
-						edges.add( mesh.areas[i]);
+						edges.add(mesh.polys[p + k]);
+						edges.add(mesh.polys[p + j]);
+						edges.add(mesh.areas[i]);
 						nedges++;
 					}
 				}
@@ -1692,39 +1693,39 @@ public class TileCacheBuilder {
 
 	}
 
-	public byte[] buildTileCacheLayer(TileCacheCompressor comp, TileCacheLayerHeader header, int[] heights, int[] areas,
-			int[] cons, ByteOrder order, boolean cCompatibility) {
-		int gridSize = header.width * header.height;
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		TileCacheLayerHeaderWriter hw = new TileCacheLayerHeaderWriter();
-		try {
-			hw.write(baos, header, order, cCompatibility);
-			byte[] buffer = new byte[gridSize * 3];
-			for (int i = 0; i < gridSize; i++) {
-				buffer[i] = (byte) heights[i];
-				buffer[gridSize + i] = (byte) areas[i];
-				buffer[gridSize * 2 + i] = (byte) cons[i];
-			}
-			baos.write(comp.compress(buffer));
-			return baos.toByteArray();
-		} catch (IOException e) {
-			throw new RuntimeException(e.getMessage(), e);
-		}
-	}
-
-	public byte[] compressTileCacheLayer(TileCacheCompressor comp, TileCacheLayer layer, ByteOrder order, boolean cCompatibility) {
-		int gridSize = layer.header.width * layer.header.height;
+	public byte[] compressTileCacheLayer(TileCacheLayer layer, ByteOrder order, boolean cCompatibility) {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		TileCacheLayerHeaderWriter hw = new TileCacheLayerHeaderWriter();
 		try {
 			hw.write(baos, layer.header, order, cCompatibility);
+			int gridSize = layer.header.width * layer.header.height;
 			byte[] buffer = new byte[gridSize * 3];
 			for (int i = 0; i < gridSize; i++) {
 				buffer[i] = (byte) layer.heights[i];
 				buffer[gridSize + i] = (byte) layer.areas[i];
 				buffer[gridSize * 2 + i] = (byte) layer.cons[i];
 			}
-			baos.write(comp.compress(buffer));
+			baos.write(TileCacheCompressorFactory.get(cCompatibility).compress(buffer));
+			return baos.toByteArray();
+		} catch (IOException e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+	}
+
+	public byte[] compressTileCacheLayer(TileCacheLayerHeader header, int[] heights, int[] areas, int[] cons,
+			ByteOrder order, boolean cCompatibility) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		TileCacheLayerHeaderWriter hw = new TileCacheLayerHeaderWriter();
+		try {
+			hw.write(baos, header, order, cCompatibility);
+			int gridSize = header.width * header.height;
+			byte[] buffer = new byte[gridSize * 3];
+			for (int i = 0; i < gridSize; i++) {
+				buffer[i] = (byte) heights[i];
+				buffer[gridSize + i] = (byte) areas[i];
+				buffer[gridSize * 2 + i] = (byte) cons[i];
+			}
+			baos.write(TileCacheCompressorFactory.get(cCompatibility).compress(buffer));
 			return baos.toByteArray();
 		} catch (IOException e) {
 			throw new RuntimeException(e.getMessage(), e);

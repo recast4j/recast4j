@@ -12,8 +12,7 @@ import org.recast4j.detour.tilecache.TileCache;
 import org.recast4j.detour.tilecache.TileCacheCompressor;
 import org.recast4j.detour.tilecache.TileCacheParams;
 import org.recast4j.detour.tilecache.TileCacheStorageParams;
-import org.recast4j.detour.tilecache.io.compress.FastLzTileCacheCompressor;
-import org.recast4j.detour.tilecache.io.compress.LZ4TileCacheCompressor;
+import org.recast4j.detour.tilecache.io.compress.TileCacheCompressorFactory;
 
 public class TileCacheReader {
 
@@ -45,8 +44,7 @@ public class TileCacheReader {
 		header.meshParams = paramReader.read(bb);
 		header.cacheParams = readCacheParams(bb, cCompatibility);
 		NavMesh mesh = new NavMesh(header.meshParams, maxVertPerPoly);
-		TileCacheCompressor compressor = cCompatibility ? new FastLzTileCacheCompressor()
-				: new LZ4TileCacheCompressor();
+		TileCacheCompressor compressor = TileCacheCompressorFactory.get(cCompatibility);
 		TileCache tc = new TileCache(header.cacheParams, new TileCacheStorageParams(bb.order(), cCompatibility), mesh,
 				compressor, null);
 		// Read tiles.

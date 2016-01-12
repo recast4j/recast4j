@@ -36,15 +36,12 @@ public class RecastTileLayersBuilder {
 
 	public RecastTileLayersBuilder(InputGeom geom) {
 		this.geom = geom;
-		rcConfig = new RecastConfig(PartitionType.WATERSHED, m_cellSize, m_cellHeight, 
-				m_agentHeight, m_agentRadius, m_agentMaxClimb,
-				m_agentMaxSlope, m_regionMinSize, 
-				m_regionMergeSize, m_edgeMaxLen,
-				m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, 
-				m_detailSampleMaxError, m_tileSize);
+		rcConfig = new RecastConfig(PartitionType.WATERSHED, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
+				m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
+				m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, m_tileSize);
 	}
 
-	public List<byte[]> build(TileCacheCompressor compressor, ByteOrder order, boolean cCompatibility) {
+	public List<byte[]> build(ByteOrder order, boolean cCompatibility) {
 		List<byte[]> layers = new ArrayList<>();
 		float[] bmin = geom.getMeshBoundsMin();
 		float[] bmax = geom.getMeshBoundsMax();
@@ -53,13 +50,13 @@ public class RecastTileLayersBuilder {
 		int th = twh[1];
 		for (int y = 0; y < th; ++y) {
 			for (int x = 0; x < tw; ++x) {
-				layers.addAll(build(x, y, compressor, order, cCompatibility));
+				layers.addAll(build(x, y, order, cCompatibility));
 			}
 		}
 		return layers;
 	}
 
-	public List<byte[]> build(int tx, int ty, TileCacheCompressor compressor, ByteOrder order, boolean cCompatibility) {
+	public List<byte[]> build(int tx, int ty, ByteOrder order, boolean cCompatibility) {
 		RecastBuilder rcBuilder = new RecastBuilder();
 		float[] bmin = geom.getMeshBoundsMin();
 		float[] bmax = geom.getMeshBoundsMax();
@@ -92,8 +89,8 @@ public class RecastTileLayersBuilder {
 				header.maxy = layer.maxy;
 				header.hmin = layer.hmin;
 				header.hmax = layer.hmax;
-				result.add(builder.buildTileCacheLayer(compressor, header, layer.heights, layer.areas, layer.cons,
-						order, cCompatibility));
+				result.add(builder.compressTileCacheLayer(header, layer.heights, layer.areas, layer.cons, order,
+						cCompatibility));
 			}
 		}
 		return result;

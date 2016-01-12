@@ -10,8 +10,6 @@ import org.junit.Test;
 import org.recast4j.detour.MeshData;
 import org.recast4j.detour.MeshHeader;
 import org.recast4j.detour.MeshTile;
-import org.recast4j.detour.tilecache.io.compress.FastLzTileCacheCompressor;
-import org.recast4j.detour.tilecache.io.compress.LZ4TileCacheCompressor;
 import org.recast4j.recast.InputGeom;
 import org.recast4j.recast.ObjImporter;
 import org.recast4j.recast.RecastBuilder;
@@ -20,33 +18,33 @@ public class TileCacheTest extends AbstractTileCacheTest {
 
 	@Test
 	public void testFastLz() throws IOException {
-		testDungeon(new FastLzTileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, false);
-		testDungeon(new FastLzTileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, true);
-		testDungeon(new FastLzTileCacheCompressor(), ByteOrder.BIG_ENDIAN, false);
-		testDungeon(new FastLzTileCacheCompressor(), ByteOrder.BIG_ENDIAN, true);
-		test(new FastLzTileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, false);
-		test(new FastLzTileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, true);
-		test(new FastLzTileCacheCompressor(), ByteOrder.BIG_ENDIAN, false);
-		test(new FastLzTileCacheCompressor(), ByteOrder.BIG_ENDIAN, true);
+		testDungeon(ByteOrder.LITTLE_ENDIAN, false);
+		testDungeon(ByteOrder.LITTLE_ENDIAN, true);
+		testDungeon(ByteOrder.BIG_ENDIAN, false);
+		testDungeon(ByteOrder.BIG_ENDIAN, true);
+		test(ByteOrder.LITTLE_ENDIAN, false);
+		test(ByteOrder.LITTLE_ENDIAN, true);
+		test(ByteOrder.BIG_ENDIAN, false);
+		test(ByteOrder.BIG_ENDIAN, true);
 	}
 
 	@Test
 	public void testLZ4() throws IOException {
-		testDungeon(new LZ4TileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, false);
-		testDungeon(new LZ4TileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, true);
-		testDungeon(new LZ4TileCacheCompressor(), ByteOrder.BIG_ENDIAN, false);
-		testDungeon(new LZ4TileCacheCompressor(), ByteOrder.BIG_ENDIAN, true);
-		test(new LZ4TileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, false);
-		test(new LZ4TileCacheCompressor(), ByteOrder.LITTLE_ENDIAN, true);
-		test(new LZ4TileCacheCompressor(), ByteOrder.BIG_ENDIAN, false);
-		test(new LZ4TileCacheCompressor(), ByteOrder.BIG_ENDIAN, true);
+		testDungeon(ByteOrder.LITTLE_ENDIAN, false);
+		testDungeon(ByteOrder.LITTLE_ENDIAN, true);
+		testDungeon(ByteOrder.BIG_ENDIAN, false);
+		testDungeon(ByteOrder.BIG_ENDIAN, true);
+		test(ByteOrder.LITTLE_ENDIAN, false);
+		test(ByteOrder.LITTLE_ENDIAN, true);
+		test(ByteOrder.BIG_ENDIAN, false);
+		test(ByteOrder.BIG_ENDIAN, true);
 	}
 
-	private void testDungeon(TileCacheCompressor compressor, ByteOrder order, boolean cCompatibility) throws IOException {
+	private void testDungeon(ByteOrder order, boolean cCompatibility) throws IOException {
 		InputGeom geom = new ObjImporter().load(RecastBuilder.class.getResourceAsStream("dungeon.obj"));
-		TileCache tc = getTileCache(geom, compressor, order, cCompatibility);
+		TileCache tc = getTileCache(geom, order, cCompatibility);
 		RecastTileLayersBuilder layerBuilder = new RecastTileLayersBuilder(geom);
-		List<byte[]> layers = layerBuilder.build(compressor, order, cCompatibility);
+		List<byte[]> layers = layerBuilder.build(order, cCompatibility);
 		int cacheLayerCount = 0;
 		int cacheCompressedSize = 0;
 		int cacheRawSize = 0;
@@ -57,7 +55,8 @@ public class TileCacheTest extends AbstractTileCacheTest {
 			cacheCompressedSize += data.length;
 			cacheRawSize += 4 * 48 * 48 + 56;
 		}
-		System.out.println("Compressor: " + compressor.getClass().getSimpleName() + " C Compatibility: " + cCompatibility + " Layers: " + cacheLayerCount + " Raw Size: " + cacheRawSize + " Compressed: "
+		System.out.println("Compressor: " + tc.getCompressor().getClass().getSimpleName() + " C Compatibility: "
+				+ cCompatibility + " Layers: " + cacheLayerCount + " Raw Size: " + cacheRawSize + " Compressed: "
 				+ cacheCompressedSize);
 		assertEquals(256, tc.getNavMesh().getMaxTiles());
 		assertEquals(16384, tc.getNavMesh().getParams().maxPolys);
@@ -70,10 +69,10 @@ public class TileCacheTest extends AbstractTileCacheTest {
 		assertEquals(2f, tc.getParams().walkableHeight, 0.0f);
 		assertEquals(0.6f, tc.getParams().walkableRadius, 0.0f);
 		assertEquals(48, tc.getParams().width);
-		assertEquals(6*7*4, tc.getParams().maxTiles);
+		assertEquals(6 * 7 * 4, tc.getParams().maxTiles);
 		assertEquals(128, tc.getParams().maxObstacles);
 		assertEquals(168, tc.getTileCount());
-		//Tile0:  Tris: 8, Verts: 18 Detail Meshed: 8 Detail Verts: 0 Detail Tris: 14 
+		// Tile0: Tris: 8, Verts: 18 Detail Meshed: 8 Detail Verts: 0 Detail Tris: 14
 		MeshTile tile = tc.getNavMesh().getTile(0);
 		MeshData data = tile.data;
 		MeshHeader header = data.header;
@@ -90,7 +89,7 @@ public class TileCacheTest extends AbstractTileCacheTest {
 		assertEquals(14.997294f, data.verts[1], 0.0001f);
 		assertEquals(15.484785f, data.verts[6], 0.0001f);
 		assertEquals(15.484785f, data.verts[9], 0.0001f);
-		//Tile8:  Tris: 3, Verts: 8 Detail Meshed: 3 Detail Verts: 0 Detail Tris: 6 
+		// Tile8: Tris: 3, Verts: 8 Detail Meshed: 3 Detail Verts: 0 Detail Tris: 6
 		tile = tc.getNavMesh().getTile(8);
 		data = tile.data;
 		header = data.header;
@@ -104,7 +103,7 @@ public class TileCacheTest extends AbstractTileCacheTest {
 		assertEquals(3, data.detailMeshes.length);
 		assertEquals(0, data.detailVerts.length);
 		assertEquals(4 * 6, data.detailTris.length);
-		//Tile16:  Tris: 10, Verts: 20 Detail Meshed: 10 Detail Verts: 0 Detail Tris: 18 
+		// Tile16: Tris: 10, Verts: 20 Detail Meshed: 10 Detail Verts: 0 Detail Tris: 18
 		tile = tc.getNavMesh().getTile(16);
 		data = tile.data;
 		header = data.header;
@@ -118,7 +117,7 @@ public class TileCacheTest extends AbstractTileCacheTest {
 		assertEquals(10, data.detailMeshes.length);
 		assertEquals(0, data.detailVerts.length);
 		assertEquals(4 * 18, data.detailTris.length);
-		//Tile29:  Tris: 1, Verts: 5 Detail Meshed: 1 Detail Verts: 0 Detail Tris: 3 
+		// Tile29: Tris: 1, Verts: 5 Detail Meshed: 1 Detail Verts: 0 Detail Tris: 3
 		tile = tc.getNavMesh().getTile(29);
 		data = tile.data;
 		header = data.header;
@@ -134,11 +133,11 @@ public class TileCacheTest extends AbstractTileCacheTest {
 		assertEquals(4 * 3, data.detailTris.length);
 	}
 
-	private void test(TileCacheCompressor compressor, ByteOrder order, boolean cCompatibility) throws IOException {
+	private void test(ByteOrder order, boolean cCompatibility) throws IOException {
 		InputGeom geom = new ObjImporter().load(RecastBuilder.class.getResourceAsStream("nav_test.obj"));
-		TileCache tc = getTileCache(geom, compressor, order, cCompatibility);
+		TileCache tc = getTileCache(geom, order, cCompatibility);
 		RecastTileLayersBuilder layerBuilder = new RecastTileLayersBuilder(geom);
-		List<byte[]> layers = layerBuilder.build(compressor, order, cCompatibility);
+		List<byte[]> layers = layerBuilder.build(order, cCompatibility);
 		int cacheLayerCount = 0;
 		int cacheCompressedSize = 0;
 		int cacheRawSize = 0;
@@ -149,7 +148,8 @@ public class TileCacheTest extends AbstractTileCacheTest {
 			cacheCompressedSize += data.length;
 			cacheRawSize += 4 * 48 * 48 + 56;
 		}
-		System.out.println("Compressor: " + compressor.getClass().getSimpleName() + " C Compatibility: " + cCompatibility + " Layers: " + cacheLayerCount + " Raw Size: " + cacheRawSize + " Compressed: "
+		System.out.println("Compressor: " + tc.getCompressor().getClass().getSimpleName() + " C Compatibility: "
+				+ cCompatibility + " Layers: " + cacheLayerCount + " Raw Size: " + cacheRawSize + " Compressed: "
 				+ cacheCompressedSize);
 	}
 }
