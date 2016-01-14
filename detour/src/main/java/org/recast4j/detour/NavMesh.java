@@ -385,6 +385,11 @@ public class NavMesh {
 	/// tile will be restored to the same values they were before the tile was
 	/// removed.
 	///
+	/// The nav mesh assumes exclusive access to the data passed and will make
+	/// changes to the dynamic portion of the data. For that reason the data
+	/// should not be reused in other nav meshes until the tile has been successfully
+	/// removed from this nav mesh.
+	///
 	/// @see dtCreateNavMeshData, #removeTile
 	public long addTile(MeshData data, int flags, long lastRef) {
 		// Make sure the data is in right format.
