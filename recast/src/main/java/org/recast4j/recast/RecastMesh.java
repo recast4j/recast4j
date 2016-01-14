@@ -852,6 +852,7 @@ public class RecastMesh {
 		mesh.cs = cset.cs;
 		mesh.ch = cset.ch;
 		mesh.borderSize = cset.borderSize;
+		mesh.maxEdgeError = cset.maxError;
 
 		int maxVertices = 0;
 		int maxTris = 0;
@@ -1193,6 +1194,7 @@ public class RecastMesh {
 		dst.cs = src.cs;
 		dst.ch = src.ch;
 		dst.borderSize = src.borderSize;
+		dst.maxEdgeError = src.maxEdgeError;
 
 		dst.verts = new int[src.nverts * 3];
 		System.arraycopy(src.verts, 0, dst.verts, 0, dst.verts.length);

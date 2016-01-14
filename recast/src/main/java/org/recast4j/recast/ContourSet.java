@@ -40,4 +40,6 @@ public class ContourSet {
 	public int height;
 	/** The AABB border size used to generate the source data from which the contours were derived. */
 	public int borderSize;
+	/** The max edge error that this contour set was simplified with. */
+	public float maxError;
 }

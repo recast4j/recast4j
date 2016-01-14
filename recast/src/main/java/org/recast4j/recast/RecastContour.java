@@ -706,6 +706,7 @@ public class RecastContour {
 		cset.width = chf.width - chf.borderSize * 2;
 		cset.height = chf.height - chf.borderSize * 2;
 		cset.borderSize = chf.borderSize;
+		cset.maxError = maxError;
 
 		int[] flags = new int[chf.spanCount];
 

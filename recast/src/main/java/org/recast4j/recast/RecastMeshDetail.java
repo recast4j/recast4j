@@ -227,7 +227,8 @@ public class RecastMeshDetail {
 		return c ? -dmin : dmin;
 	}
 
-	private static int getHeight(float fx, float fy, float fz, float cs, float ics, float ch, HeightPatch hp) {
+	private static int getHeight(float fx, float fy, float fz, float cs, float ics, float ch, int radius,
+			HeightPatch hp) {
 		int ix = (int) Math.floor(fx * ics + 0.01f);
 		int iz = (int) Math.floor(fz * ics + 0.01f);
 		ix = RecastCommon.clamp(ix - hp.xmin, 0, hp.width - 1);
@@ -235,23 +236,63 @@ public class RecastMeshDetail {
 		int h = hp.data[ix + iz * hp.width];
 		if (h == RC_UNSET_HEIGHT) {
 			// Special case when data might be bad.
-			// Find nearest neighbour pixel which has valid height.
-			int off[] = { -1, 0, -1, -1, 0, -1, 1, -1, 1, 0, 1, 1, 0, 1, -1, 1 };
-			float dmin = Float.MAX_VALUE;
-			for (int i = 0; i < 8; ++i) {
-				int nx = ix + off[i * 2 + 0];
-				int nz = iz + off[i * 2 + 1];
-				if (nx < 0 || nz < 0 || nx >= hp.width || nz >= hp.height)
-					continue;
-				int nh = hp.data[nx + nz * hp.width];
-				if (nh == RC_UNSET_HEIGHT)
-					continue;
+			// Walk adjacent cells in a spiral up to 'radius', and look
+			// for a pixel which has a valid height.
+			int x = 1, z = 0, dx = 1, dz = 0;
+			int maxSize = radius * 2 + 1;
+			int maxIter = maxSize * maxSize - 1;
 
-				float d = Math.abs(nh * ch - fy);
-				if (d < dmin) {
-					h = nh;
-					dmin = d;
+			int nextRingIterStart = 8;
+			int nextRingIters = 16;
+
+			float dmin = Float.MAX_VALUE;
+			for (int i = 0; i < maxIter; ++i) {
+				int nx = ix + x;
+				int nz = iz + z;
+
+				if (nx >= 0 && nz >= 0 && nx < hp.width && nz < hp.height) {
+					int nh = hp.data[nx + nz * hp.width];
+					if (nh != RC_UNSET_HEIGHT) {
+						float d = Math.abs(nh * ch - fy);
+						if (d < dmin) {
+							h = nh;
+							dmin = d;
+						}
+					}
 				}
+				
+				// We are searching in a grid which looks approximately like this:
+				//  __________
+				// |2 ______ 2|
+				// | |1 __ 1| |
+				// | | |__| | |
+				// | |______| |
+				// |__________|
+				// We want to find the best height as close to the center cell as possible. This means that
+				// if we find a height in one of the neighbor cells to the center, we don't want to
+				// expand further out than the 8 neighbors - we want to limit our search to the closest
+				// of these "rings", but the best height in the ring.
+				// For example, the center is just 1 cell. We checked that at the entrance to the function.
+				// The next "ring" contains 8 cells (marked 1 above). Those are all the neighbors to the center cell.
+				// The next one again contains 16 cells (marked 2). In general each ring has 8 additional cells, which
+				// can be thought of as adding 2 cells around the "center" of each side when we expand the ring.
+				// Here we detect if we are about to enter the next ring, and if we are and we have found
+				// a height, we abort the search.
+				if (i + 1 == nextRingIterStart) {
+					if (h != RC_UNSET_HEIGHT)
+						break;
+
+					nextRingIterStart += nextRingIters;
+					nextRingIters += 8;
+				}
+
+				if ((x == z) || ((x < 0) && (x == -z)) || ((x > 0) && (x == 1 - z))) {
+					int tmp = dx;
+					dx = -dz;
+					dz = tmp;
+				}
+				x += dx;
+				z += dz;
 			}
 		}
 		return h;
@@ -547,7 +588,7 @@ public class RecastMeshDetail {
 	}
 
 	static int buildPolyDetail(Context ctx, float[] in, int nin, float sampleDist, float sampleMaxError,
-			CompactHeightfield chf, HeightPatch hp, float[] verts, List<Integer> tris) {
+			int heightSearchRadius, CompactHeightfield chf, HeightPatch hp, float[] verts, List<Integer> tris) {
 
 		List<Integer> samples = new ArrayList<>(512);
 
@@ -611,7 +652,7 @@ public class RecastMeshDetail {
 					edge[pos + 0] = in[vj + 0] + dx * u;
 					edge[pos + 1] = in[vj + 1] + dy * u;
 					edge[pos + 2] = in[vj + 2] + dz * u;
-					edge[pos + 1] = getHeight(edge[pos + 0], edge[pos + 1], edge[pos + 2], cs, ics, chf.ch, hp)
+					edge[pos + 1] = getHeight(edge[pos + 0], edge[pos + 1], edge[pos + 2], cs, ics, chf.ch, heightSearchRadius, hp)
 							* chf.ch;
 				}
 				// Simplify samples.
@@ -706,7 +747,7 @@ public class RecastMeshDetail {
 					if (distToPoly(nin, in, pt) > -sampleDist / 2)
 						continue;
 					samples.add(x);
-					samples.add(getHeight(pt[0], pt[1], pt[2], cs, ics, chf.ch, hp));
+					samples.add(getHeight(pt[0], pt[1], pt[2], cs, ics, chf.ch, heightSearchRadius, hp));
 					samples.add(z);
 					samples.add(0); // Not added
 				}
@@ -1030,6 +1071,7 @@ public class RecastMeshDetail {
 		float ch = mesh.ch;
 		float[] orig = mesh.bmin;
 		int borderSize = mesh.borderSize;
+		int heightSearchRadius = (int) Math.max(1, Math.ceil(mesh.maxEdgeError));
 
 		List<Integer> tris = new ArrayList<>(512);
 		float verts[] = new float[256 * 3];
@@ -1104,7 +1146,7 @@ public class RecastMeshDetail {
 			getHeightData(ctx, chf, mesh.polys, p, npoly, mesh.verts, borderSize, hp, mesh.regs[i]);
 
 			// Build detail mesh.
-			int nverts = buildPolyDetail(ctx, poly, npoly, sampleDist, sampleMaxError, chf, hp, verts, tris);
+			int nverts = buildPolyDetail(ctx, poly, npoly, sampleDist, sampleMaxError, heightSearchRadius, chf, hp, verts, tris);
 
 			// Move detail verts to world space.
 			for (int j = 0; j < nverts; ++j) {

@@ -49,4 +49,6 @@ public class PolyMesh {
 	public float ch;
 	/** The AABB border size used to generate the source data from which the mesh was derived. */
 	public int borderSize;
+	/** The max error of the polygon edges in the mesh. */
+	public float maxEdgeError; 
 }
