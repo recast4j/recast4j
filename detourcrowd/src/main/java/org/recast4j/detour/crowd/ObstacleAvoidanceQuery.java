@@ -246,8 +246,7 @@ public class ObstacleAvoidanceQuery {
 		// find the threshold hit time to bail out based on the early out penalty
 		// (see how the penalty is calculated below to understnad)
 		float minPen = minPenalty - vpen - vcpen;
-		float tThresold = (float) (((double) m_params.weightToi / (double) minPen - 0.1)
-				* m_params.horizTime);
+		float tThresold = (m_params.weightToi / minPen - 0.1f) * m_params.horizTime;
 		if (tThresold - m_params.horizTime > -Float.MIN_VALUE)
 			return minPenalty; // already too much
 
@@ -426,7 +425,6 @@ public class ObstacleAvoidanceQuery {
 
 		int nd = clamp(ndivs, 1, DT_MAX_PATTERN_DIVS);
 		int nr = clamp(nrings, 1, DT_MAX_PATTERN_RINGS);
-		int nd2 = nd / 2;
 		float da = (1.0f / nd) * DT_PI * 2;
 		float ca = (float) Math.cos(da);
 		float sa = (float) Math.sin(da);
