@@ -20,6 +20,7 @@ package org.recast4j.recast;
 
 import static org.recast4j.recast.RecastConstants.RC_BORDER_VERTEX;
 import static org.recast4j.recast.RecastConstants.RC_MESH_NULL_IDX;
+import static org.recast4j.recast.RecastConstants.RC_MULTIPLE_REGS;
 
 import java.util.Arrays;
 
@@ -473,7 +474,7 @@ public class RecastMesh {
 		return new int[] { dx * dx + dy * dy, ea, eb };
 	}
 
-	private static void mergePolys(int[] polys, int pa, int pb, int ea, int eb, int tmp, int nvp) {
+	private static void mergePolyVerts(int[] polys, int pa, int pb, int ea, int eb, int tmp, int nvp) {
 		int na = countPolyVerts(polys, pa, nvp);
 		int nb = countPolyVerts(polys, pb, nvp);
 
@@ -758,7 +759,14 @@ public class RecastMesh {
 				polys[npolys * nvp + 0] = hole[tris[t + 0]];
 				polys[npolys * nvp + 1] = hole[tris[t + 1]];
 				polys[npolys * nvp + 2] = hole[tris[t + 2]];
-				pregs[npolys] = hreg[tris[t + 0]];
+
+				// If this polygon covers multiple region types then
+				// mark it as such
+				if (hreg[tris[t + 0]] != hreg[tris[t + 1]] || hreg[tris[t + 1]] != hreg[tris[t + 2]])
+					pregs[npolys] = RC_MULTIPLE_REGS;
+				else
+					pregs[npolys] = hreg[tris[t + 0]];
+
 				pareas[npolys] = harea[tris[t + 0]];
 				npolys++;
 			}
@@ -795,7 +803,9 @@ public class RecastMesh {
 					// Found best, merge.
 					int pa = bestPa * nvp;
 					int pb = bestPb * nvp;
-					mergePolys(polys, pa, pb, bestEa, bestEb, tmpPoly, nvp);
+					mergePolyVerts(polys, pa, pb, bestEa, bestEb, tmpPoly, nvp);
+					if (pregs[bestPa] != pregs[bestPb])
+						pregs[bestPa] = RC_MULTIPLE_REGS;
 					int last = (npolys - 1) * nvp;
 					if (pb != last) {
 						System.arraycopy(polys, last, polys, pb, nvp);
@@ -956,7 +966,7 @@ public class RecastMesh {
 						// Found best, merge.
 						int pa = bestPa * nvp;
 						int pb = bestPb * nvp;
-						mergePolys(polys, pa, pb, bestEa, bestEb, tmpPoly, nvp);
+						mergePolyVerts(polys, pa, pb, bestEa, bestEb, tmpPoly, nvp);
 						int lastPoly = (npolys - 1) * nvp;
 						if (pb != lastPoly) {
 							System.arraycopy(polys, lastPoly, polys, pb, nvp);

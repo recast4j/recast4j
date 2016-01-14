@@ -33,7 +33,14 @@ public class RecastConstants {
 	/// (Used during the region and contour build process.)
 	/// @see rcCompactSpan::reg
 	public static int RC_BORDER_REG = 0x8000;
-	/// Border vertex flag.
+	/// Polygon touches multiple regions.
+	/// If a polygon has this region ID it was merged with or created
+	/// from polygons of different regions during the polymesh
+	/// build step that removes redundant border vertices. 
+	/// (Used during the polymesh and detail polymesh build processes)
+	/// @see rcPolyMesh::regs
+	public static int RC_MULTIPLE_REGS = 0;
+	// Border vertex flag.
 	/// If a region ID has this bit set, then the associated element lies on
 	/// a tile border. If a contour vertex's region ID has this bit set, the 
 	/// vertex will later be removed in order to match the segments and vertices 

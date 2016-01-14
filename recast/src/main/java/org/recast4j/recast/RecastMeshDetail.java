@@ -18,7 +18,12 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
+import static org.recast4j.recast.RecastCommon.GetCon;
+import static org.recast4j.recast.RecastCommon.GetDirOffsetX;
+import static org.recast4j.recast.RecastCommon.GetDirOffsetY;
+import static org.recast4j.recast.RecastCommon.rcGetDirForOffset;
 import static org.recast4j.recast.RecastConstants.RC_MESH_NULL_IDX;
+import static org.recast4j.recast.RecastConstants.RC_MULTIPLE_REGS;
 import static org.recast4j.recast.RecastConstants.RC_NOT_CONNECTED;
 
 import java.util.ArrayList;
@@ -764,24 +769,18 @@ public class RecastMeshDetail {
 		return nverts;
 	}
 
-	static void getHeightDataSeedsFromVertices(CompactHeightfield chf, int[] meshpoly, int poly, int npoly, int[] verts,
-			int bs, HeightPatch hp, List<Integer> stack) {
-		// Floodfill the heightfield to get 2D height data,
-		// starting at vertex locations as seeds.
-
+	static void seedArrayWithPolyCenter(Context ctx, CompactHeightfield chf, int[] meshpoly, int poly, int npoly,
+			int[] verts, int bs, HeightPatch hp, List<Integer> array) {
 		// Note: Reads to the compact heightfield are offset by border size (bs)
 		// since border size offset is already removed from the polymesh vertices.
 
-		Arrays.fill(hp.data, 0, hp.width * hp.height, 0);
-		stack.clear();
-
 		int offset[] = { 0, 0, -1, -1, 0, -1, 1, -1, 1, 0, 1, 1, 0, 1, -1, 1, -1, 0, };
 
-		// Use poly vertices as seed points for the flood fill.
-		for (int j = 0; j < npoly; ++j) {
-			int cx = 0, cz = 0, ci = -1;
-			int dmin = RC_UNSET_HEIGHT;
-			for (int k = 0; k < 9; ++k) {
+		// Find cell closest to a poly vertex
+		int startCellX = 0, startCellY = 0, startSpanIndex = -1;
+		int dmin = RC_UNSET_HEIGHT;
+		for (int j = 0; j < npoly && dmin > 0; ++j) {
+	 		for (int k = 0; k < 9 && dmin > 0; ++k) {
 				int ax = verts[meshpoly[poly + j] * 3 + 0] + offset[k * 2 + 0];
 				int ay = verts[meshpoly[poly + j] * 3 + 1];
 				int az = verts[meshpoly[poly + j] * 3 + 2] + offset[k * 2 + 1];
@@ -789,174 +788,193 @@ public class RecastMeshDetail {
 					continue;
 
 				CompactCell c = chf.cells[(ax + bs) + (az + bs) * chf.width];
-				for (int i = c.index, ni = c.index + c.count; i < ni; ++i) {
+				for (int i = c.index, ni = c.index + c.count; i < ni && dmin > 0; ++i) {
 					CompactSpan s = chf.spans[i];
 					int d = Math.abs(ay - s.y);
 					if (d < dmin) {
-						cx = ax;
-						cz = az;
-						ci = i;
+						startCellX = ax;
+						startCellY = az;
+						startSpanIndex = i;
 						dmin = d;
 					}
 				}
 			}
-			if (ci != -1) {
-				stack.add(cx);
-				stack.add(cz);
-				stack.add(ci);
-			}
 		}
 
-		// Find center of the polygon using flood fill.
-		int pcx = 0, pcz = 0;
+		// Find center of the polygon
+		int pcx = 0, pcy = 0;
 		for (int j = 0; j < npoly; ++j) {
 			pcx += verts[meshpoly[poly + j] * 3 + 0];
-			pcz += verts[meshpoly[poly + j] * 3 + 2];
+			pcy += verts[meshpoly[poly + j] * 3 + 2];
 		}
 		pcx /= npoly;
-		pcz /= npoly;
+		pcy /= npoly;
 
-		for (int i = 0; i < stack.size(); i += 3) {
-			int cx = stack.get(i + 0);
-			int cy = stack.get(i + 1);
-			int idx = cx - hp.xmin + (cy - hp.ymin) * hp.width;
-			hp.data[idx] = 1;
-		}
-
-		while (stack.size() > 0) {
-			int ci = stack.remove(stack.size() - 1);
-			int cy = stack.remove(stack.size() - 1);
-			int cx = stack.remove(stack.size() - 1);
-
-			// Check if close to center of the polygon.
-			if (Math.abs(cx - pcx) <= 1 && Math.abs(cy - pcz) <= 1) {
-				stack.clear();
-				stack.add(cx);
-				stack.add(cy);
-				stack.add(ci);
+		array.clear();
+		array.add(startCellX);
+		array.add(startCellY);
+		array.add(startSpanIndex);
+		int dirs[] = { 0, 1, 2, 3 };
+		Arrays.fill(hp.data, 0, hp.width * hp.height, 0);
+		// DFS to move to the center. Note that we need a DFS here and can not just move
+		// directly towards the center without recording intermediate nodes, even though the polygons
+		// are convex. In very rare we can get stuck due to contour simplification if we do not
+		// record nodes.
+		int cx = -1, cy = -1, ci = -1;
+		while (true) {
+			if (array.size() < 3) {
+				ctx.warn("Walk towards polygon center failed to reach center");
 				break;
 			}
+			ci = array.remove(array.size() - 1);
+			cy = array.remove(array.size() - 1);
+			cx = array.remove(array.size() - 1);
 
-			CompactSpan cs = chf.spans[ci];
-
-			for (int dir = 0; dir < 4; ++dir) {
-				if (RecastCommon.GetCon(cs, dir) == RC_NOT_CONNECTED)
-					continue;
-
-				int ax = cx + RecastCommon.GetDirOffsetX(dir);
-				int ay = cy + RecastCommon.GetDirOffsetY(dir);
-
-				if (ax < hp.xmin || ax >= (hp.xmin + hp.width) || ay < hp.ymin || ay >= (hp.ymin + hp.height))
-					continue;
-
-				if (hp.data[ax - hp.xmin + (ay - hp.ymin) * hp.width] != 0)
-					continue;
-
-				int ai = chf.cells[(ax + bs) + (ay + bs) * chf.width].index + RecastCommon.GetCon(cs, dir);
-
-				int idx = ax - hp.xmin + (ay - hp.ymin) * hp.width;
-				hp.data[idx] = 1;
-
-				stack.add(ax);
-				stack.add(ay);
-				stack.add(ai);
+			// Check if close to center of the polygon.
+			if (cx == pcx && cy == pcy) {
+				break;
 			}
-		}
+			// If we are already at the correct X-position, prefer direction
+			// directly towards the center in the Y-axis; otherwise prefer
+			// direction in the X-axis
+			int directDir;
+			if (cx == pcx)
+				directDir = rcGetDirForOffset(0, pcy > cy ? 1 : -1);
+			else
+				directDir = rcGetDirForOffset(pcx > cx ? 1 : -1, 0);
+			
+			// Push the direct dir last so we start with this on next iteration
+			int tmp = dirs[3];
+			dirs[3] = dirs[directDir];
+			dirs[directDir] = tmp;
 
-		Arrays.fill(hp.data, 0, hp.width * hp.height, RC_UNSET_HEIGHT);
-
-		// Mark start locations.
-		for (int i = 0; i < stack.size(); i += 3) {
-			int cx = stack.get(i + 0);
-			int cy = stack.get(i + 1);
-			int ci = stack.get(i + 2);
-			int idx = cx - hp.xmin + (cy - hp.ymin) * hp.width;
 			CompactSpan cs = chf.spans[ci];
-			hp.data[idx] = cs.y;
 
-			// getHeightData seeds are given in coordinates with borders
-			stack.set(i + 0, stack.get(i + 0) + bs);
-			stack.set(i + 1, stack.get(i + 1) + bs);
+			for (int i = 0; i < 4; ++i) {
+				int dir = dirs[i];
+				if (GetCon(cs, dir) == RC_NOT_CONNECTED) continue;
+
+				int newX = cx + GetDirOffsetX(dir);
+				int newY = cy + GetDirOffsetY(dir);
+	
+				int hpx = newX - hp.xmin;
+				int hpy = newY - hp.ymin;
+				if (hpx < 0 || hpx >= hp.width || hpy < 0 || hpy >= hp.height)
+	 				continue;
+				if (hp.data[hpx+hpy*hp.width] != 0)
+					continue;
+	
+				hp.data[hpx+hpy*hp.width] = 1;
+		
+				array.add(newX);
+				array.add(newY);
+				array.add(chf.cells[(newX+bs)+(newY+bs)*chf.width].index + GetCon(cs, dir));
+	 		}
+	
+			tmp = dirs[3];
+			dirs[3] = dirs[directDir];
+			dirs[directDir] = tmp;
+
 		}
 
+		array.clear();
+		// getHeightData seeds are given in coordinates with borders
+		array.add(cx+bs);
+		array.add(cy+bs);
+		array.add(ci);
+		Arrays.fill(hp.data, 0, hp.width * hp.height, RC_UNSET_HEIGHT);
+		CompactSpan cs = chf.spans[ci];
+		hp.data[cx-hp.xmin+(cy-hp.ymin)*hp.width] = cs.y;
 	}
 
 	static final int RETRACT_SIZE = 256;
 
-	static void getHeightData(CompactHeightfield chf, int[] meshpolys, int poly, int npoly, int[] verts, int bs,
-			HeightPatch hp, int region) {
+	static void push3(List<Integer> queue, int v1, int v2, int v3) {
+		queue.add(v1);
+		queue.add(v2);
+		queue.add(v3);
+	}
+
+	static void getHeightData(Context ctx, CompactHeightfield chf, int[] meshpolys, int poly, int npoly, int[] verts,
+			int bs, HeightPatch hp, int region) {
 		// Note: Reads to the compact heightfield are offset by border size (bs)
 		// since border size offset is already removed from the polymesh vertices.
 
-		List<Integer> stack = new ArrayList<>(512);
+		List<Integer> queue = new ArrayList<>(512);
 		Arrays.fill(hp.data, 0, hp.width * hp.height, RC_UNSET_HEIGHT);
 
 		boolean empty = true;
 
-		// Copy the height from the same region, and mark region borders
-		// as seed points to fill the rest.
-		for (int hy = 0; hy < hp.height; hy++) {
-			int y = hp.ymin + hy + bs;
-			for (int hx = 0; hx < hp.width; hx++) {
-				int x = hp.xmin + hx + bs;
-				CompactCell c = chf.cells[x + y * chf.width];
-				for (int i = c.index, ni = c.index + c.count; i < ni; ++i) {
-					CompactSpan s = chf.spans[i];
-					if (s.reg == region) {
-						// Store height
-						hp.data[hx + hy * hp.width] = s.y;
-						empty = false;
-
-						// If any of the neighbours is not in same region,
-						// add the current location as flood fill start
-						boolean border = false;
-						for (int dir = 0; dir < 4; ++dir) {
-							if (RecastCommon.GetCon(s, dir) != RC_NOT_CONNECTED) {
-								int ax = x + RecastCommon.GetDirOffsetX(dir);
-								int ay = y + RecastCommon.GetDirOffsetY(dir);
-								int ai = chf.cells[ax + ay * chf.width].index + RecastCommon.GetCon(s, dir);
-								CompactSpan as = chf.spans[ai];
-								if (as.reg != region) {
-									border = true;
-									break;
+		// We cannot sample from this poly if it was created from polys
+		// of different regions. If it was then it could potentially be overlapping
+		// with polys of that region and the heights sampled here could be wrong.
+		if (region != RC_MULTIPLE_REGS) {
+			// Copy the height from the same region, and mark region borders
+			// as seed points to fill the rest.
+			for (int hy = 0; hy < hp.height; hy++) {
+				int y = hp.ymin + hy + bs;
+				for (int hx = 0; hx < hp.width; hx++) {
+					int x = hp.xmin + hx + bs;
+					CompactCell c = chf.cells[x + y * chf.width];
+					for (int i = c.index, ni = c.index + c.count; i < ni; ++i) {
+						CompactSpan s = chf.spans[i];
+						if (s.reg == region) {
+							// Store height
+							hp.data[hx + hy * hp.width] = s.y;
+							empty = false;
+							// If any of the neighbours is not in same region,
+							// add the current location as flood fill start
+							boolean border = false;
+							for (int dir = 0; dir < 4; ++dir) {
+								if (GetCon(s, dir) != RC_NOT_CONNECTED) {
+									int ax = x + GetDirOffsetX(dir);
+									int ay = y + GetDirOffsetY(dir);
+									int ai = chf.cells[ax + ay * chf.width].index + GetCon(s, dir);
+									CompactSpan as = chf.spans[ai];
+									if (as.reg != region) {
+										border = true;
+										break;
+									}
 								}
 							}
+							if (border) {
+								push3(queue, x, y, i);
+							}
+							break;
 						}
-						if (border) {
-							stack.add(x);
-							stack.add(y);
-							stack.add(i);
-						}
-						break;
 					}
 				}
 			}
 		}
 
-		// if the polygon does not contian any points from the current region (rare, but happens)
-		// then use the cells closest to the polygon vertices as seeds to fill the height field
+		// if the polygon does not contain any points from the current region (rare, but happens)
+		// or if it could potentially be overlapping polygons of the same region,
+		// then use the center as the seed point.		
 		if (empty)
-			getHeightDataSeedsFromVertices(chf, meshpolys, poly, npoly, verts, bs, hp, stack);
+			seedArrayWithPolyCenter(ctx, chf, meshpolys, poly, npoly, verts, bs, hp, queue);
 
 		int head = 0;
 
-		while (head * 3 < stack.size()) {
-			int cx = stack.get(head * 3 + 0);
-			int cy = stack.get(head * 3 + 1);
-			int ci = stack.get(head * 3 + 2);
+		 // We assume the seed is centered in the polygon, so a BFS to collect
+		 // height data will ensure we do not move onto overlapping polygons and
+		 // sample wrong heights.
+		 while (head * 3 < queue.size()) {
+			int cx = queue.get(head * 3 + 0);
+			int cy = queue.get(head * 3 + 1);
+			int ci = queue.get(head * 3 + 2);
 			head++;
 			if (head >= RETRACT_SIZE) {
 				head = 0;
-				stack = stack.subList(RETRACT_SIZE * 3, stack.size());
+				queue = queue.subList(RETRACT_SIZE * 3, queue.size());
 			}
 
 			CompactSpan cs = chf.spans[ci];
 			for (int dir = 0; dir < 4; ++dir) {
-				if (RecastCommon.GetCon(cs, dir) == RC_NOT_CONNECTED)
+				if (GetCon(cs, dir) == RC_NOT_CONNECTED)
 					continue;
 
-				int ax = cx + RecastCommon.GetDirOffsetX(dir);
-				int ay = cy + RecastCommon.GetDirOffsetY(dir);
+				int ax = cx + GetDirOffsetX(dir);
+				int ay = cy + GetDirOffsetY(dir);
 				int hx = ax - hp.xmin - bs;
 				int hy = ay - hp.ymin - bs;
 
@@ -966,14 +984,11 @@ public class RecastMeshDetail {
 				if (hp.data[hx + hy * hp.width] != RC_UNSET_HEIGHT)
 					continue;
 
-				int ai = chf.cells[ax + ay * chf.width].index + RecastCommon.GetCon(cs, dir);
+				int ai = chf.cells[ax + ay * chf.width].index + GetCon(cs, dir);
 				CompactSpan as = chf.spans[ai];
 
 				hp.data[hx + hy * hp.width] = as.y;
-
-				stack.add(ax);
-				stack.add(ay);
-				stack.add(ai);
+				push3(queue, ax, ay, ai);
 			}
 		}
 	}
@@ -1086,7 +1101,7 @@ public class RecastMeshDetail {
 			hp.ymin = bounds[i * 4 + 2];
 			hp.width = bounds[i * 4 + 1] - bounds[i * 4 + 0];
 			hp.height = bounds[i * 4 + 3] - bounds[i * 4 + 2];
-			getHeightData(chf, mesh.polys, p, npoly, mesh.verts, borderSize, hp, mesh.regs[i]);
+			getHeightData(ctx, chf, mesh.polys, p, npoly, mesh.verts, borderSize, hp, mesh.regs[i]);
 
 			// Build detail mesh.
 			int nverts = buildPolyDetail(ctx, poly, npoly, sampleDist, sampleMaxError, chf, hp, verts, tris);

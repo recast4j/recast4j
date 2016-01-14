@@ -48,6 +48,15 @@ public class RecastCommon {
 		return offset[dir & 0x03];
 	}
 
+	/// Gets the direction for the specified offset. One of x and y should be 0.
+	/// @param[in] x The x offset. [Limits: -1 <= value <= 1]
+	/// @param[in] y The y offset. [Limits: -1 <= value <= 1]
+	/// @return The direction that represents the offset.
+	static int rcGetDirForOffset(int x, int y) {
+		int dirs[] = { 3, 0, -1, 2, 1 };
+		return dirs[((y + 1) << 1) + x];
+	}
+
 	/// Sets the neighbor connection data for the specified direction.
 	///  @param[in]		s		The span to update.
 	///  @param[in]		dir		The direction to set. [Limits: 0 <= value < 4]
