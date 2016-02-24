@@ -5,9 +5,6 @@ import static org.recast4j.detour.DetourCommon.vCopy;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import org.recast4j.recast.HeightfieldLayerSet;
 import org.recast4j.recast.HeightfieldLayerSet.HeightfieldLayer;
@@ -18,9 +15,8 @@ import org.recast4j.recast.RecastBuilderConfig;
 import org.recast4j.recast.RecastConfig;
 import org.recast4j.recast.RecastConstants.PartitionType;
 
-public class RecastTileLayersBuilder {
+public class TestTileLayerBuilder extends AbstractTileLayersBuilder {
 
-	private final InputGeom geom;
 	private final float m_cellSize = 0.3f;
 	private final float m_cellHeight = 0.2f;
 	private final float m_agentHeight = 2.0f;
@@ -36,8 +32,9 @@ public class RecastTileLayersBuilder {
 	private final float m_detailSampleMaxError = 1.0f;
 	private RecastConfig rcConfig;
 	private final int m_tileSize = 48;
+	protected final InputGeom geom;
 
-	public RecastTileLayersBuilder(InputGeom geom) {
+	public TestTileLayerBuilder(InputGeom geom) {
 		this.geom = geom;
 		rcConfig = new RecastConfig(PartitionType.WATERSHED, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
 				m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
@@ -50,54 +47,12 @@ public class RecastTileLayersBuilder {
 		int[] twh = Recast.calcTileCount(bmin, bmax, m_cellSize, m_tileSize);
 		int tw = twh[0];
 		int th = twh[1];
-		if (threads == 1) {
-			return buildSingleThread(order, cCompatibility, tw, th);
-		}
-		return buildMultiThread(order, cCompatibility, tw, th, threads);
+		return build(order, cCompatibility, threads, tw, th);
 	}
 
-	private List<byte[]> buildSingleThread(ByteOrder order, boolean cCompatibility, int tw, int th) {
-		List<byte[]> layers = new ArrayList<>();
-		for (int y = 0; y < th; ++y) {
-			for (int x = 0; x < tw; ++x) {
-				layers.addAll(build(x, y, order, cCompatibility));
-			}
-		}
-		return layers;
-	}
-
-	@SuppressWarnings("unchecked")
-	private List<byte[]> buildMultiThread(ByteOrder order, boolean cCompatibility, int tw, int th, int threads) {
-		ExecutorService ec = Executors.newFixedThreadPool(threads);
-		List<?>[] partialResults = new List[tw * th];
-		for (int y = 0; y < th; ++y) {
-			for (int x = 0; x < tw; ++x) {
-				final int tx = x;
-				final int ty = y;
-				ec.submit((Runnable) () -> {
-					List<byte[]> data = build(tx, ty, order, cCompatibility);
-					partialResults[ty * tw + tx] = data;
-				});
-			}
-		}
-		ec.shutdown();
-		try {
-			ec.awaitTermination(1000, TimeUnit.HOURS);
-		} catch (InterruptedException e) {
-		}
-		List<byte[]> layers = new ArrayList<>();
-		for (List<?> pr : partialResults) {
-			layers.addAll((List<byte[]>)pr);
-		}
-		return layers;
-	}
-
+	@Override
 	public List<byte[]> build(int tx, int ty, ByteOrder order, boolean cCompatibility) {
-		RecastBuilder rcBuilder = new RecastBuilder();
-		float[] bmin = geom.getMeshBoundsMin();
-		float[] bmax = geom.getMeshBoundsMax();
-		RecastBuilderConfig cfg = new RecastBuilderConfig(rcConfig, bmin, bmax, tx, ty, true);
-		HeightfieldLayerSet lset = rcBuilder.buildLayers(geom, cfg);
+		HeightfieldLayerSet lset = getHeightfieldSet(tx, ty);
 		List<byte[]> result = new ArrayList<>();
 		if (lset != null) {
 			TileCacheBuilder builder = new TileCacheBuilder();
@@ -130,5 +85,14 @@ public class RecastTileLayersBuilder {
 			}
 		}
 		return result;
+	}
+
+	protected HeightfieldLayerSet getHeightfieldSet(int tx, int ty) {
+		RecastBuilder rcBuilder = new RecastBuilder();
+		float[] bmin = geom.getMeshBoundsMin();
+		float[] bmax = geom.getMeshBoundsMax();
+		RecastBuilderConfig cfg = new RecastBuilderConfig(rcConfig, bmin, bmax, tx, ty, true);
+		HeightfieldLayerSet lset = rcBuilder.buildLayers(geom, cfg);
+		return lset;
 	}
 }

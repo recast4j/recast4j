@@ -13,7 +13,7 @@ import org.recast4j.detour.MeshData;
 import org.recast4j.detour.MeshHeader;
 import org.recast4j.detour.MeshTile;
 import org.recast4j.detour.tilecache.AbstractTileCacheTest;
-import org.recast4j.detour.tilecache.RecastTileLayersBuilder;
+import org.recast4j.detour.tilecache.TestTileLayerBuilder;
 import org.recast4j.detour.tilecache.TileCache;
 import org.recast4j.recast.InputGeom;
 import org.recast4j.recast.ObjImporter;
@@ -38,7 +38,7 @@ public class TileCacheReaderWriterTest extends AbstractTileCacheTest {
 
 	private void testDungeon(boolean cCompatibility) throws IOException {
 		InputGeom geom = new ObjImporter().load(RecastBuilder.class.getResourceAsStream("dungeon.obj"));
-		RecastTileLayersBuilder layerBuilder = new RecastTileLayersBuilder(geom);
+		TestTileLayerBuilder layerBuilder = new TestTileLayerBuilder(geom);
 		List<byte[]> layers = layerBuilder.build(ByteOrder.LITTLE_ENDIAN, cCompatibility, 1);
 		TileCache tc = getTileCache(geom, ByteOrder.LITTLE_ENDIAN, cCompatibility);
 		for (byte[] data : layers) {

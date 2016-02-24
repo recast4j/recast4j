@@ -43,7 +43,7 @@ public class TileCacheTest extends AbstractTileCacheTest {
 	private void testDungeon(ByteOrder order, boolean cCompatibility) throws IOException {
 		InputGeom geom = new ObjImporter().load(RecastBuilder.class.getResourceAsStream("dungeon.obj"));
 		TileCache tc = getTileCache(geom, order, cCompatibility);
-		RecastTileLayersBuilder layerBuilder = new RecastTileLayersBuilder(geom);
+		TestTileLayerBuilder layerBuilder = new TestTileLayerBuilder(geom);
 		List<byte[]> layers = layerBuilder.build(order, cCompatibility, 1);
 		int cacheLayerCount = 0;
 		int cacheCompressedSize = 0;
@@ -136,7 +136,7 @@ public class TileCacheTest extends AbstractTileCacheTest {
 	private void test(ByteOrder order, boolean cCompatibility) throws IOException {
 		InputGeom geom = new ObjImporter().load(RecastBuilder.class.getResourceAsStream("nav_test.obj"));
 		TileCache tc = getTileCache(geom, order, cCompatibility);
-		RecastTileLayersBuilder layerBuilder = new RecastTileLayersBuilder(geom);
+		TestTileLayerBuilder layerBuilder = new TestTileLayerBuilder(geom);
 		List<byte[]> layers = layerBuilder.build(order, cCompatibility, 1);
 		int cacheLayerCount = 0;
 		int cacheCompressedSize = 0;
@@ -159,7 +159,7 @@ public class TileCacheTest extends AbstractTileCacheTest {
 		ByteOrder order = ByteOrder.LITTLE_ENDIAN;
 		boolean cCompatibility = false;
 		InputGeom geom = new ObjImporter().load(RecastBuilder.class.getResourceAsStream("dungeon.obj"));
-		RecastTileLayersBuilder layerBuilder = new RecastTileLayersBuilder(geom);
+		TestTileLayerBuilder layerBuilder = new TestTileLayerBuilder(geom);
 		for (int i = 0; i < 10; i++) {
 			layerBuilder.build(order, cCompatibility, 1);
 			layerBuilder.build(order, cCompatibility, threads);
