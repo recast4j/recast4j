@@ -5,6 +5,9 @@ import static org.recast4j.detour.DetourCommon.vCopy;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.recast4j.recast.HeightfieldLayerSet;
 import org.recast4j.recast.HeightfieldLayerSet.HeightfieldLayer;
@@ -41,17 +44,50 @@ public class RecastTileLayersBuilder {
 				m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, m_tileSize);
 	}
 
-	public List<byte[]> build(ByteOrder order, boolean cCompatibility) {
-		List<byte[]> layers = new ArrayList<>();
+	public List<byte[]> build(ByteOrder order, boolean cCompatibility, int threads) {
 		float[] bmin = geom.getMeshBoundsMin();
 		float[] bmax = geom.getMeshBoundsMax();
 		int[] twh = Recast.calcTileCount(bmin, bmax, m_cellSize, m_tileSize);
 		int tw = twh[0];
 		int th = twh[1];
+		if (threads == 1) {
+			return buildSingleThread(order, cCompatibility, tw, th);
+		}
+		return buildMultiThread(order, cCompatibility, tw, th, threads);
+	}
+
+	private List<byte[]> buildSingleThread(ByteOrder order, boolean cCompatibility, int tw, int th) {
+		List<byte[]> layers = new ArrayList<>();
 		for (int y = 0; y < th; ++y) {
 			for (int x = 0; x < tw; ++x) {
 				layers.addAll(build(x, y, order, cCompatibility));
 			}
+		}
+		return layers;
+	}
+
+	@SuppressWarnings("unchecked")
+	private List<byte[]> buildMultiThread(ByteOrder order, boolean cCompatibility, int tw, int th, int threads) {
+		ExecutorService ec = Executors.newFixedThreadPool(threads);
+		List<?>[] partialResults = new List[tw * th];
+		for (int y = 0; y < th; ++y) {
+			for (int x = 0; x < tw; ++x) {
+				final int tx = x;
+				final int ty = y;
+				ec.submit((Runnable) () -> {
+					List<byte[]> data = build(tx, ty, order, cCompatibility);
+					partialResults[ty * tw + tx] = data;
+				});
+			}
+		}
+		ec.shutdown();
+		try {
+			ec.awaitTermination(1000, TimeUnit.HOURS);
+		} catch (InterruptedException e) {
+		}
+		List<byte[]> layers = new ArrayList<>();
+		for (List<?> pr : partialResults) {
+			layers.addAll((List<byte[]>)pr);
 		}
 		return layers;
 	}

@@ -19,7 +19,7 @@ public class TempObstaclesTest extends AbstractTileCacheTest {
 		boolean cCompatibility = true;
 		InputGeom geom = new ObjImporter().load(RecastBuilder.class.getResourceAsStream("dungeon.obj"));
 		RecastTileLayersBuilder layerBuilder = new RecastTileLayersBuilder(geom);
-		List<byte[]> layers = layerBuilder.build(ByteOrder.LITTLE_ENDIAN, cCompatibility);
+		List<byte[]> layers = layerBuilder.build(ByteOrder.LITTLE_ENDIAN, cCompatibility, 1);
 		TileCache tc = getTileCache(geom, ByteOrder.LITTLE_ENDIAN, cCompatibility);
 		for (byte[] data : layers) {
 			long ref = tc.addTile(data, 0);
