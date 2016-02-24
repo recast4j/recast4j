@@ -43,6 +43,22 @@ public class RecastBuilder {
 		}
 	}
 
+	public RecastBuilderResult[][] buildTiles(InputGeom geom, RecastConfig cfg, int threads) {
+		float[] bmin = geom.getMeshBoundsMin();
+		float[] bmax = geom.getMeshBoundsMax();
+		int[] twh = Recast.calcTileCount(bmin, bmax, cfg.cs, cfg.tileSize);
+		int tw = twh[0];
+		int th = twh[1];
+		RecastBuilderResult[][] result = new RecastBuilderResult[th][tw];
+		for (int y = 0; y < th; ++y) {
+			for (int x = 0; x < tw; ++x) {
+				RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, bmin, bmax, x, y, true);
+				result[y][x] = build(geom, bcfg);
+			}
+		}
+		return result;
+	}
+
 	public RecastBuilderResult build(InputGeom geom, RecastBuilderConfig bcfg) {
 
 		RecastConfig cfg = bcfg.cfg;
