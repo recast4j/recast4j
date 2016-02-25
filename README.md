@@ -13,22 +13,8 @@ Recast & Detour is licensed under ZLib license, see License.txt for more informa
 
 ## Maven
 
-Recast4j snapshots are currently available in Sonatype snapshots repository.
-```
-<repositories>
-	<repository>
-		<id>snapshots-repo</id>
-		<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-		<releases>
-			<enabled>false</enabled>
-		</releases>
-		<snapshots>
-			<enabled>true</enabled>
-		</snapshots>
-	</repository>
-</repositories>
-```
-
+####Releases
+Recast4j releases are available in Maven Central Repository.
 The project includes 4 artifacts:
 ```
 <dependency>
@@ -52,3 +38,21 @@ The project includes 4 artifacts:
 	<version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```
+
+####Snapshots
+Recast4j snapshots are currently available in Sonatype snapshots repository.
+```
+<repositories>
+	<repository>
+		<id>snapshots-repo</id>
+		<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		<releases>
+			<enabled>false</enabled>
+		</releases>
+		<snapshots>
+			<enabled>true</enabled>
+		</snapshots>
+	</repository>
+</repositories>
+```
+
