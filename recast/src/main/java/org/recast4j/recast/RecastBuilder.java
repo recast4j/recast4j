@@ -19,6 +19,9 @@ freely, subject to the following restrictions:
 package org.recast4j.recast;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.recast4j.recast.ChunkyTriMesh.ChunkyTriMeshNode;
 import org.recast4j.recast.RecastConstants.PartitionType;
@@ -49,16 +52,45 @@ public class RecastBuilder {
 		int[] twh = Recast.calcTileCount(bmin, bmax, cfg.cs, cfg.tileSize);
 		int tw = twh[0];
 		int th = twh[1];
-		RecastBuilderResult[][] result = new RecastBuilderResult[th][tw];
-		for (int y = 0; y < th; ++y) {
-			for (int x = 0; x < tw; ++x) {
-				RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, bmin, bmax, x, y, true);
-				result[y][x] = build(geom, bcfg);
+		RecastBuilderResult[][] result = null;
+		if (threads == 1) {
+			result = buildSingleThread(geom, cfg, bmin, bmax, tw, th);
+		} else {
+			result = buildMultiThread(geom, cfg, bmin, bmax, tw, th, threads);
+		}
+		return result;
+	}
+
+	private RecastBuilderResult[][] buildSingleThread(InputGeom geom, RecastConfig cfg, float[] bmin, float[] bmax, int tw, int th) {
+		RecastBuilderResult[][] result = new RecastBuilderResult[tw][th];
+		for (int x = 0; x < tw; ++x) {
+			for (int y = 0; y < th; ++y) {
+				result[x][y] = build(geom, new RecastBuilderConfig(cfg, bmin, bmax, x, y, true));
 			}
 		}
 		return result;
 	}
 
+	private RecastBuilderResult[][] buildMultiThread(InputGeom geom, RecastConfig cfg, float[] bmin, float[] bmax, int tw, int th, int threads) {
+		ExecutorService ec = Executors.newFixedThreadPool(threads);
+		RecastBuilderResult[][] result = new RecastBuilderResult[tw][th];
+		for (int x = 0; x < tw; ++x) {
+			for (int y = 0; y < th; ++y) {
+				final int tx = x;
+				final int ty = y;
+				ec.submit((Runnable) () -> {
+					result[tx][ty] = build(geom, new RecastBuilderConfig(cfg, bmin, bmax, tx, ty, true));
+				});
+			}
+		}
+		ec.shutdown();
+		try {
+			ec.awaitTermination(1000, TimeUnit.HOURS);
+		} catch (InterruptedException e) {
+		}
+		return result;
+	}
+	
 	public RecastBuilderResult build(InputGeom geom, RecastBuilderConfig bcfg) {
 
 		RecastConfig cfg = bcfg.cfg;

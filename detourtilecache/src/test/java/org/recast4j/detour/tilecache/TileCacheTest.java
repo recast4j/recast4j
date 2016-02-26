@@ -154,7 +154,7 @@ public class TileCacheTest extends AbstractTileCacheTest {
 	}
 
 	@Test
-	public void testPerformanceMT() throws IOException {
+	public void testPerformance() throws IOException {
 		int threads = 4;
 		ByteOrder order = ByteOrder.LITTLE_ENDIAN;
 		boolean cCompatibility = false;
