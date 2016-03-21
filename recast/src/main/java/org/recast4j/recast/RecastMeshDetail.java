@@ -597,11 +597,10 @@ public class RecastMeshDetail {
 		int[] hull = new int[MAX_VERTS];
 		int nhull = 0;
 
-		nverts = 0;
+		nverts = nin;
 
 		for (int i = 0; i < nin; ++i)
 			RecastVectors.copy(verts, i * 3, in, i * 3);
-		nverts = nin;
 		tris.clear();
 
 		float cs = chf.cs;
@@ -713,7 +712,7 @@ public class RecastMeshDetail {
 
 		// Tessellate the base mesh.
 		// We're using the triangulateHull instead of delaunayHull as it tends to
-		// create a bit better triangulation for long thing triangles when there
+		// create a bit better triangulation for long thin triangles when there
 		// are no internal points.
 		triangulateHull(nverts, verts, nhull, hull, tris);
 

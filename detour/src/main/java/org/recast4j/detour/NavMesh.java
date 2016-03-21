@@ -977,9 +977,9 @@ public class NavMesh {
 		vCopy(closest, pos);
 		if (!distancePtPolyEdgesSqr(pos, verts, nv, edged, edget)) {
 			// Point is outside the polygon, dtClamp to nearest edge.
-			float dmin = Float.MAX_VALUE;
-			int imin = -1;
-			for (int i = 0; i < nv; ++i) {
+			float dmin = edged[0];
+			int imin = 0;
+			for (int i = 1; i < nv; ++i) {
 				if (edged[i] < dmin) {
 					dmin = edged[i];
 					imin = i;

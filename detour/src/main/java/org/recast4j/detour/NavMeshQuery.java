@@ -386,9 +386,9 @@ public class NavMeshQuery {
 		vCopy(closest, pos);
 		if (!distancePtPolyEdgesSqr(pos, verts, nv, edged, edget)) {
 			// Point is outside the polygon, dtClamp to nearest edge.
-			float dmin = Float.MAX_VALUE;
-			int imin = -1;
-			for (int i = 0; i < nv; ++i) {
+			float dmin = edged[0];
+			int imin = 0;
+			for (int i = 1; i < nv; ++i) {
 				if (edged[i] < dmin) {
 					dmin = edged[i];
 					imin = i;
@@ -462,9 +462,9 @@ public class NavMeshQuery {
 			closest = vCopy(pos);
 		} else {
 			// Point is outside the polygon, dtClamp to nearest edge.
-			float dmin = Float.MAX_VALUE;
-			int imin = -1;
-			for (int i = 0; i < nv; ++i) {
+			float dmin = edged[0];
+			int imin = 0;
+			for (int i = 1; i < nv; ++i) {
 				if (edged[i] < dmin) {
 					dmin = edged[i];
 					imin = i;
@@ -525,9 +525,6 @@ public class NavMeshQuery {
 	/// @note If the search box does not intersect any polygons the search will
 	/// return #DT_SUCCESS, but @p nearestRef will be zero. So if in doubt, check
 	/// @p nearestRef before using @p nearestPt.
-	///
-	/// @warning This function is not suitable for large area searches. If the search
-	/// extents overlaps more than MAX_SEARCH (128) polygons it may return an invalid result.
 	///
 	/// @}
 	/// @name Local Query Functions
@@ -1397,7 +1394,6 @@ public class NavMeshQuery {
 			for (int i = 0; i < path.size(); ++i) {
 				float[] left;
 				float[] right;
-				int fromType;
 				int toType;
 
 				if (i + 1 < path.size()) {
@@ -1406,7 +1402,6 @@ public class NavMeshQuery {
 						PortalResult portalPoints = getPortalPoints(path.get(i), path.get(i + 1));
 						left = portalPoints.left;
 						right = portalPoints.right;
-						fromType = portalPoints.fromType;
 						toType = portalPoints.toType;
 					} catch (Exception e) {
 						closestEndPos = closestPointOnPolyBoundary(path.get(i), endPos);
@@ -1430,7 +1425,7 @@ public class NavMeshQuery {
 					// End of the path.
 					left = vCopy(closestEndPos);
 					right = vCopy(closestEndPos);
-					fromType = toType = Poly.DT_POLYTYPE_GROUND;
+					toType = Poly.DT_POLYTYPE_GROUND;
 				}
 
 				// Right vertex.
