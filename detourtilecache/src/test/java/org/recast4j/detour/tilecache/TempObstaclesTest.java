@@ -1,6 +1,7 @@
 package org.recast4j.detour.tilecache;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.nio.ByteOrder;
@@ -30,13 +31,15 @@ public class TempObstaclesTest extends AbstractTileCacheTest {
 		assertEquals(16, tile.data.header.vertCount);
 		assertEquals(6, tile.data.header.polyCount);
 		long o = tc.addObstacle(new float[] {-1.815208f, 9.998184f, -20.307983f}, 1f, 2f);
-		tc.update();
+		boolean upToDate = tc.update();
+		assertTrue(upToDate);
 		tiles = tc.getNavMesh().getTilesAt(1, 4);
 		tile = tiles.get(0);
 		assertEquals(22, tile.data.header.vertCount);
 		assertEquals(11, tile.data.header.polyCount);
 		tc.removeObstacle(o);
-		tc.update();
+		upToDate = tc.update();
+		assertTrue(upToDate);
 		tiles = tc.getNavMesh().getTilesAt(1, 4);
 		tile = tiles.get(0);
 		assertEquals(16, tile.data.header.vertCount);

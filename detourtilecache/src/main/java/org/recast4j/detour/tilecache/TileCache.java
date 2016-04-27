@@ -343,7 +343,13 @@ public class TileCache {
 		return results;
 	}
 
-	void update() {
+	 /**
+	  *  Updates the tile cache by rebuilding tiles touched by unfinished obstacle requests.
+	  *  @return Returns true if the tile cache is fully up to date with obstacle requests and tile rebuilds.
+	  *          If the tile cache is up to date another (immediate) call to update will have no effect;
+	  * 		 otherwise another call will continue processing obstacle requests and tile rebuilds.
+	  */
+	 public boolean update() {
 		if (m_update.isEmpty()) {
 			// Process requests.
 			for (ObstacleRequest req : m_reqs) {
@@ -387,7 +393,8 @@ public class TileCache {
 		}
 
 		// Process updates
-		for (long ref : m_update) {
+		if (!m_update.isEmpty()) {
+			long ref = m_update.remove(0);
 			// Build mesh
 			buildNavMeshTile(ref);
 
@@ -417,7 +424,7 @@ public class TileCache {
 				}
 			}
 		}
-		m_update.clear();
+		return m_update.isEmpty() && m_reqs.isEmpty();
 
 	}
 
