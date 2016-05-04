@@ -456,15 +456,18 @@ public class NavMesh {
 		// Init tile.
 
 		connectIntLinks(tile);
+		// Base off-mesh connections to their starting polygons and connect connections inside the tile.
 		baseOffMeshLinks(tile);
+		connectExtOffMeshLinks(tile, tile, -1);
 
 		// Connect with layers in current tile.
 		List<MeshTile> neis = getTilesAt(header.x, header.y);
 		for (int j = 0; j < neis.size(); ++j) {
-			if (neis.get(j) != tile) {
-				connectExtLinks(tile, neis.get(j), -1);
-				connectExtLinks(neis.get(j), tile, -1);
+			if (neis.get(j) == tile) {
+				continue;
 			}
+			connectExtLinks(tile, neis.get(j), -1);
+			connectExtLinks(neis.get(j), tile, -1);
 			connectExtOffMeshLinks(tile, neis.get(j), -1);
 			connectExtOffMeshLinks(neis.get(j), tile, -1);
 		}
