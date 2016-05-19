@@ -17,6 +17,8 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
+import static org.junit.Assert.assertTrue;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -69,13 +71,15 @@ public class FindPolysAroundCircleTest extends AbstractDetourTest {
 			FindPolysAroundResult polys = query.findPolysAroundCircle(startRef, startPos, 7.5f, filter);
 			Assert.assertEquals(refs[i].length, polys.getRefs().size());
 			for (int v = 0; v < refs[i].length; v++) {
-				Assert.assertEquals(refs[i][v], polys.getRefs().get(v).longValue());
-			}
-			for (int v = 0; v < parentsRefs[i].length; v++) {
-				Assert.assertEquals(parentsRefs[i][v], polys.getParentRefs().get(v).longValue());
-			}
-			for (int v = 0; v < costs[i].length; v++) {
-				Assert.assertEquals(costs[i][v], polys.getCosts().get(v).floatValue(), 0.01f);
+				boolean found = false;
+				for (int w = 0; w < refs[i].length; w++) {
+					if (refs[i][v] == polys.getRefs().get(w).longValue()) {
+						Assert.assertEquals(parentsRefs[i][v], polys.getParentRefs().get(w).longValue());
+						Assert.assertEquals(costs[i][v], polys.getCosts().get(w).floatValue(), 0.01f);
+						found = true;
+					}
+				}
+				assertTrue("Ref not found " + refs[i][v], found);
 			}
 		}
 

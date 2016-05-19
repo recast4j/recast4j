@@ -2134,10 +2134,6 @@ public class NavMeshQuery {
 		startNode.flags = Node.DT_NODE_OPEN;
 		m_openList.push(startNode);
 
-		resultRef.add(startNode.id);
-		resultParent.add(0L);
-		resultCost.add(0f);
-
 		float radiusSqr = sqr(radius);
 
 		while (!m_openList.isEmpty()) {
@@ -2163,6 +2159,10 @@ public class NavMeshQuery {
 				parentTile = tileAndPoly.first;
 				parentPoly = tileAndPoly.second;
 			}
+
+			resultRef.add(bestRef);
+			resultParent.add(parentRef);
+			resultCost.add(bestNode.total);
 
 			for (int i = bestPoly.firstLink; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
 				Link link = bestTile.links.get(i);
@@ -2208,16 +2208,12 @@ public class NavMeshQuery {
 					continue;
 
 				neighbourNode.id = neighbourRef;
-				neighbourNode.flags = (neighbourNode.flags & ~Node.DT_NODE_CLOSED);
 				neighbourNode.pidx = m_nodePool.getNodeIdx(bestNode);
 				neighbourNode.total = total;
 
 				if ((neighbourNode.flags & Node.DT_NODE_OPEN) != 0) {
 					m_openList.modify(neighbourNode);
 				} else {
-					resultRef.add(neighbourNode.id);
-					resultParent.add(m_nodePool.getNodeAtIdx(neighbourNode.pidx).id);
-					resultCost.add(neighbourNode.total);
 					neighbourNode.flags = Node.DT_NODE_OPEN;
 					m_openList.push(neighbourNode);
 				}
@@ -2295,10 +2291,6 @@ public class NavMeshQuery {
 		startNode.flags = Node.DT_NODE_OPEN;
 		m_openList.push(startNode);
 
-		resultRef.add(startNode.id);
-		resultParent.add(0L);
-		resultCost.add(0f);
-
 		while (!m_openList.isEmpty()) {
 			Node bestNode = m_openList.pop();
 			bestNode.flags &= ~Node.DT_NODE_OPEN;
@@ -2322,6 +2314,10 @@ public class NavMeshQuery {
 				parentTile = tileAndPoly.first;
 				parentPoly = tileAndPoly.second;
 			}
+
+			resultRef.add(bestRef);
+			resultParent.add(parentRef);
+			resultCost.add(bestNode.total);
 
 			for (int i = bestPoly.firstLink; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
 				Link link = bestTile.links.get(i);
@@ -2368,16 +2364,12 @@ public class NavMeshQuery {
 					continue;
 
 				neighbourNode.id = neighbourRef;
-				neighbourNode.flags = (neighbourNode.flags & ~Node.DT_NODE_CLOSED);
 				neighbourNode.pidx = m_nodePool.getNodeIdx(bestNode);
 				neighbourNode.total = total;
 
 				if ((neighbourNode.flags & Node.DT_NODE_OPEN) != 0) {
 					m_openList.modify(neighbourNode);
 				} else {
-					resultRef.add(neighbourNode.id);
-					resultParent.add(m_nodePool.getNodeAtIdx(neighbourNode.pidx).id);
-					resultCost.add(neighbourNode.total);
 					neighbourNode.flags = Node.DT_NODE_OPEN;
 					m_openList.push(neighbourNode);
 				}
