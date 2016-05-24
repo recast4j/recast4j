@@ -2201,8 +2201,10 @@ public class NavMeshQuery {
 				if (neighbourNode.flags == 0)
 					neighbourNode.pos = vLerp(va, vb, 0.5f);
 
-				float total = bestNode.total + vDist(bestNode.pos, neighbourNode.pos);
+				float cost = filter.getCost(bestNode.pos, neighbourNode.pos, parentRef, parentTile, parentPoly, bestRef,
+						bestTile, bestPoly, neighbourRef, neighbourTile, neighbourPoly);
 
+				float total = bestNode.total + cost;
 				// The node is already in open list and the new result is worse, skip.
 				if ((neighbourNode.flags & Node.DT_NODE_OPEN) != 0 && total >= neighbourNode.total)
 					continue;
@@ -2357,7 +2359,10 @@ public class NavMeshQuery {
 				if (neighbourNode.flags == 0)
 					neighbourNode.pos = vLerp(va, vb, 0.5f);
 
-				float total = bestNode.total + vDist(bestNode.pos, neighbourNode.pos);
+				float cost = filter.getCost(bestNode.pos, neighbourNode.pos, parentRef, parentTile, parentPoly, bestRef,
+						bestTile, bestPoly, neighbourRef, neighbourTile, neighbourPoly);
+
+				float total = bestNode.total + cost;
 
 				// The node is already in open list and the new result is worse, skip.
 				if ((neighbourNode.flags & Node.DT_NODE_OPEN) != 0 && total >= neighbourNode.total)
