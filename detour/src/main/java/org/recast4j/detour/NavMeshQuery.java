@@ -44,6 +44,8 @@ import static org.recast4j.detour.DetourCommon.vMax;
 import static org.recast4j.detour.DetourCommon.vMin;
 import static org.recast4j.detour.DetourCommon.vNormalize;
 import static org.recast4j.detour.DetourCommon.vSub;
+import static org.recast4j.detour.Node.DT_NODE_CLOSED;
+import static org.recast4j.detour.Node.DT_NODE_OPEN;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -213,7 +215,7 @@ public class NavMeshQuery {
 		startNode.cost = 0;
 		startNode.total = 0;
 		startNode.id = startRef;
-		startNode.flags = Node.DT_NODE_OPEN;
+		startNode.flags = DT_NODE_OPEN;
 		m_openList.push(startNode);
 
 		float radiusSqr = maxRadius * maxRadius;
@@ -225,8 +227,8 @@ public class NavMeshQuery {
 
 		while (!m_openList.isEmpty()) {
 			Node bestNode = m_openList.pop();
-			bestNode.flags &= ~Node.DT_NODE_OPEN;
-			bestNode.flags |= Node.DT_NODE_CLOSED;
+			bestNode.flags &= ~DT_NODE_OPEN;
+			bestNode.flags |= DT_NODE_CLOSED;
 			// Get poly and tile.
 			// The API input has been cheked already, skip checking internal data.
 			long bestRef = bestNode.id;
@@ -717,8 +719,8 @@ public class NavMeshQuery {
 		if (!m_nav.isValidPolyRef(startRef) || !m_nav.isValidPolyRef(endRef))
 			throw new IllegalArgumentException("Invalid start or end ref");
 
-		List<Long> path = new ArrayList<>(64);
 		if (startRef == endRef) {
+			List<Long> path = new ArrayList<>(1);
 			path.add(startRef);
 			return new FindPathResult(Status.SUCCSESS, path);
 		}
@@ -856,25 +858,10 @@ public class NavMeshQuery {
 			}
 		}
 
+		List<Long> path = getPathToNode(lastBestNode);
+
 		if (lastBestNode.id != endRef)
 			status = Status.PARTIAL_RESULT;
-
-		// Reverse the path.
-		Node prev = null;
-		Node node = lastBestNode;
-		do {
-			Node next = m_nodePool.getNodeAtIdx(node.pidx);
-			node.pidx = m_nodePool.getNodeIdx(prev);
-			prev = node;
-			node = next;
-		} while (node != null);
-
-		// Store path
-		node = prev;
-		do {
-			path.add(node.id);
-			node = m_nodePool.getNodeAtIdx(node.pidx);
-		} while (node != null);
 
 		return new FindPathResult(status, path);
 	}
@@ -2906,7 +2893,41 @@ public class NavMeshQuery {
 		return false;
 	}
 	
-	
 	*/
 
+	/**
+	 * Gets a path from the explored nodes in the previous search.
+	 * 
+	 * @param endRef
+	 *            The reference id of the end polygon.
+	 * @returns An ordered list of polygon references representing the path. (Start to end.)
+	 * @remarks The result of this function depends on the state of the query object. For that reason it should only be
+	 *          used immediately after one of the two Dijkstra searches, findPolysAroundCircle or findPolysAroundShape.
+	 */
+	public List<Long> getPathFromDijkstraSearch(long endRef) {
+		if (!m_nav.isValidPolyRef(endRef))
+			throw new IllegalArgumentException("Invalid end ref");
+		List<Node> nodes = m_nodePool.findNodes(endRef);
+		if (nodes.size() != 1)
+			throw new IllegalArgumentException("Invalid end ref");
+		Node endNode = nodes.get(0);
+		if ((endNode.flags & DT_NODE_CLOSED) == 0)
+			throw new IllegalArgumentException("Invalid end ref");
+		return getPathToNode(endNode);
+	}
+
+	/**
+	 * Gets the path leading to the specified end node.
+	 */
+	private List<Long> getPathToNode(Node endNode) {
+		List<Long> path = new ArrayList<>();
+		// Reverse the path.
+		Node curNode = endNode;
+		do {
+			path.add(0, curNode.id);
+			curNode = m_nodePool.getNodeAtIdx(curNode.pidx);
+		} while (curNode != null);
+
+		return path;
+	}
 }

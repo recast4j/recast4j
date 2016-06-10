@@ -37,7 +37,7 @@ public class NodePool {
 		m_map.clear();
 	}
 
-	List<Node> findNodes(long id, int maxNodes) {
+	List<Node> findNodes(long id) {
 		List<Node> nodes = m_map.get(id);
 		if (nodes == null) {
 			nodes = new ArrayList<>();
