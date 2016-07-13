@@ -32,6 +32,7 @@ import org.recast4j.detour.MeshData;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshBuilder;
 import org.recast4j.detour.NavMeshCreateParams;
+import org.recast4j.detour.tilecache.TileCacheObstacle.TileCacheObstacleType;
 import org.recast4j.detour.tilecache.io.TileCacheLayerHeaderReader;
 
 public class TileCache {
@@ -280,14 +281,26 @@ public class TileCache {
 
 	public long addObstacle(float[] pos, float radius, float height) {
 		TileCacheObstacle ob = allocObstacle();
+		ob.type = TileCacheObstacleType.CYLINDER;
 
-		int salt = ob.salt;
-		ob.reset();
-		ob.salt = salt;
-		ob.state = ObstacleState.DT_OBSTACLE_PROCESSING;
 		vCopy(ob.pos, pos);
 		ob.radius = radius;
 		ob.height = height;
+
+		ObstacleRequest req = new ObstacleRequest();
+		req.action = ObstacleRequestAction.REQUEST_ADD;
+		req.ref = getObstacleRef(ob);
+		m_reqs.add(req);
+
+		return req.ref;
+	}
+
+	public long addBoxObstacle(float[] bmin, float[] bmax) {
+		TileCacheObstacle ob = allocObstacle();
+		ob.type = TileCacheObstacleType.BOX;
+
+		vCopy(ob.bmin, bmin);
+		vCopy(ob.bmax, bmax);
 
 		ObstacleRequest req = new ObstacleRequest();
 		req.action = ObstacleRequestAction.REQUEST_ADD;
@@ -315,6 +328,10 @@ public class TileCache {
 		} else {
 			m_nextFreeObstacle = o.next;
 		}
+		o.state = ObstacleState.DT_OBSTACLE_PROCESSING;
+		o.touched.clear();
+		o.pending.clear();
+		o.next = null;
 		return o;
 	}
 
@@ -343,13 +360,14 @@ public class TileCache {
 		return results;
 	}
 
-	 /**
-	  *  Updates the tile cache by rebuilding tiles touched by unfinished obstacle requests.
-	  *  @return Returns true if the tile cache is fully up to date with obstacle requests and tile rebuilds.
-	  *          If the tile cache is up to date another (immediate) call to update will have no effect;
-	  * 		 otherwise another call will continue processing obstacle requests and tile rebuilds.
-	  */
-	 public boolean update() {
+	/**
+	 * Updates the tile cache by rebuilding tiles touched by unfinished obstacle requests.
+	 * 
+	 * @return Returns true if the tile cache is fully up to date with obstacle requests and tile rebuilds. If the tile
+	 *         cache is up to date another (immediate) call to update will have no effect; otherwise another call will
+	 *         continue processing obstacle requests and tile rebuilds.
+	 */
+	public boolean update() {
 		if (m_update.isEmpty()) {
 			// Process requests.
 			for (ObstacleRequest req : m_reqs) {
@@ -447,8 +465,12 @@ public class TileCache {
 			if (ob.state == ObstacleState.DT_OBSTACLE_EMPTY || ob.state == ObstacleState.DT_OBSTACLE_REMOVING)
 				continue;
 			if (contains(ob.touched, ref)) {
-				builder.markCylinderArea(layer, tile.header.bmin, m_params.cs, m_params.ch, ob.pos, ob.radius,
-						ob.height, 0);
+				if (ob.type == TileCacheObstacleType.CYLINDER) {
+					builder.markCylinderArea(layer, tile.header.bmin, m_params.cs, m_params.ch, ob.pos, ob.radius,
+							ob.height, 0);
+				} else {
+					builder.markBoxArea(layer, tile.header.bmin, m_params.cs, m_params.ch, ob.bmin, ob.bmax, 0);
+				}
 			}
 		}
 		// Build navmesh
@@ -509,12 +531,17 @@ public class TileCache {
 	}
 
 	void getObstacleBounds(TileCacheObstacle ob, float[] bmin, float[] bmax) {
-		bmin[0] = ob.pos[0] - ob.radius;
-		bmin[1] = ob.pos[1];
-		bmin[2] = ob.pos[2] - ob.radius;
-		bmax[0] = ob.pos[0] + ob.radius;
-		bmax[1] = ob.pos[1] + ob.height;
-		bmax[2] = ob.pos[2] + ob.radius;
+		if (ob.type == TileCacheObstacleType.CYLINDER) {
+			bmin[0] = ob.pos[0] - ob.radius;
+			bmin[1] = ob.pos[1];
+			bmin[2] = ob.pos[2] - ob.radius;
+			bmax[0] = ob.pos[0] + ob.radius;
+			bmax[1] = ob.pos[1] + ob.height;
+			bmax[2] = ob.pos[2] + ob.radius;
+		} else {
+			vCopy(bmin, ob.bmin);
+			vCopy(bmax, ob.bmax);
+		}
 	}
 
 	public TileCacheParams getParams() {

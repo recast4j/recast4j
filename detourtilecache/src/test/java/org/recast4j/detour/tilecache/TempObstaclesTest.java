@@ -45,4 +45,35 @@ public class TempObstaclesTest extends AbstractTileCacheTest {
 		assertEquals(16, tile.data.header.vertCount);
 		assertEquals(6, tile.data.header.polyCount);
 	}
+
+	@Test
+	public void testDungeonBox() throws IOException {
+		boolean cCompatibility = true;
+		InputGeom geom = new ObjImporter().load(RecastBuilder.class.getResourceAsStream("dungeon.obj"));
+		TestTileLayerBuilder layerBuilder = new TestTileLayerBuilder(geom);
+		List<byte[]> layers = layerBuilder.build(ByteOrder.LITTLE_ENDIAN, cCompatibility, 1);
+		TileCache tc = getTileCache(geom, ByteOrder.LITTLE_ENDIAN, cCompatibility);
+		for (byte[] data : layers) {
+			long ref = tc.addTile(data, 0);
+			tc.buildNavMeshTile(ref);
+		}
+		List<MeshTile> tiles = tc.getNavMesh().getTilesAt(1, 4);
+		MeshTile tile = tiles.get(0);
+		assertEquals(16, tile.data.header.vertCount);
+		assertEquals(6, tile.data.header.polyCount);
+		long o = tc.addBoxObstacle(new float[] {-2.315208f, 9.998184f, -20.807983f}, new float[] {-1.315208f, 11.998184f, -19.807983f});
+		boolean upToDate = tc.update();
+		assertTrue(upToDate);
+		tiles = tc.getNavMesh().getTilesAt(1, 4);
+		tile = tiles.get(0);
+		assertEquals(22, tile.data.header.vertCount);
+		assertEquals(11, tile.data.header.polyCount);
+		tc.removeObstacle(o);
+		upToDate = tc.update();
+		assertTrue(upToDate);
+		tiles = tc.getNavMesh().getTilesAt(1, 4);
+		tile = tiles.get(0);
+		assertEquals(16, tile.data.header.vertCount);
+		assertEquals(6, tile.data.header.polyCount);
+	}
 }

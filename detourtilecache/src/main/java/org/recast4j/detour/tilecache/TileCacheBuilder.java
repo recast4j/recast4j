@@ -1690,6 +1690,47 @@ public class TileCacheBuilder {
 				layer.areas[x + z * w] = (short) areaId;
 			}
 		}
+	}
+
+	public void markBoxArea(TileCacheLayer layer, float[] orig, float cs, float ch, float[] bmin, float[] bmax, int areaId) {
+		int w = layer.header.width;
+		int h = layer.header.height;
+		float ics = 1.0f / cs;
+		float ich = 1.0f / ch;
+
+		int minx = (int) Math.floor((bmin[0] - orig[0]) * ics);
+		int miny = (int) Math.floor((bmin[1] - orig[1]) * ich);
+		int minz = (int) Math.floor((bmin[2] - orig[2]) * ics);
+		int maxx = (int) Math.floor((bmax[0] - orig[0]) * ics);
+		int maxy = (int) Math.floor((bmax[1] - orig[1]) * ich);
+		int maxz = (int) Math.floor((bmax[2] - orig[2]) * ics);
+
+		if (maxx < 0)
+			return;
+		if (minx >= w)
+			return;
+		if (maxz < 0)
+			return;
+		if (minz >= h)
+			return;
+
+		if (minx < 0)
+			minx = 0;
+		if (maxx >= w)
+			maxx = w - 1;
+		if (minz < 0)
+			minz = 0;
+		if (maxz >= h)
+			maxz = h - 1;
+
+		for (int z = minz; z <= maxz; ++z) {
+			for (int x = minx; x <= maxx; ++x) {
+				int y = layer.heights[x + z * w];
+				if (y < miny || y > maxy)
+					continue;
+				layer.areas[x + z * w] = (short) areaId;
+			}
+		}
 
 	}
 
