@@ -176,7 +176,7 @@ public class NavMeshQuery {
 
 		float[] pt = randomPointInConvexPoly(verts, poly.vertCount, areas, s, t);
 
-		pt[1] = getPolyHeight(polyRef, new VectorPtr(pt, 0));
+		pt[1] = getPolyHeight(polyRef, pt);
 
 		return new FindRandomPointResult(Status.SUCCSESS, polyRef, pt);
 	}
@@ -339,7 +339,7 @@ public class NavMeshQuery {
 
 		float[] pt = randomPointInConvexPoly(verts, randomPoly.vertCount, areas, s, t);
 
-		pt[1] = getPolyHeight(randomPolyRef, new VectorPtr(pt, 0));
+		pt[1] = getPolyHeight(randomPolyRef, pt);
 
 		return new FindRandomPointResult(Status.SUCCSESS, randomPolyRef, pt);
 	}
@@ -406,19 +406,22 @@ public class NavMeshQuery {
 		int ip = poly.index;
 		if (tile.data.detailMeshes != null && tile.data.detailMeshes.length > ip) {
 			PolyDetail pd = tile.data.detailMeshes[ip];
-			VectorPtr posV = new VectorPtr(pos);
 			// Find height at the location.
 			for (int j = 0; j < pd.triCount; ++j) {
 				int t = (pd.triBase + j) * 4;
-				VectorPtr[] v = new VectorPtr[3];
+				float[][] v = new float[3][];
 				for (int k = 0; k < 3; ++k) {
-					if (tile.data.detailTris[t + k] < poly.vertCount)
-						v[k] = new VectorPtr(tile.data.verts, poly.verts[tile.data.detailTris[t + k]] * 3);
-					else
-						v[k] = new VectorPtr(tile.data.detailVerts,
-								(pd.vertBase + (tile.data.detailTris[t + k] - poly.vertCount)) * 3);
+					if (tile.data.detailTris[t + k] < poly.vertCount) {
+						int index = poly.verts[tile.data.detailTris[t + k]] * 3;
+						v[k] = new float[] { tile.data.verts[index], tile.data.verts[index + 1],
+								tile.data.verts[index + 2] };
+					} else {
+						int index = pd.vertBase + (tile.data.detailTris[t + k] - poly.vertCount) * 3;
+						v[k] = new float[] { tile.data.detailVerts[index], tile.data.verts[index + 1],
+								tile.data.verts[index + 2] };
+					}
 				}
-				Tupple2<Boolean, Float> clp = closestHeightPointTriangle(posV, v[0], v[1], v[2]);
+				Tupple2<Boolean, Float> clp = closestHeightPointTriangle(closest, v[0], v[1], v[2]);
 				if (clp.first) {
 					closest[1] = clp.second;
 					break;
@@ -489,29 +492,35 @@ public class NavMeshQuery {
 	///  @param[in]		pos			A position within the xz-bounds of the polygon. [(x, y, z)]
 	///  @param[out]	height		The height at the surface of the polygon.
 	/// @returns The status flags for the query.
-	public float getPolyHeight(long ref, VectorPtr pos) {
+	public float getPolyHeight(long ref, float[] pos) {
 		Tupple2<MeshTile,Poly> tileAndPoly = m_nav.getTileAndPolyByRef(ref);
 		MeshTile tile = tileAndPoly.first;
 		Poly poly = tileAndPoly.second;
 		if (poly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
-			VectorPtr v0 = new VectorPtr(tile.data.verts, poly.verts[0] * 3);
-			VectorPtr v1 = new VectorPtr(tile.data.verts, poly.verts[1] * 3);
+			int i = poly.verts[0] * 3;
+			float[] v0 = new float[] { tile.data.verts[i], tile.data.verts[i + 1], tile.data.verts[i + 2] };
+			i = poly.verts[1] * 3;
+			float[] v1 = new float[] { tile.data.verts[i], tile.data.verts[i + 1], tile.data.verts[i + 2] };
 			float d0 = vDist2D(pos, v0);
 			float d1 = vDist2D(pos, v1);
 			float u = d0 / (d0 + d1);
-			return v0.get(1) + (v1.get(1) - v0.get(1)) * u;
+			return v0[1] + (v1[1] - v0[1]) * u;
 		} else {
 			int ip = poly.index;
 			PolyDetail pd = tile.data.detailMeshes[ip];
 			for (int j = 0; j < pd.triCount; ++j) {
 				int t = (pd.triBase + j) * 4;
-				VectorPtr[] v = new VectorPtr[3];
+				float[][] v = new float[3][];
 				for (int k = 0; k < 3; ++k) {
-					if (tile.data.detailTris[t + k] < poly.vertCount)
-						v[k] = new VectorPtr(tile.data.verts, poly.verts[tile.data.detailTris[t + k]] * 3);
-					else
-						v[k] = new VectorPtr(tile.data.detailVerts,
-								(pd.vertBase + (tile.data.detailTris[t + k] - poly.vertCount)) * 3);
+					if (tile.data.detailTris[t + k] < poly.vertCount) {
+						int index = poly.verts[tile.data.detailTris[t + k]] * 3;
+						v[k] = new float[] { tile.data.verts[index], tile.data.verts[index + 1],
+								tile.data.verts[index + 2] };
+					} else {
+						int index = pd.vertBase + (tile.data.detailTris[t + k] - poly.vertCount) * 3;
+						v[k] = new float[] { tile.data.detailVerts[index], tile.data.verts[index + 1],
+								tile.data.verts[index + 2] };
+					}
 				}
 				Tupple2<Boolean, Float> heightResult = closestHeightPointTriangle(pos, v[0], v[1], v[2]);
 				if (heightResult.first) {

@@ -37,7 +37,6 @@ import org.recast4j.detour.QueryFilter;
 import org.recast4j.detour.RaycastHit;
 import org.recast4j.detour.StraightPathItem;
 import org.recast4j.detour.Tupple2;
-import org.recast4j.detour.VectorPtr;
 
 /**
  * Represents a dynamic polygon corridor used to plan agent movement.
@@ -392,7 +391,7 @@ public class PathCorridor {
 		m_path = mergeCorridorStartMoved(m_path, masResult.getVisited());
 		// Adjust the position to stay on top of the navmesh.
 		vCopy(m_pos, masResult.getResultPos());
-		m_pos[1] = navquery.getPolyHeight(m_path.get(0), new VectorPtr(masResult.getResultPos()));
+		m_pos[1] = navquery.getPolyHeight(m_path.get(0), masResult.getResultPos());
 	}
 
 	/**

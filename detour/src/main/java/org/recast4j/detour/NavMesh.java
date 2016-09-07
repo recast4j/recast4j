@@ -812,7 +812,7 @@ public class NavMesh {
 				break;
 			}
 		}
-		return new Tupple3<long[], float[], Integer>(con, conarea, n);
+		return new Tupple3<>(con, conarea, n);
 	}
 
 	static float getSlabCoord(float[] verts, int va, int side) {
@@ -1000,18 +1000,21 @@ public class NavMesh {
 		int ip = poly.index;
 		if (tile.data.detailMeshes != null && tile.data.detailMeshes.length > ip) {
 			PolyDetail pd = tile.data.detailMeshes[ip];
-			VectorPtr posV = new VectorPtr(pos);
 			for (int j = 0; j < pd.triCount; ++j) {
 				int t = (pd.triBase + j) * 4;
-				VectorPtr[] v = new VectorPtr[3];
+				float[][] v = new float[3][];
 				for (int k = 0; k < 3; ++k) {
-					if (tile.data.detailTris[t + k] < poly.vertCount)
-						v[k] = new VectorPtr(tile.data.verts, poly.verts[tile.data.detailTris[t + k]] * 3);
-					else
-						v[k] = new VectorPtr(tile.data.detailVerts,
-								(pd.vertBase + (tile.data.detailTris[t + k] - poly.vertCount)) * 3);
+					if (tile.data.detailTris[t + k] < poly.vertCount) {
+						int index = poly.verts[tile.data.detailTris[t + k]] * 3;
+						v[k] = new float[] { tile.data.verts[index], tile.data.verts[index + 1],
+								tile.data.verts[index + 2] };
+					} else {
+						int index = pd.vertBase + (tile.data.detailTris[t + k] - poly.vertCount) * 3;
+						v[k] = new float[] { tile.data.detailVerts[index], tile.data.verts[index + 1],
+								tile.data.verts[index + 2] };
+					}
 				}
-				Tupple2<Boolean, Float> clp = closestHeightPointTriangle(posV, v[0], v[1], v[2]);
+				Tupple2<Boolean, Float> clp = closestHeightPointTriangle(closest, v[0], v[1], v[2]);
 				if (clp.first) {
 					closest[1] = clp.second;
 					break;
@@ -1213,7 +1216,7 @@ public class NavMesh {
 		float[] endPos = new float[3];
 		vCopy(startPos, tile.data.verts, poly.verts[idx0] * 3);
 		vCopy(endPos, tile.data.verts, poly.verts[idx1] * 3);
-		return new Tupple2<float[], float[]>(startPos, endPos);
+		return new Tupple2<>(startPos, endPos);
 
 	}
 
