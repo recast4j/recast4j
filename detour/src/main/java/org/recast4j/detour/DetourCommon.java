@@ -194,12 +194,6 @@ public class DetourCommon {
 	///
 	/// The vectors are projected onto the xz-plane, so the y-values are
 	/// ignored.
-	public static float vDist2D(VectorPtr v1, VectorPtr v2) {
-		float dx = v2.get(0) - v1.get(0);
-		float dz = v2.get(2) - v1.get(2);
-		return (float) Math.sqrt(dx * dx + dz * dz);
-	}
-
 	public static float vDist2D(float[] v1, float[] v2) {
 		float dx = v2[0] - v1[0];
 		float dz = v2[2] - v1[2];
@@ -343,7 +337,7 @@ public class DetourCommon {
 		return new Tupple2<>(dx * dx + dz * dz, t);
 	}
 
-	static Tupple2<Boolean, Float> closestHeightPointTriangle(VectorPtr p, VectorPtr a, VectorPtr b, VectorPtr c) {
+	static Tupple2<Boolean, Float> closestHeightPointTriangle(float[] p, float[] a, float[] b, float[] c) {
 		float[] v0 = vSub(c, a);
 		float[] v1 = vSub(b, a);
 		float[] v2 = vSub(p, a);
@@ -364,7 +358,7 @@ public class DetourCommon {
 
 		// If point lies inside the triangle, return interpolated ycoord.
 		if (u >= -EPS && v >= -EPS && (u + v) <= 1 + EPS) {
-			float h = a.get(1) + v0[1] * u + v1[1] * v;
+			float h = a[1] + v0[1] * u + v1[1] * v;
 			return new Tupple2<>(true, h);
 		}
 
