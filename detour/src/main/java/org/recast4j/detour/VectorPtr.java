@@ -39,7 +39,4 @@ public class VectorPtr {
 		return array[index + offset];
 	}
 
-	public void set(int offset, float f) {
-		array[index + offset] = f;
-	}
 }

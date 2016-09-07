@@ -41,14 +41,6 @@ public class DetourCommon {
 	/// @param[in] v1 The starting vector.
 	/// @param[in] v2 The destination vector.
 	/// @param[in] t The interpolation factor. [Limits: 0 <= value <= 1.0]
-	public static float[] vLerp(VectorPtr v1, VectorPtr v2, float t) {
-		float[] dest = new float[3];
-		dest[0] = v1.get(0) + (v2.get(0) - v1.get(0)) * t;
-		dest[1] = v1.get(1) + (v2.get(1) - v1.get(1)) * t;
-		dest[2] = v1.get(2) + (v2.get(2) - v1.get(2)) * t;
-		return dest;
-	}
-
 	public static float[] vLerp(float[] verts, int v1, int v2, float t) {
 		float[] dest = new float[3];
 		dest[0] = verts[v1 + 0] + (verts[v2 + 0] - verts[v1 + 0]) * t;
@@ -81,13 +73,6 @@ public class DetourCommon {
 		return dest;
 	}
 
-	static float[] vAdd(VectorPtr v1, VectorPtr v2) {
-		float[] dest = new float[3];
-		dest[0] = v1.get(0) + v2.get(0);
-		dest[1] = v1.get(1) + v2.get(1);
-		dest[2] = v1.get(2) + v2.get(2);
-		return dest;
-	}
 
 	public static float[] vAdd(float[] v1, float[] v2) {
 		float[] dest = new float[3];
@@ -198,12 +183,6 @@ public class DetourCommon {
 		float dx = v2[0] - v1[0];
 		float dz = v2[2] - v1[2];
 		return (float) Math.sqrt(dx * dx + dz * dz);
-	}
-
-	public static float vDist2DSqr(VectorPtr v1, VectorPtr v2) {
-		float dx = v2.get(0) - v1.get(0);
-		float dz = v2.get(2) - v1.get(2);
-		return dx * dx + dz * dz;
 	}
 
 	public static float vDist2DSqr(float[] v1, float[] v2) {
