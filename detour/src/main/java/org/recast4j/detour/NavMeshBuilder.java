@@ -18,7 +18,10 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
+import static org.recast4j.detour.DetourCommon.clamp;
 import static org.recast4j.detour.DetourCommon.vCopy;
+import static org.recast4j.detour.DetourCommon.vMax;
+import static org.recast4j.detour.DetourCommon.vMin;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -168,47 +171,70 @@ public class NavMeshBuilder {
 		return curNode;
 	}
 
-	private static int createBVTree(int[] verts, int nverts, int[] polys, int npolys, int nvp, float cs, float ch,
-			BVNode[] nodes) {
-		// Build tree
-		BVItem[] items = new BVItem[npolys];
-		for (int i = 0; i < npolys; i++) {
+	private static int createBVTree(NavMeshCreateParams params, BVNode[] nodes) {
+	// Build tree
+		float quantFactor = 1 / params.cs;
+		BVItem[] items = new BVItem[params.polyCount];
+		for (int i = 0; i < params.polyCount; i++) {
 			BVItem it = new BVItem();
 			items[i] = it;
 			it.i = i;
-			// Calc polygon bounds.
-			int p = i * nvp * 2;
-			it.bmin[0] = it.bmax[0] = verts[polys[p] * 3 + 0];
-			it.bmin[1] = it.bmax[1] = verts[polys[p] * 3 + 1];
-			it.bmin[2] = it.bmax[2] = verts[polys[p] * 3 + 2];
+			// Calc polygon bounds. Use detail meshes if available.
+			if (params.detailMeshes != null) {
+				int vb = params.detailMeshes[i * 4 + 0];
+				int ndv = params.detailMeshes[i * 4 + 1];
+				float[] bmin = new float[3];
+				float[] bmax = new float[3];
+				int dv = vb * 3;
+				vCopy(bmin, params.detailVerts, dv);
+				vCopy(bmax, params.detailVerts, dv);
+				for (int j = 1; j < ndv; j++) {
+					vMin(bmin, params.detailVerts, dv + j * 3);
+					vMax(bmax, params.detailVerts, dv + j * 3);
+				}
 
-			for (int j = 1; j < nvp; ++j) {
-				if (polys[p + j] == MESH_NULL_IDX)
-					break;
-				int x = verts[polys[p + j] * 3 + 0];
-				int y = verts[polys[p + j] * 3 + 1];
-				int z = verts[polys[p + j] * 3 + 2];
+				// BV-tree uses cs for all dimensions
+				it.bmin[0] = clamp((int) ((bmin[0] - params.bmin[0]) * quantFactor), 0, 0xffff);
+				it.bmin[1] = clamp((int) ((bmin[1] - params.bmin[1]) * quantFactor), 0, 0xffff);
+				it.bmin[2] = clamp((int) ((bmin[2] - params.bmin[2]) * quantFactor), 0, 0xffff);
 
-				if (x < it.bmin[0])
-					it.bmin[0] = x;
-				if (y < it.bmin[1])
-					it.bmin[1] = y;
-				if (z < it.bmin[2])
-					it.bmin[2] = z;
+				it.bmax[0] = clamp((int) ((bmax[0] - params.bmin[0]) * quantFactor), 0, 0xffff);
+				it.bmax[1] = clamp((int) ((bmax[1] - params.bmin[1]) * quantFactor), 0, 0xffff);
+				it.bmax[2] = clamp((int) ((bmax[2] - params.bmin[2]) * quantFactor), 0, 0xffff);
+			} else {
+				int p = i * params.nvp * 2;
+				it.bmin[0] = it.bmax[0] = params.verts[params.polys[p] * 3 + 0];
+				it.bmin[1] = it.bmax[1] = params.verts[params.polys[p] * 3 + 1];
+				it.bmin[2] = it.bmax[2] = params.verts[params.polys[p] * 3 + 2];
 
-				if (x > it.bmax[0])
-					it.bmax[0] = x;
-				if (y > it.bmax[1])
-					it.bmax[1] = y;
-				if (z > it.bmax[2])
-					it.bmax[2] = z;
+				for (int j = 1; j < params.nvp; ++j) {
+					if (params.polys[p + j] == MESH_NULL_IDX)
+						break;
+					int x = params.verts[params.polys[p + j] * 3 + 0];
+					int y = params.verts[params.polys[p + j] * 3 + 1];
+					int z = params.verts[params.polys[p + j] * 3 + 2];
+
+					if (x < it.bmin[0])
+						it.bmin[0] = x;
+					if (y < it.bmin[1])
+						it.bmin[1] = y;
+					if (z < it.bmin[2])
+						it.bmin[2] = z;
+
+					if (x > it.bmax[0])
+						it.bmax[0] = x;
+					if (y > it.bmax[1])
+						it.bmax[1] = y;
+					if (z > it.bmax[2])
+						it.bmax[2] = z;
+				}
+				// Remap y
+				it.bmin[1] = (int) Math.floor(it.bmin[1] * params.ch / params.cs);
+				it.bmax[1] = (int) Math.ceil(it.bmax[1] * params.ch / params.cs);
 			}
-			// Remap y
-			it.bmin[1] = (int) Math.floor(it.bmin[1] * ch / cs);
-			it.bmax[1] = (int) Math.floor(it.bmax[1] * ch / cs);
 		}
 
-		return subdivide(items, npolys, 0, npolys, 0, nodes);
+		return subdivide(items, params.polyCount, 0, params.polyCount, 0, nodes);
 	}
 
 	static final int XP = 1 << 0;
@@ -554,9 +580,7 @@ public class NavMeshBuilder {
 		// TODO: take detail mesh into account! use byte per bbox extent?
 		if (params.buildBvTree) {
 			// Do not set header.bvNodeCount set to make it work look exactly the same as in original Detour  
-			header.bvNodeCount = createBVTree(params.verts, params.vertCount, params.polys, params.polyCount, nvp,
-					params.cs, params.ch, navBvtree);
-
+			header.bvNodeCount = createBVTree(params, navBvtree);
 		}
 
 		// Store Off-Mesh connections.
