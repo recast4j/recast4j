@@ -20,22 +20,22 @@ The project includes 4 artifacts:
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>recast</artifactId>
-	<version>1.0.1</version>
+	<version>1.0.2</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour</artifactId>
-	<version>1.0.1</version>
+	<version>1.0.2</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour-crowd</artifactId>
-	<version>1.0.1</version>
+	<version>1.0.2</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour-tile-cache</artifactId>
-	<version>1.0.1</version>
+	<version>1.0.2</version>
 </dependency>
 ```
 
