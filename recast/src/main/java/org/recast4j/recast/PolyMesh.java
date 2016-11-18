@@ -21,7 +21,7 @@ package org.recast4j.recast;
 /** Represents a polygon mesh suitable for use in building a navigation mesh. */
 public class PolyMesh {
 
-	/** The mesh vertices. [Form: (x, y, z) * #nverts] */
+	/** The mesh vertices. [Form: (x, y, z) coordinates * #nverts] */
 	public int[] verts;
 	/** Polygon and neighbor data. [Length: #maxpolys * 2 * #nvp] */
 	public int[] polys;

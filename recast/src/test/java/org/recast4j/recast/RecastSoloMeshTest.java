@@ -17,6 +17,8 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
+import static org.recast4j.recast.RecastConstants.RC_MESH_NULL_IDX;
+
 import java.io.File;
 import java.io.FileWriter;
 
@@ -96,8 +98,9 @@ public class RecastSoloMeshTest {
 		//
 
 		// Init build configuration from GUI
-		RecastConfig cfg = new RecastConfig(partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb,
-				m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, 0);
+		RecastConfig cfg = new RecastConfig(partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
+				m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
+				m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, 0);
 		RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, bmin, bmax);
 		Context m_ctx = new Context();
 		//
@@ -235,25 +238,52 @@ public class RecastSoloMeshTest {
 		Assert.assertEquals("Mesh Detail Tris", expDetTRis, m_dmesh.ntris);
 		long time2 = System.nanoTime();
 		System.out.println(filename + " : " + partitionType + "  " + (time2 - time) / 1000000 + " ms");
-		saveObj(filename.substring(0, filename.lastIndexOf('.')) + "_" + partitionType + ".obj", m_dmesh);
+		saveObj(filename.substring(0, filename.lastIndexOf('.')) + "_" + partitionType + "_detail.obj", m_dmesh);
+		saveObj(filename.substring(0, filename.lastIndexOf('.')) + "_" + partitionType + ".obj", m_pmesh);
 	}
 
-	private void saveObj(String filename, PolyMeshDetail m_dmesh) {
+	private void saveObj(String filename, PolyMesh mesh) {
 		try {
 			File file = new File(filename);
 			FileWriter fw = new FileWriter(file);
-			for (int v = 0; v < m_dmesh.nverts; v++) {
-				fw.write("v " + m_dmesh.verts[v * 3] + " " + m_dmesh.verts[v * 3 + 1] + " " + m_dmesh.verts[v * 3 + 2]
-						+ "\n");
+			for (int v = 0; v < mesh.nverts; v++) {
+				fw.write("v " + (mesh.bmin[0] + mesh.verts[v * 3] * mesh.cs) + " "
+						+ (mesh.bmin[1] + mesh.verts[v * 3 + 1] * mesh.ch) + " "
+						+ (mesh.bmin[2] + mesh.verts[v * 3 + 2] * mesh.cs) + "\n");
 			}
 
-			for (int m = 0; m < m_dmesh.nmeshes; m++) {
-				int vfirst = m_dmesh.meshes[m * 4];
-				int tfirst = m_dmesh.meshes[m * 4 + 2];
-				for (int f = 0; f < m_dmesh.meshes[m * 4 + 3]; f++) {
-					fw.write("f " + (vfirst + m_dmesh.tris[(tfirst + f) * 4] + 1) + " "
-							+ (vfirst + m_dmesh.tris[(tfirst + f) * 4 + 1] + 1) + " "
-							+ (vfirst + m_dmesh.tris[(tfirst + f) * 4 + 2] + 1) + "\n");
+			for (int i = 0; i < mesh.npolys; i++) {
+				int p = i * mesh.nvp * 2;
+				fw.write("f ");
+				for (int j = 0; j < mesh.nvp; ++j) {
+					int v = mesh.polys[p + j];
+					if (v == RC_MESH_NULL_IDX)
+						break;
+					fw.write((v + 1) + " ");
+				}
+				fw.write("\n");
+			}
+			fw.close();
+		} catch (Exception e) {
+		}
+	}
+
+	private void saveObj(String filename, PolyMeshDetail dmesh) {
+		try {
+			File file = new File(filename);
+			FileWriter fw = new FileWriter(file);
+			for (int v = 0; v < dmesh.nverts; v++) {
+				fw.write(
+						"v " + dmesh.verts[v * 3] + " " + dmesh.verts[v * 3 + 1] + " " + dmesh.verts[v * 3 + 2] + "\n");
+			}
+
+			for (int m = 0; m < dmesh.nmeshes; m++) {
+				int vfirst = dmesh.meshes[m * 4];
+				int tfirst = dmesh.meshes[m * 4 + 2];
+				for (int f = 0; f < dmesh.meshes[m * 4 + 3]; f++) {
+					fw.write("f " + (vfirst + dmesh.tris[(tfirst + f) * 4] + 1) + " "
+							+ (vfirst + dmesh.tris[(tfirst + f) * 4 + 1] + 1) + " "
+							+ (vfirst + dmesh.tris[(tfirst + f) * 4 + 2] + 1) + "\n");
 				}
 			}
 			fw.close();
