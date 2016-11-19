@@ -33,21 +33,31 @@ public class TestTileLayerBuilder extends AbstractTileLayersBuilder {
 	private RecastConfig rcConfig;
 	private final int m_tileSize = 48;
 	protected final InputGeom geom;
+	private final int tw;
+	private final int th;
 
 	public TestTileLayerBuilder(InputGeom geom) {
 		this.geom = geom;
 		rcConfig = new RecastConfig(PartitionType.WATERSHED, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
 				m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
 				m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, m_tileSize);
-	}
-
-	public List<byte[]> build(ByteOrder order, boolean cCompatibility, int threads) {
 		float[] bmin = geom.getMeshBoundsMin();
 		float[] bmax = geom.getMeshBoundsMax();
 		int[] twh = Recast.calcTileCount(bmin, bmax, m_cellSize, m_tileSize);
-		int tw = twh[0];
-		int th = twh[1];
+		tw = twh[0];
+		th = twh[1];
+	}
+
+	public List<byte[]> build(ByteOrder order, boolean cCompatibility, int threads) {
 		return build(order, cCompatibility, threads, tw, th);
+	}
+
+	public int getTw() {
+		return tw;
+	}
+
+	public int getTh() {
+		return th;
 	}
 
 	@Override
@@ -58,7 +68,7 @@ public class TestTileLayerBuilder extends AbstractTileLayersBuilder {
 			TileCacheBuilder builder = new TileCacheBuilder();
 			for (int i = 0; i < lset.layers.length; ++i) {
 				HeightfieldLayer layer = lset.layers[i];
-
+				
 				// Store header
 				TileCacheLayerHeader header = new TileCacheLayerHeader();
 				header.magic = TileCacheLayerHeader.DT_TILECACHE_MAGIC;

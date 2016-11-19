@@ -24,8 +24,8 @@ import org.junit.Test;
 
 public class FindPathTest extends AbstractDetourTest {
 
-	Status[] statuses = { Status.SUCCSESS, Status.PARTIAL_RESULT, Status.SUCCSESS, Status.SUCCSESS, Status.SUCCSESS };
-	long[][] results = {
+	private final Status[] statuses = { Status.SUCCSESS, Status.PARTIAL_RESULT, Status.SUCCSESS, Status.SUCCSESS, Status.SUCCSESS };
+	private final long[][] results = {
 			{ 281474976710696L, 281474976710695L, 281474976710694L, 281474976710703L, 281474976710706L,
 					281474976710705L, 281474976710702L, 281474976710701L, 281474976710714L, 281474976710713L,
 					281474976710712L, 281474976710727L, 281474976710730L, 281474976710717L, 281474976710721L },
@@ -47,7 +47,7 @@ public class FindPathTest extends AbstractDetourTest {
 					281474976710748L, 281474976710753L, 281474976710755L, 281474976710754L, 281474976710768L,
 					281474976710772L } };
 
-	StraightPathItem[][] straightPaths = {
+	private final StraightPathItem[][] straightPaths = {
 			{ new StraightPathItem(new float[] { 22.606520f, 10.197294f, -45.918674f }, 1, 281474976710696L),
 					new StraightPathItem(new float[] { 3.484785f, 10.197294f, -34.241272f }, 0, 281474976710713L),
 					new StraightPathItem(new float[] { 1.984785f, 10.197294f, -31.241272f }, 0, 281474976710712L),

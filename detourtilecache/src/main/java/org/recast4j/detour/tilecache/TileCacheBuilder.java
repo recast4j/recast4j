@@ -598,7 +598,7 @@ public class TileCacheBuilder {
 			shouldRemove = true;
 		}
 
-		return new Tupple2<Integer, Boolean>(height, shouldRemove);
+		return new Tupple2<>(height, shouldRemove);
 	}
 
 	// TODO: move this somewhere else, once the layer meshing is done.
@@ -834,11 +834,10 @@ public class TileCacheBuilder {
 					int xmin = cont.verts[va];
 					int xmax = cont.verts[vb];
 					if (xmin > xmax) {
-
+						int tmp = xmin;
+						xmin = xmax;
+						xmax = tmp;
 					}
-					int tmp = xmin;
-					xmin = xmax;
-					xmax = tmp;
 					for (int m = 0; m < edgeCount; ++m) {
 						Edge e = edges[m];
 						// Skip connected edges.
@@ -850,7 +849,7 @@ public class TileCacheBuilder {
 							int exmin = verts[eva];
 							int exmax = verts[evb];
 							if (exmin > exmax) {
-								tmp = exmin;
+								int tmp = exmin;
 								exmin = exmax;
 								exmax = tmp;
 							}
@@ -1159,7 +1158,7 @@ public class TileCacheBuilder {
 		int nb = countPolyVerts(polys, pb, maxVertsPerPoly);
 
 		// Merge polygons.
-		Arrays.fill(tmp, 0xFFFF);
+		Arrays.fill(tmp, DT_TILECACHE_NULL_IDX);
 		int n = 0;
 		// Add pa
 		for (int i = 0; i < na - 1; ++i)
@@ -1308,7 +1307,7 @@ public class TileCacheBuilder {
 				// Remove the polygon.
 				int p2 = (mesh.npolys - 1) * maxVertsPerPoly * 2;
 				System.arraycopy(mesh.polys, p2, mesh.polys, p, maxVertsPerPoly);
-				Arrays.fill(mesh.polys, p + maxVertsPerPoly, p + 2 * maxVertsPerPoly, 0xFFFF);
+				Arrays.fill(mesh.polys, p + maxVertsPerPoly, p + 2 * maxVertsPerPoly, DT_TILECACHE_NULL_IDX);
 				mesh.areas[i] = mesh.areas[mesh.npolys - 1];
 				mesh.npolys--;
 				--i;
@@ -1406,7 +1405,7 @@ public class TileCacheBuilder {
 
 		// Build initial polygons.
 		int npolys = 0;
-		Arrays.fill(polys, 0, ntris * maxVertsPerPoly, 0xFFFF);
+		Arrays.fill(polys, 0, ntris * maxVertsPerPoly, DT_TILECACHE_NULL_IDX);
 		for (int j = 0; j < ntris; ++j) {
 			int t = j * 3;
 			if (tris[t] != tris[t + 1] && tris[t] != tris[t + 2] && tris[t + 1] != tris[t + 2]) {
@@ -1465,7 +1464,7 @@ public class TileCacheBuilder {
 			if (mesh.npolys >= maxTris)
 				break;
 			int p = mesh.npolys * maxVertsPerPoly * 2;
-			Arrays.fill(mesh.polys, p, p + maxVertsPerPoly * 2, 0xFFFF);
+			Arrays.fill(mesh.polys, p, p + maxVertsPerPoly * 2, DT_TILECACHE_NULL_IDX);
 			for (int j = 0; j < maxVertsPerPoly; ++j)
 				mesh.polys[p + j] = polys[i * maxVertsPerPoly + j];
 			mesh.areas[mesh.npolys] = pareas[i];
@@ -1507,6 +1506,8 @@ public class TileCacheBuilder {
 		mesh.nverts = 0;
 		mesh.npolys = 0;
 
+		Arrays.fill(mesh.polys, DT_TILECACHE_NULL_IDX);
+
 		int[] firstVert = new int[VERTEX_BUCKET_COUNT2];
 		for (int i = 0; i < VERTEX_BUCKET_COUNT2; ++i)
 			firstVert[i] = DT_TILECACHE_NULL_IDX;
@@ -1547,7 +1548,7 @@ public class TileCacheBuilder {
 
 			// Build initial polygons.
 			int npolys = 0;
-			Arrays.fill(polys, 0xFFFF);
+			Arrays.fill(polys, DT_TILECACHE_NULL_IDX);
 			for (int j = 0; j < ntris; ++j) {
 				int t = j * 3;
 				if (tris[t] != tris[t + 1] && tris[t] != tris[t + 2] && tris[t + 1] != tris[t + 2]) {

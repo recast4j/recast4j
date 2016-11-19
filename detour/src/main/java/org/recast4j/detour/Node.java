@@ -43,8 +43,12 @@ public class Node {
 	long id;
 
 	public Node(int index) {
-		super();
 		this.index = index;
+	}
+
+	@Override
+	public String toString() {
+		return "Node [id=" + id + "]";
 	}
 
 }
