@@ -15,12 +15,12 @@ public class TestDetourBuilder extends DetourBuilder {
 		RecastBuilderResult rcResult = rcBuilder.build(geom, rcConfig);
 		PolyMesh pmesh = rcResult.getMesh();
 		PolyMeshDetail dmesh = rcResult.getMeshDetail();
-		NavMeshCreateParams params = getNavMeshCreateParams(rcConfig.cfg, pmesh, dmesh, agentHeight, agentRadius, agentMaxClimb);
+		NavMeshDataCreateParams params = getNavMeshCreateParams(rcConfig.cfg, pmesh, dmesh, agentHeight, agentRadius, agentMaxClimb);
 		return build(params, x, y);
 	}
 
-	public NavMeshCreateParams getNavMeshCreateParams(RecastConfig rcConfig, PolyMesh pmesh, PolyMeshDetail dmesh, float agentHeight, float agentRadius, float agentMaxClimb) {
-		NavMeshCreateParams params = new NavMeshCreateParams();
+	public NavMeshDataCreateParams getNavMeshCreateParams(RecastConfig rcConfig, PolyMesh pmesh, PolyMeshDetail dmesh, float agentHeight, float agentRadius, float agentMaxClimb) {
+		NavMeshDataCreateParams params = new NavMeshDataCreateParams();
 		params.verts = pmesh.verts;
 		params.vertCount = pmesh.nverts;
 		params.polys = pmesh.polys;

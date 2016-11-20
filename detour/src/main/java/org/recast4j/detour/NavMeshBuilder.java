@@ -171,7 +171,7 @@ public class NavMeshBuilder {
 		return curNode;
 	}
 
-	private static int createBVTree(NavMeshCreateParams params, BVNode[] nodes) {
+	private static int createBVTree(NavMeshDataCreateParams params, BVNode[] nodes) {
 	// Build tree
 		float quantFactor = 1 / params.cs;
 		BVItem[] items = new BVItem[params.polyCount];
@@ -280,7 +280,7 @@ public class NavMeshBuilder {
 	 * 
 	 * @return created tile data
 	 */
-	public static MeshData createNavMeshData(NavMeshCreateParams params) {
+	public static MeshData createNavMeshData(NavMeshDataCreateParams params) {
 		if (params.vertCount >= 0xffff)
 			return null;
 		if (params.vertCount == 0 || params.verts == null)

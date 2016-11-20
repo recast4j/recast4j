@@ -45,7 +45,7 @@ public class RecastTestMeshBuilder {
 	private final static float m_detailSampleMaxError = 1.0f;
 
 	public RecastTestMeshBuilder() {
-		this(new ObjImporter().load(RecastBuilder.class.getResourceAsStream("dungeon.obj")), PartitionType.WATERSHED,
+		this(new ObjImporter().load(ObjImporter.class.getResourceAsStream("dungeon.obj")), PartitionType.WATERSHED,
 				m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope,
 				m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist,
 				m_detailSampleMaxError);
@@ -66,7 +66,7 @@ public class RecastTestMeshBuilder {
 			m_pmesh.flags[i] = 1;
 		}
 		PolyMeshDetail m_dmesh = rcResult.getMeshDetail();
-		NavMeshCreateParams params = new NavMeshCreateParams();
+		NavMeshDataCreateParams params = new NavMeshDataCreateParams();
 		params.verts = m_pmesh.verts;
 		params.vertCount = m_pmesh.nverts;
 		params.polys = m_pmesh.polys;

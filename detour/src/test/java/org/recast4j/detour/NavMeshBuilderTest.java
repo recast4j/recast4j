@@ -21,9 +21,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Before;
 import org.junit.Test;
 
-public class NavMeshBuilderTest extends AbstractDetourTest {
+public class NavMeshBuilderTest {
+
+	private MeshData nmd;
+
+	@Before
+	public void setUp() {
+		nmd = new RecastTestMeshBuilder().getMeshData();
+	}
 
 	@Test
 	public void testBVTree() {
@@ -54,6 +62,6 @@ public class NavMeshBuilderTest extends AbstractDetourTest {
 		assertEquals(12, nmd.polys[118].flags);
 		assertEquals(2, nmd.polys[118].getArea());
 		assertEquals(Poly.DT_POLYTYPE_OFFMESH_CONNECTION, nmd.polys[118].getType());
-		
+
 	}
 }

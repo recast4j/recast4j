@@ -2,7 +2,7 @@ package org.recast4j.detour;
 
 public class DetourBuilder {
 
-	public MeshData build(NavMeshCreateParams params, int tileX,int tileY) {
+	public MeshData build(NavMeshDataCreateParams params, int tileX,int tileY) {
 		MeshData data = NavMeshBuilder.createNavMeshData(params);
 		if (data != null) {
 			data.header.x = tileX;

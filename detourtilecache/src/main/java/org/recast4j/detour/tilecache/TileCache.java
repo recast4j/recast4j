@@ -31,7 +31,7 @@ import java.util.List;
 import org.recast4j.detour.MeshData;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshBuilder;
-import org.recast4j.detour.NavMeshCreateParams;
+import org.recast4j.detour.NavMeshDataCreateParams;
 import org.recast4j.detour.tilecache.TileCacheObstacle.TileCacheObstacleType;
 import org.recast4j.detour.tilecache.io.TileCacheLayerHeaderReader;
 
@@ -483,7 +483,7 @@ public class TileCache {
 			m_navmesh.removeTile(m_navmesh.getTileRefAt(tile.header.tx, tile.header.ty, tile.header.tlayer));
 			return;
 		}
-		NavMeshCreateParams params = new NavMeshCreateParams();
+		NavMeshDataCreateParams params = new NavMeshDataCreateParams();
 		params.verts = polyMesh.verts;
 		params.vertCount = polyMesh.nverts;
 		params.polys = polyMesh.polys;

@@ -18,9 +18,9 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour.tilecache;
 
-import org.recast4j.detour.NavMeshCreateParams;
+import org.recast4j.detour.NavMeshDataCreateParams;
 
 public interface TileCacheMeshProcess {
 
-	void process(NavMeshCreateParams params, int[] areas, int[] flags);
+	void process(NavMeshDataCreateParams params, int[] areas, int[] flags);
 }

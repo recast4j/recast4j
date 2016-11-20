@@ -19,7 +19,7 @@ freely, subject to the following restrictions:
 package org.recast4j.detour;
 
 /// Represents the source data used to build an navigation mesh tile.
-public class NavMeshCreateParams {
+public class NavMeshDataCreateParams {
 
 	/// @name Polygon Mesh Attributes
 	/// Used to create the base navigation graph.

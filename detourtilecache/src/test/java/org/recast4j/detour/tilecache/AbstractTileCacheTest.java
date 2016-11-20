@@ -6,7 +6,7 @@ import static org.recast4j.recast.RecastVectors.copy;
 import java.nio.ByteOrder;
 
 import org.recast4j.detour.NavMesh;
-import org.recast4j.detour.NavMeshCreateParams;
+import org.recast4j.detour.NavMeshDataCreateParams;
 import org.recast4j.detour.NavMeshParams;
 import org.recast4j.detour.tilecache.io.compress.TileCacheCompressorFactory;
 import org.recast4j.recast.InputGeom;
@@ -25,7 +25,7 @@ public class AbstractTileCacheTest {
 
 	private static class TestTileCacheMeshProcess implements TileCacheMeshProcess {
 		@Override
-		public void process(NavMeshCreateParams params, int[] areas, int[] flags) {
+		public void process(NavMeshDataCreateParams params, int[] areas, int[] flags) {
 			for (int i = 0; i < params.polyCount; ++i) {
 				flags[i] = 1;
 			}

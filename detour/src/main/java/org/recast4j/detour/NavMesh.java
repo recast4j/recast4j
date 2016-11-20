@@ -239,7 +239,7 @@ public class NavMesh {
 		int ip = saltitip[2];
 		if (it >= m_maxTiles)
 			return false;
-		if (m_tiles[it].salt != salt || m_tiles[it].data.header == null)
+		if (m_tiles[it].salt != salt || m_tiles[it].data == null)
 			return false;
 		if (ip >= m_tiles[it].data.header.polyCount)
 			return false;
