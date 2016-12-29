@@ -1414,7 +1414,7 @@ public class NavMeshQuery {
 					// If starting really close the portal, advance.
 					if (i == 0) {
 						Tupple2<Float,Float> dt = distancePtSegSqr2D(portalApex, left, right);
-						if (dt.second < sqr(0.001f))
+						if (dt.first < sqr(0.001f))
 							continue;
 					}
 				} else {
