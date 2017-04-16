@@ -209,13 +209,13 @@ public class RecastBuilder {
 				int[] tris = node.tris;
 				int ntris = tris.length / 3;
 				totaltris += ntris;
-				int[] m_triareas = Recast.markWalkableTriangles(ctx, cfg.walkableSlopeAngle, verts, tris, ntris);
+				int[] m_triareas = Recast.markWalkableTriangles(ctx, cfg.walkableSlopeAngle, verts, tris, ntris, cfg.walkableAreaMod);
 				RecastRasterization.rasterizeTriangles(ctx, verts, tris, m_triareas, ntris, solid, cfg.walkableClimb);
 			}
 		} else {
 			int[] tris = geom.getTris();
 			int ntris = tris.length / 3;
-			int[] m_triareas = Recast.markWalkableTriangles(ctx, cfg.walkableSlopeAngle, verts, tris, ntris);
+			int[] m_triareas = Recast.markWalkableTriangles(ctx, cfg.walkableSlopeAngle, verts, tris, ntris, cfg.walkableAreaMod);
 			totaltris = ntris;
 			RecastRasterization.rasterizeTriangles(ctx, verts, tris, m_triareas, ntris, solid, cfg.walkableClimb);
 		}
@@ -243,7 +243,7 @@ public class RecastBuilder {
 		RecastArea.erodeWalkableArea(ctx, cfg.walkableRadius, chf);
 		// (Optional) Mark areas.
 		for (ConvexVolume vol : geom.getConvexVolumes()) {
-			RecastArea.markConvexPolyArea(ctx, vol.verts, vol.hmin, vol.hmax, vol.area, chf);
+			RecastArea.markConvexPolyArea(ctx, vol.verts, vol.hmin, vol.hmax, vol.areaMod, chf);
 		}
 		return chf;
 	}

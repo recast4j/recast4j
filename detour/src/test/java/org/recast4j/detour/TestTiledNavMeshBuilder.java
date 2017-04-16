@@ -53,7 +53,7 @@ public class TestTiledNavMeshBuilder {
 		// Build all tiles
 		RecastConfig cfg = new RecastConfig(m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
 				m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
-				m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, m_tileSize);
+				m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, m_tileSize, SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
 		RecastBuilder rcBuilder = new RecastBuilder();
 		RecastBuilderResult[][] rcResult = rcBuilder.buildTiles(m_geom, cfg, 1);
 

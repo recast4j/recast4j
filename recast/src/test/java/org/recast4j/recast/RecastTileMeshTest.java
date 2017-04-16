@@ -22,6 +22,7 @@ public class RecastTileMeshTest {
 	private float m_detailSampleDist = 6.0f;
 	private float m_detailSampleMaxError = 1.0f;
 	private PartitionType m_partitionType = PartitionType.WATERSHED;
+	private int m_tileSize = 32;
 
 	@Test
 	public void testDungeon() {
@@ -34,7 +35,7 @@ public class RecastTileMeshTest {
 		RecastBuilder builder = new RecastBuilder();
 		RecastConfig cfg = new RecastConfig(m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
 				m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
-				m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, 32);
+				m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, m_tileSize, SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
 		RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 7, 8,
 				true);
 		RecastBuilderResult rcResult = builder.build(geom, bcfg);
@@ -69,7 +70,7 @@ public class RecastTileMeshTest {
 		RecastBuilder builder = new RecastBuilder();
 		RecastConfig cfg = new RecastConfig(m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
 				m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
-				m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, 32);
+				m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, m_tileSize, SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
 		for (int i = 0; i < 10; i++) {
 			build(geom, builder, cfg, 1, true);
 			build(geom, builder, cfg, 4, true);

@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.recast4j.detour.MeshData;
 import org.recast4j.detour.MeshTile;
 import org.recast4j.detour.NavMesh;
+import org.recast4j.detour.SampleAreaModifications;
 import org.recast4j.detour.TestDetourBuilder;
 import org.recast4j.recast.InputGeom;
 import org.recast4j.recast.ObjImporter;
@@ -69,7 +70,7 @@ public class MeshSetReaderWriterTest {
 				RecastConfig cfg = new RecastConfig(PartitionType.WATERSHED, m_cellSize, m_cellHeight, m_agentHeight,
 						m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize,
 						m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError,
-						m_tileSize);
+						m_tileSize, SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
 				RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, bmin, bmax, x, y, true);
 				TestDetourBuilder db = new TestDetourBuilder();
 				MeshData data = db.build(geom, bcfg, m_agentHeight, m_agentRadius, m_agentMaxClimb, x, y);

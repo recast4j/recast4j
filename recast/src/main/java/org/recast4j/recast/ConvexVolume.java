@@ -5,5 +5,5 @@ public class ConvexVolume {
 	float[] verts;
 	float hmin;
 	float hmax;
-	int area;
+	AreaModification areaMod;
 }

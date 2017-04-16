@@ -86,10 +86,12 @@ public class RecastConfig {
 	 **/
 	public final float detailSampleMaxError;
 
+	public final AreaModification walkableAreaMod;
+
 	public RecastConfig(PartitionType partitionType, float cellSize, float cellHeight, float agentHeight,
 			float agentRadius, float agentMaxClimb, float agentMaxSlope, int regionMinSize, int regionMergeSize,
 			float edgeMaxLen, float edgeMaxError, int vertsPerPoly, float detailSampleDist, float detailSampleMaxError,
-			int tileSize) {
+			int tileSize, AreaModification walkableAreaMod) {
 		this.partitionType = partitionType;
 		this.cs = cellSize;
 		this.ch = cellHeight;
@@ -105,6 +107,7 @@ public class RecastConfig {
 		this.detailSampleDist = detailSampleDist < 0.9f ? 0 : cellSize * detailSampleDist;
 		this.detailSampleMaxError = cellHeight * detailSampleMaxError;
 		this.tileSize = tileSize;
+		this.walkableAreaMod = walkableAreaMod;
 	}
-	
+
 }

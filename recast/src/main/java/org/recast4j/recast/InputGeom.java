@@ -27,6 +27,7 @@ public class InputGeom {
 	final int[] faces;
 	final float[] bmin;
 	final float[] bmax;
+	final List<ConvexVolume> volumes = new ArrayList<>();
 
 	public InputGeom(List<Float> vertexPositions, List<Integer> meshFaces) {
 		vertices = new float[vertexPositions.size()];
@@ -71,4 +72,12 @@ public class InputGeom {
 		return new ArrayList<>();
 	}
 
+	public void addConvexVolume(float[] verts, float minh, float maxh, AreaModification areaMod) {
+		ConvexVolume vol = new ConvexVolume();
+		vol.hmin = minh;
+		vol.hmax = maxh;
+		vol.verts = verts;
+		vol.areaMod = areaMod;
+		volumes.add(vol);
+	}
 }

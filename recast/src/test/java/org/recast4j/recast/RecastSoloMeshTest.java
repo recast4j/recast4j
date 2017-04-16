@@ -100,7 +100,7 @@ public class RecastSoloMeshTest {
 		// Init build configuration from GUI
 		RecastConfig cfg = new RecastConfig(partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
 				m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
-				m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, 0);
+				m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, 0, SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
 		RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, bmin, bmax);
 		Context m_ctx = new Context();
 		//
@@ -120,7 +120,7 @@ public class RecastSoloMeshTest {
 		// If your input data is multiple meshes, you can transform them here,
 		// calculate
 		// the are type for each of the meshes and rasterize them.
-		int[] m_triareas = Recast.markWalkableTriangles(m_ctx, cfg.walkableSlopeAngle, verts, tris, ntris);
+		int[] m_triareas = Recast.markWalkableTriangles(m_ctx, cfg.walkableSlopeAngle, verts, tris, ntris, cfg.walkableAreaMod);
 		RecastRasterization.rasterizeTriangles(m_ctx, verts, tris, m_triareas, ntris, m_solid, cfg.walkableClimb);
 		//
 		// Step 3. Filter walkables surfaces.

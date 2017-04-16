@@ -40,7 +40,7 @@ public class TestTileLayerBuilder extends AbstractTileLayersBuilder {
 		this.geom = geom;
 		rcConfig = new RecastConfig(PartitionType.WATERSHED, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
 				m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
-				m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, m_tileSize);
+				m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, m_tileSize, SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
 		float[] bmin = geom.getMeshBoundsMin();
 		float[] bmax = geom.getMeshBoundsMax();
 		int[] twh = Recast.calcTileCount(bmin, bmax, m_cellSize, m_tileSize);

@@ -20,7 +20,6 @@ package org.recast4j.recast;
 
 import static org.recast4j.recast.RecastConstants.RC_NOT_CONNECTED;
 import static org.recast4j.recast.RecastConstants.RC_NULL_AREA;
-import static org.recast4j.recast.RecastConstants.RC_WALKABLE_AREA;
 import static org.recast4j.recast.RecastVectors.copy;
 
 public class Recast {
@@ -50,18 +49,18 @@ public class Recast {
 		int ts = tileSize;
 		int tw = (gw + ts - 1) / ts;
 		int th = (gh + ts - 1) / ts;
-		return new int[]{tw, th};
+		return new int[] { tw, th };
 	}
 
 	/// @par
 	///
-	/// Only sets the area id's for the walkable triangles.  Does not alter the
-	/// area id's for unwalkable triangles.
-	/// 
+	/// Modifies the area id of all triangles with a slope below the specified value.
+	///
 	/// See the #rcConfig documentation for more information on the configuration parameters.
-	/// 
+	///
 	/// @see rcHeightfield, rcClearUnwalkableTriangles, rcRasterizeTriangles
-	static int[] markWalkableTriangles(Context ctx, float walkableSlopeAngle, float[] verts, int[] tris, int nt) {
+	static int[] markWalkableTriangles(Context ctx, float walkableSlopeAngle, float[] verts, int[] tris, int nt,
+			AreaModification areaMod) {
 		int[] areas = new int[nt];
 		float walkableThr = (float) Math.cos(walkableSlopeAngle / 180.0f * Math.PI);
 		float norm[] = new float[3];
@@ -70,7 +69,7 @@ public class Recast {
 			calcTriNormal(verts, tris[tri], tris[tri + 1], tris[tri + 2], norm);
 			// Check if the face is walkable.
 			if (norm[1] > walkableThr)
-				areas[i] = RC_WALKABLE_AREA;
+				areas[i] = areaMod.apply(areas[i]);
 		}
 		return areas;
 	}
@@ -85,11 +84,11 @@ public class Recast {
 
 	/// @par
 	///
-	/// Only sets the area id's for the unwalkable triangles.  Does not alter the
+	/// Only sets the area id's for the unwalkable triangles. Does not alter the
 	/// area id's for walkable triangles.
-	/// 
+	///
 	/// See the #rcConfig documentation for more information on the configuration parameters.
-	/// 
+	///
 	/// @see rcHeightfield, rcClearUnwalkableTriangles, rcRasterizeTriangles
 	void clearUnwalkableTriangles(Context ctx, float walkableSlopeAngle, float[] verts, int nv, int[] tris, int nt,
 			int[] areas) {
@@ -131,7 +130,8 @@ public class Recast {
 	///
 	/// @see rcAllocCompactHeightfield, rcHeightfield, rcCompactHeightfield, rcConfig
 
-	public static CompactHeightfield buildCompactHeightfield(Context ctx, int walkableHeight, int walkableClimb, Heightfield hf) {
+	public static CompactHeightfield buildCompactHeightfield(Context ctx, int walkableHeight, int walkableClimb,
+			Heightfield hf) {
 
 		ctx.startTimer("BUILD_COMPACTHEIGHTFIELD");
 

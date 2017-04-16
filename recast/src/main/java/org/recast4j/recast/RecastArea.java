@@ -25,14 +25,14 @@ import java.util.Arrays;
 
 public class RecastArea {
 
-	/// @par 
-	/// 
-	/// Basically, any spans that are closer to a boundary or obstruction than the specified radius 
+	/// @par
+	///
+	/// Basically, any spans that are closer to a boundary or obstruction than the specified radius
 	/// are marked as unwalkable.
 	///
 	/// This method is usually called immediately after the heightfield has been built.
 	///
-	/// @see rcCompactHeightfield, rcBuildCompactHeightfield, rcConfig::walkableRadius	
+	/// @see rcCompactHeightfield, rcBuildCompactHeightfield, rcConfig::walkableRadius
 	public static void erodeWalkableArea(Context ctx, int radius, CompactHeightfield chf) {
 		int w = chf.width;
 		int h = chf.height;
@@ -184,7 +184,7 @@ public class RecastArea {
 	///
 	/// This filter is usually applied after applying area id's using functions
 	/// such as #rcMarkBoxArea, #rcMarkConvexPolyArea, and #rcMarkCylinderArea.
-	/// 
+	///
 	/// @see rcCompactHeightfield
 	public boolean medianFilterWalkableArea(Context ctx, CompactHeightfield chf) {
 
@@ -243,9 +243,9 @@ public class RecastArea {
 	/// @par
 	///
 	/// The value of spacial parameters are in world units.
-	/// 
+	///
 	/// @see rcCompactHeightfield, rcMedianFilterWalkableArea
-	public void markBoxArea(Context ctx, float[] bmin, float[] bmax, int areaId, CompactHeightfield chf) {
+	public void markBoxArea(Context ctx, float[] bmin, float[] bmax, AreaModification areaMod, CompactHeightfield chf) {
 		ctx.startTimer("MARK_BOX_AREA");
 
 		int minx = (int) ((bmin[0] - chf.bmin[0]) / chf.cs);
@@ -280,7 +280,7 @@ public class RecastArea {
 					CompactSpan s = chf.spans[i];
 					if (s.y >= miny && s.y <= maxy) {
 						if (chf.areas[i] != RC_NULL_AREA)
-							chf.areas[i] = areaId;
+							chf.areas[i] = areaMod.apply(chf.areas[i]);
 					}
 				}
 			}
@@ -307,12 +307,12 @@ public class RecastArea {
 	/// @par
 	///
 	/// The value of spacial parameters are in world units.
-	/// 
-	/// The y-values of the polygon vertices are ignored. So the polygon is effectively 
+	///
+	/// The y-values of the polygon vertices are ignored. So the polygon is effectively
 	/// projected onto the xz-plane at @p hmin, then extruded to @p hmax.
-	/// 
+	///
 	/// @see rcCompactHeightfield, rcMedianFilterWalkableArea
-	public static void markConvexPolyArea(Context ctx, float[] verts, float hmin, float hmax, int areaId,
+	public static void markConvexPolyArea(Context ctx, float[] verts, float hmin, float hmax, AreaModification areaMod,
 			CompactHeightfield chf) {
 		ctx.startTimer("MARK_CONVEXPOLY_AREA");
 
@@ -366,7 +366,7 @@ public class RecastArea {
 						p[2] = chf.bmin[2] + (z + 0.5f) * chf.cs;
 
 						if (pointInPoly(verts, p)) {
-							chf.areas[i] = areaId;
+							chf.areas[i] = areaMod.apply(chf.areas[i]);
 						}
 					}
 				}
@@ -447,9 +447,10 @@ public class RecastArea {
 	/// @par
 	///
 	/// The value of spacial parameters are in world units.
-	/// 
+	///
 	/// @see rcCompactHeightfield, rcMedianFilterWalkableArea
-	public void markCylinderArea(Context ctx, float[] pos, float r, float h, int areaId, CompactHeightfield chf) {
+	public void markCylinderArea(Context ctx, float[] pos, float r, float h, AreaModification areaMod,
+			CompactHeightfield chf) {
 
 		ctx.startTimer("MARK_CYLINDER_AREA");
 
@@ -503,7 +504,7 @@ public class RecastArea {
 						float dz = sz - pos[2];
 
 						if (dx * dx + dz * dz < r2) {
-							chf.areas[i] = areaId;
+							chf.areas[i] = areaMod.apply(chf.areas[i]);
 						}
 					}
 				}
