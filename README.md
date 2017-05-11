@@ -13,7 +13,7 @@ Recast & Detour is licensed under ZLib license, see License.txt for more informa
 
 ## Maven
 
-####Releases
+#### Releases
 Recast4j releases are available in Maven Central Repository.
 The project includes 4 artifacts:
 ```
@@ -39,7 +39,7 @@ The project includes 4 artifacts:
 </dependency>
 ```
 
-####Snapshots
+#### Snapshots
 Recast4j snapshots are currently available in Sonatype snapshots repository.
 ```
 <repositories>
