@@ -441,8 +441,8 @@ public class DetourCommon {
 		// Find sub triangle weighted by area.
 		float thr = s * areasum;
 		float acc = 0.0f;
-		float u = 0.0f;
-		int tri = 0;
+		float u = 1.0f;
+		int tri = npts - 1;
 		for (int i = 2; i < npts; i++) {
 			float dacc = areas[i];
 			if (thr >= acc && thr < (acc + dacc)) {
