@@ -1880,7 +1880,6 @@ public class NavMeshQuery {
 		float[] verts = new float[m_nav.getMaxVertsPerPoly() * 3 + 3];
 
 		float[] curPos = new float[3], lastPos = new float[3];
-		VectorPtr curPosV = new VectorPtr(curPos);
 
 		vCopy(curPos, startPos);
 		float[] dir = vSub(endPos, startPos);
@@ -2025,7 +2024,7 @@ public class NavMeshQuery {
 				VectorPtr e1 = new VectorPtr(verts, iresult.segMax * 3);
 				VectorPtr e2 = new VectorPtr(verts, ((iresult.segMax + 1) % nv) * 3);
 				float[] eDir = vSub(e2, e1);
-				float[] diff = vSub(curPosV, e1);
+				float[] diff = vSub(new VectorPtr(curPos), e1);
 				float s = sqr(eDir[0]) > sqr(eDir[2]) ? diff[0] / eDir[0] : diff[2] / eDir[2];
 				curPos[1] = e1.get(1) + eDir[1] * s;
 
