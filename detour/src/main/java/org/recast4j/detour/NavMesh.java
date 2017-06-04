@@ -917,7 +917,9 @@ public class NavMesh {
 			if (dx * dx + dz * dz > dr * dr)
 				continue;
 			// Make sure the location is on current mesh.
-			System.arraycopy(nearestPoly, 0, tile.data.verts, poly.verts[0] * 3, 3);
+			tile.data.verts[poly.verts[0] * 3] = nearestPt[0];
+			tile.data.verts[poly.verts[0] * 3 + 1] = nearestPt[1];
+			tile.data.verts[poly.verts[0] * 3 + 2] = nearestPt[2];
 
 			// Link off-mesh connection to target poly.
 			int idx = allocLink(tile);
