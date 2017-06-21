@@ -112,6 +112,7 @@ public class TileCacheReaderTest {
 		assertEquals(10.110685f, data.verts[9], 0.0001f);
 	}
 
+	@Test
 	public void testDungeon() throws IOException {
 		InputStream is = getClass().getClassLoader().getResourceAsStream("dungeon_all_tiles_tilecache.bin");
 		TileCache tc = reader.read(is, 6);
