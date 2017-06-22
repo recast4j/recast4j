@@ -23,16 +23,16 @@ public class AbstractTileCacheTest {
 	private final float m_edgeMaxError = 1.3f;
 	private final int m_tileSize = 48;
 
-	private static class TestTileCacheMeshProcess implements TileCacheMeshProcess {
+	protected static class TestTileCacheMeshProcess implements TileCacheMeshProcess {
 		@Override
-		public void process(NavMeshDataCreateParams params, int[] areas, int[] flags) {
+		public void process(NavMeshDataCreateParams params) {
 			for (int i = 0; i < params.polyCount; ++i) {
-				flags[i] = 1;
+				params.polyFlags[i] = 1;
 			}
 		}
-		
+
 	}
-	
+
 	public TileCache getTileCache(InputGeom geom, ByteOrder order, boolean cCompatibility) {
 		TileCacheParams params = new TileCacheParams();
 		int[] twh = Recast.calcTileCount(geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), m_cellSize, m_tileSize);

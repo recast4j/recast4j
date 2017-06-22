@@ -20,7 +20,7 @@ import org.recast4j.recast.ObjImporter;
 import org.recast4j.recast.RecastBuilder;
 
 public class TileCacheReaderWriterTest extends AbstractTileCacheTest {
-	
+
 	private final TileCacheReader reader = new TileCacheReader();
 	private final TileCacheWriter writer = new TileCacheWriter();
 
@@ -48,7 +48,7 @@ public class TileCacheReaderWriterTest extends AbstractTileCacheTest {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		writer.write(baos, tc, ByteOrder.LITTLE_ENDIAN, cCompatibility);
 		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-		tc = reader.read(bais, 6);
+		tc = reader.read(bais, 6, null);
 		assertEquals(256, tc.getNavMesh().getMaxTiles());
 		assertEquals(16384, tc.getNavMesh().getParams().maxPolys);
 		assertEquals(14.4f, tc.getNavMesh().getParams().tileWidth, 0.001f);
@@ -63,7 +63,7 @@ public class TileCacheReaderWriterTest extends AbstractTileCacheTest {
 		assertEquals(6*7*4, tc.getParams().maxTiles);
 		assertEquals(128, tc.getParams().maxObstacles);
 		assertEquals(168, tc.getTileCount());
-		//Tile0:  Tris: 8, Verts: 18 Detail Meshed: 8 Detail Verts: 0 Detail Tris: 14 
+		//Tile0:  Tris: 8, Verts: 18 Detail Meshed: 8 Detail Verts: 0 Detail Tris: 14
 		MeshTile tile = tc.getNavMesh().getTile(0);
 		MeshData data = tile.data;
 		MeshHeader header = data.header;
@@ -77,7 +77,7 @@ public class TileCacheReaderWriterTest extends AbstractTileCacheTest {
 		assertEquals(8, data.detailMeshes.length);
 		assertEquals(0, data.detailVerts.length);
 		assertEquals(4 * 14, data.detailTris.length);
-		//Tile8:  Tris: 3, Verts: 8 Detail Meshed: 3 Detail Verts: 0 Detail Tris: 6 
+		//Tile8:  Tris: 3, Verts: 8 Detail Meshed: 3 Detail Verts: 0 Detail Tris: 6
 		tile = tc.getNavMesh().getTile(8);
 		data = tile.data;
 		header = data.header;
@@ -91,7 +91,7 @@ public class TileCacheReaderWriterTest extends AbstractTileCacheTest {
 		assertEquals(3, data.detailMeshes.length);
 		assertEquals(0, data.detailVerts.length);
 		assertEquals(4 * 6, data.detailTris.length);
-		//Tile16:  Tris: 10, Verts: 20 Detail Meshed: 10 Detail Verts: 0 Detail Tris: 18 
+		//Tile16:  Tris: 10, Verts: 20 Detail Meshed: 10 Detail Verts: 0 Detail Tris: 18
 		tile = tc.getNavMesh().getTile(16);
 		data = tile.data;
 		header = data.header;
@@ -105,7 +105,7 @@ public class TileCacheReaderWriterTest extends AbstractTileCacheTest {
 		assertEquals(10, data.detailMeshes.length);
 		assertEquals(0, data.detailVerts.length);
 		assertEquals(4 * 18, data.detailTris.length);
-		//Tile29:  Tris: 1, Verts: 5 Detail Meshed: 1 Detail Verts: 0 Detail Tris: 3 
+		//Tile29:  Tris: 1, Verts: 5 Detail Meshed: 1 Detail Verts: 0 Detail Tris: 3
 		tile = tc.getNavMesh().getTile(29);
 		data = tile.data;
 		header = data.header;

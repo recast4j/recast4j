@@ -22,5 +22,5 @@ import org.recast4j.detour.NavMeshDataCreateParams;
 
 public interface TileCacheMeshProcess {
 
-	void process(NavMeshDataCreateParams params, int[] areas, int[] flags);
+	void process(NavMeshDataCreateParams params);
 }

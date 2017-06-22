@@ -17,9 +17,9 @@ public class TileCacheReaderTest {
 
 	@Test
 	public void testNavmesh() throws IOException {
-		
+
 		InputStream is = getClass().getClassLoader().getResourceAsStream("all_tiles_tilecache.bin");
-		TileCache tc = reader.read(is, 6);
+		TileCache tc = reader.read(is, 6, null);
 		assertEquals(256, tc.getNavMesh().getMaxTiles());
 		assertEquals(16384, tc.getNavMesh().getParams().maxPolys);
 		assertEquals(14.4f, tc.getNavMesh().getParams().tileWidth, 0.001f);
@@ -34,7 +34,7 @@ public class TileCacheReaderTest {
 		assertEquals(6*7*4, tc.getParams().maxTiles);
 		assertEquals(128, tc.getParams().maxObstacles);
 		assertEquals(168, tc.getTileCount());
-		//Tile0:  Tris: 1, Verts: 4 Detail Meshed: 1 Detail Verts: 0 Detail Tris: 2 
+		//Tile0:  Tris: 1, Verts: 4 Detail Meshed: 1 Detail Verts: 0 Detail Tris: 2
 		//Verts: -2.269517, 28.710686, 28.710686
 		MeshTile tile = tc.getNavMesh().getTile(0);
 		MeshData data = tile.data;
@@ -52,7 +52,7 @@ public class TileCacheReaderTest {
 		assertEquals(-2.269517f, data.verts[1], 0.0001f);
 		assertEquals(28.710686f, data.verts[6], 0.0001f);
 		assertEquals(28.710686f, data.verts[9], 0.0001f);
-		//Tile8:  Tris: 7, Verts: 10 Detail Meshed: 7 Detail Verts: 0 Detail Tris: 10 
+		//Tile8:  Tris: 7, Verts: 10 Detail Meshed: 7 Detail Verts: 0 Detail Tris: 10
 		//Verts: 0.330483, 43.110687, 43.110687
 		tile = tc.getNavMesh().getTile(8);
 		data = tile.data;
@@ -74,7 +74,7 @@ public class TileCacheReaderTest {
 		assertEquals(0.330483f, data.verts[1], 0.0001f);
 		assertEquals(43.110687f, data.verts[6], 0.0001f);
 		assertEquals(43.110687f, data.verts[9], 0.0001f);
-		//Tile16:  Tris: 13, Verts: 33 Detail Meshed: 13 Detail Verts: 0 Detail Tris: 25 
+		//Tile16:  Tris: 13, Verts: 33 Detail Meshed: 13 Detail Verts: 0 Detail Tris: 25
 		//Verts: 1.130483, 5.610685, 6.510685
 		tile = tc.getNavMesh().getTile(16);
 		data = tile.data;
@@ -92,7 +92,7 @@ public class TileCacheReaderTest {
 		assertEquals(1.130483f, data.verts[1], 0.0001f);
 		assertEquals(5.610685f, data.verts[6], 0.0001f);
 		assertEquals(6.510685f, data.verts[9], 0.0001f);
-		//Tile29:  Tris: 5, Verts: 15 Detail Meshed: 5 Detail Verts: 0 Detail Tris: 11 
+		//Tile29:  Tris: 5, Verts: 15 Detail Meshed: 5 Detail Verts: 0 Detail Tris: 11
 		//Verts: 10.330483, 10.110685, 10.110685
 		tile = tc.getNavMesh().getTile(29);
 		data = tile.data;
@@ -115,7 +115,7 @@ public class TileCacheReaderTest {
 	@Test
 	public void testDungeon() throws IOException {
 		InputStream is = getClass().getClassLoader().getResourceAsStream("dungeon_all_tiles_tilecache.bin");
-		TileCache tc = reader.read(is, 6);
+		TileCache tc = reader.read(is, 6, null);
 		assertEquals(256, tc.getNavMesh().getMaxTiles());
 		assertEquals(16384, tc.getNavMesh().getParams().maxPolys);
 		assertEquals(14.4f, tc.getNavMesh().getParams().tileWidth, 0.001f);
@@ -130,7 +130,7 @@ public class TileCacheReaderTest {
 		assertEquals(6*7*4, tc.getParams().maxTiles);
 		assertEquals(128, tc.getParams().maxObstacles);
 		assertEquals(168, tc.getTileCount());
-		//Tile0:  Tris: 8, Verts: 18 Detail Meshed: 8 Detail Verts: 0 Detail Tris: 14 
+		//Tile0:  Tris: 8, Verts: 18 Detail Meshed: 8 Detail Verts: 0 Detail Tris: 14
 		//Verts: 14.997294, 15.484785, 15.484785
 		MeshTile tile = tc.getNavMesh().getTile(0);
 		MeshData data = tile.data;
@@ -148,7 +148,7 @@ public class TileCacheReaderTest {
 		assertEquals(14.997294f, data.verts[1], 0.0001f);
 		assertEquals(15.484785f, data.verts[6], 0.0001f);
 		assertEquals(15.484785f, data.verts[9], 0.0001f);
-		//Tile8:  Tris: 3, Verts: 8 Detail Meshed: 3 Detail Verts: 0 Detail Tris: 6 
+		//Tile8:  Tris: 3, Verts: 8 Detail Meshed: 3 Detail Verts: 0 Detail Tris: 6
 		//Verts: 13.597294, 17.584785, 17.584785
 		tile = tc.getNavMesh().getTile(8);
 		data = tile.data;
@@ -166,7 +166,7 @@ public class TileCacheReaderTest {
 		assertEquals(13.597294f, data.verts[1], 0.0001f);
 		assertEquals(17.584785f, data.verts[6], 0.0001f);
 		assertEquals(17.584785f, data.verts[9], 0.0001f);
-		//Tile16:  Tris: 10, Verts: 20 Detail Meshed: 10 Detail Verts: 0 Detail Tris: 18 
+		//Tile16:  Tris: 10, Verts: 20 Detail Meshed: 10 Detail Verts: 0 Detail Tris: 18
 		//Verts: 6.197294, -22.315216, -22.315216
 		tile = tc.getNavMesh().getTile(16);
 		data = tile.data;
@@ -184,7 +184,7 @@ public class TileCacheReaderTest {
 		assertEquals(6.197294f, data.verts[1], 0.0001f);
 		assertEquals(-22.315216f, data.verts[6], 0.0001f);
 		assertEquals(-22.315216f, data.verts[9], 0.0001f);
-		//Tile29:  Tris: 1, Verts: 5 Detail Meshed: 1 Detail Verts: 0 Detail Tris: 3 
+		//Tile29:  Tris: 1, Verts: 5 Detail Meshed: 1 Detail Verts: 0 Detail Tris: 3
 		//Verts: 10.197294, 48.484783, 48.484783
 		tile = tc.getNavMesh().getTile(29);
 		data = tile.data;
