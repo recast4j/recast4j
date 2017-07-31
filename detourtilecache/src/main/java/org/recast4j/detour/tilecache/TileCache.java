@@ -293,6 +293,7 @@ public class TileCache {
 
 	}
 
+	// Cylinder obstacle
 	public long addObstacle(float[] pos, float radius, float height) {
 		TileCacheObstacle ob = allocObstacle();
 		ob.type = TileCacheObstacleType.CYLINDER;
@@ -301,14 +302,10 @@ public class TileCache {
 		ob.radius = radius;
 		ob.height = height;
 
-		ObstacleRequest req = new ObstacleRequest();
-		req.action = ObstacleRequestAction.REQUEST_ADD;
-		req.ref = getObstacleRef(ob);
-		m_reqs.add(req);
-
-		return req.ref;
+		return addObstacleRequest(ob).ref;
 	}
 
+	// Aabb obstacle
 	public long addBoxObstacle(float[] bmin, float[] bmax) {
 		TileCacheObstacle ob = allocObstacle();
 		ob.type = TileCacheObstacleType.BOX;
@@ -316,12 +313,28 @@ public class TileCache {
 		vCopy(ob.bmin, bmin);
 		vCopy(ob.bmax, bmax);
 
+		return addObstacleRequest(ob).ref;
+	}
+
+	// Box obstacle: can be rotated in Y
+	public long addBoxObstacle(float[] center, float[] extents, float yRadians) {
+		TileCacheObstacle ob = allocObstacle();
+		ob.type = TileCacheObstacleType.ORIENTED_BOX;
+		vCopy(ob.center, center);
+		vCopy(ob.extents, extents);
+		float coshalf = (float) Math.cos(0.5f * yRadians);
+		float sinhalf = (float) Math.sin(-0.5f * yRadians);
+		ob.rotAux[0] = coshalf * sinhalf;
+		ob.rotAux[1] = coshalf * coshalf - 0.5f;
+		return addObstacleRequest(ob).ref;
+	}
+	
+	private ObstacleRequest addObstacleRequest(TileCacheObstacle ob) {
 		ObstacleRequest req = new ObstacleRequest();
 		req.action = ObstacleRequestAction.REQUEST_ADD;
 		req.ref = getObstacleRef(ob);
 		m_reqs.add(req);
-
-		return req.ref;
+		return req;
 	}
 
 	void removeObstacle(long ref) {
@@ -489,8 +502,11 @@ public class TileCache {
 				if (ob.type == TileCacheObstacleType.CYLINDER) {
 					builder.markCylinderArea(layer, tile.header.bmin, m_params.cs, m_params.ch, ob.pos, ob.radius,
 							ob.height, 0);
-				} else {
+				} else if (ob.type == TileCacheObstacleType.BOX) {
 					builder.markBoxArea(layer, tile.header.bmin, m_params.cs, m_params.ch, ob.bmin, ob.bmax, 0);
+				} else if (ob.type == TileCacheObstacleType.ORIENTED_BOX) {
+					builder.markBoxArea(layer, tile.header.bmin, m_params.cs, m_params.ch, ob.center, ob.extents,
+							ob.rotAux, 0);
 				}
 			}
 		}
@@ -559,9 +575,17 @@ public class TileCache {
 			bmax[0] = ob.pos[0] + ob.radius;
 			bmax[1] = ob.pos[1] + ob.height;
 			bmax[2] = ob.pos[2] + ob.radius;
-		} else {
+		} else if (ob.type == TileCacheObstacleType.BOX) {
 			vCopy(bmin, ob.bmin);
 			vCopy(bmax, ob.bmax);
+		} else if (ob.type == TileCacheObstacleType.ORIENTED_BOX) {
+			float maxr = 1.41f * Math.max(ob.extents[0], ob.extents[2]);
+			bmin[0] = ob.center[0] - maxr;
+			bmax[0] = ob.center[0] + maxr;
+			bmin[1] = ob.center[1] - ob.extents[1];
+			bmax[1] = ob.center[1] + ob.extents[1];
+			bmin[2] = ob.center[2] - maxr;
+			bmax[2] = ob.center[2] + maxr;
 		}
 	}
 

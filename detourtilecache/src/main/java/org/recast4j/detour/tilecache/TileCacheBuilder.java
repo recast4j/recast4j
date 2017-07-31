@@ -1800,4 +1800,61 @@ public class TileCacheBuilder {
 
 	}
 
+	public void markBoxArea(TileCacheLayer layer, float[] orig, float cs, float ch, float[] center, float[] extents,
+			float[] rotAux, int areaId) {
+		int w = layer.header.width;
+		int h = layer.header.height;
+		float ics = 1.0f / cs;
+		float ich = 1.0f / ch;
+
+		float cx = (center[0] - orig[0]) * ics;
+		float cz = (center[2] - orig[2]) * ics;
+
+		float maxr = 1.41f * Math.max(extents[0], extents[2]);
+		int minx = (int) Math.floor(cx - maxr * ics);
+		int maxx = (int) Math.floor(cx + maxr * ics);
+		int minz = (int) Math.floor(cz - maxr * ics);
+		int maxz = (int) Math.floor(cz + maxr * ics);
+		int miny = (int) Math.floor((center[1] - extents[1] - orig[1]) * ich);
+		int maxy = (int) Math.floor((center[1] + extents[1] - orig[1]) * ich);
+		
+		if (maxx < 0)
+			return;
+		if (minx >= w)
+			return;
+		if (maxz < 0)
+			return;
+		if (minz >= h)
+			return;
+
+		if (minx < 0)
+			minx = 0;
+		if (maxx >= w)
+			maxx = w - 1;
+		if (minz < 0)
+			minz = 0;
+		if (maxz >= h)
+			maxz = h - 1;
+
+		float xhalf = extents[0] * ics + 0.5f;
+		float zhalf = extents[2] * ics + 0.5f;
+		for (int z = minz; z <= maxz; ++z) {
+			for (int x = minx; x <= maxx; ++x) {
+				float x2 = 2.0f * (x - cx);
+				float z2 = 2.0f * (z - cz);
+				float xrot = rotAux[1] * x2 + rotAux[0] * z2;
+				if (xrot > xhalf || xrot < -xhalf)
+					continue;
+				float zrot = rotAux[1] * z2 - rotAux[0] * x2;
+				if (zrot > zhalf || zrot < -zhalf)
+					continue;
+				int y = layer.heights[x + z * w];
+				if (y < miny || y > maxy)
+					continue;
+				layer.areas[x + z * w] = (short) areaId;
+			}
+		}
+
+	}
+
 }

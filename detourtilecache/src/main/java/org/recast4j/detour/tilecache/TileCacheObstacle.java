@@ -25,7 +25,8 @@ public class TileCacheObstacle {
 
 	public enum TileCacheObstacleType {
 		CYLINDER,
-		BOX
+		BOX,
+		ORIENTED_BOX
 	};
 	final int index;
 	TileCacheObstacleType type;
@@ -33,6 +34,9 @@ public class TileCacheObstacle {
 	final float[] bmin = new float[3];
 	final float[] bmax = new float[3];
 	float radius, height;
+	final float[] center = new float[3];
+	final float[] extents = new float[3];
+	final float[] rotAux = new float[2]; //{ cos(0.5f*angle)*sin(-0.5f*angle); cos(0.5f*angle)*cos(0.5f*angle) - 0.5 }
 	List<Long> touched = new ArrayList<>();
 	final List<Long> pending = new ArrayList<>();
 	int salt;
