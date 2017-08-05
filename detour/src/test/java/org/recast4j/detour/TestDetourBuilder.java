@@ -10,16 +10,38 @@ import org.recast4j.recast.RecastConfig;
 
 public class TestDetourBuilder extends DetourBuilder {
 
-	public MeshData build(InputGeom geom, RecastBuilderConfig rcConfig, float agentHeight, float agentRadius, float agentMaxClimb, int x, int y) {
+	public MeshData build(InputGeom geom, RecastBuilderConfig rcConfig, float agentHeight, float agentRadius,
+			float agentMaxClimb, int x, int y, boolean applyRecastDemoFlags) {
 		RecastBuilder rcBuilder = new RecastBuilder();
 		RecastBuilderResult rcResult = rcBuilder.build(geom, rcConfig);
 		PolyMesh pmesh = rcResult.getMesh();
+
+		if (applyRecastDemoFlags) {
+			// Update poly flags from areas.
+			for (int i = 0; i < pmesh.npolys; ++i) {
+				if (pmesh.areas[i] == SampleAreaModifications.SAMPLE_POLYAREA_TYPE_GROUND
+						|| pmesh.areas[i] == SampleAreaModifications.SAMPLE_POLYAREA_TYPE_GRASS
+						|| pmesh.areas[i] == SampleAreaModifications.SAMPLE_POLYAREA_TYPE_ROAD) {
+					pmesh.flags[i] = SampleAreaModifications.SAMPLE_POLYFLAGS_WALK;
+				} else if (pmesh.areas[i] == SampleAreaModifications.SAMPLE_POLYAREA_TYPE_WATER) {
+					pmesh.flags[i] = SampleAreaModifications.SAMPLE_POLYFLAGS_SWIM;
+				} else if (pmesh.areas[i] == SampleAreaModifications.SAMPLE_POLYAREA_TYPE_DOOR) {
+					pmesh.flags[i] = SampleAreaModifications.SAMPLE_POLYFLAGS_WALK
+							| SampleAreaModifications.SAMPLE_POLYFLAGS_DOOR;
+				}
+				if (pmesh.areas[i] > 0) {
+					pmesh.areas[i]--;
+				}
+			}
+		}
 		PolyMeshDetail dmesh = rcResult.getMeshDetail();
-		NavMeshDataCreateParams params = getNavMeshCreateParams(rcConfig.cfg, pmesh, dmesh, agentHeight, agentRadius, agentMaxClimb);
+		NavMeshDataCreateParams params = getNavMeshCreateParams(rcConfig.cfg, pmesh, dmesh, agentHeight, agentRadius,
+				agentMaxClimb);
 		return build(params, x, y);
 	}
 
-	public NavMeshDataCreateParams getNavMeshCreateParams(RecastConfig rcConfig, PolyMesh pmesh, PolyMeshDetail dmesh, float agentHeight, float agentRadius, float agentMaxClimb) {
+	public NavMeshDataCreateParams getNavMeshCreateParams(RecastConfig rcConfig, PolyMesh pmesh, PolyMeshDetail dmesh,
+			float agentHeight, float agentRadius, float agentMaxClimb) {
 		NavMeshDataCreateParams params = new NavMeshDataCreateParams();
 		params.verts = pmesh.verts;
 		params.vertCount = pmesh.nverts;
@@ -44,14 +66,12 @@ public class TestDetourBuilder extends DetourBuilder {
 		params.ch = rcConfig.ch;
 		params.buildBvTree = true;
 		/*
-		params.offMeshConVerts = m_geom->getOffMeshConnectionVerts();
-		params.offMeshConRad = m_geom->getOffMeshConnectionRads();
-		params.offMeshConDir = m_geom->getOffMeshConnectionDirs();
-		params.offMeshConAreas = m_geom->getOffMeshConnectionAreas();
-		params.offMeshConFlags = m_geom->getOffMeshConnectionFlags();
-		params.offMeshConUserID = m_geom->getOffMeshConnectionId();
-		params.offMeshConCount = m_geom->getOffMeshConnectionCount();	
-		*/	
+		 * params.offMeshConVerts = m_geom->getOffMeshConnectionVerts(); params.offMeshConRad =
+		 * m_geom->getOffMeshConnectionRads(); params.offMeshConDir = m_geom->getOffMeshConnectionDirs();
+		 * params.offMeshConAreas = m_geom->getOffMeshConnectionAreas(); params.offMeshConFlags =
+		 * m_geom->getOffMeshConnectionFlags(); params.offMeshConUserID = m_geom->getOffMeshConnectionId();
+		 * params.offMeshConCount = m_geom->getOffMeshConnectionCount();
+		 */
 		return params;
 
 	}

@@ -45,6 +45,7 @@ public class Poly {
 
 	public Poly(int index, int maxVertsPerPoly) {
 		this.index = index;
+		firstLink = NavMesh.DT_NULL_LINK;
 		verts = new int[maxVertsPerPoly];
 		neis = new int[maxVertsPerPoly];
 	}

@@ -73,7 +73,7 @@ public class MeshSetReaderWriterTest {
 						m_tileSize, SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
 				RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, bmin, bmax, x, y, true);
 				TestDetourBuilder db = new TestDetourBuilder();
-				MeshData data = db.build(geom, bcfg, m_agentHeight, m_agentRadius, m_agentMaxClimb, x, y);
+				MeshData data = db.build(geom, bcfg, m_agentHeight, m_agentRadius, m_agentMaxClimb, x, y, true);
 				if (data != null) {
 					mesh.removeTile(mesh.getTileRefAt(x, y, 0));
 					mesh.addTile(data, 0, 0);
