@@ -30,10 +30,10 @@ public class NavMeshBuilder {
 
 	static final int MESH_NULL_IDX = 0xffff;
 
-	private static class BVItem {
-		final int bmin[] = new int[3];
-		final int bmax[] = new int[3];
-		int i;
+	public static class BVItem {
+		public final int bmin[] = new int[3];
+		public final int bmax[] = new int[3];
+		public int i;
 	};
 
 	private static class CompareItemX implements Comparator<BVItem> {
@@ -119,7 +119,7 @@ public class NavMeshBuilder {
 		return axis;
 	}
 
-	private static int subdivide(BVItem[] items, int nitems, int imin, int imax, int curNode, BVNode[] nodes) {
+	public static int subdivide(BVItem[] items, int nitems, int imin, int imax, int curNode, BVNode[] nodes) {
 		int inum = imax - imin;
 		int icur = curNode;
 
@@ -242,7 +242,7 @@ public class NavMeshBuilder {
 	static final int XM = 1 << 2;
 	static final int ZM = 1 << 3;
 
-	private static int classifyOffMeshPoint(VectorPtr pt, float[] bmin, float[] bmax) {
+	public static int classifyOffMeshPoint(VectorPtr pt, float[] bmin, float[] bmax) {
 
 		int outcode = 0;
 		outcode |= (pt.get(0) >= bmax[0]) ? XP : 0;
