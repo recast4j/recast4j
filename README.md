@@ -11,8 +11,16 @@ More information about [Recast and Detour](https://github.com/recastnavigation/r
 
 Recast & Detour is licensed under ZLib license, see License.txt for more information.
 
-## Maven
+## Usage
+### Java Version Enhancements
+#### Recast
+- out-of-the-box support for multi-threaded build
+#### Detour-tile-cache
+- more compact file format due to reduced data structures and better compression with LZ4
+#### Extras
+- simple tool to import navmeshes created with [A* Pathfinding Project](https://arongranberg.com/astar/)
 
+### Maven
 #### Releases
 Recast4j releases are available in Maven Central Repository.
 The project includes 4 artifacts:
