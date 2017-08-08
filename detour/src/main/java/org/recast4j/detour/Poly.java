@@ -21,7 +21,7 @@ package org.recast4j.detour;
 /** Defines a polyogn within a dtMeshTile object. */
 public class Poly {
 
-	final int index;
+	public final int index;
 	/** The polygon is a standard convex polygon that is part of the surface of the mesh. */
 	public static final int DT_POLYTYPE_GROUND = 0;
 	/** The polygon is an off-mesh connection consisting of two vertices. */
@@ -56,7 +56,7 @@ public class Poly {
 	}
 
 	/** Sets the polygon type. (See: #dtPolyTypes.) */
-	void setType(int t) {
+	public void setType(int t) {
 		areaAndtype = (areaAndtype & 0x3f) | (t << 6);
 	}
 
