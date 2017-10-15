@@ -2717,6 +2717,8 @@ public class NavMeshQuery {
 
 		float radiusSqr = sqr(maxRadius);
 		float[] hitPos = new float[3];
+		VectorPtr bestvj = null;
+		VectorPtr bestvi = null;
 		while (!m_openList.isEmpty()) {
 			Node bestNode = m_openList.pop();
 			bestNode.flags &= ~Node.DT_NODE_OPEN;
@@ -2787,6 +2789,8 @@ public class NavMeshQuery {
 				hitPos[0] = bestTile.data.verts[vj] + (bestTile.data.verts[vi] - bestTile.data.verts[vj]) * tseg;
 				hitPos[1] = bestTile.data.verts[vj + 1] + (bestTile.data.verts[vi + 1] - bestTile.data.verts[vj + 1]) * tseg;
 				hitPos[2] = bestTile.data.verts[vj + 2] + (bestTile.data.verts[vi + 2] - bestTile.data.verts[vj + 2]) * tseg;
+				bestvj = new VectorPtr(bestTile.data.verts, vj);
+				bestvi = new VectorPtr(bestTile.data.verts, vi);
 			}
 
 			for (int i = bestPoly.firstLink; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
@@ -2849,9 +2853,14 @@ public class NavMeshQuery {
 		}
 
 		// Calc hit normal.
-		float[] hitNormal = vSub(centerPos, hitPos);
-		vNormalize(hitNormal);
-
+		float[] hitNormal = new float[3];
+		if (bestvi != null && bestvj != null) {
+			float[] tangent = vSub(bestvi, bestvj);
+			hitNormal[0] = tangent[2];
+			hitNormal[1] = 0;
+			hitNormal[2] = -tangent[0];
+			vNormalize(hitNormal);
+		}
 		return new FindDistanceToWallResult((float) Math.sqrt(radiusSqr), hitPos, hitNormal);
 	}
 	
