@@ -39,11 +39,11 @@ public class NavMeshDataCreateParams {
 	/// See #rcPolyMeshDetail for details related to these attributes.
 	/// @{
 
-	int[] detailMeshes;			///< The height detail sub-mesh data. [Size: 4 * #polyCount]
-	float[] detailVerts;		///< The detail mesh vertices. [Size: 3 * #detailVertsCount] [Unit: wu]
-	int detailVertsCount;		///< The number of vertices in the detail mesh.
-	int[] detailTris;			///< The detail mesh triangles. [Size: 4 * #detailTriCount]
-	int detailTriCount;			///< The number of triangles in the detail mesh.
+	public int[] detailMeshes;			///< The height detail sub-mesh data. [Size: 4 * #polyCount]
+	public float[] detailVerts;		///< The detail mesh vertices. [Size: 3 * #detailVertsCount] [Unit: wu]
+	public int detailVertsCount;		///< The number of vertices in the detail mesh.
+	public int[] detailTris;			///< The detail mesh triangles. [Size: 4 * #detailTriCount]
+	public int detailTriCount;			///< The number of triangles in the detail mesh.
 
 	/// @}
 	/// @name Off-Mesh Connections Attributes (Optional)
@@ -53,22 +53,22 @@ public class NavMeshDataCreateParams {
 	/// @{
 
 	/// Off-mesh connection vertices. [(ax, ay, az, bx, by, bz) * #offMeshConCount] [Unit: wu]
-	float[] offMeshConVerts;
+	public float[] offMeshConVerts;
 	/// Off-mesh connection radii. [Size: #offMeshConCount] [Unit: wu]
-	float[] offMeshConRad;
+	public float[] offMeshConRad;
 	/// User defined flags assigned to the off-mesh connections. [Size: #offMeshConCount]
-	int[] offMeshConFlags;
+	public int[] offMeshConFlags;
 	/// User defined area ids assigned to the off-mesh connections. [Size: #offMeshConCount]
-	int[] offMeshConAreas;
+	public int[] offMeshConAreas;
 	/// The permitted travel direction of the off-mesh connections. [Size: #offMeshConCount]
 	///
 	/// 0 = Travel only from endpoint A to endpoint B.<br/>
 	/// #DT_OFFMESH_CON_BIDIR = Bidirectional travel.
-	int[] offMeshConDir;	
+	public int[] offMeshConDir;	
 	/// The user defined ids of the off-mesh connection. [Size: #offMeshConCount]
-	int[] offMeshConUserID;
+	public int[] offMeshConUserID;
 	/// The number of off-mesh connections. [Limit: >= 0]
-	int offMeshConCount;
+	public int offMeshConCount;
 
 	/// @}
 	/// @name Tile Attributes

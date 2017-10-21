@@ -59,7 +59,7 @@ public class Recast {
 	/// See the #rcConfig documentation for more information on the configuration parameters.
 	///
 	/// @see rcHeightfield, rcClearUnwalkableTriangles, rcRasterizeTriangles
-	static int[] markWalkableTriangles(Context ctx, float walkableSlopeAngle, float[] verts, int[] tris, int nt,
+	public static int[] markWalkableTriangles(Context ctx, float walkableSlopeAngle, float[] verts, int[] tris, int nt,
 			AreaModification areaMod) {
 		int[] areas = new int[nt];
 		float walkableThr = (float) Math.cos(walkableSlopeAngle / 180.0f * Math.PI);

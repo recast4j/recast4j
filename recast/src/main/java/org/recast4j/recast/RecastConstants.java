@@ -59,10 +59,10 @@ public class RecastConstants {
 	/// fields value can't be used directly.
 	/// @see rcContour::verts, rcContour::rverts
 	static int RC_CONTOUR_REG_MASK = 0xffff;
-	/// An value which indicates an invalid index within a mesh.
+	/// A value which indicates an invalid index within a mesh.
 	/// @note This does not necessarily indicate an error.
 	/// @see rcPolyMesh::polys
-	static int RC_MESH_NULL_IDX = 0xffff;
+	public static int RC_MESH_NULL_IDX = 0xffff;
 	
 	static int RC_CONTOUR_TESS_WALL_EDGES = 0x01;	///< Tessellate solid (impassable) edges during contour simplification.
 	static int RC_CONTOUR_TESS_AREA_EDGES = 0x02;	///< Tessellate edges between areas during contour simplification.
@@ -70,7 +70,6 @@ public class RecastConstants {
 	public enum PartitionType {
 		WATERSHED, MONOTONE, LAYERS
 	}
-
 	
 	public static final int RC_LOG_WARNING = 1;
 
