@@ -22,11 +22,26 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.recast4j.recast.ChunkyTriMesh.ChunkyTriMeshNode;
 import org.recast4j.recast.RecastConstants.PartitionType;
 
 public class RecastBuilder {
+
+	public interface RecastBuilderProgressListener {
+		void onProgress(int completed, int total);
+	}
+
+	private final RecastBuilderProgressListener progressListener;
+
+	public RecastBuilder() {
+		progressListener = null;
+	}
+
+	public RecastBuilder(RecastBuilderProgressListener progressListener) {
+		this.progressListener = progressListener;
+	}
 
 	public class RecastBuilderResult {
 		private final PolyMesh pmesh;
@@ -61,25 +76,29 @@ public class RecastBuilder {
 		return result;
 	}
 
-	private RecastBuilderResult[][] buildSingleThread(InputGeom geom, RecastConfig cfg, float[] bmin, float[] bmax, int tw, int th) {
+	private RecastBuilderResult[][] buildSingleThread(InputGeom geom, RecastConfig cfg, float[] bmin, float[] bmax,
+			int tw, int th) {
 		RecastBuilderResult[][] result = new RecastBuilderResult[tw][th];
+		AtomicInteger counter = new AtomicInteger();
 		for (int x = 0; x < tw; ++x) {
 			for (int y = 0; y < th; ++y) {
-				result[x][y] = build(geom, new RecastBuilderConfig(cfg, bmin, bmax, x, y, true));
+				result[x][y] = buildTile(geom, cfg, bmin, bmax, x, y, counter, tw * th);
 			}
 		}
 		return result;
 	}
 
-	private RecastBuilderResult[][] buildMultiThread(InputGeom geom, RecastConfig cfg, float[] bmin, float[] bmax, int tw, int th, int threads) {
+	private RecastBuilderResult[][] buildMultiThread(InputGeom geom, RecastConfig cfg, float[] bmin, float[] bmax,
+			int tw, int th, int threads) {
 		ExecutorService ec = Executors.newFixedThreadPool(threads);
 		RecastBuilderResult[][] result = new RecastBuilderResult[tw][th];
+		AtomicInteger counter = new AtomicInteger();
 		for (int x = 0; x < tw; ++x) {
 			for (int y = 0; y < th; ++y) {
 				final int tx = x;
 				final int ty = y;
 				ec.submit((Runnable) () -> {
-					result[tx][ty] = build(geom, new RecastBuilderConfig(cfg, bmin, bmax, tx, ty, true));
+					result[tx][ty] = buildTile(geom, cfg, bmin, bmax, tx, ty, counter, tw * th);
 				});
 			}
 		}
@@ -90,7 +109,16 @@ public class RecastBuilder {
 		}
 		return result;
 	}
-	
+
+	private RecastBuilderResult buildTile(InputGeom geom, RecastConfig cfg, float[] bmin, float[] bmax, final int tx,
+			final int ty, AtomicInteger counter, int total) {
+		RecastBuilderResult result = build(geom, new RecastBuilderConfig(cfg, bmin, bmax, tx, ty, true));
+		if (progressListener != null) {
+			progressListener.onProgress(counter.incrementAndGet(), total);
+		}
+		return result;
+	}
+
 	public RecastBuilderResult build(InputGeom geom, RecastBuilderConfig bcfg) {
 
 		RecastConfig cfg = bcfg.cfg;
@@ -209,13 +237,15 @@ public class RecastBuilder {
 				int[] tris = node.tris;
 				int ntris = tris.length / 3;
 				totaltris += ntris;
-				int[] m_triareas = Recast.markWalkableTriangles(ctx, cfg.walkableSlopeAngle, verts, tris, ntris, cfg.walkableAreaMod);
+				int[] m_triareas = Recast.markWalkableTriangles(ctx, cfg.walkableSlopeAngle, verts, tris, ntris,
+						cfg.walkableAreaMod);
 				RecastRasterization.rasterizeTriangles(ctx, verts, tris, m_triareas, ntris, solid, cfg.walkableClimb);
 			}
 		} else {
 			int[] tris = geom.getTris();
 			int ntris = tris.length / 3;
-			int[] m_triareas = Recast.markWalkableTriangles(ctx, cfg.walkableSlopeAngle, verts, tris, ntris, cfg.walkableAreaMod);
+			int[] m_triareas = Recast.markWalkableTriangles(ctx, cfg.walkableSlopeAngle, verts, tris, ntris,
+					cfg.walkableAreaMod);
 			totaltris = ntris;
 			RecastRasterization.rasterizeTriangles(ctx, verts, tris, m_triareas, ntris, solid, cfg.walkableClimb);
 		}
