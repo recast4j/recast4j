@@ -63,17 +63,17 @@ public class ObstacleAvoidanceQuery {
 		boolean touch;
 	}
 	
-	static class ObstacleAvoidanceParams {
-		float velBias;
-		float weightDesVel;
-		float weightCurVel;
-		float weightSide;
-		float weightToi;
-		float horizTime;
-		int gridSize; ///< grid
-		int adaptiveDivs; ///< adaptive
-		int adaptiveRings; ///< adaptive
-		int adaptiveDepth; ///< adaptive
+	public static class ObstacleAvoidanceParams {
+		public float velBias;
+		public float weightDesVel;
+		public float weightCurVel;
+		public float weightSide;
+		public float weightToi;
+		public float horizTime;
+		public int gridSize; ///< grid
+		public int adaptiveDivs; ///< adaptive
+		public int adaptiveRings; ///< adaptive
+		public int adaptiveDepth; ///< adaptive
 
 		public ObstacleAvoidanceParams() {
 			velBias = 0.4f;
@@ -219,15 +219,15 @@ public class ObstacleAvoidanceQuery {
 		float[] w = vSub(ap, bp);
 		float d = vPerp2D(u, v);
 		if (Math.abs(d) < 1e-6f)
-			return new Tupple2<Boolean, Float>(false, 0f);
+			return new Tupple2<>(false, 0f);
 		d = 1.0f / d;
 		float t = vPerp2D(v, w) * d;
 		if (t < 0 || t > 1)
-			return new Tupple2<Boolean, Float>(false, 0f);
+			return new Tupple2<>(false, 0f);
 		float s = vPerp2D(u, w) * d;
 		if (s < 0 || s > 1)
-			return new Tupple2<Boolean, Float>(false, 0f);
-		return new Tupple2<Boolean, Float>(true, t);
+			return new Tupple2<>(false, 0f);
+		return new Tupple2<>(true, t);
 	}
 	
 
@@ -375,7 +375,7 @@ public class ObstacleAvoidanceQuery {
 			}
 		}
 
-		return new Tupple2<Integer, float[]>(ns, nvel);
+		return new Tupple2<>(ns, nvel);
 	}
 
 	// vector normalization that ignores the y-component.
@@ -501,6 +501,6 @@ public class ObstacleAvoidanceQuery {
 		}
 		vCopy(nvel, res);
 
-		return new Tupple2<Integer, float[]>(ns, nvel);
+		return new Tupple2<>(ns, nvel);
 	}
 }
