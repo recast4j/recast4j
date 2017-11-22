@@ -48,6 +48,7 @@ import static org.recast4j.detour.Node.DT_NODE_CLOSED;
 import static org.recast4j.detour.Node.DT_NODE_OPEN;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -528,7 +529,7 @@ public class NavMeshQuery {
 				}
 			}
 		}
-		throw new IllegalArgumentException("Invalid ref " + ref);
+		throw new IllegalArgumentException("Invalid ref " + ref + " pos " + Arrays.toString(pos));
 	}
 
 	/// @par
