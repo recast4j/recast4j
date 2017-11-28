@@ -470,7 +470,7 @@ public class Crowd {
 
 	/// The maximum number of agents that can be managed by the object.
 	/// @return The maximum number of agents.
-	int getAgentCount() {
+	public int getAgentCount() {
 		return m_maxAgents;
 	}
 
