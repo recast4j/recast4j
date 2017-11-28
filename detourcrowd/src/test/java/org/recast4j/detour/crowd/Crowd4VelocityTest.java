@@ -94,8 +94,8 @@ public class Crowd4VelocityTest extends AbstractCrowdTest {
 
 	@Test
 	public void testAgent1Quality3TVTA() {
-		int updateFlags = CrowdAgent.DT_CROWD_ANTICIPATE_TURNS | CrowdAgent.DT_CROWD_OPTIMIZE_VIS
-				| CrowdAgent.DT_CROWD_OPTIMIZE_TOPO | CrowdAgent.DT_CROWD_OBSTACLE_AVOIDANCE;
+		int updateFlags = CrowdAgentParams.DT_CROWD_ANTICIPATE_TURNS | CrowdAgentParams.DT_CROWD_OPTIMIZE_VIS
+				| CrowdAgentParams.DT_CROWD_OPTIMIZE_TOPO | CrowdAgentParams.DT_CROWD_OBSTACLE_AVOIDANCE;
 
 		addAgentGrid(2, 0.3f, updateFlags, 3, endPoss[0]);
 		setMoveTarget(endPoss[4], false);

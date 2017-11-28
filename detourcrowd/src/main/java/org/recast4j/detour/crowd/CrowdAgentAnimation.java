@@ -20,11 +20,11 @@ package org.recast4j.detour.crowd;
 
 public class CrowdAgentAnimation {
 
-	boolean active;
-	float[] initPos = new float[3];
-	float[] startPos = new float[3];
-	float[] endPos = new float[3];
-	long polyRef;
-	float t, tmax;
+	public boolean active;
+	public float[] initPos = new float[3];
+	public float[] startPos = new float[3];
+	public float[] endPos = new float[3];
+	public long polyRef;
+	public float t, tmax;
 
 }

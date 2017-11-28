@@ -655,7 +655,7 @@ public class Crowd {
 	static final int MAX_ITER = 20;
 
 	void updateMoveRequest() {
-		PriorityQueue<CrowdAgent> queue = new PriorityQueue<CrowdAgent>(
+		PriorityQueue<CrowdAgent> queue = new PriorityQueue<>(
 				(a1, a2) -> Float.compare(a2.targetReplanTime, a1.targetReplanTime));
 
 		// Fire off new requests.
@@ -844,7 +844,7 @@ public class Crowd {
 		if (!agents.isEmpty())
 			return;
 		
-		PriorityQueue<CrowdAgent> queue = new PriorityQueue<CrowdAgent>(
+		PriorityQueue<CrowdAgent> queue = new PriorityQueue<>(
 				(a1, a2) -> Float.compare(a2.topologyOptTime, a1.topologyOptTime));
 		
 		for (int i = 0; i < agents.size(); ++i)
@@ -854,7 +854,7 @@ public class Crowd {
 				continue;
 			if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_NONE || ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY)
 				continue;
-			if ((ag.params.updateFlags & CrowdAgent.DT_CROWD_OPTIMIZE_TOPO) == 0)
+			if ((ag.params.updateFlags & CrowdAgentParams.DT_CROWD_OPTIMIZE_TOPO) == 0)
 				continue;
 			ag.topologyOptTime += dt;
 			if (ag.topologyOptTime >= OPT_TIME_THR)
@@ -1037,7 +1037,7 @@ public class Crowd {
 			
 			// Check to see if the corner after the next corner is directly visible,
 			// and short cut to there.
-			if ((ag.params.updateFlags & CrowdAgent.DT_CROWD_OPTIMIZE_VIS) != 0 && ag.corners.size() > 0)
+			if ((ag.params.updateFlags & CrowdAgentParams.DT_CROWD_OPTIMIZE_VIS) != 0 && ag.corners.size() > 0)
 			{
 				float[] target = ag.corners.get(Math.min(1,ag.corners.size()-1)).getPos();
 				ag.corridor.optimizePathVisibility(target, ag.params.pathOptimizationRange, m_navquery, m_filters[ag.params.queryFilterType]);
@@ -1118,7 +1118,7 @@ public class Crowd {
 			else
 			{
 				// Calculate steering direction.
-				if ((ag.params.updateFlags & CrowdAgent.DT_CROWD_ANTICIPATE_TURNS) != 0)
+				if ((ag.params.updateFlags & CrowdAgentParams.DT_CROWD_ANTICIPATE_TURNS) != 0)
 					dvel = ag.calcSmoothSteerDirection();
 				else
 					dvel = ag.calcStraightSteerDirection();
@@ -1131,7 +1131,7 @@ public class Crowd {
 			}
 
 			// Separation
-			if ((ag.params.updateFlags & CrowdAgent.DT_CROWD_SEPARATION) != 0)
+			if ((ag.params.updateFlags & CrowdAgentParams.DT_CROWD_SEPARATION) != 0)
 			{
 				float separationDist = ag.params.collisionQueryRange; 
 				float invSeparationDist = 1.0f / separationDist; 
@@ -1183,7 +1183,7 @@ public class Crowd {
 			if (ag.state != CrowdAgentState.DT_CROWDAGENT_STATE_WALKING)
 				continue;
 			
-			if ((ag.params.updateFlags & CrowdAgent.DT_CROWD_OBSTACLE_AVOIDANCE) != 0)
+			if ((ag.params.updateFlags & CrowdAgentParams.DT_CROWD_OBSTACLE_AVOIDANCE) != 0)
 			{
 				m_obstacleQuery.reset();
 				
