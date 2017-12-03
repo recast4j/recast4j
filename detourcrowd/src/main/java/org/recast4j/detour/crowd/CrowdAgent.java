@@ -98,8 +98,8 @@ public class CrowdAgent {
 	List<StraightPathItem> corners = new ArrayList<>();
 
 	MoveRequestState targetState; ///< State of the movement request.
-	long targetRef; ///< Target polyref of the movement request.
-	float[] targetPos = new float[3]; ///< Target position of the movement request (or velocity in case of DT_CROWDAGENT_TARGET_VELOCITY).
+	public long targetRef; ///< Target polyref of the movement request.
+	public float[] targetPos = new float[3]; ///< Target position of the movement request (or velocity in case of DT_CROWDAGENT_TARGET_VELOCITY).
 	long targetPathqRef; ///< Path finder ref.
 	boolean targetReplan; ///< Flag indicating that the current path is being replanned.
 	float targetReplanTime; /// <Time since the agent's target was replanned.
