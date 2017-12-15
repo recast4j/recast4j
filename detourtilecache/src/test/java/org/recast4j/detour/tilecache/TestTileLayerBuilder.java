@@ -8,12 +8,12 @@ import java.util.List;
 
 import org.recast4j.recast.HeightfieldLayerSet;
 import org.recast4j.recast.HeightfieldLayerSet.HeightfieldLayer;
-import org.recast4j.recast.InputGeom;
 import org.recast4j.recast.Recast;
 import org.recast4j.recast.RecastBuilder;
 import org.recast4j.recast.RecastBuilderConfig;
 import org.recast4j.recast.RecastConfig;
 import org.recast4j.recast.RecastConstants.PartitionType;
+import org.recast4j.recast.geom.InputGeomProvider;
 
 public class TestTileLayerBuilder extends AbstractTileLayersBuilder {
 
@@ -32,11 +32,11 @@ public class TestTileLayerBuilder extends AbstractTileLayersBuilder {
 	private final float m_detailSampleMaxError = 1.0f;
 	private RecastConfig rcConfig;
 	private final int m_tileSize = 48;
-	protected final InputGeom geom;
+	protected final InputGeomProvider geom;
 	private final int tw;
 	private final int th;
 
-	public TestTileLayerBuilder(InputGeom geom) {
+	public TestTileLayerBuilder(InputGeomProvider geom) {
 		this.geom = geom;
 		rcConfig = new RecastConfig(PartitionType.WATERSHED, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
 				m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,

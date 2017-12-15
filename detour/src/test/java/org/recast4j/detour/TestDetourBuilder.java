@@ -1,16 +1,16 @@
 package org.recast4j.detour;
 
-import org.recast4j.recast.InputGeom;
 import org.recast4j.recast.PolyMesh;
 import org.recast4j.recast.PolyMeshDetail;
 import org.recast4j.recast.RecastBuilder;
 import org.recast4j.recast.RecastBuilder.RecastBuilderResult;
+import org.recast4j.recast.geom.InputGeomProvider;
 import org.recast4j.recast.RecastBuilderConfig;
 import org.recast4j.recast.RecastConfig;
 
 public class TestDetourBuilder extends DetourBuilder {
 
-	public MeshData build(InputGeom geom, RecastBuilderConfig rcConfig, float agentHeight, float agentRadius,
+	public MeshData build(InputGeomProvider geom, RecastBuilderConfig rcConfig, float agentHeight, float agentRadius,
 			float agentMaxClimb, int x, int y, boolean applyRecastDemoFlags) {
 		RecastBuilder rcBuilder = new RecastBuilder();
 		RecastBuilderResult rcResult = rcBuilder.build(geom, rcConfig);

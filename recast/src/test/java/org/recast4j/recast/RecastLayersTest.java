@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 import org.recast4j.recast.RecastConstants.PartitionType;
+import org.recast4j.recast.geom.InputGeomProvider;
 
 public class RecastLayersTest {
 	private float m_cellSize = 0.3f;
@@ -112,7 +113,7 @@ public class RecastLayersTest {
 
 	private HeightfieldLayerSet build(String filename, int x, int y) {
 		ObjImporter importer = new ObjImporter();
-		InputGeom geom = importer.load(getClass().getResourceAsStream(filename));
+		InputGeomProvider geom = importer.load(getClass().getResourceAsStream(filename));
 		RecastBuilder builder = new RecastBuilder();
 		RecastConfig cfg = new RecastConfig(m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
 				m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,

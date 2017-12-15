@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 import org.recast4j.recast.RecastBuilder.RecastBuilderResult;
 import org.recast4j.recast.RecastConstants.PartitionType;
+import org.recast4j.recast.geom.InputGeomProvider;
 
 public class RecastTileMeshTest {
 
@@ -31,7 +32,7 @@ public class RecastTileMeshTest {
 
 	public void testBuild(String filename) {
 		ObjImporter importer = new ObjImporter();
-		InputGeom geom = importer.load(getClass().getResourceAsStream(filename));
+		InputGeomProvider geom = importer.load(getClass().getResourceAsStream(filename));
 		RecastBuilder builder = new RecastBuilder();
 		RecastConfig cfg = new RecastConfig(m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
 				m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
@@ -66,7 +67,7 @@ public class RecastTileMeshTest {
 	@Test
 	public void testPerformance() {
 		ObjImporter importer = new ObjImporter();
-		InputGeom geom = importer.load(getClass().getResourceAsStream("dungeon.obj"));
+		InputGeomProvider geom = importer.load(getClass().getResourceAsStream("dungeon.obj"));
 		RecastBuilder builder = new RecastBuilder();
 		RecastConfig cfg = new RecastConfig(m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
 				m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
@@ -88,7 +89,7 @@ public class RecastTileMeshTest {
 		System.out.println(" Time MT : " + (t3 - t2) / 1000000);
 	}
 
-	private void build(InputGeom geom, RecastBuilder builder, RecastConfig cfg, int threads, boolean validate) {
+	private void build(InputGeomProvider geom, RecastBuilder builder, RecastConfig cfg, int threads, boolean validate) {
 		RecastBuilderResult[][] tiles = builder.buildTiles(geom, cfg, threads);
 		if (validate) {
 			RecastBuilderResult rcResult = tiles[7][8];
