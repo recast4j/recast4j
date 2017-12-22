@@ -12,9 +12,9 @@ import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.detour.QueryFilter;
 import org.recast4j.detour.Status;
-import org.recast4j.recast.InputGeom;
 import org.recast4j.recast.ObjImporter;
 import org.recast4j.recast.RecastBuilder;
+import org.recast4j.recast.geom.InputGeomProvider;
 
 public class TileCacheNavigationTest extends AbstractTileCacheTest {
 
@@ -38,7 +38,7 @@ public class TileCacheNavigationTest extends AbstractTileCacheTest {
 	public void setUp() throws IOException {
 
 		boolean cCompatibility = true;
-		InputGeom geom = new ObjImporter().load(RecastBuilder.class.getResourceAsStream("dungeon.obj"));
+		InputGeomProvider geom = new ObjImporter().load(RecastBuilder.class.getResourceAsStream("dungeon.obj"));
 		TestTileLayerBuilder layerBuilder = new TestTileLayerBuilder(geom);
 		List<byte[]> layers = layerBuilder.build(ByteOrder.LITTLE_ENDIAN, cCompatibility, 1);
 		TileCache tc = getTileCache(geom, ByteOrder.LITTLE_ENDIAN, cCompatibility);

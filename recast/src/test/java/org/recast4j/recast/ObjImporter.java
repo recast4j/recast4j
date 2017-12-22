@@ -24,6 +24,9 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.recast4j.recast.geom.InputGeomProvider;
+import org.recast4j.recast.geom.SimpleInputGeomProvider;
+
 public class ObjImporter {
 
 	private class ObjImporterContext {
@@ -31,7 +34,7 @@ public class ObjImporter {
 	    List<Integer> meshFaces = new ArrayList<>();
 	}
 
-    public InputGeom load(InputStream is) {
+    public InputGeomProvider load(InputStream is) {
         ObjImporterContext context = new ObjImporterContext();
         BufferedReader reader = null;
         try {
@@ -52,7 +55,7 @@ public class ObjImporter {
 				}
             }
         }
-        return new InputGeom(context.vertexPositions, context.meshFaces);
+        return new SimpleInputGeomProvider(context.vertexPositions, context.meshFaces);
 
     }
 

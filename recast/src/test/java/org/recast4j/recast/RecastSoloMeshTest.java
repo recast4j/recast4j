@@ -25,22 +25,24 @@ import java.io.FileWriter;
 import org.junit.Assert;
 import org.junit.Test;
 import org.recast4j.recast.RecastConstants.PartitionType;
+import org.recast4j.recast.geom.TriMesh;
+import org.recast4j.recast.geom.InputGeomProvider;
 
 public class RecastSoloMeshTest {
 
-	private float m_cellSize = 0.3f;
-	private float m_cellHeight = 0.2f;
-	private float m_agentHeight = 2.0f;
-	private float m_agentRadius = 0.6f;
-	private float m_agentMaxClimb = 0.9f;
-	private float m_agentMaxSlope = 45.0f;
-	private int m_regionMinSize = 8;
-	private int m_regionMergeSize = 20;
-	private float m_edgeMaxLen = 12.0f;
-	private float m_edgeMaxError = 1.3f;
-	private int m_vertsPerPoly = 6;
-	private float m_detailSampleDist = 6.0f;
-	private float m_detailSampleMaxError = 1.0f;
+	private final float m_cellSize = 0.3f;
+	private final float m_cellHeight = 0.2f;
+	private final float m_agentHeight = 2.0f;
+	private final float m_agentRadius = 0.6f;
+	private final float m_agentMaxClimb = 0.9f;
+	private final float m_agentMaxSlope = 45.0f;
+	private final int m_regionMinSize = 8;
+	private final int m_regionMergeSize = 20;
+	private final float m_edgeMaxLen = 12.0f;
+	private final float m_edgeMaxError = 1.3f;
+	private final int m_vertsPerPoly = 6;
+	private final float m_detailSampleDist = 6.0f;
+	private final float m_detailSampleMaxError = 1.0f;
 	private PartitionType m_partitionType = PartitionType.WATERSHED;
 
 	@Test
@@ -86,46 +88,48 @@ public class RecastSoloMeshTest {
 			int expContours, int expVerts, int expPolys, int expDetMeshes, int expDetVerts, int expDetTRis) {
 		m_partitionType = partitionType;
 		ObjImporter importer = new ObjImporter();
-		InputGeom geom = importer.load(getClass().getResourceAsStream(filename));
+		InputGeomProvider geomProvider = importer.load(getClass().getResourceAsStream(filename));
 		long time = System.nanoTime();
-		float[] bmin = geom.getMeshBoundsMin();
-		float[] bmax = geom.getMeshBoundsMax();
-		float[] verts = geom.getVerts();
-		int[] tris = geom.getTris();
-		int ntris = tris.length / 3;
-		//
-		// Step 1. Initialize build config.
-		//
+		float[] bmin = geomProvider.getMeshBoundsMin();
+		float[] bmax = geomProvider.getMeshBoundsMax();
+        Context m_ctx = new Context();
+        //
+        // Step 1. Initialize build config.
+        //
 
-		// Init build configuration from GUI
-		RecastConfig cfg = new RecastConfig(partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
-				m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
-				m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, 0, SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
-		RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, bmin, bmax);
-		Context m_ctx = new Context();
-		//
-		// Step 2. Rasterize input polygon soup.
-		//
+        // Init build configuration from GUI
+        RecastConfig cfg = new RecastConfig(partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
+                m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
+                m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, 0, SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
+        RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, bmin, bmax);
+        //
+        // Step 2. Rasterize input polygon soup.
+        //
 
-		// Allocate voxel heightfield where we rasterize our input data to.
-		Heightfield m_solid = new Heightfield(bcfg.width, bcfg.height, bcfg.bmin, bcfg.bmax, cfg.cs, cfg.ch);
+        // Allocate voxel heightfield where we rasterize our input data to.
+        Heightfield m_solid = new Heightfield(bcfg.width, bcfg.height, bcfg.bmin, bcfg.bmax, cfg.cs, cfg.ch);
 
-		// Allocate array that can hold triangle area types.
-		// If you have multiple meshes you need to process, allocate
-		// and array which can hold the max number of triangles you need to
-		// process.
+        for (TriMesh geom : geomProvider.meshes()) {
+    		float[] verts = geom.getVerts();
+    		int[] tris = geom.getTris();
+    		int ntris = tris.length / 3;
 
-		// Find triangles which are walkable based on their slope and rasterize
-		// them.
-		// If your input data is multiple meshes, you can transform them here,
-		// calculate
-		// the are type for each of the meshes and rasterize them.
-		int[] m_triareas = Recast.markWalkableTriangles(m_ctx, cfg.walkableSlopeAngle, verts, tris, ntris, cfg.walkableAreaMod);
-		RecastRasterization.rasterizeTriangles(m_ctx, verts, tris, m_triareas, ntris, m_solid, cfg.walkableClimb);
-		//
-		// Step 3. Filter walkables surfaces.
-		//
+    		// Allocate array that can hold triangle area types.
+    		// If you have multiple meshes you need to process, allocate
+    		// and array which can hold the max number of triangles you need to
+    		// process.
 
+    		// Find triangles which are walkable based on their slope and rasterize
+    		// them.
+    		// If your input data is multiple meshes, you can transform them here,
+    		// calculate
+    		// the are type for each of the meshes and rasterize them.
+    		int[] m_triareas = Recast.markWalkableTriangles(m_ctx, cfg.walkableSlopeAngle, verts, tris, ntris, cfg.walkableAreaMod);
+    		RecastRasterization.rasterizeTriangles(m_ctx, verts, tris, m_triareas, ntris, m_solid, cfg.walkableClimb);
+    		//
+    		// Step 3. Filter walkables surfaces.
+    		//
+        }
 		// Once all geometry is rasterized, we do initial pass of filtering to
 		// remove unwanted overhangs caused by the conservative rasterization
 		// as well as filter spans where the character cannot possibly stand.
@@ -257,8 +261,9 @@ public class RecastSoloMeshTest {
 				fw.write("f ");
 				for (int j = 0; j < mesh.nvp; ++j) {
 					int v = mesh.polys[p + j];
-					if (v == RC_MESH_NULL_IDX)
-						break;
+					if (v == RC_MESH_NULL_IDX) {
+                        break;
+                    }
 					fw.write((v + 1) + " ");
 				}
 				fw.write("\n");
