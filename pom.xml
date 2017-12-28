@@ -4,7 +4,7 @@
 
 	<groupId>org.recast4j</groupId>
 	<artifactId>parent</artifactId>
-	<version>1.0.7-SNAPSHOT</version>
+	<version>1.0.7</version>
 	<packaging>pom</packaging>
 
 	<properties>
@@ -41,7 +41,7 @@
 		<url>https://github.com/ppiastucki/recast4j</url>
 		<connection>https://github.com/ppiastucki/recast4j.git</connection>
 		<developerConnection>scm:git:git@github.com:ppiastucki/recast4j.git</developerConnection>
-		<tag>parent-1.0.1</tag>
+		<tag>parent-1.0.7</tag>
 	</scm>
 	<dependencyManagement>
 		<dependencies>
