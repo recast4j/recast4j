@@ -2,7 +2,6 @@ package org.recast4j.detour;
 
 import static org.recast4j.recast.RecastVectors.copy;
 
-import org.recast4j.recast.InputGeom;
 import org.recast4j.recast.ObjImporter;
 import org.recast4j.recast.PolyMesh;
 import org.recast4j.recast.PolyMeshDetail;
@@ -10,6 +9,7 @@ import org.recast4j.recast.RecastBuilder;
 import org.recast4j.recast.RecastBuilder.RecastBuilderResult;
 import org.recast4j.recast.RecastConfig;
 import org.recast4j.recast.RecastConstants.PartitionType;
+import org.recast4j.recast.geom.InputGeomProvider;
 
 public class TestTiledNavMeshBuilder {
 
@@ -36,7 +36,7 @@ public class TestTiledNavMeshBuilder {
 				m_detailSampleMaxError, m_tileSize);
 	}
 
-	public TestTiledNavMeshBuilder(InputGeom m_geom, PartitionType m_partitionType, float m_cellSize,
+	public TestTiledNavMeshBuilder(InputGeomProvider m_geom, PartitionType m_partitionType, float m_cellSize,
 			float m_cellHeight, float m_agentHeight, float m_agentRadius, float m_agentMaxClimb, float m_agentMaxSlope,
 			int m_regionMinSize, int m_regionMergeSize, float m_edgeMaxLen, float m_edgeMaxError, int m_vertsPerPoly,
 			float m_detailSampleDist, float m_detailSampleMaxError, int m_tileSize) {

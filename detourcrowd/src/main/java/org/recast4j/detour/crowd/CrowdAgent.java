@@ -38,7 +38,7 @@ import org.recast4j.detour.crowd.Crowd.CrowdNeighbour;
 
 /// Represents an agent managed by a #dtCrowd object.
 /// @ingroup crowd
-class CrowdAgent {
+public class CrowdAgent {
 
 	/// The type of navigation mesh polygon the agent is currently traversing.
 	/// @ingroup crowd
@@ -60,20 +60,13 @@ class CrowdAgent {
 		DT_CROWDAGENT_TARGET_VELOCITY,
 	};
 	
-	/// Crowd agent update flags.
-	static final int DT_CROWD_ANTICIPATE_TURNS = 1;
-	static final int DT_CROWD_OBSTACLE_AVOIDANCE = 2;
-	static final int DT_CROWD_SEPARATION = 4;
-	static final int DT_CROWD_OPTIMIZE_VIS = 8;			///< Use #dtPathCorridor::optimizePathVisibility() to optimize the agent path.
-	static final int DT_CROWD_OPTIMIZE_TOPO = 16;		///< Use dtPathCorridor::optimizePathTopology() to optimize the agent path.
-	
-	final int idx;
+	public final int idx;
 	
 	/// True if the agent is active, false if the agent is in an unused slot in the agent pool.
-	boolean active;
+	public boolean active;
 
 	/// The type of mesh polygon the agent is traversing. (See: #CrowdAgentState)
-	CrowdAgentState state;
+	public CrowdAgentState state;
 
 	/// True if the agent has valid path (targetState == DT_CROWDAGENT_TARGET_VALID) and the path does not lead to the requested position, else false.
 	boolean partial;
@@ -93,25 +86,25 @@ class CrowdAgent {
 	/// The desired speed.
 	float desiredSpeed;
 
-	float[] npos = new float[3]; ///< The current agent position. [(x, y, z)]
+	public float[] npos = new float[3]; ///< The current agent position. [(x, y, z)]
 	float[] disp = new float[3]; ///< A temporary value used to accumulate agent displacement during iterative collision resolution. [(x, y, z)]
 	float[] dvel = new float[3]; ///< The desired velocity of the agent. Based on the current path, calculated from scratch each frame. [(x, y, z)]
 	float[] nvel = new float[3]; ///< The desired velocity adjusted by obstacle avoidance, calculated from scratch each frame. [(x, y, z)]
-	float[] vel = new float[3]; ///< The actual velocity of the agent. The change from nvel -> vel is constrained by max acceleration. [(x, y, z)]
+	public float[] vel = new float[3]; ///< The actual velocity of the agent. The change from nvel -> vel is constrained by max acceleration. [(x, y, z)]
 
 	/// The agent's configuration parameters.
-	CrowdAgentParams params;
+	public CrowdAgentParams params;
 	/// The local path corridor corners for the agent.
 	List<StraightPathItem> corners = new ArrayList<>();
 
 	MoveRequestState targetState; ///< State of the movement request.
-	long targetRef; ///< Target polyref of the movement request.
-	float[] targetPos = new float[3]; ///< Target position of the movement request (or velocity in case of DT_CROWDAGENT_TARGET_VELOCITY).
+	public long targetRef; ///< Target polyref of the movement request.
+	public float[] targetPos = new float[3]; ///< Target position of the movement request (or velocity in case of DT_CROWDAGENT_TARGET_VELOCITY).
 	long targetPathqRef; ///< Path finder ref.
 	boolean targetReplan; ///< Flag indicating that the current path is being replanned.
 	float targetReplanTime; /// <Time since the agent's target was replanned.
 
-	CrowdAgentAnimation animation;
+	public CrowdAgentAnimation animation;
 
 	public CrowdAgent(int idx) {
 		this.idx = idx;

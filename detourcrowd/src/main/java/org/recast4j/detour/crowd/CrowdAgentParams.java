@@ -20,8 +20,7 @@ package org.recast4j.detour.crowd;
 
 /// Configuration parameters for a crowd agent.
 /// @ingroup crowd
-public class CrowdAgentParams
-{
+public class CrowdAgentParams {
 	public float radius;						///< Agent radius. [Limit: >= 0]
 	public float height;						///< Agent height. [Limit: > 0]
 	public float maxAcceleration;				///< Maximum allowed acceleration. [Limit: >= 0]
@@ -35,6 +34,13 @@ public class CrowdAgentParams
 	/// How aggresive the agent manager should be at avoiding collisions with this agent. [Limit: >= 0]
 	public float separationWeight;
 
+	/// Crowd agent update flags.
+	public static final int DT_CROWD_ANTICIPATE_TURNS = 1;
+	public static final int DT_CROWD_OBSTACLE_AVOIDANCE = 2;
+	public static final int DT_CROWD_SEPARATION = 4;
+	public static final int DT_CROWD_OPTIMIZE_VIS = 8;			///< Use #dtPathCorridor::optimizePathVisibility() to optimize the agent path.
+	public static final int DT_CROWD_OPTIMIZE_TOPO = 16;		///< Use dtPathCorridor::optimizePathTopology() to optimize the agent path.
+	
 	/// Flags that impact steering behavior. (See: #UpdateFlags)
 	public int updateFlags;
 

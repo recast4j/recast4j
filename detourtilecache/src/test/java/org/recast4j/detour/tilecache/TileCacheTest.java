@@ -10,9 +10,9 @@ import org.junit.Test;
 import org.recast4j.detour.MeshData;
 import org.recast4j.detour.MeshHeader;
 import org.recast4j.detour.MeshTile;
-import org.recast4j.recast.InputGeom;
 import org.recast4j.recast.ObjImporter;
 import org.recast4j.recast.RecastBuilder;
+import org.recast4j.recast.geom.InputGeomProvider;
 
 public class TileCacheTest extends AbstractTileCacheTest {
 
@@ -41,7 +41,7 @@ public class TileCacheTest extends AbstractTileCacheTest {
 	}
 
 	private void testDungeon(ByteOrder order, boolean cCompatibility) throws IOException {
-		InputGeom geom = new ObjImporter().load(RecastBuilder.class.getResourceAsStream("dungeon.obj"));
+		InputGeomProvider geom = new ObjImporter().load(RecastBuilder.class.getResourceAsStream("dungeon.obj"));
 		TileCache tc = getTileCache(geom, order, cCompatibility);
 		TestTileLayerBuilder layerBuilder = new TestTileLayerBuilder(geom);
 		List<byte[]> layers = layerBuilder.build(order, cCompatibility, 1);
@@ -134,7 +134,7 @@ public class TileCacheTest extends AbstractTileCacheTest {
 	}
 
 	private void test(ByteOrder order, boolean cCompatibility) throws IOException {
-		InputGeom geom = new ObjImporter().load(RecastBuilder.class.getResourceAsStream("nav_test.obj"));
+		InputGeomProvider geom = new ObjImporter().load(RecastBuilder.class.getResourceAsStream("nav_test.obj"));
 		TileCache tc = getTileCache(geom, order, cCompatibility);
 		TestTileLayerBuilder layerBuilder = new TestTileLayerBuilder(geom);
 		List<byte[]> layers = layerBuilder.build(order, cCompatibility, 1);
@@ -158,7 +158,7 @@ public class TileCacheTest extends AbstractTileCacheTest {
 		int threads = 4;
 		ByteOrder order = ByteOrder.LITTLE_ENDIAN;
 		boolean cCompatibility = false;
-		InputGeom geom = new ObjImporter().load(RecastBuilder.class.getResourceAsStream("dungeon.obj"));
+		InputGeomProvider geom = new ObjImporter().load(RecastBuilder.class.getResourceAsStream("dungeon.obj"));
 		TestTileLayerBuilder layerBuilder = new TestTileLayerBuilder(geom);
 		for (int i = 0; i < 10; i++) {
 			layerBuilder.build(order, cCompatibility, 1);

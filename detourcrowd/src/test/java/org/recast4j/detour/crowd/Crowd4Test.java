@@ -295,8 +295,8 @@ public class Crowd4Test extends AbstractCrowdTest {
 
 	@Test
 	public void testAgent1Quality2TVTA() {
-		int updateFlags = CrowdAgent.DT_CROWD_ANTICIPATE_TURNS | CrowdAgent.DT_CROWD_OPTIMIZE_VIS
-				| CrowdAgent.DT_CROWD_OPTIMIZE_TOPO | CrowdAgent.DT_CROWD_OBSTACLE_AVOIDANCE;
+		int updateFlags = CrowdAgentParams.DT_CROWD_ANTICIPATE_TURNS | CrowdAgentParams.DT_CROWD_OPTIMIZE_VIS
+				| CrowdAgentParams.DT_CROWD_OPTIMIZE_TOPO | CrowdAgentParams.DT_CROWD_OBSTACLE_AVOIDANCE;
 
 		addAgentGrid(2, 0.3f, updateFlags, 2, startPoss[0]);
 		setMoveTarget(endPoss[0], false);
@@ -314,9 +314,9 @@ public class Crowd4Test extends AbstractCrowdTest {
 
 	@Test
 	public void testAgent1Quality2TVTAS() {
-		int updateFlags = CrowdAgent.DT_CROWD_ANTICIPATE_TURNS | CrowdAgent.DT_CROWD_OPTIMIZE_VIS
-				| CrowdAgent.DT_CROWD_OPTIMIZE_TOPO | CrowdAgent.DT_CROWD_OBSTACLE_AVOIDANCE
-				| CrowdAgent.DT_CROWD_SEPARATION;
+		int updateFlags = CrowdAgentParams.DT_CROWD_ANTICIPATE_TURNS | CrowdAgentParams.DT_CROWD_OPTIMIZE_VIS
+				| CrowdAgentParams.DT_CROWD_OPTIMIZE_TOPO | CrowdAgentParams.DT_CROWD_OBSTACLE_AVOIDANCE
+				| CrowdAgentParams.DT_CROWD_SEPARATION;
 
 		addAgentGrid(2, 0.3f, updateFlags, 2, startPoss[0]);
 		setMoveTarget(endPoss[0], false);
@@ -334,7 +334,7 @@ public class Crowd4Test extends AbstractCrowdTest {
 
 	@Test
 	public void testAgent1Quality2T() {
-		int updateFlags = CrowdAgent.DT_CROWD_OPTIMIZE_TOPO;
+		int updateFlags = CrowdAgentParams.DT_CROWD_OPTIMIZE_TOPO;
 
 		addAgentGrid(2, 0.3f, updateFlags, 2, startPoss[0]);
 		setMoveTarget(endPoss[0], false);

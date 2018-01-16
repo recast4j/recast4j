@@ -14,7 +14,7 @@ Recast & Detour is licensed under ZLib license, see License.txt for more informa
 ## Usage
 ### Java Version Enhancements
 #### Recast
-- out-of-the-box support for multi-threaded build
+- out-of-the-box support for multi-threaded builds
 #### Detour-tile-cache
 - more compact file format due to reduced data structures and better compression with LZ4
 #### Extras
@@ -28,27 +28,27 @@ The project includes 4 artifacts:
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>recast</artifactId>
-	<version>1.0.6</version>
+	<version>1.0.7</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour</artifactId>
-	<version>1.0.6</version>
+	<version>1.0.7</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour-crowd</artifactId>
-	<version>1.0.6</version>
+	<version>1.0.7</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour-tile-cache</artifactId>
-	<version>1.0.6</version>
+	<version>1.0.7</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour-extras</artifactId>
-	<version>1.0.6</version>
+	<version>1.0.7</version>
 </dependency>
 ```
 

@@ -16,15 +16,34 @@ freely, subject to the following restrictions:
  misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
-package org.recast4j.detour.crowd;
+package org.recast4j.recast.geom;
 
-public class CrowdAgentAnimation {
+import java.util.List;
 
-	public boolean active;
-	public float[] initPos = new float[3];
-	public float[] startPos = new float[3];
-	public float[] endPos = new float[3];
-	public long polyRef;
-	public float t, tmax;
+import org.recast4j.recast.geom.ChunkyTriMesh.ChunkyTriMeshNode;
+
+public class TriMesh {
+
+    private final float[] vertices;
+    private final int[] faces;
+    private final ChunkyTriMesh chunkyTriMesh;
+
+    public TriMesh(float[] vertices, int[] faces) {
+        this.vertices = vertices;
+        this.faces = faces;
+        this.chunkyTriMesh = new ChunkyTriMesh(vertices, faces, faces.length / 3, 256);
+    }
+
+    public int[] getTris() {
+        return faces;
+    }
+
+    public float[] getVerts() {
+        return vertices;
+    }
+
+    public List<ChunkyTriMeshNode> getChunksOverlappingRect(float[] bmin, float[] bmax) {
+        return chunkyTriMesh.getChunksOverlappingRect(bmin, bmax);
+    }
 
 }

@@ -546,8 +546,8 @@ public class Crowd1Test extends AbstractCrowdTest {
 
 	@Test
 	public void testAgent1Quality0TVTA() {
-		int updateFlags = CrowdAgent.DT_CROWD_ANTICIPATE_TURNS | CrowdAgent.DT_CROWD_OPTIMIZE_VIS
-				| CrowdAgent.DT_CROWD_OPTIMIZE_TOPO | CrowdAgent.DT_CROWD_OBSTACLE_AVOIDANCE;
+		int updateFlags = CrowdAgentParams.DT_CROWD_ANTICIPATE_TURNS | CrowdAgentParams.DT_CROWD_OPTIMIZE_VIS
+				| CrowdAgentParams.DT_CROWD_OPTIMIZE_TOPO | CrowdAgentParams.DT_CROWD_OBSTACLE_AVOIDANCE;
 
 		addAgentGrid(1, 0.4f, updateFlags, 0, startPoss[0]);
 		setMoveTarget(endPoss[0], false);
@@ -566,8 +566,8 @@ public class Crowd1Test extends AbstractCrowdTest {
 
 	@Test
 	public void testAgent1Quality0TVT() {
-		int updateFlags = CrowdAgent.DT_CROWD_ANTICIPATE_TURNS | CrowdAgent.DT_CROWD_OPTIMIZE_VIS
-				| CrowdAgent.DT_CROWD_OPTIMIZE_TOPO;
+		int updateFlags = CrowdAgentParams.DT_CROWD_ANTICIPATE_TURNS | CrowdAgentParams.DT_CROWD_OPTIMIZE_VIS
+				| CrowdAgentParams.DT_CROWD_OPTIMIZE_TOPO;
 
 		addAgentGrid(1, 0.4f, updateFlags, 0, startPoss[0]);
 		setMoveTarget(endPoss[0], false);
@@ -586,7 +586,7 @@ public class Crowd1Test extends AbstractCrowdTest {
 
 	@Test
 	public void testAgent1Quality0TV() {
-		int updateFlags = CrowdAgent.DT_CROWD_OPTIMIZE_TOPO | CrowdAgent.DT_CROWD_OPTIMIZE_VIS;
+		int updateFlags = CrowdAgentParams.DT_CROWD_OPTIMIZE_TOPO | CrowdAgentParams.DT_CROWD_OPTIMIZE_VIS;
 
 		addAgentGrid(1, 0.4f, updateFlags, 0, startPoss[0]);
 		setMoveTarget(endPoss[0], false);
@@ -605,7 +605,7 @@ public class Crowd1Test extends AbstractCrowdTest {
 
 	@Test
 	public void testAgent1Quality0T() {
-		int updateFlags = CrowdAgent.DT_CROWD_OPTIMIZE_TOPO;
+		int updateFlags = CrowdAgentParams.DT_CROWD_OPTIMIZE_TOPO;
 
 		addAgentGrid(1, 0.4f, updateFlags, 0, startPoss[0]);
 		setMoveTarget(endPoss[0], false);
@@ -624,8 +624,8 @@ public class Crowd1Test extends AbstractCrowdTest {
 
 	@Test
 	public void testAgent1Quality1TVTA() {
-		int updateFlags = CrowdAgent.DT_CROWD_ANTICIPATE_TURNS | CrowdAgent.DT_CROWD_OPTIMIZE_VIS
-				| CrowdAgent.DT_CROWD_OPTIMIZE_TOPO | CrowdAgent.DT_CROWD_OBSTACLE_AVOIDANCE;
+		int updateFlags = CrowdAgentParams.DT_CROWD_ANTICIPATE_TURNS | CrowdAgentParams.DT_CROWD_OPTIMIZE_VIS
+				| CrowdAgentParams.DT_CROWD_OPTIMIZE_TOPO | CrowdAgentParams.DT_CROWD_OBSTACLE_AVOIDANCE;
 
 		addAgentGrid(1, 0.4f, updateFlags, 1, startPoss[0]);
 		setMoveTarget(endPoss[0], false);
@@ -644,8 +644,8 @@ public class Crowd1Test extends AbstractCrowdTest {
 
 	@Test
 	public void testAgent1Quality2TVTA() {
-		int updateFlags = CrowdAgent.DT_CROWD_ANTICIPATE_TURNS | CrowdAgent.DT_CROWD_OPTIMIZE_VIS
-				| CrowdAgent.DT_CROWD_OPTIMIZE_TOPO | CrowdAgent.DT_CROWD_OBSTACLE_AVOIDANCE;
+		int updateFlags = CrowdAgentParams.DT_CROWD_ANTICIPATE_TURNS | CrowdAgentParams.DT_CROWD_OPTIMIZE_VIS
+				| CrowdAgentParams.DT_CROWD_OPTIMIZE_TOPO | CrowdAgentParams.DT_CROWD_OBSTACLE_AVOIDANCE;
 
 		addAgentGrid(1, 0.4f, updateFlags, 2, startPoss[0]);
 		setMoveTarget(endPoss[0], false);
@@ -664,8 +664,8 @@ public class Crowd1Test extends AbstractCrowdTest {
 
 	@Test
 	public void testAgent1Quality3TVTA() {
-		int updateFlags = CrowdAgent.DT_CROWD_ANTICIPATE_TURNS | CrowdAgent.DT_CROWD_OPTIMIZE_VIS
-				| CrowdAgent.DT_CROWD_OPTIMIZE_TOPO | CrowdAgent.DT_CROWD_OBSTACLE_AVOIDANCE;
+		int updateFlags = CrowdAgentParams.DT_CROWD_ANTICIPATE_TURNS | CrowdAgentParams.DT_CROWD_OPTIMIZE_VIS
+				| CrowdAgentParams.DT_CROWD_OPTIMIZE_TOPO | CrowdAgentParams.DT_CROWD_OBSTACLE_AVOIDANCE;
 
 		addAgentGrid(1, 0.4f, updateFlags, 3, startPoss[0]);
 		setMoveTarget(endPoss[0], false);
@@ -684,9 +684,9 @@ public class Crowd1Test extends AbstractCrowdTest {
 
 	@Test
 	public void testAgent1Quality3TVTAS() {
-		int updateFlags = CrowdAgent.DT_CROWD_ANTICIPATE_TURNS | CrowdAgent.DT_CROWD_OPTIMIZE_VIS
-				| CrowdAgent.DT_CROWD_OPTIMIZE_TOPO | CrowdAgent.DT_CROWD_OBSTACLE_AVOIDANCE
-				| CrowdAgent.DT_CROWD_SEPARATION;
+		int updateFlags = CrowdAgentParams.DT_CROWD_ANTICIPATE_TURNS | CrowdAgentParams.DT_CROWD_OPTIMIZE_VIS
+				| CrowdAgentParams.DT_CROWD_OPTIMIZE_TOPO | CrowdAgentParams.DT_CROWD_OBSTACLE_AVOIDANCE
+				| CrowdAgentParams.DT_CROWD_SEPARATION;
 
 		addAgentGrid(1, 0.4f, updateFlags, 3, startPoss[0]);
 		setMoveTarget(endPoss[0], false);
