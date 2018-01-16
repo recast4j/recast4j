@@ -383,7 +383,7 @@ public class PathCorridor {
 	 * @param navquery
 	 *            The query object used to build the corridor.
 	 * @param filter
-	 *            Thefilter to apply to the operation.
+	 *            The filter to apply to the operation.
 	 */
 	public void movePosition(float[] npos, NavMeshQuery navquery, QueryFilter filter) {
 		// Move along navmesh and update new position.
@@ -391,7 +391,12 @@ public class PathCorridor {
 		m_path = mergeCorridorStartMoved(m_path, masResult.getVisited());
 		// Adjust the position to stay on top of the navmesh.
 		vCopy(m_pos, masResult.getResultPos());
-		m_pos[1] = navquery.getPolyHeight(m_path.get(0), masResult.getResultPos());
+		try {
+			m_pos[1] = navquery.getPolyHeight(m_path.get(0), masResult.getResultPos());
+		} catch (IllegalArgumentException e) {
+			// Silently disregard the returned status of DT_FAILURE | DT_INVALID_PARAM to stay
+			// consistent with what the library in C++ does, see DetourPathCorridor.cpp.
+		}
 	}
 
 	/**
