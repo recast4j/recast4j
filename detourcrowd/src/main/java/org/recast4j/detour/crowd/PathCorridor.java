@@ -391,7 +391,11 @@ public class PathCorridor {
 		m_path = mergeCorridorStartMoved(m_path, masResult.getVisited());
 		// Adjust the position to stay on top of the navmesh.
 		vCopy(m_pos, masResult.getResultPos());
-		m_pos[1] = navquery.getPolyHeight(m_path.get(0), masResult.getResultPos());
+		try {                    
+			m_pos[1] = navquery.getPolyHeight(m_path.get(0), masResult.getResultPos());                
+		} catch (IllegalArgumentException ex) {                    
+			//Silently catch. See #DetourPathCorridor.cpp.                
+		}		
 	}
 
 	/**
