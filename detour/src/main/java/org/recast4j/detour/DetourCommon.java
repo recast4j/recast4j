@@ -124,7 +124,7 @@ public class DetourCommon {
 	/// @param[in] v1 A point. [(x, y, z)]
 	/// @param[in] v2 A point. [(x, y, z)]
 	/// @return The distance between the two points.
-	static float vDist(float[] v1, float[] v2) {
+	public static float vDist(float[] v1, float[] v2) {
 		float dx = v2[0] - v1[0];
 		float dy = v2[1] - v1[1];
 		float dz = v2[2] - v1[2];

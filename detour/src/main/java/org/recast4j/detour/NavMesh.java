@@ -18,45 +18,30 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
-import static org.recast4j.detour.DetourCommon.clamp;
-import static org.recast4j.detour.DetourCommon.closestHeightPointTriangle;
-import static org.recast4j.detour.DetourCommon.distancePtPolyEdgesSqr;
-import static org.recast4j.detour.DetourCommon.nextPow2;
-import static org.recast4j.detour.DetourCommon.oppositeTile;
-import static org.recast4j.detour.DetourCommon.overlapBounds;
-import static org.recast4j.detour.DetourCommon.overlapQuantBounds;
-import static org.recast4j.detour.DetourCommon.sqr;
-import static org.recast4j.detour.DetourCommon.vAdd;
-import static org.recast4j.detour.DetourCommon.vCopy;
-import static org.recast4j.detour.DetourCommon.vDist;
-import static org.recast4j.detour.DetourCommon.vLenSqr;
-import static org.recast4j.detour.DetourCommon.vLerp;
-import static org.recast4j.detour.DetourCommon.vMax;
-import static org.recast4j.detour.DetourCommon.vMin;
-import static org.recast4j.detour.DetourCommon.vSub;
+import static org.recast4j.detour.DetourCommon.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class NavMesh {
 
-	static int DT_SALT_BITS = 16;
-	static int DT_TILE_BITS = 28;
-	static int DT_POLY_BITS = 20;
+	final static int DT_SALT_BITS = 16;
+	final static int DT_TILE_BITS = 28;
+	final static int DT_POLY_BITS = 20;
 
 	/// A flag that indicates that an entity links to an external entity.
 	/// (E.g. A polygon edge is a portal that links to another polygon.)
-	public static int DT_EXT_LINK = 0x8000;
+	public final static int DT_EXT_LINK = 0x8000;
 
 	/// A value that indicates the entity does not link to anything.
-	static int DT_NULL_LINK = 0xffffffff;
+	final static int DT_NULL_LINK = 0xffffffff;
 
 	/// A flag that indicates that an off-mesh connection can be traversed in
 	/// both directions. (Is bidirectional.)
-	public static int DT_OFFMESH_CON_BIDIR = 1;
+	public final static int DT_OFFMESH_CON_BIDIR = 1;
 
 	/// The maximum number of user defined area ids.
-	static int DT_MAX_AREAS = 64;
+	public final static int DT_MAX_AREAS = 64;
 
 	/// Limit raycasting during any angle pahfinding
 	/// The limit is given as a multiple of the character radius

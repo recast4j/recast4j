@@ -49,7 +49,7 @@ public class QueryFilter implements IQueryFilter {
 
 	private int m_excludeFlags;
 	private int m_includeFlags;
-	float[] m_areaCost = new float[NavMesh.DT_MAX_AREAS];
+	private float[] m_areaCost = new float[NavMesh.DT_MAX_AREAS];
 
 	public QueryFilter() {
 		this.m_includeFlags = 0xffff;
