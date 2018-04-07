@@ -27,8 +27,8 @@ import java.util.List;
 
 import org.recast4j.detour.FindLocalNeighbourhoodResult;
 import org.recast4j.detour.GetPolyWallSegmentsResult;
+import org.recast4j.detour.IQueryFilter;
 import org.recast4j.detour.NavMeshQuery;
-import org.recast4j.detour.QueryFilter;
 import org.recast4j.detour.Tupple2;
 
 public class LocalBoundary {
@@ -81,7 +81,7 @@ public class LocalBoundary {
 		}
 	}
 
-	public void update(long ref, float[] pos, float collisionQueryRange, NavMeshQuery navquery, QueryFilter filter) {
+	public void update(long ref, float[] pos, float collisionQueryRange, NavMeshQuery navquery, IQueryFilter filter) {
 		if (ref == 0) {
 			reset();
 			return;
@@ -105,7 +105,7 @@ public class LocalBoundary {
 		}
 	}
 
-	public boolean isValid(NavMeshQuery navquery, QueryFilter filter) {
+	public boolean isValid(NavMeshQuery navquery, IQueryFilter filter) {
 		if (m_polys.isEmpty())
 			return false;
 

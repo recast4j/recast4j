@@ -18,14 +18,15 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
-class QueryData {
-	Status status;
-	Node lastBestNode;
-	float lastBestNodeCost;
-	long startRef, endRef;
-	float[] startPos = new float[3];
-	float[] endPos = new float[3];
-	IQueryFilter filter;
-	int options;
-	float raycastLimitSqr;
+/**
+ * @see QueryFilter
+ * @see NavMeshQuery
+ * 
+ * @author zcxv
+ * @date 08.04.2018
+ * @project detour
+ */
+public interface IQueryFilter {
+	boolean passFilter(long ref, MeshTile tile, Poly poly);
+	float getCost(float[] pa, float[] pb, long prevRef, MeshTile prevTile, Poly prevPoly, long curRef, MeshTile curTile, Poly curPoly, long nextRef, MeshTile nextTile, Poly nextPoly);
 }

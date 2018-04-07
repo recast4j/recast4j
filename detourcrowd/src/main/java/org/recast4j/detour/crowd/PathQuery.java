@@ -20,7 +20,7 @@ package org.recast4j.detour.crowd;
 
 import java.util.List;
 
-import org.recast4j.detour.QueryFilter;
+import org.recast4j.detour.IQueryFilter;
 import org.recast4j.detour.Status;
 
 public class PathQuery {
@@ -33,5 +33,5 @@ public class PathQuery {
 	/// State.
 	Status status;
 	int keepAlive;
-	QueryFilter filter; /// < TODO: This is potentially dangerous!
+	IQueryFilter filter; /// < TODO: This is potentially dangerous!
 }

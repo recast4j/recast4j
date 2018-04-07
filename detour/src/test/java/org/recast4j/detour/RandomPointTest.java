@@ -26,7 +26,7 @@ public class RandomPointTest extends AbstractDetourTest {
 	@Test
 	public void testRandom() {
 		FRand f = new FRand();
-		QueryFilter filter = new QueryFilter();
+		IQueryFilter filter = new QueryFilter();
 		for (int i = 0; i < 1000; i++) {
 			FindRandomPointResult point = query.findRandomPoint(filter, f);
 			Assert.assertEquals(Status.SUCCSESS, point.getStatus());
@@ -50,7 +50,7 @@ public class RandomPointTest extends AbstractDetourTest {
 	@Test
 	public void testRandomInCircle() {
 		FRand f = new FRand();
-		QueryFilter filter = new QueryFilter();
+		IQueryFilter filter = new QueryFilter();
 		FindRandomPointResult point = query.findRandomPoint(filter, f);
 		for (int i = 0; i < 1000; i++) {
 			point = query.findRandomPointAroundCircle(point.getRandomRef(), point.getRandomPt(), 5f, filter, f);

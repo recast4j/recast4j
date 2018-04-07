@@ -45,7 +45,7 @@ import static org.recast4j.detour.DetourCommon.vDist;
  * 
  * @see NavMeshQuery
  */
-public class QueryFilter {
+public class QueryFilter implements IQueryFilter {
 
 	private int m_excludeFlags;
 	private int m_includeFlags;
@@ -58,10 +58,12 @@ public class QueryFilter {
 			m_areaCost[i] = 1.0f;
 	}
 
+	@Override
 	public boolean passFilter(long ref, MeshTile tile, Poly poly) {
 		return (poly.flags & m_includeFlags) != 0 && (poly.flags & m_excludeFlags) == 0;
 	}
 
+	@Override
 	public float getCost(float[] pa, float[] pb, long prevRef, MeshTile prevTile, Poly prevPoly, long curRef,
 			MeshTile curTile, Poly curPoly, long nextRef, MeshTile nextTile, Poly nextPoly) {
 		return vDist(pa, pb) * m_areaCost[curPoly.getArea()];
