@@ -32,7 +32,7 @@ public class FindDistanceToWallTest extends AbstractDetourTest {
 
 	@Test
 	public void testFindDistanceToWall() {
-		QueryFilter filter = new QueryFilter();
+		QueryFilter filter = new DefaultQueryFilter();
 		for (int i = 0; i < startRefs.length; i++) {
 			float[] startPos = startPoss[i];
 			FindDistanceToWallResult hit = query.findDistanceToWall(startRefs[i], startPos, 3.5f, filter);

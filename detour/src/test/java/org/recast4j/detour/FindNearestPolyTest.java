@@ -30,7 +30,7 @@ public class FindNearestPolyTest extends AbstractDetourTest {
 
 	@Test
 	public void testFindNearestPoly() {
-		QueryFilter filter = new QueryFilter();
+		QueryFilter filter = new DefaultQueryFilter();
 		float[] extents = { 2, 4, 2 };
 		for (int i = 0; i < startRefs.length; i++) {
 			float[] startPos = startPoss[i];

@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.nio.ByteOrder;
 
 import org.junit.Test;
+import org.recast4j.detour.DefaultQueryFilter;
 import org.recast4j.detour.FindNearestPolyResult;
 import org.recast4j.detour.FindPathResult;
 import org.recast4j.detour.NavMesh;
@@ -32,7 +33,7 @@ public class UnityAStarPathfindingImporterTest {
 		NavMesh mesh = meshes[0];
 		// Perform a simple pathfinding
 		NavMeshQuery query = new NavMeshQuery(mesh);
-		QueryFilter filter = new QueryFilter();
+		QueryFilter filter = new DefaultQueryFilter();
 		float[] startPos = new float[] { 8.200293f, 2.155071f, -26.176147f };
 		float[] endPos = new float[] { 11.971109f, 0.000000f, 8.663261f };
 		FindNearestPolyResult start = query.findNearestPoly(startPos, new float[] { 0.1f, 0.1f, 0.1f }, filter);

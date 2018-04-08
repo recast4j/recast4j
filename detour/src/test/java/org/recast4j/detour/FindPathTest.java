@@ -92,7 +92,7 @@ public class FindPathTest extends AbstractDetourTest {
 
 	@Test
 	public void testFindPath() {
-		QueryFilter filter = new QueryFilter();
+		QueryFilter filter = new DefaultQueryFilter();
 		for (int i = 0; i < startRefs.length; i++) {
 			long startRef = startRefs[i];
 			long endRef = endRefs[i];
@@ -109,7 +109,7 @@ public class FindPathTest extends AbstractDetourTest {
 
 	@Test
 	public void testFindPathSliced() {
-		QueryFilter filter = new QueryFilter();
+		QueryFilter filter = new DefaultQueryFilter();
 		for (int i = 0; i < startRefs.length; i++) {
 			long startRef = startRefs[i];
 			long endRef = endRefs[i];
@@ -133,7 +133,7 @@ public class FindPathTest extends AbstractDetourTest {
 
 	@Test
 	public void testFindPathStraight() {
-		QueryFilter filter = new QueryFilter();
+		QueryFilter filter = new DefaultQueryFilter();
 		for (int i = 0; i < straightPaths.length; i++) {// startRefs.length; i++) {
 			long startRef = startRefs[i];
 			long endRef = endRefs[i];

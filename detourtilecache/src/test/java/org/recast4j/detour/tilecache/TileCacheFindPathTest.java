@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import org.junit.Test;
+import org.recast4j.detour.DefaultQueryFilter;
 import org.recast4j.detour.FindNearestPolyResult;
 import org.recast4j.detour.FindPathResult;
 import org.recast4j.detour.NavMesh;
@@ -31,7 +32,7 @@ public class TileCacheFindPathTest extends AbstractTileCacheTest {
 
     @Test
     public void testFindPath() {
-        QueryFilter filter = new QueryFilter();
+        QueryFilter filter = new DefaultQueryFilter();
         float[] extents = new float[] { 2f, 4f, 2f };
         FindNearestPolyResult findPolyStart = query.findNearestPoly(start, extents, filter);
         FindNearestPolyResult findPolyEnd = query.findNearestPoly(end, extents, filter);

@@ -64,7 +64,7 @@ public class FindPolysAroundCircleTest extends AbstractDetourTest {
 
 	@Test
 	public void testFindPolysAroundCircle() {
-		QueryFilter filter = new QueryFilter();
+		QueryFilter filter = new DefaultQueryFilter();
 		for (int i = 0; i < startRefs.length; i++) {
 			long startRef = startRefs[i];
 			float[] startPos = startPoss[i];

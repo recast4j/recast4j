@@ -33,7 +33,7 @@ public class TiledFindPathTest {
 
 	@Test
 	public void testFindPath() {
-		QueryFilter filter = new QueryFilter();
+		QueryFilter filter = new DefaultQueryFilter();
 		for (int i = 0; i < startRefs.length; i++) {
 			long startRef = startRefs[i];
 			long endRef = endRefs[i];
