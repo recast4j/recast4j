@@ -23,10 +23,10 @@ import static org.recast4j.detour.DetourCommon.vSub;
 
 import org.junit.Before;
 import org.recast4j.detour.FindNearestPolyResult;
+import org.recast4j.detour.IQueryFilter;
 import org.recast4j.detour.MeshData;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
-import org.recast4j.detour.QueryFilter;
 import org.recast4j.detour.RecastTestMeshBuilder;
 import org.recast4j.detour.crowd.ObstacleAvoidanceQuery.ObstacleAvoidanceParams;
 
@@ -112,7 +112,7 @@ public class AbstractCrowdTest {
 
 	protected void setMoveTarget(float[] pos, boolean adjust) {
 		float[] ext = crowd.getQueryExtents();
-		QueryFilter filter = crowd.getFilter(0);
+		IQueryFilter filter = crowd.getFilter(0);
 		if (adjust) {
 			for (int i = 0; i < crowd.getAgentCount(); i++) {
 				CrowdAgent ag = crowd.getAgent(i);

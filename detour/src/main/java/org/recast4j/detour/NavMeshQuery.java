@@ -18,32 +18,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
-import static org.recast4j.detour.DetourCommon.clamp;
-import static org.recast4j.detour.DetourCommon.closestHeightPointTriangle;
-import static org.recast4j.detour.DetourCommon.distancePtPolyEdgesSqr;
-import static org.recast4j.detour.DetourCommon.distancePtSegSqr2D;
-import static org.recast4j.detour.DetourCommon.intersectSegSeg2D;
-import static org.recast4j.detour.DetourCommon.intersectSegmentPoly2D;
-import static org.recast4j.detour.DetourCommon.overlapBounds;
-import static org.recast4j.detour.DetourCommon.overlapPolyPoly2D;
-import static org.recast4j.detour.DetourCommon.overlapQuantBounds;
-import static org.recast4j.detour.DetourCommon.pointInPolygon;
-import static org.recast4j.detour.DetourCommon.randomPointInConvexPoly;
-import static org.recast4j.detour.DetourCommon.sqr;
-import static org.recast4j.detour.DetourCommon.triArea2D;
-import static org.recast4j.detour.DetourCommon.vAdd;
-import static org.recast4j.detour.DetourCommon.vCopy;
-import static org.recast4j.detour.DetourCommon.vDist;
-import static org.recast4j.detour.DetourCommon.vDist2D;
-import static org.recast4j.detour.DetourCommon.vDistSqr;
-import static org.recast4j.detour.DetourCommon.vEqual;
-import static org.recast4j.detour.DetourCommon.vLenSqr;
-import static org.recast4j.detour.DetourCommon.vLerp;
-import static org.recast4j.detour.DetourCommon.vMad;
-import static org.recast4j.detour.DetourCommon.vMax;
-import static org.recast4j.detour.DetourCommon.vMin;
-import static org.recast4j.detour.DetourCommon.vNormalize;
-import static org.recast4j.detour.DetourCommon.vSub;
+import static org.recast4j.detour.DetourCommon.*;
 import static org.recast4j.detour.Node.DT_NODE_CLOSED;
 import static org.recast4j.detour.Node.DT_NODE_OPEN;
 
@@ -108,7 +83,7 @@ public class NavMeshQuery {
 	 * @param frand Function returning a random number [0..1).
 	 * @return Random location
 	 */
-	public FindRandomPointResult findRandomPoint(QueryFilter filter, FRand frand) {
+	public FindRandomPointResult findRandomPoint(IQueryFilter filter, FRand frand) {
 		// Randomly pick one tile. Assume that all tiles cover roughly the same area.
 		MeshTile tile = null;
 		float tsum = 0.0f;
@@ -195,7 +170,7 @@ public class NavMeshQuery {
 	 * @return Random location
 	 */
 	public FindRandomPointResult findRandomPointAroundCircle(long startRef, float[] centerPos, float maxRadius,
-			QueryFilter filter, FRand frand) {
+			IQueryFilter filter, FRand frand) {
 
 		// Validate input
 		if (startRef == 0 || !m_nav.isValidPolyRef(startRef))
@@ -547,7 +522,7 @@ public class NavMeshQuery {
 	///  @param[in]		extents		The search distance along each axis. [(x, y, z)]
 	///  @param[in]		filter		The polygon filter to apply to the query.
 	/// @returns The status flags for the query.
-	public FindNearestPolyResult findNearestPoly(float[] center, float[] extents, QueryFilter filter) {
+	public FindNearestPolyResult findNearestPoly(float[] center, float[] extents, IQueryFilter filter) {
 
 		float[] nearestPt = null;
 
@@ -587,7 +562,7 @@ public class NavMeshQuery {
 	}
 
 	// FIXME: (PP) duplicate?
-	protected List<Long> queryPolygonsInTile(MeshTile tile, float[] qmin, float[] qmax, QueryFilter filter) {
+	protected List<Long> queryPolygonsInTile(MeshTile tile, float[] qmin, float[] qmax, IQueryFilter filter) {
 		List<Long> polys = new ArrayList<>();
 		if (tile.data.bvTree != null) {
 			int nodeIndex = 0;
@@ -677,7 +652,7 @@ public class NavMeshQuery {
 	 *            The polygon filter to apply to the query.
 	 * @return The reference ids of the polygons that overlap the query box.
 	 */
-	public List<Long> queryPolygons(float[] center, float[] extents, QueryFilter filter) {
+	public List<Long> queryPolygons(float[] center, float[] extents, IQueryFilter filter) {
 		float[] bmin = vSub(center, extents);
 		float[] bmax = vAdd(center, extents);
 		// Find tiles the query touches.
@@ -721,7 +696,7 @@ public class NavMeshQuery {
 	 * @return Found path
 	 */
 	public FindPathResult findPath(long startRef, long endRef, float[] startPos, float[] endPos,
-			QueryFilter filter) {
+			IQueryFilter filter) {
 		if (startRef == 0 || endRef == 0)
 			throw new IllegalArgumentException("Start or end ref = 0");
 
@@ -896,7 +871,7 @@ public class NavMeshQuery {
 	 *            query options (see: #FindPathOptions)
 	 * @return
 	 */
-	public Status initSlicedFindPath(long startRef, long endRef, float[] startPos, float[] endPos, QueryFilter filter,
+	public Status initSlicedFindPath(long startRef, long endRef, float[] startPos, float[] endPos, IQueryFilter filter,
 			int options) {
 		// Init path state.
 		m_query = new QueryData();
@@ -1549,7 +1524,7 @@ public class NavMeshQuery {
 	///  @param[in]		endPos			The desired end position of the mover. [(x, y, z)]
 	///  @param[in]		filter			The polygon filter to apply to the query.
 	/// @returns Path
-	public MoveAlongSurfaceResult moveAlongSurface(long startRef, float[] startPos, float[] endPos, QueryFilter filter) {
+	public MoveAlongSurfaceResult moveAlongSurface(long startRef, float[] startPos, float[] endPos, IQueryFilter filter) {
 
 		// Validate input
 		if (startRef == 0)
@@ -1869,7 +1844,7 @@ public class NavMeshQuery {
 	///  @param[out]	pathCount	The number of visited polygons. [opt]
 	///  @param[in]		maxPath		The maximum number of polygons the @p path array can hold.
 	/// @returns The status flags for the query.
-	public RaycastHit raycast(long startRef, float[] startPos, float[] endPos, QueryFilter filter, int options, long prevRef) {
+	public RaycastHit raycast(long startRef, float[] startPos, float[] endPos, IQueryFilter filter, int options, long prevRef) {
 		// Validate input
 		if (startRef == 0 || !m_nav.isValidPolyRef(startRef))
 			throw new IllegalArgumentException("Invalid start ref");
@@ -2108,7 +2083,7 @@ public class NavMeshQuery {
 	///  @param[in]		maxResult		The maximum number of polygons the result arrays can hold.
 	/// @returns The status flags for the query.
 	public FindPolysAroundResult findPolysAroundCircle(long startRef, float[] centerPos, float radius,
-			QueryFilter filter) {
+			IQueryFilter filter) {
 
 		// Validate input
 		if (startRef == 0 || !m_nav.isValidPolyRef(startRef))
@@ -2257,7 +2232,7 @@ public class NavMeshQuery {
 	///  @param[in]		maxResult		The maximum number of polygons the result arrays can hold.
 	/// @returns The status flags for the query.
 	public FindPolysAroundResult findPolysAroundShape(long startRef, float[] verts, int nverts,
-			QueryFilter filter) {
+			IQueryFilter filter) {
 		// Validate input
 		if (startRef == 0 || !m_nav.isValidPolyRef(startRef))
 			throw new IllegalArgumentException("Invalid start ref");
@@ -2415,7 +2390,7 @@ public class NavMeshQuery {
 	///  @param[in]		maxResult		The maximum number of polygons the result arrays can hold.
 	/// @returns The status flags for the query.
 	public FindLocalNeighbourhoodResult findLocalNeighbourhood(long startRef, float[] centerPos, float radius,
-			QueryFilter filter) {
+			IQueryFilter filter) {
 
 		// Validate input
 		if (startRef == 0 || !m_nav.isValidPolyRef(startRef))
@@ -2590,7 +2565,7 @@ public class NavMeshQuery {
 	///  @param[out]	segmentCount	The number of segments returned.
 	///  @param[in]		maxSegments		The maximum number of segments the result arrays can hold.
 	/// @returns The status flags for the query.
-	public GetPolyWallSegmentsResult getPolyWallSegments(long ref, boolean storePortals, QueryFilter filter) {
+	public GetPolyWallSegmentsResult getPolyWallSegments(long ref, boolean storePortals, IQueryFilter filter) {
 		Tupple2<MeshTile, Poly> tileAndPoly = m_nav.getTileAndPolyByRef(ref);
 		MeshTile tile = tileAndPoly.first;
 		Poly poly = tileAndPoly.second;
@@ -2698,7 +2673,7 @@ public class NavMeshQuery {
 	///  								source point. [(x, y, z)]
 	/// @returns The status flags for the query.
 	public FindDistanceToWallResult findDistanceToWall(long startRef, float[] centerPos, float maxRadius,
-			QueryFilter filter) {
+			IQueryFilter filter) {
 
 		// Validate input
 		if (startRef == 0 || !m_nav.isValidPolyRef(startRef))
@@ -2868,7 +2843,7 @@ public class NavMeshQuery {
 	/// Returns true if the polygon reference is valid and passes the filter restrictions.
 	///  @param[in]		ref			The polygon reference to check.
 	///  @param[in]		filter		The filter to apply.
-	public boolean isValidPolyRef(long ref, QueryFilter filter) {
+	public boolean isValidPolyRef(long ref, IQueryFilter filter) {
 		try {
 			Tupple2<MeshTile,Poly> tileAndPoly = m_nav.getTileAndPolyByRef(ref);
 			// If cannot pass filter, assume flags has changed and boundary is invalid.

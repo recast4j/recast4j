@@ -23,9 +23,9 @@ import static org.recast4j.detour.DetourCommon.vCopy;
 import java.util.ArrayList;
 
 import org.recast4j.detour.FindPathResult;
+import org.recast4j.detour.IQueryFilter;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
-import org.recast4j.detour.QueryFilter;
 import org.recast4j.detour.Status;
 import org.recast4j.detour.UpdateSlicedPathResult;
 
@@ -103,7 +103,7 @@ public class PathQueue {
 
 	}
 
-	protected long request(long startRef, long endRef, float[] startPos, float[] endPos, QueryFilter filter) {
+	protected long request(long startRef, long endRef, float[] startPos, float[] endPos, IQueryFilter filter) {
 		// Find empty slot
 		int slot = -1;
 		for (int i = 0; i < MAX_QUEUE; ++i) {

@@ -8,6 +8,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.recast4j.detour.FindPathResult;
+import org.recast4j.detour.IQueryFilter;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.detour.QueryFilter;
@@ -59,7 +60,7 @@ public class TileCacheNavigationTest extends AbstractTileCacheTest {
 
 	@Test
 	public void testFindPath() {
-		QueryFilter filter = new QueryFilter();
+		IQueryFilter filter = new QueryFilter();
 		for (int i = 0; i < startRefs.length; i++) {
 			long startRef = startRefs[i];
 			long endRef = endRefs[i];

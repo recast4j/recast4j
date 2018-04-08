@@ -18,22 +18,17 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour.crowd;
 
-import static org.recast4j.detour.DetourCommon.sqr;
-import static org.recast4j.detour.DetourCommon.vCopy;
-import static org.recast4j.detour.DetourCommon.vDist2D;
-import static org.recast4j.detour.DetourCommon.vDist2DSqr;
-import static org.recast4j.detour.DetourCommon.vMad;
-import static org.recast4j.detour.DetourCommon.vSub;
+import static org.recast4j.detour.DetourCommon.*;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import org.recast4j.detour.FindPathResult;
+import org.recast4j.detour.IQueryFilter;
 import org.recast4j.detour.MoveAlongSurfaceResult;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
-import org.recast4j.detour.QueryFilter;
 import org.recast4j.detour.RaycastHit;
 import org.recast4j.detour.StraightPathItem;
 import org.recast4j.detour.Tupple2;
@@ -225,7 +220,7 @@ public class PathCorridor {
 	 * @param[in] navquery The query object used to build the corridor.
 	 * @return Corners
 	 */
-	public List<StraightPathItem> findCorners(int maxCorners, NavMeshQuery navquery, QueryFilter filter) {
+	public List<StraightPathItem> findCorners(int maxCorners, NavMeshQuery navquery, IQueryFilter filter) {
 		final float MIN_TARGET_DIST = sqr(0.01f);
 
 		List<StraightPathItem> path = navquery.findStraightPath(m_pos, m_target, m_path, maxCorners, 0);
@@ -275,7 +270,7 @@ public class PathCorridor {
 	 */
 
 	public void optimizePathVisibility(float[] next, float pathOptimizationRange, NavMeshQuery navquery,
-			QueryFilter filter) {
+			IQueryFilter filter) {
 		// Clamp the ray to max distance.
 		float dist = vDist2D(m_pos, next);
 
@@ -314,7 +309,7 @@ public class PathCorridor {
 	 * @param filter The filter to apply to the operation.
 	 * 
 	 */
-	boolean optimizePathTopology(NavMeshQuery navquery, QueryFilter filter) {
+	boolean optimizePathTopology(NavMeshQuery navquery, IQueryFilter filter) {
 		if (m_path.size() < 3)
 			return false;
 
@@ -385,7 +380,7 @@ public class PathCorridor {
 	 * @param filter
 	 *            The filter to apply to the operation.
 	 */
-	public void movePosition(float[] npos, NavMeshQuery navquery, QueryFilter filter) {
+	public void movePosition(float[] npos, NavMeshQuery navquery, IQueryFilter filter) {
 		// Move along navmesh and update new position.
 		MoveAlongSurfaceResult masResult = navquery.moveAlongSurface(m_path.get(0), m_pos, npos, filter);
 		m_path = mergeCorridorStartMoved(m_path, masResult.getVisited());
@@ -420,7 +415,7 @@ public class PathCorridor {
 	 * @param filter
 	 *            The filter to apply to the operation.
 	 */
-	public void moveTargetPosition(float[] npos, NavMeshQuery navquery, QueryFilter filter) {
+	public void moveTargetPosition(float[] npos, NavMeshQuery navquery, IQueryFilter filter) {
 		// Move along navmesh and update new position.
 		MoveAlongSurfaceResult masResult = navquery.moveAlongSurface(m_path.get(m_path.size() - 1), m_target, npos,
 				filter);
@@ -469,7 +464,7 @@ public class PathCorridor {
 
 	}
 
-	public void trimInvalidPath(long safeRef, float[] safePos, NavMeshQuery navquery, QueryFilter filter) {
+	public void trimInvalidPath(long safeRef, float[] safePos, NavMeshQuery navquery, IQueryFilter filter) {
 		// Keep valid path as far as possible.
 		int n = 0;
 		while (n < m_path.size() && navquery.isValidPolyRef(m_path.get(n), filter)) {
@@ -505,7 +500,7 @@ public class PathCorridor {
 	 *            The filter to apply to the operation.
 	 * @return
 	 */
-	boolean isValid(int maxLookAhead, NavMeshQuery navquery, QueryFilter filter) {
+	boolean isValid(int maxLookAhead, NavMeshQuery navquery, IQueryFilter filter) {
 		// Check that all polygons still pass query filter.
 		int n = Math.min(m_path.size(), maxLookAhead);
 		for (int i = 0; i < n; ++i) {

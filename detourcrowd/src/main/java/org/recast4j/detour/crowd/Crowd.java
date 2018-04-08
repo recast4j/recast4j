@@ -18,20 +18,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour.crowd;
 
-import static org.recast4j.detour.DetourCommon.clamp;
-import static org.recast4j.detour.DetourCommon.sqr;
-import static org.recast4j.detour.DetourCommon.triArea2D;
-import static org.recast4j.detour.DetourCommon.vAdd;
-import static org.recast4j.detour.DetourCommon.vCopy;
-import static org.recast4j.detour.DetourCommon.vDist2D;
-import static org.recast4j.detour.DetourCommon.vDist2DSqr;
-import static org.recast4j.detour.DetourCommon.vLen;
-import static org.recast4j.detour.DetourCommon.vLenSqr;
-import static org.recast4j.detour.DetourCommon.vLerp;
-import static org.recast4j.detour.DetourCommon.vMad;
-import static org.recast4j.detour.DetourCommon.vScale;
-import static org.recast4j.detour.DetourCommon.vSet;
-import static org.recast4j.detour.DetourCommon.vSub;
+import static org.recast4j.detour.DetourCommon.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,6 +30,7 @@ import java.util.Set;
 import org.recast4j.detour.ClosesPointOnPolyResult;
 import org.recast4j.detour.FindNearestPolyResult;
 import org.recast4j.detour.FindPathResult;
+import org.recast4j.detour.IQueryFilter;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.detour.QueryFilter;
@@ -354,7 +342,7 @@ public class Crowd {
 	
 	float[] m_ext = new float[3];
 
-	QueryFilter[] m_filters = new QueryFilter[DT_CROWD_MAX_QUERY_FILTER_TYPE];
+	IQueryFilter[] m_filters = new IQueryFilter[DT_CROWD_MAX_QUERY_FILTER_TYPE];
 
 	float m_maxAgentRadius;
 
@@ -1371,7 +1359,7 @@ public class Crowd {
 		return m_ext;
 	}
 
-	public QueryFilter getFilter(int i) {
+	public IQueryFilter getFilter(int i) {
 		return i >=0 && i < DT_CROWD_MAX_QUERY_FILTER_TYPE ? m_filters[i] : null;
 	}
 
