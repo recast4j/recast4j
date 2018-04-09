@@ -38,7 +38,7 @@ public class FindLocalNeighbourhoodTest extends AbstractDetourTest {
 
 	@Test
 	public void testFindNearestPoly() {
-		QueryFilter filter = new QueryFilter();
+		QueryFilter filter = new DefaultQueryFilter();
 		for (int i = 0; i < startRefs.length; i++) {
 			float[] startPos = startPoss[i];
 			FindLocalNeighbourhoodResult poly = query.findLocalNeighbourhood(startRefs[i], startPos, 3.5f, filter);

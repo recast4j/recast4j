@@ -53,7 +53,7 @@ public class GetPolyWallSegmentsTest extends AbstractDetourTest {
 
 	@Test
 	public void testFindDistanceToWall() {
-		QueryFilter filter = new QueryFilter();
+		QueryFilter filter = new DefaultQueryFilter();
 		for (int i = 0; i < startRefs.length; i++) {
 			GetPolyWallSegmentsResult segments = query.getPolyWallSegments(startRefs[i], true, filter);
 			Assert.assertEquals(vertices[i].length, segments.getSegmentVerts().size() * 6);

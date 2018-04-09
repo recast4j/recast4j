@@ -46,17 +46,17 @@ public class NavMesh {
 
 	/// A flag that indicates that an entity links to an external entity.
 	/// (E.g. A polygon edge is a portal that links to another polygon.)
-	public static int DT_EXT_LINK = 0x8000;
+	public static final int DT_EXT_LINK = 0x8000;
 
 	/// A value that indicates the entity does not link to anything.
-	static int DT_NULL_LINK = 0xffffffff;
+	static final int DT_NULL_LINK = 0xffffffff;
 
 	/// A flag that indicates that an off-mesh connection can be traversed in
 	/// both directions. (Is bidirectional.)
-	public static int DT_OFFMESH_CON_BIDIR = 1;
+	public static final int DT_OFFMESH_CON_BIDIR = 1;
 
 	/// The maximum number of user defined area ids.
-	static int DT_MAX_AREAS = 64;
+	public static final int DT_MAX_AREAS = 64;
 
 	/// Limit raycasting during any angle pahfinding
 	/// The limit is given as a multiple of the character radius
