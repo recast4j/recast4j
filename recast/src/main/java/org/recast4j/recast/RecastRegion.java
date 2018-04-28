@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+Recast4J Copyright (c) 2015-2018 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -230,8 +230,8 @@ public class RecastRegion {
         return dst;
     }
 
-    private static boolean floodRegion(int x, int y, int i, int level, int r, CompactHeightfield chf, int[] srcReg, int[] srcDist,
-            List<Integer> stack) {
+    private static boolean floodRegion(int x, int y, int i, int level, int r, CompactHeightfield chf, int[] srcReg,
+            int[] srcDist, List<Integer> stack) {
         int w = chf.width;
 
         int area = chf.areas[i];
@@ -322,8 +322,8 @@ public class RecastRegion {
         return count > 0;
     }
 
-    private static int[] expandRegions(int maxIter, int level, CompactHeightfield chf, int[] srcReg, int[] srcDist, int[] dstReg,
-            int[] dstDist, List<Integer> stack, boolean fillStack) {
+    private static int[] expandRegions(int maxIter, int level, CompactHeightfield chf, int[] srcReg, int[] srcDist,
+            List<Integer> stack, boolean fillStack) {
         int w = chf.width;
         int h = chf.height;
 
@@ -353,11 +353,11 @@ public class RecastRegion {
             }
         }
 
+        List<Integer> dirtyEntries = new ArrayList<>();
         int iter = 0;
         while (stack.size() > 0) {
             int failed = 0;
-            System.arraycopy(srcReg, 0, dstReg, 0, chf.spanCount);
-            System.arraycopy(srcDist, 0, dstDist, 0, chf.spanCount);
+            dirtyEntries.clear();
 
             for (int j = 0; j < stack.size(); j += 3) {
                 int x = stack.get(j + 0);
@@ -391,20 +391,20 @@ public class RecastRegion {
                 }
                 if (r != 0) {
                     stack.set(j + 2, -1); // mark as used
-                    dstReg[i] = r;
-                    dstDist[i] = d2;
+                    dirtyEntries.add(i);
+                    dirtyEntries.add(r);
+                    dirtyEntries.add(d2);
                 } else {
                     failed++;
                 }
             }
 
-            // rcSwap source and dest.
-            int[] temp = srcReg;
-            srcReg = dstReg;
-            dstReg = temp;
-            temp = srcDist;
-            srcDist = dstDist;
-            dstDist = temp;
+            // Copy entries that differ between src and dst to keep them in sync.
+            for (int i = 0; i < dirtyEntries.size(); i += 3) {
+                int idx = dirtyEntries.get(i);
+                srcReg[idx] = dirtyEntries.get(i + 1);
+                srcDist[idx] = dirtyEntries.get(i + 2);
+            }
 
             if (failed * 3 == stack.size()) {
                 break;
@@ -421,8 +421,8 @@ public class RecastRegion {
         return srcReg;
     }
 
-    private static void sortCellsByLevel(int startLevel, CompactHeightfield chf, int[] srcReg, int nbStacks, List<List<Integer>> stacks,
-            int loglevelsPerStack) // the levels per stack (2 in our case) as a bit shift
+    private static void sortCellsByLevel(int startLevel, CompactHeightfield chf, int[] srcReg, int nbStacks,
+            List<List<Integer>> stacks, int loglevelsPerStack) // the levels per stack (2 in our case) as a bit shift
     {
         int w = chf.width;
         int h = chf.height;
@@ -624,7 +624,8 @@ public class RecastRegion {
         return true;
     }
 
-    private static void walkContour(int x, int y, int i, int dir, CompactHeightfield chf, int[] srcReg, List<Integer> cont) {
+    private static void walkContour(int x, int y, int i, int dir, CompactHeightfield chf, int[] srcReg,
+            List<Integer> cont) {
         int startDir = dir;
         int starti = i;
 
@@ -693,8 +694,8 @@ public class RecastRegion {
         }
     }
 
-    private static int mergeAndFilterRegions(Context ctx, int minRegionArea, int mergeRegionSize, int maxRegionId, CompactHeightfield chf,
-            int[] srcReg, List<Integer> overlaps) {
+    private static int mergeAndFilterRegions(Context ctx, int minRegionArea, int mergeRegionSize, int maxRegionId,
+            CompactHeightfield chf, int[] srcReg, List<Integer> overlaps) {
         int w = chf.width;
         int h = chf.height;
 
@@ -893,12 +894,10 @@ public class RecastRegion {
         // Compress region Ids.
         for (int i = 0; i < nreg; ++i) {
             regions[i].remap = false;
-            if (regions[i].id == 0)
-             {
+            if (regions[i].id == 0) {
                 continue; // Skip nil regions.
             }
-            if ((regions[i].id & RC_BORDER_REG) != 0)
-             {
+            if ((regions[i].id & RC_BORDER_REG) != 0) {
                 continue; // Skip external regions.
             }
             regions[i].remap = true;
@@ -943,8 +942,8 @@ public class RecastRegion {
         }
     }
 
-    private static int mergeAndFilterLayerRegions(Context ctx, int minRegionArea, int maxRegionId, CompactHeightfield chf, int[] srcReg,
-            List<Integer> overlaps) {
+    private static int mergeAndFilterLayerRegions(Context ctx, int minRegionArea, int maxRegionId,
+            CompactHeightfield chf, int[] srcReg, List<Integer> overlaps) {
         int w = chf.width;
         int h = chf.height;
 
@@ -1093,12 +1092,10 @@ public class RecastRegion {
         // Compress region Ids.
         for (int i = 0; i < nreg; ++i) {
             regions[i].remap = false;
-            if (regions[i].id == 0)
-             {
+            if (regions[i].id == 0) {
                 continue; // Skip nil regions.
             }
-            if ((regions[i].id & RC_BORDER_REG) != 0)
-             {
+            if ((regions[i].id & RC_BORDER_REG) != 0) {
                 continue; // Skip external regions.
             }
             regions[i].remap = true;
@@ -1165,7 +1162,8 @@ public class RecastRegion {
 
     }
 
-    private static void paintRectRegion(int minx, int maxx, int miny, int maxy, int regId, CompactHeightfield chf, int[] srcReg) {
+    private static void paintRectRegion(int minx, int maxx, int miny, int maxy, int regId, CompactHeightfield chf,
+            int[] srcReg) {
         int w = chf.width;
         for (int y = miny; y < maxy; ++y) {
             for (int x = minx; x < maxx; ++x) {
@@ -1198,7 +1196,8 @@ public class RecastRegion {
     /// @warning The distance field must be created using #rcBuildDistanceField before attempting to build regions.
     ///
     /// @see rcCompactHeightfield, rcCompactSpan, rcBuildDistanceField, rcBuildRegionsMonotone, rcConfig
-    public static void buildRegionsMonotone(Context ctx, CompactHeightfield chf, int borderSize, int minRegionArea, int mergeRegionArea) {
+    public static void buildRegionsMonotone(Context ctx, CompactHeightfield chf, int borderSize, int minRegionArea,
+            int mergeRegionArea) {
         ctx.startTimer("BUILD_REGIONS");
 
         int w = chf.width;
@@ -1347,7 +1346,8 @@ public class RecastRegion {
     /// @warning The distance field must be created using #rcBuildDistanceField before attempting to build regions.
     ///
     /// @see rcCompactHeightfield, rcCompactSpan, rcBuildDistanceField, rcBuildRegionsMonotone, rcConfig
-    public static void buildRegions(Context ctx, CompactHeightfield chf, int borderSize, int minRegionArea, int mergeRegionArea) {
+    public static void buildRegions(Context ctx, CompactHeightfield chf, int borderSize, int minRegionArea,
+            int mergeRegionArea) {
         ctx.startTimer("BUILD_REGIONS");
 
         int w = chf.width;
@@ -1366,8 +1366,6 @@ public class RecastRegion {
 
         int[] srcReg = new int[chf.spanCount];
         int[] srcDist = new int[chf.spanCount];
-        int[] dstReg = new int[chf.spanCount];
-        int[] dstDist = new int[chf.spanCount];
 
         int regionId = 1;
         int level = (chf.maxDistance + 1) & ~1;
@@ -1405,8 +1403,7 @@ public class RecastRegion {
 
             if (sId == 0) {
                 sortCellsByLevel(level, chf, srcReg, NB_STACKS, lvlStacks, 1);
-            }
-            else {
+            } else {
                 appendStacks(lvlStacks.get(sId - 1), lvlStacks.get(sId), srcReg); // copy left overs from last level
             }
 
@@ -1415,14 +1412,7 @@ public class RecastRegion {
             ctx.startTimer("BUILD_REGIONS_EXPAND");
 
             // Expand current regions until no empty connected cells found.
-            if (expandRegions(expandIters, level, chf, srcReg, srcDist, dstReg, dstDist, lvlStacks.get(sId), false) != srcReg) {
-                int[] temp = srcReg;
-                srcReg = dstReg;
-                dstReg = temp;
-                temp = srcDist;
-                srcDist = dstDist;
-                dstDist = temp;
-            }
+            expandRegions(expandIters, level, chf, srcReg, srcDist, lvlStacks.get(sId), false);
 
             ctx.stopTimer("BUILD_REGIONS_EXPAND");
 
@@ -1444,14 +1434,7 @@ public class RecastRegion {
         }
 
         // Expand current regions until no empty connected cells found.
-        if (expandRegions(expandIters * 8, 0, chf, srcReg, srcDist, dstReg, dstDist, stack, true) != srcReg) {
-            int[] temp = srcReg;
-            srcReg = dstReg;
-            dstReg = temp;
-            temp = srcDist;
-            srcDist = dstDist;
-            dstDist = temp;
-        }
+        expandRegions(expandIters * 8, 0, chf, srcReg, srcDist, stack, true);
 
         ctx.stopTimer("BUILD_REGIONS_WATERSHED");
 
