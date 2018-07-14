@@ -12,6 +12,12 @@ More information about [Recast and Detour](https://github.com/recastnavigation/r
 Recast & Detour is licensed under ZLib license, see License.txt for more information.
 
 ## Usage
+### How To Use
+The API is kept as close to https://github.com/recastnavigation/recastnavigation as possible so most of the information and hints apply to recast4j too.
+You can find a lot of examples in tests e.g.
+- building a nav mesh from obj files: https://github.com/ppiastucki/recast4j/blob/master/detour/src/test/java/org/recast4j/detour/RecastTestMeshBuilder.java
+- finding a path: https://github.com/ppiastucki/recast4j/blob/master/detour/src/test/java/org/recast4j/detour/FindPathTest.java#L94
+- persisting a nav mesh: https://github.com/ppiastucki/recast4j/blob/master/detour/src/test/java/org/recast4j/detour/io/MeshSetReaderWriterTest.java
 ### Java Version Enhancements
 #### Recast
 - out-of-the-box support for multi-threaded builds
