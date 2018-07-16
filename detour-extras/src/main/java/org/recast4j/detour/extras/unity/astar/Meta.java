@@ -21,7 +21,7 @@ class Meta {
 		int[] actual = parseVersion(version);
 		int[] minSupported = parseVersion(minVersion);
 		for (int i = 0; i < Math.min(actual.length, minSupported.length); i++) {
-			if (actual[i] >= minSupported[i]) {
+			if (actual[i] > minSupported[i]) {
 				return true;
 			} else if (minSupported[i] > actual[i]) {
 				return false;
