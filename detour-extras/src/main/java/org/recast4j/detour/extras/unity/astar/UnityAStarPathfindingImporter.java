@@ -48,7 +48,7 @@ public class UnityAStarPathfindingImporter {
 					graphMeta, maxVertPerPoly);
 			// Then graph connection data - links between nodes located in both the same tile and other tiles
 			List<int[]> connections = graphConnectionReader.read(file, String.format(GRAPH_CONNECTION_FILE_NAME_PATTERN, graphIndex),
-					graphMeta, indexToNode);
+					meta, indexToNode);
 			int nodeCount = graphData.countNodes();
 			if (connections.size() != nodeCount) {
 				throw new IllegalArgumentException("Inconsistent number of nodes in data file: " + nodeCount
