@@ -15,7 +15,7 @@ public class BVTreeBuilder {
 	void build(GraphMeshData graphData, GraphMeta meta) {
 		for (MeshData d : graphData.tiles) {
 			d.bvTree = new BVNode[d.header.polyCount * 2];
-			d.header.bvNodeCount = createBVTree(d, d.bvTree, meta.cellSize);
+			d.header.bvNodeCount = d.bvTree.length == 0 ? 0 : createBVTree(d, d.bvTree, meta.cellSize);
 		}
 	}
 

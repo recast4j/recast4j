@@ -48,7 +48,7 @@ public class UnityAStarPathfindingImporter {
 					graphMeta, maxVertPerPoly);
 			// Then graph connection data - links between nodes located in both the same tile and other tiles
 			List<int[]> connections = graphConnectionReader.read(file, String.format(GRAPH_CONNECTION_FILE_NAME_PATTERN, graphIndex),
-					graphMeta, indexToNode);
+					meta, indexToNode);
 			int nodeCount = graphData.countNodes();
 			if (connections.size() != nodeCount) {
 				throw new IllegalArgumentException("Inconsistent number of nodes in data file: " + nodeCount
@@ -63,8 +63,8 @@ public class UnityAStarPathfindingImporter {
 			NavMeshParams params = new NavMeshParams();
 			params.maxTiles = graphData.tiles.length;
 			params.maxPolys = 32768;
-			params.tileWidth = graphMeta.forcedBoundsSize.x / graphData.tileXCount;
-			params.tileHeight = graphMeta.forcedBoundsSize.z / graphData.tileZCount;
+			params.tileWidth = graphMeta.tileSizeX * graphMeta.cellSize;
+			params.tileHeight = graphMeta.tileSizeZ * graphMeta.cellSize;
 			params.orig[0] = -0.5f * graphMeta.forcedBoundsSize.x + graphMeta.forcedBoundsCenter.x;
 			params.orig[1] = -0.5f * graphMeta.forcedBoundsSize.y + graphMeta.forcedBoundsCenter.y;
 			params.orig[2] = -0.5f * graphMeta.forcedBoundsSize.z + graphMeta.forcedBoundsCenter.z;

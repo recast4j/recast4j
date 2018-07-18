@@ -9,7 +9,7 @@ import java.util.zip.ZipFile;
 class GraphConnectionReader extends BinaryReader {
 
 	@SuppressWarnings("unused")
-	List<int[]> read(ZipFile file, String filename, GraphMeta meta, int[] indexToNode) throws IOException {
+	List<int[]> read(ZipFile file, String filename, Meta meta, int[] indexToNode) throws IOException {
 		List<int[]> connections = new ArrayList<>();
 		ByteBuffer buffer = toByteBuffer(file, filename);
 		while (buffer.remaining() > 0) {
@@ -21,6 +21,9 @@ class GraphConnectionReader extends BinaryReader {
 				nodeConnections[i] = indexToNode[nodeIndex];
 				// XXX: Is there anything we can do with the cost? 
 				int cost = buffer.getInt();
+				if(meta.isSupportedVersion(Meta.UPDATED_STRUCT_VERSION)) {
+					byte shapeEdge = buffer.get();
+				}
 			}
 		}
 		return connections;

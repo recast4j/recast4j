@@ -11,7 +11,9 @@ class GraphMeta {
 	float maxSlope;
 	float maxEdgeLength;
 	float minRegionSize;
+	/** Size of tile along X axis in voxels */
 	float tileSizeX;
+	/** Size of tile along Z axis in voxels */
 	float tileSizeZ;
 	boolean useTiles;
 	Vector3f rotation;

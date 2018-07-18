@@ -5,16 +5,21 @@ import java.util.regex.Pattern;
 
 class Meta {
 
-	static String TYPENAME_RECAST_GRAPH = "Pathfinding.RecastGraph";
-	static String MIN_SUPPORTED_VERSION = "4.0.6";
-	static Pattern VERSION_PATTERN = Pattern.compile("(\\d+)\\.(\\d+)\\.(\\d+)");
+	final static String TYPENAME_RECAST_GRAPH = "Pathfinding.RecastGraph";
+	final static String MIN_SUPPORTED_VERSION = "4.0.6";
+	final static String UPDATED_STRUCT_VERSION = "4.1.16";
+	final static Pattern VERSION_PATTERN = Pattern.compile("(\\d+)\\.(\\d+)\\.(\\d+)");
 	String version;
 	int graphs;
 	String[] typeNames;
 
 	boolean isSupportedVersion() {
+		return isSupportedVersion(MIN_SUPPORTED_VERSION);
+	}
+	
+	boolean isSupportedVersion(String minVersion) {
 		int[] actual = parseVersion(version);
-		int[] minSupported = parseVersion(MIN_SUPPORTED_VERSION);
+		int[] minSupported = parseVersion(minVersion);
 		for (int i = 0; i < Math.min(actual.length, minSupported.length); i++) {
 			if (actual[i] > minSupported[i]) {
 				return true;
