@@ -9,7 +9,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteOrder;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.recast4j.detour.BVNode;
 import org.recast4j.detour.DefaultQueryFilter;
@@ -74,7 +73,7 @@ public class UnityAStarPathfindingImporterTest {
 		data.bvTree = bvNodes; 
 		FindNearestPolyResult bvResult = getNearestPolys(mesh, position)[0];
 		
-		Assert.assertEquals(clearResult.getNearestRef(), bvResult.getNearestRef());
+		assertEquals(clearResult.getNearestRef(), bvResult.getNearestRef());
 	}
 
 	private NavMesh loadNavMesh(String filename) throws Exception {
