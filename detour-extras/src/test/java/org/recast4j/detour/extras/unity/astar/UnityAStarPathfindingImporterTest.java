@@ -10,9 +10,12 @@ import java.io.IOException;
 import java.nio.ByteOrder;
 
 import org.junit.Test;
+import org.recast4j.detour.BVNode;
 import org.recast4j.detour.DefaultQueryFilter;
 import org.recast4j.detour.FindNearestPolyResult;
 import org.recast4j.detour.FindPathResult;
+import org.recast4j.detour.MeshData;
+import org.recast4j.detour.MeshTile;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.detour.Poly;
@@ -47,8 +50,30 @@ public class UnityAStarPathfindingImporterTest {
 		float[] endPos = new float[] { 16.81f, -2.37f, 25.52f };
 		FindPathResult path = findPath(mesh, startPos, endPos);
 		assertTrue(path.getStatus().isSuccess());
-		assertEquals(10, path.getRefs().size());
+		assertEquals(15, path.getRefs().size());
 		saveMesh(mesh, "v4_1_16");
+	}
+	
+	@Test
+	public void testBoundsTree() throws Exception {
+		NavMesh mesh = loadNavMesh("test_boundstree.zip");
+		float[] position = { 387.52988f, 19.997f, 368.86282f };
+		
+		int[] tilePos = mesh.calcTileLoc(position);
+		long tileRef = mesh.getTileRefAt(tilePos[0], tilePos[1], 0);
+		MeshTile tile = mesh.getTileByRef(tileRef);
+		MeshData data = tile.data;
+		BVNode[] bvNodes = data.bvTree;
+		data.bvTree = null; //set BV-Tree empty to get 'clear' search poly without BV
+		FindNearestPolyResult clearResult = getNearestPolys(mesh, position)[0]; //check poly to exists
+		
+		//restore BV-Tree and try search again
+		// important aspect in that test: BV result must equals result without BV
+		// if poly not found or found other poly - tile bounds is wrong!
+		data.bvTree = bvNodes; 
+		FindNearestPolyResult bvResult = getNearestPolys(mesh, position)[0];
+		
+		assertEquals(clearResult.getNearestRef(), bvResult.getNearestRef());
 	}
 
 	private NavMesh loadNavMesh(String filename) throws Exception {
