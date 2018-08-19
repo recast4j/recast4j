@@ -57,6 +57,7 @@ class GraphMeshDataReader extends BinaryReader {
 				float[] detailVerts = new float[0];
 				int[] detailTris = new int[4 * nodeCount];
 				int vertMask = getVertMask(vertsCount);
+				Bounds bounds = new Bounds();
 				for (int i = 0; i < nodes.length; i++) {
 					nodes[i] = new Poly(i, maxVertPerPoly);
 					nodes[i].vertCount = 3;
@@ -66,6 +67,11 @@ class GraphMeshDataReader extends BinaryReader {
 					nodes[i].verts[0] = buffer.getInt() & vertMask;
 					nodes[i].verts[1] = buffer.getInt() & vertMask;
 					nodes[i].verts[2] = buffer.getInt() & vertMask;
+					
+					bounds.encapsulate(verts[nodes[i].verts[0] * 3], verts[nodes[i].verts[0] * 3 + 1], verts[nodes[i].verts[0] * 3 + 2]);
+					bounds.encapsulate(verts[nodes[i].verts[1] * 3], verts[nodes[i].verts[1] * 3 + 1], verts[nodes[i].verts[1] * 3 + 2]);
+					bounds.encapsulate(verts[nodes[i].verts[2] * 3], verts[nodes[i].verts[2] * 3 + 1], verts[nodes[i].verts[2] * 3 + 2]);
+					
 					// XXX: Detail mesh is not needed by recast4j, but RecastDemo will crash without it
 					detailNodes[i] = new PolyDetail();
 					detailNodes[i].vertBase = 0;
@@ -94,12 +100,19 @@ class GraphMeshDataReader extends BinaryReader {
 				header.detailMeshCount = nodeCount;
 				header.detailTriCount = nodeCount;
 				header.maxLinkCount = nodeCount * 3 * 2; // XXX: Needed by Recast, not needed by recast4j  
-				header.bmin[0] = meta.forcedBoundsCenter.x + meta.forcedBoundsSize.x * ((float) x / tileXCount - 0.5f);
-				header.bmin[1] = -0.5f * meta.forcedBoundsSize.y + meta.forcedBoundsCenter.y;
-				header.bmin[2] = meta.forcedBoundsCenter.z + meta.forcedBoundsSize.z * ((float) z / tileZCount - 0.5f);
-				header.bmax[0] = meta.forcedBoundsCenter.x + meta.forcedBoundsSize.x * ((x + 1f) / tileXCount - 0.5f);
-				header.bmax[1] = 0.5f * meta.forcedBoundsSize.y + meta.forcedBoundsCenter.y;
-				header.bmax[2] = meta.forcedBoundsCenter.z + meta.forcedBoundsSize.z * ((z + 1f) / tileZCount - 0.5f);
+				
+				if(!bounds.isValid()) {
+					throw new RuntimeException("Invalid bounds in tile " + x + " " + z);
+				}
+				
+				header.bmin[0] = bounds.xmin;
+				header.bmin[1] = bounds.ymin;
+				header.bmin[2] = bounds.zmin;
+				
+				header.bmax[0] = bounds.xmax;
+				header.bmax[1] = bounds.ymax;
+				header.bmax[2] = bounds.zmax;
+				
 				header.bvQuantFactor = 1.0f / meta.cellSize;
 				header.offMeshBase = nodeCount;
 				tiles[tileIndex].header = header;
@@ -116,5 +129,29 @@ class GraphMeshDataReader extends BinaryReader {
 		vertMask--;
 		return vertMask;
 	}
-
+	
+	private static class Bounds {
+		public float xmin = Float.POSITIVE_INFINITY;
+		public float ymin = Float.POSITIVE_INFINITY;
+		public float zmin = Float.POSITIVE_INFINITY;
+		public float xmax = Float.NEGATIVE_INFINITY;
+		public float ymax = Float.NEGATIVE_INFINITY;
+		public float zmax = Float.NEGATIVE_INFINITY;
+		
+		public void encapsulate(float x, float y, float z) {
+			xmin = Math.min(xmin, x);
+			ymin = Math.min(ymin, y);
+			zmin = Math.min(zmin, z);
+			
+			xmax = Math.max(xmax, x);
+			ymax = Math.max(ymax, y);
+			zmax = Math.max(zmax, z);
+		}
+		
+		public boolean isValid() {
+			return Float.isFinite(xmin) && Float.isFinite(ymin) && Float.isFinite(zmin) &&
+					Float.isFinite(xmax) && Float.isFinite(ymax) && Float.isFinite(zmax);
+		}
+	}
+	
 }
