@@ -26,42 +26,42 @@ import org.junit.Test;
 
 public class NavMeshBuilderTest {
 
-	private MeshData nmd;
+    private MeshData nmd;
 
-	@Before
-	public void setUp() {
-		nmd = new RecastTestMeshBuilder().getMeshData();
-	}
+    @Before
+    public void setUp() {
+        nmd = new RecastTestMeshBuilder().getMeshData();
+    }
 
-	@Test
-	public void testBVTree() {
-		assertEquals(225, nmd.verts.length / 3);
-		assertEquals(119, nmd.polys.length);
-		assertEquals(457, nmd.header.maxLinkCount);
-		assertEquals(118, nmd.detailMeshes.length);
-		assertEquals(289, nmd.detailTris.length / 4);
-		assertEquals(59, nmd.detailVerts.length / 3);
-		assertEquals(1, nmd.offMeshCons.length);
-		assertEquals(118, nmd.header.offMeshBase);
-		assertEquals(236, nmd.bvTree.length);
-		assertTrue(nmd.header.bvNodeCount <= nmd.bvTree.length);
-		for (int i = 0; i < nmd.header.bvNodeCount; i++) {
-			assertNotNull(nmd.bvTree[i]);
-		}
-		for (int i = 0; i < 6; i++) {
-			assertEquals(nmd.offMeshCons[0].pos[i], nmd.verts[223 * 3 + i], 0.0f);
-		}
-		assertEquals(0.1f, nmd.offMeshCons[0].rad, 0.0f);
-		assertEquals(118, nmd.offMeshCons[0].poly);
-		assertEquals(NavMesh.DT_OFFMESH_CON_BIDIR, nmd.offMeshCons[0].flags);
-		assertEquals(0xFF, nmd.offMeshCons[0].side);
-		assertEquals(0x4567, nmd.offMeshCons[0].userId);
-		assertEquals(2, nmd.polys[118].vertCount);
-		assertEquals(223, nmd.polys[118].verts[0]);
-		assertEquals(224, nmd.polys[118].verts[1]);
-		assertEquals(12, nmd.polys[118].flags);
-		assertEquals(2, nmd.polys[118].getArea());
-		assertEquals(Poly.DT_POLYTYPE_OFFMESH_CONNECTION, nmd.polys[118].getType());
+    @Test
+    public void testBVTree() {
+        assertEquals(225, nmd.verts.length / 3);
+        assertEquals(119, nmd.polys.length);
+        assertEquals(457, nmd.header.maxLinkCount);
+        assertEquals(118, nmd.detailMeshes.length);
+        assertEquals(291, nmd.detailTris.length / 4);
+        assertEquals(60, nmd.detailVerts.length / 3);
+        assertEquals(1, nmd.offMeshCons.length);
+        assertEquals(118, nmd.header.offMeshBase);
+        assertEquals(236, nmd.bvTree.length);
+        assertTrue(nmd.header.bvNodeCount <= nmd.bvTree.length);
+        for (int i = 0; i < nmd.header.bvNodeCount; i++) {
+            assertNotNull(nmd.bvTree[i]);
+        }
+        for (int i = 0; i < 6; i++) {
+            assertEquals(nmd.offMeshCons[0].pos[i], nmd.verts[223 * 3 + i], 0.0f);
+        }
+        assertEquals(0.1f, nmd.offMeshCons[0].rad, 0.0f);
+        assertEquals(118, nmd.offMeshCons[0].poly);
+        assertEquals(NavMesh.DT_OFFMESH_CON_BIDIR, nmd.offMeshCons[0].flags);
+        assertEquals(0xFF, nmd.offMeshCons[0].side);
+        assertEquals(0x4567, nmd.offMeshCons[0].userId);
+        assertEquals(2, nmd.polys[118].vertCount);
+        assertEquals(223, nmd.polys[118].verts[0]);
+        assertEquals(224, nmd.polys[118].verts[1]);
+        assertEquals(12, nmd.polys[118].flags);
+        assertEquals(2, nmd.polys[118].getArea());
+        assertEquals(Poly.DT_POLYTYPE_OFFMESH_CONNECTION, nmd.polys[118].getType());
 
-	}
+    }
 }
