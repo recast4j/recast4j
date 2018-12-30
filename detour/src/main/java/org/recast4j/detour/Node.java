@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -20,35 +20,37 @@ package org.recast4j.detour;
 
 public class Node {
 
-	static int DT_NODE_OPEN = 0x01;
-	static int DT_NODE_CLOSED = 0x02;
-	/** parent of the node is not adjacent. Found using raycast. */
-	static int DT_NODE_PARENT_DETACHED = 0x04;
+    static int DT_NODE_OPEN = 0x01;
+    static int DT_NODE_CLOSED = 0x02;
+    /** parent of the node is not adjacent. Found using raycast. */
+    static int DT_NODE_PARENT_DETACHED = 0x04;
 
-	public final int index;
+    public final int index;
 
-	/** Position of the node. */
-	float[] pos = new float[3]; 
-	/** Cost from previous node to current node. */
-	float cost;
-	/** Cost up to the node. */
-	float total;
-	/** Index to parent node. */
-	int pidx;
-	/** extra state information. A polyRef can have multiple nodes with different extra info. see DT_MAX_STATES_PER_NODE */
-	int state;
-	/** Node flags. A combination of dtNodeFlags. */
-	int flags;
-	/** Polygon ref the node corresponds to. */
-	long id;
+    /** Position of the node. */
+    public float[] pos = new float[3];
+    /** Cost from previous node to current node. */
+    float cost;
+    /** Cost up to the node. */
+    float total;
+    /** Index to parent node. */
+    public int pidx;
+    /**
+     * extra state information. A polyRef can have multiple nodes with different extra info. see DT_MAX_STATES_PER_NODE
+     */
+    int state;
+    /** Node flags. A combination of dtNodeFlags. */
+    int flags;
+    /** Polygon ref the node corresponds to. */
+    long id;
 
-	public Node(int index) {
-		this.index = index;
-	}
+    public Node(int index) {
+        this.index = index;
+    }
 
-	@Override
-	public String toString() {
-		return "Node [id=" + id + "]";
-	}
+    @Override
+    public String toString() {
+        return "Node [id=" + id + "]";
+    }
 
 }

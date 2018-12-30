@@ -22,7 +22,6 @@ public class RecastConstants {
 
     public static final int RC_NULL_AREA = 0;
     public static final int RC_NOT_CONNECTED = 0x3f;
-    public static final int RC_WALKABLE_AREA = 63;
     /// Defines the number of bits allocated to rcSpan::smin and rcSpan::smax.
     public static int RC_SPAN_HEIGHT_BITS = 13;
     /// Defines the maximum value for rcSpan::smin and rcSpan::smax.
@@ -47,13 +46,13 @@ public class RecastConstants {
     /// at tile boundaries.
     /// (Used during the build process.)
     /// @see rcCompactSpan::reg, #rcContour::verts, #rcContour::rverts
-    static int RC_BORDER_VERTEX = 0x10000;
+    public static int RC_BORDER_VERTEX = 0x10000;
     /// Area border flag.
     /// If a region ID has this bit set, then the associated element lies on
     /// the border of an area.
     /// (Used during the region and contour build process.)
     /// @see rcCompactSpan::reg, #rcContour::verts, #rcContour::rverts
-    static int RC_AREA_BORDER = 0x20000;
+    public static int RC_AREA_BORDER = 0x20000;
     /// Applied to the region id field of contour vertices in order to extract the region id.
     /// The region id field of a vertex may have several flags applied to it. So the
     /// fields value can't be used directly.
@@ -64,11 +63,18 @@ public class RecastConstants {
     /// @see rcPolyMesh::polys
     public static int RC_MESH_NULL_IDX = 0xffff;
 
-    public static int RC_CONTOUR_TESS_WALL_EDGES = 0x01; /// < Tessellate solid (impassable) edges during contour simplification.
-    public static int RC_CONTOUR_TESS_AREA_EDGES = 0x02; /// < Tessellate edges between areas during contour simplification.
+    public static int RC_CONTOUR_TESS_WALL_EDGES = 0x01; /// < Tessellate solid (impassable) edges during contour
+                                                         /// simplification.
+    public static int RC_CONTOUR_TESS_AREA_EDGES = 0x02; /// < Tessellate edges between areas during contour
+                                                         /// simplification.
 
     public enum PartitionType {
-        WATERSHED, MONOTONE, LAYERS
+        WATERSHED, MONOTONE, LAYERS;
+
+        @Override
+        public String toString() {
+            return name().substring(0, 1) + name().substring(1).toLowerCase();
+        }
     }
 
     public static final int RC_LOG_WARNING = 1;

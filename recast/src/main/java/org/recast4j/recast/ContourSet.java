@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -24,22 +24,22 @@ import java.util.List;
 /** Represents a group of related contours. */
 public class ContourSet {
 
-	/** A list of the contours in the set. */
-	public final List<Contour> conts = new ArrayList<>();
-	/** The minimum bounds in world space. [(x, y, z)] */
-	final float[] bmin = new float[3];
-	/** The maximum bounds in world space. [(x, y, z)] */
-	final float[] bmax = new float[3];
-	/** The size of each cell. (On the xz-plane.) */
-	public float cs;
-	/** The height of each cell. (The minimum increment along the y-axis.) */
-	public float ch;
-	/** The width of the set. (Along the x-axis in cell units.) */
-	public int width;
-	/** The height of the set. (Along the z-axis in cell units.) */
-	public int height;
-	/** The AABB border size used to generate the source data from which the contours were derived. */
-	public int borderSize;
-	/** The max edge error that this contour set was simplified with. */
-	public float maxError;
+    /** A list of the contours in the set. */
+    public final List<Contour> conts = new ArrayList<>();
+    /** The minimum bounds in world space. [(x, y, z)] */
+    public final float[] bmin = new float[3];
+    /** The maximum bounds in world space. [(x, y, z)] */
+    final float[] bmax = new float[3];
+    /** The size of each cell. (On the xz-plane.) */
+    public float cs;
+    /** The height of each cell. (The minimum increment along the y-axis.) */
+    public float ch;
+    /** The width of the set. (Along the x-axis in cell units.) */
+    public int width;
+    /** The height of the set. (Along the z-axis in cell units.) */
+    public int height;
+    /** The AABB border size used to generate the source data from which the contours were derived. */
+    public int borderSize;
+    /** The max edge error that this contour set was simplified with. */
+    public float maxError;
 }

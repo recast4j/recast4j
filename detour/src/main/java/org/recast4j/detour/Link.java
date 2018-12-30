@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -20,22 +20,22 @@ package org.recast4j.detour;
 
 /**
  * Defines a link between polygons.
- * 
+ *
  * @note This structure is rarely if ever used by the end user.
  * @see MeshTile
  */
 public class Link {
-	/** Neighbour reference. (The neighbor that is linked to.) */
-	long ref;
-	/** Index of the next link. */
-	int next;
-	/** Index of the polygon edge that owns this link. */
-	int edge;
-	/** If a boundary link, defines on which side the link is. */
-	int side;
-	/** If a boundary link, defines the minimum sub-edge area. */
-	int bmin;
-	/** If a boundary link, defines the maximum sub-edge area. */
-	int bmax;
+    /** Neighbour reference. (The neighbor that is linked to.) */
+    long ref;
+    /** Index of the next link. */
+    public int next;
+    /** Index of the polygon edge that owns this link. */
+    public int edge;
+    /** If a boundary link, defines on which side the link is. */
+    int side;
+    /** If a boundary link, defines the minimum sub-edge area. */
+    int bmin;
+    /** If a boundary link, defines the maximum sub-edge area. */
+    int bmax;
 
 }
