@@ -18,12 +18,12 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
-public class ClosesPointOnPolyResult {
+public class ClosestPointOnPolyResult {
 
 	private final boolean posOverPoly;
 	private final float[] closest;
 
-	public ClosesPointOnPolyResult(boolean posOverPoly, float[] closest) {
+	public ClosestPointOnPolyResult(boolean posOverPoly, float[] closest) {
 		this.posOverPoly = posOverPoly;
 		this.closest = closest;
 	}

@@ -118,18 +118,21 @@ public class NavMeshQuery {
         float tsum = 0.0f;
         for (int i = 0; i < m_nav.getMaxTiles(); i++) {
             MeshTile t = m_nav.getTile(i);
-            if (t == null || t.data == null || t.data.header == null)
+            if (t == null || t.data == null || t.data.header == null) {
                 continue;
+            }
 
             // Choose random tile using reservoi sampling.
             float area = 1.0f; // Could be tile area too.
             tsum += area;
             float u = frand.frand();
-            if (u * tsum <= area)
+            if (u * tsum <= area) {
                 tile = t;
+            }
         }
-        if (tile == null)
+        if (tile == null) {
             return new FindRandomPointResult(Status.FAILURE, 0, null);
+        }
 
         // Randomly pick one polygon weighted by polygon area.
         Poly poly = null;
@@ -140,12 +143,14 @@ public class NavMeshQuery {
         for (int i = 0; i < tile.data.header.polyCount; ++i) {
             Poly p = tile.data.polys[i];
             // Do not return off-mesh connection polygons.
-            if (p.getType() != Poly.DT_POLYTYPE_GROUND)
+            if (p.getType() != Poly.DT_POLYTYPE_GROUND) {
                 continue;
+            }
             // Must pass filter
             long ref = base | i;
-            if (!filter.passFilter(ref, tile, p))
+            if (!filter.passFilter(ref, tile, p)) {
                 continue;
+            }
 
             // Calc area of the polygon.
             float polyArea = 0.0f;
@@ -165,8 +170,9 @@ public class NavMeshQuery {
             }
         }
 
-        if (poly == null)
+        if (poly == null) {
             return new FindRandomPointResult(Status.FAILURE, 0, null);
+        }
 
         // Randomly pick point on polygon.
         float[] verts = new float[3 * m_nav.getMaxVertsPerPoly()];
@@ -206,14 +212,16 @@ public class NavMeshQuery {
             QueryFilter filter, FRand frand) {
 
         // Validate input
-        if (startRef == 0 || !m_nav.isValidPolyRef(startRef))
+        if (startRef == 0 || !m_nav.isValidPolyRef(startRef)) {
             throw new IllegalArgumentException("Invalid start ref");
+        }
 
         Tupple2<MeshTile, Poly> tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(startRef);
         MeshTile startTile = tileAndPoly.first;
         Poly startPoly = tileAndPoly.second;
-        if (!filter.passFilter(startRef, startTile, startPoly))
+        if (!filter.passFilter(startRef, startTile, startPoly)) {
             throw new IllegalArgumentException("Invalid start");
+        }
 
         m_nodePool.clear();
         m_openList.clear();
@@ -267,8 +275,9 @@ public class NavMeshQuery {
 
             // Get parent poly and tile.
             long parentRef = 0;
-            if (bestNode.pidx != 0)
+            if (bestNode.pidx != 0) {
                 parentRef = m_nodePool.getNodeAtIdx(bestNode.pidx).id;
+            }
             if (parentRef != 0) {
                 Tupple2<MeshTile, Poly> parentTilePoly = m_nav.getTileAndPolyByRefUnsafe(parentRef);
                 MeshTile parentTile = parentTilePoly.first;
@@ -279,8 +288,9 @@ public class NavMeshQuery {
                 Link link = bestTile.links.get(i);
                 long neighbourRef = link.ref;
                 // Skip invalid neighbours and do not follow back to parent.
-                if (neighbourRef == 0 || neighbourRef == parentRef)
+                if (neighbourRef == 0 || neighbourRef == parentRef) {
                     continue;
+                }
 
                 // Expand to neighbour
                 Tupple2<MeshTile, Poly> neighbourTilePoly = m_nav.getTileAndPolyByRefUnsafe(neighbourRef);
@@ -288,8 +298,9 @@ public class NavMeshQuery {
                 Poly neighbourPoly = neighbourTilePoly.second;
 
                 // Do not advance if the polygon is excluded by the filter.
-                if (!filter.passFilter(neighbourRef, neighbourTile, neighbourPoly))
+                if (!filter.passFilter(neighbourRef, neighbourTile, neighbourPoly)) {
                     continue;
+                }
 
                 // Find edge and calc distance to the edge.
                 PortalResult portalpoints = getPortalPoints(bestRef, bestPoly, bestTile, neighbourRef, neighbourPoly,
@@ -300,23 +311,27 @@ public class NavMeshQuery {
                 // If the circle is not touching the next polygon, skip it.
                 Tupple2<Float, Float> distseg = distancePtSegSqr2D(centerPos, va, vb);
                 float distSqr = distseg.first;
-                if (distSqr > radiusSqr)
+                if (distSqr > radiusSqr) {
                     continue;
+                }
 
                 Node neighbourNode = m_nodePool.getNode(neighbourRef);
 
-                if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0)
+                if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0) {
                     continue;
+                }
 
                 // Cost
-                if (neighbourNode.flags == 0)
+                if (neighbourNode.flags == 0) {
                     neighbourNode.pos = vLerp(va, vb, 0.5f);
+                }
 
                 float total = bestNode.total + vDist(bestNode.pos, neighbourNode.pos);
 
                 // The node is already in open list and the new result is worse, skip.
-                if ((neighbourNode.flags & Node.DT_NODE_OPEN) != 0 && total >= neighbourNode.total)
+                if ((neighbourNode.flags & Node.DT_NODE_OPEN) != 0 && total >= neighbourNode.total) {
                     continue;
+                }
 
                 neighbourNode.id = neighbourRef;
                 neighbourNode.flags = (neighbourNode.flags & ~Node.DT_NODE_CLOSED);
@@ -332,8 +347,9 @@ public class NavMeshQuery {
             }
         }
 
-        if (randomPoly == null)
+        if (randomPoly == null) {
             return new FindRandomPointResult(Status.FAILURE, 0, null);
+        }
 
         // Randomly pick point on polygon.
         float[] verts = new float[3 * m_nav.getMaxVertsPerPoly()];
@@ -368,7 +384,7 @@ public class NavMeshQuery {
     /// @param[out] closest
     /// @param[out] posOverPoly
     /// @returns The status flags for the query.
-    public ClosesPointOnPolyResult closestPointOnPoly(long ref, float[] pos) {
+    public ClosestPointOnPolyResult closestPointOnPoly(long ref, float[] pos) {
         Tupple2<MeshTile, Poly> tileAndPoly = m_nav.getTileAndPolyByRef(ref);
         MeshTile tile = tileAndPoly.first;
         Poly poly = tileAndPoly.second;
@@ -381,7 +397,7 @@ public class NavMeshQuery {
             float d1 = vDist(pos, tile.data.verts, v1);
             float u = d0 / (d0 + d1);
             float[] closest = vLerp(tile.data.verts, v0, v1, u);
-            return new ClosesPointOnPolyResult(false, closest);
+            return new ClosestPointOnPolyResult(false, closest);
         }
 
         // Clamp point to be inside the polygon.
@@ -389,8 +405,9 @@ public class NavMeshQuery {
         float[] edged = new float[m_nav.getMaxVertsPerPoly()];
         float[] edget = new float[m_nav.getMaxVertsPerPoly()];
         int nv = poly.vertCount;
-        for (int i = 0; i < nv; ++i)
+        for (int i = 0; i < nv; ++i) {
             System.arraycopy(tile.data.verts, poly.verts[i] * 3, verts, i * 3, 3);
+        }
 
         boolean posOverPoly = false;
         float[] closest = new float[3];
@@ -437,7 +454,7 @@ public class NavMeshQuery {
                 }
             }
         }
-        return new ClosesPointOnPolyResult(posOverPoly, closest);
+        return new ClosestPointOnPolyResult(posOverPoly, closest);
     }
 
     /// @par
@@ -468,8 +485,9 @@ public class NavMeshQuery {
         float[] edged = new float[m_nav.getMaxVertsPerPoly()];
         float[] edget = new float[m_nav.getMaxVertsPerPoly()];
         int nv = poly.vertCount;
-        for (int i = 0; i < nv; ++i)
+        for (int i = 0; i < nv; ++i) {
             System.arraycopy(tile.data.verts, poly.verts[i] * 3, verts, i * 3, 3);
+        }
 
         float[] closest;
         if (distancePtPolyEdgesSqr(pos, verts, nv, edged, edget)) {
@@ -567,7 +585,7 @@ public class NavMeshQuery {
         float nearestDistanceSqr = Float.MAX_VALUE;
         for (int i = 0; i < polys.size(); ++i) {
             long ref = polys.get(i);
-            ClosesPointOnPolyResult closest = closestPointOnPoly(ref, center);
+            ClosestPointOnPolyResult closest = closestPointOnPoly(ref, center);
             boolean posOverPoly = closest.isPosOverPoly();
             float[] closestPtPoly = closest.getClosest();
 
@@ -635,9 +653,9 @@ public class NavMeshQuery {
                     }
                 }
 
-                if (overlap || isLeafNode)
+                if (overlap || isLeafNode) {
                     nodeIndex++;
-                else {
+                } else {
                     int escapeIndex = -node.i;
                     nodeIndex += escapeIndex;
                 }
@@ -650,11 +668,13 @@ public class NavMeshQuery {
             for (int i = 0; i < tile.data.header.polyCount; ++i) {
                 Poly p = tile.data.polys[i];
                 // Do not return off-mesh connection polygons.
-                if (p.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION)
+                if (p.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
                     continue;
+                }
                 long ref = base | i;
-                if (!filter.passFilter(ref, tile, p))
+                if (!filter.passFilter(ref, tile, p)) {
                     continue;
+                }
                 // Calc polygon bounds.
                 int v = p.verts[0] * 3;
                 vCopy(bmin, tile.data.verts, v);
@@ -729,12 +749,14 @@ public class NavMeshQuery {
      * @return Found path
      */
     public FindPathResult findPath(long startRef, long endRef, float[] startPos, float[] endPos, QueryFilter filter) {
-        if (startRef == 0 || endRef == 0)
+        if (startRef == 0 || endRef == 0) {
             throw new IllegalArgumentException("Start or end ref = 0");
+        }
 
         // Validate input
-        if (!m_nav.isValidPolyRef(startRef) || !m_nav.isValidPolyRef(endRef))
+        if (!m_nav.isValidPolyRef(startRef) || !m_nav.isValidPolyRef(endRef)) {
             throw new IllegalArgumentException("Invalid start or end ref");
+        }
 
         if (startRef == endRef) {
             List<Long> path = new ArrayList<>(1);
@@ -782,8 +804,9 @@ public class NavMeshQuery {
             long parentRef = 0;
             MeshTile parentTile = null;
             Poly parentPoly = null;
-            if (bestNode.pidx != 0)
+            if (bestNode.pidx != 0) {
                 parentRef = m_nodePool.getNodeAtIdx(bestNode.pidx).id;
+            }
             if (parentRef != 0) {
                 tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(parentRef);
                 parentTile = tileAndPoly.first;
@@ -794,8 +817,9 @@ public class NavMeshQuery {
                 long neighbourRef = bestTile.links.get(i).ref;
 
                 // Skip invalid ids and do not expand back to where we came from.
-                if (neighbourRef == 0 || neighbourRef == parentRef)
+                if (neighbourRef == 0 || neighbourRef == parentRef) {
                     continue;
+                }
 
                 // Get neighbour poly and tile.
                 // The API input has been cheked already, skip checking internal data.
@@ -803,13 +827,15 @@ public class NavMeshQuery {
                 MeshTile neighbourTile = tileAndPoly.first;
                 Poly neighbourPoly = tileAndPoly.second;
 
-                if (!filter.passFilter(neighbourRef, neighbourTile, neighbourPoly))
+                if (!filter.passFilter(neighbourRef, neighbourTile, neighbourPoly)) {
                     continue;
+                }
 
                 // deal explicitly with crossing tile boundaries
                 int crossSide = 0;
-                if (bestTile.links.get(i).side != 0xff)
+                if (bestTile.links.get(i).side != 0xff) {
                     crossSide = bestTile.links.get(i).side >> 1;
+                }
 
                 // get the node
                 Node neighbourNode = m_nodePool.getNode(neighbourRef, crossSide);
@@ -845,11 +871,13 @@ public class NavMeshQuery {
                 float total = cost + heuristic;
 
                 // The node is already in open list and the new result is worse, skip.
-                if ((neighbourNode.flags & Node.DT_NODE_OPEN) != 0 && total >= neighbourNode.total)
+                if ((neighbourNode.flags & Node.DT_NODE_OPEN) != 0 && total >= neighbourNode.total) {
                     continue;
+                }
                 // The node is already visited and process, and the new result is worse, skip.
-                if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0 && total >= neighbourNode.total)
+                if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0 && total >= neighbourNode.total) {
                     continue;
+                }
 
                 // Add or update the node.
                 neighbourNode.pidx = m_nodePool.getNodeIdx(bestNode);
@@ -877,8 +905,9 @@ public class NavMeshQuery {
 
         List<Long> path = getPathToNode(lastBestNode);
 
-        if (lastBestNode.id != endRef)
+        if (lastBestNode.id != endRef) {
             status = Status.PARTIAL_RESULT;
+        }
 
         return new FindPathResult(status, path);
     }
@@ -916,12 +945,14 @@ public class NavMeshQuery {
         m_query.options = options;
         m_query.raycastLimitSqr = Float.MAX_VALUE;
 
-        if (startRef == 0 || endRef == 0)
+        if (startRef == 0 || endRef == 0) {
             throw new IllegalArgumentException("Start or end ref = 0");
+        }
 
         // Validate input
-        if (!m_nav.isValidPolyRef(startRef) || !m_nav.isValidPolyRef(endRef))
+        if (!m_nav.isValidPolyRef(startRef) || !m_nav.isValidPolyRef(endRef)) {
             throw new IllegalArgumentException("Invalid start or end ref");
+        }
 
         // trade quality with performance?
         if ((options & DT_FINDPATH_ANY_ANGLE) != 0) {
@@ -964,8 +995,9 @@ public class NavMeshQuery {
      * @return The status flags for the query.
      */
     public UpdateSlicedPathResult updateSlicedFindPath(int maxIter) {
-        if (!m_query.status.isInProgress())
+        if (!m_query.status.isInProgress()) {
             return new UpdateSlicedPathResult(m_query.status, 0);
+        }
 
         // Make sure the request is still valid.
         if (!m_nav.isValidPolyRef(m_query.startRef) || !m_nav.isValidPolyRef(m_query.endRef)) {
@@ -1011,8 +1043,9 @@ public class NavMeshQuery {
             if (bestNode.pidx != 0) {
                 parentNode = m_nodePool.getNodeAtIdx(bestNode.pidx);
                 parentRef = parentNode.id;
-                if (parentNode.pidx != 0)
+                if (parentNode.pidx != 0) {
                     grandpaRef = m_nodePool.getNodeAtIdx(parentNode.pidx).id;
+                }
             }
             if (parentRef != 0) {
                 boolean invalidParent = false;
@@ -1034,8 +1067,9 @@ public class NavMeshQuery {
             // decide whether to test raycast to previous nodes
             boolean tryLOS = false;
             if ((m_query.options & DT_FINDPATH_ANY_ANGLE) != 0) {
-                if ((parentRef != 0) && (vDistSqr(parentNode.pos, bestNode.pos) < m_query.raycastLimitSqr))
+                if ((parentRef != 0) && (vDistSqr(parentNode.pos, bestNode.pos) < m_query.raycastLimitSqr)) {
                     tryLOS = true;
+                }
             }
 
             for (int i = bestPoly.firstLink; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
@@ -1043,8 +1077,9 @@ public class NavMeshQuery {
 
                 // Skip invalid ids and do not expand back to where we came
                 // from.
-                if (neighbourRef == 0 || neighbourRef == parentRef)
+                if (neighbourRef == 0 || neighbourRef == parentRef) {
                     continue;
+                }
 
                 // Get neighbour poly and tile.
                 // The API input has been cheked already, skip checking internal
@@ -1053,16 +1088,18 @@ public class NavMeshQuery {
                 MeshTile neighbourTile = tileAndPolyUns.first;
                 Poly neighbourPoly = tileAndPolyUns.second;
 
-                if (!m_query.filter.passFilter(neighbourRef, neighbourTile, neighbourPoly))
+                if (!m_query.filter.passFilter(neighbourRef, neighbourTile, neighbourPoly)) {
                     continue;
+                }
 
                 // get the neighbor node
                 Node neighbourNode = m_nodePool.getNode(neighbourRef, 0);
 
                 // do not expand to nodes that were already visited from the
                 // same parent
-                if (neighbourNode.pidx != 0 && neighbourNode.pidx == bestNode.pidx)
+                if (neighbourNode.pidx != 0 && neighbourNode.pidx == bestNode.pidx) {
                     continue;
+                }
 
                 // If the node is visited the first time, calculate node
                 // position.
@@ -1111,12 +1148,14 @@ public class NavMeshQuery {
 
                 // The node is already in open list and the new result is worse,
                 // skip.
-                if ((neighbourNode.flags & Node.DT_NODE_OPEN) != 0 && total >= neighbourNode.total)
+                if ((neighbourNode.flags & Node.DT_NODE_OPEN) != 0 && total >= neighbourNode.total) {
                     continue;
+                }
                 // The node is already visited and process, and the new result
                 // is worse, skip.
-                if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0 && total >= neighbourNode.total)
+                if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0 && total >= neighbourNode.total) {
                     continue;
+                }
 
                 // Add or update the node.
                 neighbourNode.pidx = foundShortCut ? bestNode.pidx : m_nodePool.getNodeIdx(bestNode);
@@ -1124,8 +1163,9 @@ public class NavMeshQuery {
                 neighbourNode.flags = (neighbourNode.flags & ~(Node.DT_NODE_CLOSED | Node.DT_NODE_PARENT_DETACHED));
                 neighbourNode.cost = cost;
                 neighbourNode.total = total;
-                if (foundShortCut)
+                if (foundShortCut) {
                     neighbourNode.flags = (neighbourNode.flags | Node.DT_NODE_PARENT_DETACHED);
+                }
 
                 if ((neighbourNode.flags & Node.DT_NODE_OPEN) != 0) {
                     // Already in open, update node location.
@@ -1170,8 +1210,9 @@ public class NavMeshQuery {
             path.add(m_query.startRef);
         } else {
             // Reverse the path.
-            if (m_query.lastBestNode.id != m_query.endRef)
+            if (m_query.lastBestNode.id != m_query.endRef) {
                 m_query.status = Status.PARTIAL_RESULT;
+            }
 
             Node prev = null;
             Node node = m_query.lastBestNode;
@@ -1197,7 +1238,9 @@ public class NavMeshQuery {
                     path.addAll(iresult.path);
                     // raycast ends on poly boundary and the path might include the next poly boundary.
                     if (path.get(path.size() - 1) == next.id)
+                     {
                         path.remove(path.size() - 1); // remove to avoid duplicates
+                    }
                 } else {
                     path.add(node.id);
                 }
@@ -1240,8 +1283,9 @@ public class NavMeshQuery {
             Node node = null;
             for (int i = existing.size() - 1; i >= 0; --i) {
                 node = m_nodePool.findNode(existing.get(i));
-                if (node != null)
+                if (node != null) {
                     break;
+                }
             }
 
             if (node == null) {
@@ -1272,7 +1316,9 @@ public class NavMeshQuery {
                     path.addAll(iresult.path);
                     // raycast ends on poly boundary and the path might include the next poly boundary.
                     if (path.get(path.size() - 1) == next.id)
+                     {
                         path.remove(path.size() - 1); // remove to avoid duplicates
+                    }
                 } else {
                     path.add(node.id);
                 }
@@ -1329,8 +1375,9 @@ public class NavMeshQuery {
 
             if ((options & DT_STRAIGHTPATH_AREA_CROSSINGS) != 0) {
                 // Skip intersection if only area crossings are requested.
-                if (fromPoly.getArea() == toPoly.getArea())
+                if (fromPoly.getArea() == toPoly.getArea()) {
                     continue;
+                }
             }
 
             // Append intersection
@@ -1339,8 +1386,9 @@ public class NavMeshQuery {
                 float t = interect.third;
                 float[] pt = vLerp(left, right, t);
                 stat = appendVertex(pt, 0, path.get(i + 1), straightPath, maxStraightPath);
-                if (!stat.isInProgress())
+                if (!stat.isInProgress()) {
                     return stat;
+                }
             }
         }
         return Status.IN_PROGRESS;
@@ -1382,8 +1430,9 @@ public class NavMeshQuery {
         List<StraightPathItem> straightPath = new ArrayList<>();
         // Add start point.
         Status stat = appendVertex(closestStartPos, DT_STRAIGHTPATH_START, path.get(0), straightPath, maxStraightPath);
-        if (!stat.isInProgress())
+        if (!stat.isInProgress()) {
             return straightPath;
+        }
 
         if (path.size() > 1) {
             float[] portalApex = vCopy(closestStartPos);
@@ -1415,10 +1464,10 @@ public class NavMeshQuery {
                         closestEndPos = closestPointOnPolyBoundary(path.get(i), endPos);
                         // Append portals along the current straight path segment.
                         if ((options & (DT_STRAIGHTPATH_AREA_CROSSINGS | DT_STRAIGHTPATH_ALL_CROSSINGS)) != 0) {
-                            stat = appendPortals(apexIndex, i, closestEndPos, path, straightPath, options,
-                                    maxStraightPath);
-                            if (!stat.isInProgress())
+                            stat = appendPortals(apexIndex, i, closestEndPos, path, straightPath, maxStraightPath, options);
+                            if (!stat.isInProgress()) {
                                 return straightPath;
+                            }
                         }
                         appendVertex(closestEndPos, 0, path.get(i), straightPath, maxStraightPath);
                         return straightPath;
@@ -1427,8 +1476,9 @@ public class NavMeshQuery {
                     // If starting really close the portal, advance.
                     if (i == 0) {
                         Tupple2<Float, Float> dt = distancePtSegSqr2D(portalApex, left, right);
-                        if (dt.first < sqr(0.001f))
+                        if (dt.first < sqr(0.001f)) {
                             continue;
+                        }
                     }
                 } else {
                     // End of the path.
@@ -1447,26 +1497,28 @@ public class NavMeshQuery {
                     } else {
                         // Append portals along the current straight path segment.
                         if ((options & (DT_STRAIGHTPATH_AREA_CROSSINGS | DT_STRAIGHTPATH_ALL_CROSSINGS)) != 0) {
-                            stat = appendPortals(apexIndex, leftIndex, portalLeft, path, straightPath, options,
-                                    maxStraightPath);
-                            if (!stat.isInProgress())
+                            stat = appendPortals(apexIndex, leftIndex, portalLeft, path, straightPath, maxStraightPath, options);
+                            if (!stat.isInProgress()) {
                                 return straightPath;
+                            }
                         }
 
                         portalApex = vCopy(portalLeft);
                         apexIndex = leftIndex;
 
                         int flags = 0;
-                        if (leftPolyRef == 0)
+                        if (leftPolyRef == 0) {
                             flags = DT_STRAIGHTPATH_END;
-                        else if (leftPolyType == Poly.DT_POLYTYPE_OFFMESH_CONNECTION)
+                        } else if (leftPolyType == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
                             flags = DT_STRAIGHTPATH_OFFMESH_CONNECTION;
+                        }
                         long ref = leftPolyRef;
 
                         // Append or update vertex
                         stat = appendVertex(portalApex, flags, ref, straightPath, maxStraightPath);
-                        if (!stat.isInProgress())
+                        if (!stat.isInProgress()) {
                             return straightPath;
+                        }
 
                         portalLeft = vCopy(portalApex);
                         portalRight = vCopy(portalApex);
@@ -1490,26 +1542,28 @@ public class NavMeshQuery {
                     } else {
                         // Append portals along the current straight path segment.
                         if ((options & (DT_STRAIGHTPATH_AREA_CROSSINGS | DT_STRAIGHTPATH_ALL_CROSSINGS)) != 0) {
-                            stat = appendPortals(apexIndex, rightIndex, portalRight, path, straightPath, options,
-                                    maxStraightPath);
-                            if (!stat.isInProgress())
+                            stat = appendPortals(apexIndex, rightIndex, portalRight, path, straightPath, maxStraightPath, options);
+                            if (!stat.isInProgress()) {
                                 return straightPath;
+                            }
                         }
 
                         portalApex = vCopy(portalRight);
                         apexIndex = rightIndex;
 
                         int flags = 0;
-                        if (rightPolyRef == 0)
+                        if (rightPolyRef == 0) {
                             flags = DT_STRAIGHTPATH_END;
-                        else if (rightPolyType == Poly.DT_POLYTYPE_OFFMESH_CONNECTION)
+                        } else if (rightPolyType == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
                             flags = DT_STRAIGHTPATH_OFFMESH_CONNECTION;
+                        }
                         long ref = rightPolyRef;
 
                         // Append or update vertex
                         stat = appendVertex(portalApex, flags, ref, straightPath, maxStraightPath);
-                        if (!stat.isInProgress())
+                        if (!stat.isInProgress()) {
                             return straightPath;
+                        }
 
                         portalLeft = vCopy(portalApex);
                         portalRight = vCopy(portalApex);
@@ -1526,10 +1580,10 @@ public class NavMeshQuery {
 
             // Append portals along the current straight path segment.
             if ((options & (DT_STRAIGHTPATH_AREA_CROSSINGS | DT_STRAIGHTPATH_ALL_CROSSINGS)) != 0) {
-                stat = appendPortals(apexIndex, path.size() - 1, closestEndPos, path, straightPath, options,
-                        maxStraightPath);
-                if (!stat.isInProgress())
+                stat = appendPortals(apexIndex, path.size() - 1, closestEndPos, path, straightPath, maxStraightPath, options);
+                if (!stat.isInProgress()) {
                     return straightPath;
+                }
             }
         }
 
@@ -1568,10 +1622,12 @@ public class NavMeshQuery {
             QueryFilter filter) {
 
         // Validate input
-        if (startRef == 0)
+        if (startRef == 0) {
             throw new IllegalArgumentException("Start ref = 0");
-        if (!m_nav.isValidPolyRef(startRef))
+        }
+        if (!m_nav.isValidPolyRef(startRef)) {
             throw new IllegalArgumentException("Invalid start ref");
+        }
 
         m_tinyNodePool.clear();
 
@@ -1608,8 +1664,9 @@ public class NavMeshQuery {
 
             // Collect vertices.
             int nverts = curPoly.vertCount;
-            for (int i = 0; i < nverts; ++i)
+            for (int i = 0; i < nverts; ++i) {
                 System.arraycopy(curTile.data.verts, curPoly.verts[i] * 3, verts, i * 3, 3);
+            }
 
             // If target is inside the poly, stop search.
             if (pointInPolygon(endPos, verts, nverts)) {
@@ -1635,8 +1692,9 @@ public class NavMeshQuery {
                                 MeshTile neiTile = tileAndPoly.first;
                                 Poly neiPoly = tileAndPoly.second;
                                 if (filter.passFilter(link.ref, neiTile, neiPoly)) {
-                                    if (nneis < MAX_NEIS)
+                                    if (nneis < MAX_NEIS) {
                                         neis[nneis++] = link.ref;
+                                    }
                                 }
                             }
                         }
@@ -1667,11 +1725,13 @@ public class NavMeshQuery {
                     for (int k = 0; k < nneis; ++k) {
                         // Skip if no node can be allocated.
                         Node neighbourNode = m_tinyNodePool.getNode(neis[k]);
-                        if (neighbourNode == null)
+                        if (neighbourNode == null) {
                             continue;
+                        }
                         // Skip if already visited.
-                        if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0)
+                        if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0) {
                             continue;
+                        }
 
                         // Skip the link if it is too far from search constraint.
                         // TODO: Maybe should use getPortalPoints(), but this one is way faster.
@@ -1679,8 +1739,9 @@ public class NavMeshQuery {
                         int vi = i * 3;
                         Tupple2<Float, Float> distseg = distancePtSegSqr2D(searchPos, verts, vj, vi);
                         float distSqr = distseg.first;
-                        if (distSqr > searchRadSqr)
+                        if (distSqr > searchRadSqr) {
                             continue;
+                        }
 
                         // Mark as the node as visited and push to queue.
                         neighbourNode.pidx = m_tinyNodePool.getNodeIdx(curNode);
@@ -1755,8 +1816,9 @@ public class NavMeshQuery {
                 break;
             }
         }
-        if (link == null)
+        if (link == null) {
             throw new IllegalArgumentException("Null link");
+        }
 
         // Handle off-mesh connections.
         if (fromPoly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
@@ -1887,10 +1949,12 @@ public class NavMeshQuery {
     public RaycastHit raycast(long startRef, float[] startPos, float[] endPos, QueryFilter filter, int options,
             long prevRef) {
         // Validate input
-        if (startRef == 0 || !m_nav.isValidPolyRef(startRef))
+        if (startRef == 0 || !m_nav.isValidPolyRef(startRef)) {
             throw new IllegalArgumentException("Invalid start ref");
-        if (prevRef != 0 && !m_nav.isValidPolyRef(prevRef))
+        }
+        if (prevRef != 0 && !m_nav.isValidPolyRef(prevRef)) {
             throw new IllegalArgumentException("Invalid pref ref");
+        }
 
         RaycastHit hit = new RaycastHit();
 
@@ -1935,8 +1999,9 @@ public class NavMeshQuery {
             hit.hitEdgeIndex = iresult.segMax;
 
             // Keep track of furthest t so far.
-            if (iresult.tmax > hit.t)
+            if (iresult.tmax > hit.t) {
                 hit.t = iresult.tmax;
+            }
 
             // Store visited polygons.
             hit.path.add(curRef);
@@ -1946,9 +2011,10 @@ public class NavMeshQuery {
                 hit.t = Float.MAX_VALUE;
 
                 // add the cost
-                if ((options & DT_RAYCAST_USE_COSTS) != 0)
+                if ((options & DT_RAYCAST_USE_COSTS) != 0) {
                     hit.pathCost += filter.getCost(curPos, endPos, prevRef, prevTile, prevPoly, curRef, tile, poly,
                             curRef, tile, poly);
+                }
                 return hit;
             }
 
@@ -1959,20 +2025,23 @@ public class NavMeshQuery {
                 Link link = tile.links.get(i);
 
                 // Find link which contains this edge.
-                if (link.edge != iresult.segMax)
+                if (link.edge != iresult.segMax) {
                     continue;
+                }
 
                 // Get pointer to the next polygon.
                 tileAndPolyUns = m_nav.getTileAndPolyByRefUnsafe(link.ref);
                 nextTile = tileAndPolyUns.first;
                 nextPoly = tileAndPolyUns.second;
                 // Skip off-mesh connections.
-                if (nextPoly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION)
+                if (nextPoly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
                     continue;
+                }
 
                 // Skip links based on filter.
-                if (!filter.passFilter(link.ref, nextTile, nextPoly))
+                if (!filter.passFilter(link.ref, nextTile, nextPoly)) {
                     continue;
+                }
 
                 // If the link is internal, just return the ref.
                 if (link.side == 0xff) {
@@ -2129,8 +2198,9 @@ public class NavMeshQuery {
             QueryFilter filter) {
 
         // Validate input
-        if (startRef == 0 || !m_nav.isValidPolyRef(startRef))
+        if (startRef == 0 || !m_nav.isValidPolyRef(startRef)) {
             throw new IllegalArgumentException("Invalid start ref");
+        }
 
         List<Long> resultRef = new ArrayList<>();
         List<Long> resultParent = new ArrayList<>();
@@ -2166,8 +2236,9 @@ public class NavMeshQuery {
             long parentRef = 0;
             MeshTile parentTile = null;
             Poly parentPoly = null;
-            if (bestNode.pidx != 0)
+            if (bestNode.pidx != 0) {
                 parentRef = m_nodePool.getNodeAtIdx(bestNode.pidx).id;
+            }
             if (parentRef != 0) {
                 tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(parentRef);
                 parentTile = tileAndPoly.first;
@@ -2182,8 +2253,9 @@ public class NavMeshQuery {
                 Link link = bestTile.links.get(i);
                 long neighbourRef = link.ref;
                 // Skip invalid neighbours and do not follow back to parent.
-                if (neighbourRef == 0 || neighbourRef == parentRef)
+                if (neighbourRef == 0 || neighbourRef == parentRef) {
                     continue;
+                }
 
                 // Expand to neighbour
                 tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(neighbourRef);
@@ -2191,8 +2263,9 @@ public class NavMeshQuery {
                 Poly neighbourPoly = tileAndPoly.second;
 
                 // Do not advance if the polygon is excluded by the filter.
-                if (!filter.passFilter(neighbourRef, neighbourTile, neighbourPoly))
+                if (!filter.passFilter(neighbourRef, neighbourTile, neighbourPoly)) {
                     continue;
+                }
 
                 // Find edge and calc distance to the edge.
                 PortalResult pp = getPortalPoints(bestRef, bestPoly, bestTile, neighbourRef, neighbourPoly,
@@ -2203,25 +2276,29 @@ public class NavMeshQuery {
                 // If the circle is not touching the next polygon, skip it.
                 Tupple2<Float, Float> distseg = distancePtSegSqr2D(centerPos, va, vb);
                 float distSqr = distseg.first;
-                if (distSqr > radiusSqr)
+                if (distSqr > radiusSqr) {
                     continue;
+                }
 
                 Node neighbourNode = m_nodePool.getNode(neighbourRef);
 
-                if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0)
+                if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0) {
                     continue;
+                }
 
                 // Cost
-                if (neighbourNode.flags == 0)
+                if (neighbourNode.flags == 0) {
                     neighbourNode.pos = vLerp(va, vb, 0.5f);
+                }
 
                 float cost = filter.getCost(bestNode.pos, neighbourNode.pos, parentRef, parentTile, parentPoly, bestRef,
                         bestTile, bestPoly, neighbourRef, neighbourTile, neighbourPoly);
 
                 float total = bestNode.total + cost;
                 // The node is already in open list and the new result is worse, skip.
-                if ((neighbourNode.flags & Node.DT_NODE_OPEN) != 0 && total >= neighbourNode.total)
+                if ((neighbourNode.flags & Node.DT_NODE_OPEN) != 0 && total >= neighbourNode.total) {
                     continue;
+                }
 
                 neighbourNode.id = neighbourRef;
                 neighbourNode.pidx = m_nodePool.getNodeIdx(bestNode);
@@ -2276,8 +2353,9 @@ public class NavMeshQuery {
     /// @returns The status flags for the query.
     public FindPolysAroundResult findPolysAroundShape(long startRef, float[] verts, int nverts, QueryFilter filter) {
         // Validate input
-        if (startRef == 0 || !m_nav.isValidPolyRef(startRef))
+        if (startRef == 0 || !m_nav.isValidPolyRef(startRef)) {
             throw new IllegalArgumentException("Invalid start ref");
+        }
 
         List<Long> resultRef = new ArrayList<>();
         List<Long> resultParent = new ArrayList<>();
@@ -2322,8 +2400,9 @@ public class NavMeshQuery {
             long parentRef = 0;
             MeshTile parentTile = null;
             Poly parentPoly = null;
-            if (bestNode.pidx != 0)
+            if (bestNode.pidx != 0) {
                 parentRef = m_nodePool.getNodeAtIdx(bestNode.pidx).id;
+            }
             if (parentRef != 0) {
                 tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(parentRef);
                 parentTile = tileAndPoly.first;
@@ -2338,8 +2417,9 @@ public class NavMeshQuery {
                 Link link = bestTile.links.get(i);
                 long neighbourRef = link.ref;
                 // Skip invalid neighbours and do not follow back to parent.
-                if (neighbourRef == 0 || neighbourRef == parentRef)
+                if (neighbourRef == 0 || neighbourRef == parentRef) {
                     continue;
+                }
 
                 // Expand to neighbour
                 tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(neighbourRef);
@@ -2347,8 +2427,9 @@ public class NavMeshQuery {
                 Poly neighbourPoly = tileAndPoly.second;
 
                 // Do not advance if the polygon is excluded by the filter.
-                if (!filter.passFilter(neighbourRef, neighbourTile, neighbourPoly))
+                if (!filter.passFilter(neighbourRef, neighbourTile, neighbourPoly)) {
                     continue;
+                }
 
                 // Find edge and calc distance to the edge.
                 PortalResult pp = getPortalPoints(bestRef, bestPoly, bestTile, neighbourRef, neighbourPoly,
@@ -2358,19 +2439,23 @@ public class NavMeshQuery {
 
                 // If the poly is not touching the edge to the next polygon, skip the connection it.
                 IntersectResult ir = intersectSegmentPoly2D(va, vb, verts, nverts);
-                if (!ir.intersects)
+                if (!ir.intersects) {
                     continue;
-                if (ir.tmin > 1.0f || ir.tmax < 0.0f)
+                }
+                if (ir.tmin > 1.0f || ir.tmax < 0.0f) {
                     continue;
+                }
 
                 Node neighbourNode = m_nodePool.getNode(neighbourRef);
 
-                if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0)
+                if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0) {
                     continue;
+                }
 
                 // Cost
-                if (neighbourNode.flags == 0)
+                if (neighbourNode.flags == 0) {
                     neighbourNode.pos = vLerp(va, vb, 0.5f);
+                }
 
                 float cost = filter.getCost(bestNode.pos, neighbourNode.pos, parentRef, parentTile, parentPoly, bestRef,
                         bestTile, bestPoly, neighbourRef, neighbourTile, neighbourPoly);
@@ -2378,8 +2463,9 @@ public class NavMeshQuery {
                 float total = bestNode.total + cost;
 
                 // The node is already in open list and the new result is worse, skip.
-                if ((neighbourNode.flags & Node.DT_NODE_OPEN) != 0 && total >= neighbourNode.total)
+                if ((neighbourNode.flags & Node.DT_NODE_OPEN) != 0 && total >= neighbourNode.total) {
                     continue;
+                }
 
                 neighbourNode.id = neighbourRef;
                 neighbourNode.pidx = m_nodePool.getNodeIdx(bestNode);
@@ -2435,8 +2521,9 @@ public class NavMeshQuery {
             QueryFilter filter) {
 
         // Validate input
-        if (startRef == 0 || !m_nav.isValidPolyRef(startRef))
+        if (startRef == 0 || !m_nav.isValidPolyRef(startRef)) {
             throw new IllegalArgumentException("Invalid start ref");
+        }
 
         List<Long> resultRef = new ArrayList<>();
         List<Long> resultParent = new ArrayList<>();
@@ -2473,16 +2560,19 @@ public class NavMeshQuery {
                 Link link = curTile.links.get(i);
                 long neighbourRef = link.ref;
                 // Skip invalid neighbours.
-                if (neighbourRef == 0)
+                if (neighbourRef == 0) {
                     continue;
+                }
 
                 // Skip if cannot alloca more nodes.
                 Node neighbourNode = m_tinyNodePool.getNode(neighbourRef);
-                if (neighbourNode == null)
+                if (neighbourNode == null) {
                     continue;
+                }
                 // Skip visited.
-                if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0)
+                if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0) {
                     continue;
+                }
 
                 // Expand to neighbour
                 tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(neighbourRef);
@@ -2490,12 +2580,14 @@ public class NavMeshQuery {
                 Poly neighbourPoly = tileAndPoly.second;
 
                 // Skip off-mesh connections.
-                if (neighbourPoly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION)
+                if (neighbourPoly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
                     continue;
+                }
 
                 // Do not advance if the polygon is excluded by the filter.
-                if (!filter.passFilter(neighbourRef, neighbourTile, neighbourPoly))
+                if (!filter.passFilter(neighbourRef, neighbourTile, neighbourPoly)) {
                     continue;
+                }
 
                 // Find edge and calc distance to the edge.
                 PortalResult pp = getPortalPoints(curRef, curPoly, curTile, neighbourRef, neighbourPoly, neighbourTile,
@@ -2506,8 +2598,9 @@ public class NavMeshQuery {
                 // If the circle is not touching the next polygon, skip it.
                 Tupple2<Float, Float> distseg = distancePtSegSqr2D(centerPos, va, vb);
                 float distSqr = distseg.first;
-                if (distSqr > radiusSqr)
+                if (distSqr > radiusSqr) {
                     continue;
+                }
 
                 // Mark node visited, this is done before the overlap test so that
                 // we will not visit the poly again if the test fails.
@@ -2518,8 +2611,9 @@ public class NavMeshQuery {
 
                 // Collect vertices of the neighbour poly.
                 int npa = neighbourPoly.vertCount;
-                for (int k = 0; k < npa; ++k)
+                for (int k = 0; k < npa; ++k) {
                     System.arraycopy(neighbourTile.data.verts, neighbourPoly.verts[k] * 3, pa, k * 3, 3);
+                }
 
                 boolean overlap = false;
                 for (int j = 0; j < resultRef.size(); ++j) {
@@ -2533,8 +2627,9 @@ public class NavMeshQuery {
                             break;
                         }
                     }
-                    if (connected)
+                    if (connected) {
                         continue;
+                    }
 
                     // Potentially overlapping.
                     tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(pastRef);
@@ -2543,16 +2638,18 @@ public class NavMeshQuery {
 
                     // Get vertices and test overlap
                     int npb = pastPoly.vertCount;
-                    for (int k = 0; k < npb; ++k)
+                    for (int k = 0; k < npb; ++k) {
                         System.arraycopy(pastTile.data.verts, pastPoly.verts[k] * 3, pb, k * 3, 3);
+                    }
 
                     if (overlapPolyPoly2D(pa, npa, pb, npb)) {
                         overlap = true;
                         break;
                     }
                 }
-                if (overlap)
+                if (overlap) {
                     continue;
+                }
 
                 resultRef.add(neighbourRef);
                 resultParent.add(curRef);
@@ -2579,8 +2676,9 @@ public class NavMeshQuery {
         // Find insertion point.
         int idx = 0;
         while (idx < ints.size()) {
-            if (tmax <= ints.get(idx).tmin)
+            if (tmax <= ints.get(idx).tmin) {
                 break;
+            }
             idx++;
         }
         // Store
@@ -2640,12 +2738,14 @@ public class NavMeshQuery {
                 if (poly.neis[j] != 0) {
                     int idx = (poly.neis[j] - 1);
                     neiRef = m_nav.getPolyRefBase(tile) | idx;
-                    if (!filter.passFilter(neiRef, tile, tile.data.polys[idx]))
+                    if (!filter.passFilter(neiRef, tile, tile.data.polys[idx])) {
                         neiRef = 0;
+                    }
                 }
                 // If the edge leads to another polygon and portals are not stored, skip.
-                if (neiRef != 0 && !storePortals)
+                if (neiRef != 0 && !storePortals) {
                     continue;
+                }
 
                 int vj = poly.verts[j] * 3;
                 int vi = poly.verts[i] * 3;
@@ -2718,8 +2818,9 @@ public class NavMeshQuery {
             QueryFilter filter) {
 
         // Validate input
-        if (startRef == 0 || !m_nav.isValidPolyRef(startRef))
+        if (startRef == 0 || !m_nav.isValidPolyRef(startRef)) {
             throw new IllegalArgumentException("Invalid start ref");
+        }
 
         m_nodePool.clear();
         m_openList.clear();
@@ -2753,8 +2854,9 @@ public class NavMeshQuery {
             long parentRef = 0;
             MeshTile parentTile = null;
             Poly parentPoly = null;
-            if (bestNode.pidx != 0)
+            if (bestNode.pidx != 0) {
                 parentRef = m_nodePool.getNodeAtIdx(bestNode.pidx).id;
+            }
             if (parentRef != 0) {
                 tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(parentRef);
                 parentTile = tileAndPoly.first;
@@ -2774,20 +2876,23 @@ public class NavMeshQuery {
                                 tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(link.ref);
                                 MeshTile neiTile = tileAndPoly.first;
                                 Poly neiPoly = tileAndPoly.second;
-                                if (filter.passFilter(link.ref, neiTile, neiPoly))
+                                if (filter.passFilter(link.ref, neiTile, neiPoly)) {
                                     solid = false;
+                                }
                             }
                             break;
                         }
                     }
-                    if (!solid)
+                    if (!solid) {
                         continue;
+                    }
                 } else if (bestPoly.neis[j] != 0) {
                     // Internal edge
                     int idx = (bestPoly.neis[j] - 1);
                     long ref = m_nav.getPolyRefBase(bestTile) | idx;
-                    if (filter.passFilter(ref, bestTile, bestTile.data.polys[idx]))
+                    if (filter.passFilter(ref, bestTile, bestTile.data.polys[idx])) {
                         continue;
+                    }
                 }
 
                 // Calc distance to the edge.
@@ -2798,8 +2903,9 @@ public class NavMeshQuery {
                 float tseg = distseg.second;
 
                 // Edge is too far, skip.
-                if (distSqr > radiusSqr)
+                if (distSqr > radiusSqr) {
                     continue;
+                }
 
                 // Hit wall, update radius.
                 radiusSqr = distSqr;
@@ -2817,8 +2923,9 @@ public class NavMeshQuery {
                 Link link = bestTile.links.get(i);
                 long neighbourRef = link.ref;
                 // Skip invalid neighbours and do not follow back to parent.
-                if (neighbourRef == 0 || neighbourRef == parentRef)
+                if (neighbourRef == 0 || neighbourRef == parentRef) {
                     continue;
+                }
 
                 // Expand to neighbour.
                 tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(neighbourRef);
@@ -2826,8 +2933,9 @@ public class NavMeshQuery {
                 Poly neighbourPoly = tileAndPoly.second;
 
                 // Skip off-mesh connections.
-                if (neighbourPoly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION)
+                if (neighbourPoly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
                     continue;
+                }
 
                 // Calc distance to the edge.
                 int va = bestPoly.verts[link.edge] * 3;
@@ -2835,16 +2943,19 @@ public class NavMeshQuery {
                 Tupple2<Float, Float> distseg = distancePtSegSqr2D(centerPos, bestTile.data.verts, va, vb);
                 float distSqr = distseg.first;
                 // If the circle is not touching the next polygon, skip it.
-                if (distSqr > radiusSqr)
+                if (distSqr > radiusSqr) {
                     continue;
+                }
 
-                if (!filter.passFilter(neighbourRef, neighbourTile, neighbourPoly))
+                if (!filter.passFilter(neighbourRef, neighbourTile, neighbourPoly)) {
                     continue;
+                }
 
                 Node neighbourNode = m_nodePool.getNode(neighbourRef);
 
-                if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0)
+                if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0) {
                     continue;
+                }
 
                 // Cost
                 if (neighbourNode.flags == 0) {
@@ -2855,8 +2966,9 @@ public class NavMeshQuery {
                 float total = bestNode.total + vDist(bestNode.pos, neighbourNode.pos);
 
                 // The node is already in open list and the new result is worse, skip.
-                if ((neighbourNode.flags & Node.DT_NODE_OPEN) != 0 && total >= neighbourNode.total)
+                if ((neighbourNode.flags & Node.DT_NODE_OPEN) != 0 && total >= neighbourNode.total) {
                     continue;
+                }
 
                 neighbourNode.id = neighbourRef;
                 neighbourNode.flags = (neighbourNode.flags & ~Node.DT_NODE_CLOSED);
@@ -2891,8 +3003,9 @@ public class NavMeshQuery {
         try {
             Tupple2<MeshTile, Poly> tileAndPoly = m_nav.getTileAndPolyByRef(ref);
             // If cannot pass filter, assume flags has changed and boundary is invalid.
-            if (filter.passFilter(ref, tileAndPoly.first, tileAndPoly.second))
+            if (filter.passFilter(ref, tileAndPoly.first, tileAndPoly.second)) {
                 return true;
+            }
         } catch (IllegalArgumentException e) {
             // If cannot get polygon, assume it does not exists and boundary is invalid.
         }
@@ -2915,14 +3028,17 @@ public class NavMeshQuery {
      *          used immediately after one of the two Dijkstra searches, findPolysAroundCircle or findPolysAroundShape.
      */
     public List<Long> getPathFromDijkstraSearch(long endRef) {
-        if (!m_nav.isValidPolyRef(endRef))
+        if (!m_nav.isValidPolyRef(endRef)) {
             throw new IllegalArgumentException("Invalid end ref");
+        }
         List<Node> nodes = m_nodePool.findNodes(endRef);
-        if (nodes.size() != 1)
+        if (nodes.size() != 1) {
             throw new IllegalArgumentException("Invalid end ref");
+        }
         Node endNode = nodes.get(0);
-        if ((endNode.flags & DT_NODE_CLOSED) == 0)
+        if ((endNode.flags & DT_NODE_CLOSED) == 0) {
             throw new IllegalArgumentException("Invalid end ref");
+        }
         return getPathToNode(endNode);
     }
 

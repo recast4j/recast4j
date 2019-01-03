@@ -1,0 +1,525 @@
+/*
+Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
+recast4j copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
+
+This software is provided 'as-is', without any express or implied
+warranty.  In no event will the authors be held liable for any damages
+arising from the use of this software.
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
+1. The origin of this software must not be misrepresented; you must not
+ claim that you wrote the original software. If you use this software
+ in a product, an acknowledgment in the product documentation would be
+ appreciated but is not required.
+2. Altered source versions must be plainly marked as such, and must not be
+ misrepresented as being the original software.
+3. This notice may not be removed or altered from any source distribution.
+*/
+package org.recast4j.demo;
+
+import static org.lwjgl.glfw.GLFW.GLFW_BLUE_BITS;
+import static org.lwjgl.glfw.GLFW.GLFW_DEPTH_BITS;
+import static org.lwjgl.glfw.GLFW.GLFW_DOUBLEBUFFER;
+import static org.lwjgl.glfw.GLFW.GLFW_GREEN_BITS;
+import static org.lwjgl.glfw.GLFW.GLFW_MOD_CONTROL;
+import static org.lwjgl.glfw.GLFW.GLFW_MOD_SHIFT;
+import static org.lwjgl.glfw.GLFW.GLFW_RED_BITS;
+import static org.lwjgl.glfw.GLFW.GLFW_RESIZABLE;
+import static org.lwjgl.glfw.GLFW.GLFW_SAMPLES;
+import static org.lwjgl.glfw.GLFW.GLFW_SRGB_CAPABLE;
+import static org.lwjgl.glfw.GLFW.GLFW_VISIBLE;
+import static org.lwjgl.glfw.GLFW.glfwCreateWindow;
+import static org.lwjgl.glfw.GLFW.glfwDefaultWindowHints;
+import static org.lwjgl.glfw.GLFW.glfwGetPrimaryMonitor;
+import static org.lwjgl.glfw.GLFW.glfwGetVideoMode;
+import static org.lwjgl.glfw.GLFW.glfwInit;
+import static org.lwjgl.glfw.GLFW.glfwMakeContextCurrent;
+import static org.lwjgl.glfw.GLFW.glfwPollEvents;
+import static org.lwjgl.glfw.GLFW.glfwSetErrorCallback;
+import static org.lwjgl.glfw.GLFW.glfwSetWindowPos;
+import static org.lwjgl.glfw.GLFW.glfwShowWindow;
+import static org.lwjgl.glfw.GLFW.glfwSwapBuffers;
+import static org.lwjgl.glfw.GLFW.glfwSwapInterval;
+import static org.lwjgl.glfw.GLFW.glfwWindowHint;
+import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
+import static org.lwjgl.opengl.GL.createCapabilities;
+import static org.lwjgl.opengl.GL11.GL_BLEND;
+import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
+import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
+import static org.lwjgl.opengl.GL11.GL_FALSE;
+import static org.lwjgl.opengl.GL11.GL_FOG;
+import static org.lwjgl.opengl.GL11.GL_FOG_COLOR;
+import static org.lwjgl.opengl.GL11.GL_FOG_END;
+import static org.lwjgl.opengl.GL11.GL_FOG_MODE;
+import static org.lwjgl.opengl.GL11.GL_FOG_START;
+import static org.lwjgl.opengl.GL11.GL_LEQUAL;
+import static org.lwjgl.opengl.GL11.GL_LINEAR;
+import static org.lwjgl.opengl.GL11.GL_MODELVIEW;
+import static org.lwjgl.opengl.GL11.GL_MODELVIEW_MATRIX;
+import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
+import static org.lwjgl.opengl.GL11.GL_PROJECTION;
+import static org.lwjgl.opengl.GL11.GL_PROJECTION_MATRIX;
+import static org.lwjgl.opengl.GL11.GL_RENDERER;
+import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
+import static org.lwjgl.opengl.GL11.GL_TRUE;
+import static org.lwjgl.opengl.GL11.GL_VENDOR;
+import static org.lwjgl.opengl.GL11.GL_VERSION;
+import static org.lwjgl.opengl.GL11.GL_VIEWPORT;
+import static org.lwjgl.opengl.GL11.glBlendFunc;
+import static org.lwjgl.opengl.GL11.glClear;
+import static org.lwjgl.opengl.GL11.glClearColor;
+import static org.lwjgl.opengl.GL11.glDepthFunc;
+import static org.lwjgl.opengl.GL11.glDisable;
+import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL11.glFogf;
+import static org.lwjgl.opengl.GL11.glFogfv;
+import static org.lwjgl.opengl.GL11.glFogi;
+import static org.lwjgl.opengl.GL11.glGetFloatv;
+import static org.lwjgl.opengl.GL11.glGetIntegerv;
+import static org.lwjgl.opengl.GL11.glGetString;
+import static org.lwjgl.opengl.GL11.glLoadIdentity;
+import static org.lwjgl.opengl.GL11.glMatrixMode;
+import static org.lwjgl.opengl.GL11.glRotatef;
+import static org.lwjgl.opengl.GL11.glTranslatef;
+import static org.lwjgl.opengl.GL11.glViewport;
+import static org.lwjgl.opengl.GL20.GL_SHADING_LANGUAGE_VERSION;
+import static org.lwjgl.system.MemoryUtil.NULL;
+
+import java.nio.IntBuffer;
+import java.util.Optional;
+
+import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWVidMode;
+import org.lwjgl.opengl.ARBDebugOutput;
+import org.lwjgl.opengl.GL43;
+import org.lwjgl.opengl.GLCapabilities;
+import org.recast4j.demo.builder.SampleAreaModifications;
+import org.recast4j.demo.builder.SoloNavMeshBuilder;
+import org.recast4j.demo.draw.GLU;
+import org.recast4j.demo.draw.NavMeshRenderer;
+import org.recast4j.demo.draw.RecastDebugDraw;
+import org.recast4j.demo.geom.DemoInputGeomProvider;
+import org.recast4j.demo.io.ObjImporter;
+import org.recast4j.demo.math.DemoMath;
+import org.recast4j.demo.sample.Sample;
+import org.recast4j.demo.settings.SettingsUI;
+import org.recast4j.demo.tool.ConvexVolumeTool;
+import org.recast4j.demo.tool.OffMeshConnectionTool;
+import org.recast4j.demo.tool.TestNavmeshTool;
+import org.recast4j.demo.tool.Tool;
+import org.recast4j.demo.tool.ToolsUI;
+import org.recast4j.demo.ui.MouseListener;
+import org.recast4j.demo.ui.NuklearUI;
+import org.recast4j.detour.MeshData;
+import org.recast4j.detour.NavMesh;
+import org.recast4j.detour.Tupple2;
+import org.recast4j.recast.RecastBuilder.RecastBuilderResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class RecastDemo {
+
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private NuklearUI nuklearUI;
+    private GLFWErrorCallback errorfun;
+    private int width = 1000;
+    private int height = 900;
+    private final String title = "Recast3j Demo";
+    private GLCapabilities capabilities;
+    private final RecastDebugDraw dd = new RecastDebugDraw();
+    private final NavMeshRenderer renderer = new NavMeshRenderer(dd);
+    private boolean building = false;
+
+    private final OffMeshConnectionTool offMeshConnectionTool = new OffMeshConnectionTool();
+    private final ConvexVolumeTool convexVolumeTool = new ConvexVolumeTool();
+    private final TestNavmeshTool testNavmeshTool = new TestNavmeshTool();
+    private Sample sample;
+
+    private boolean processHitTest = false;
+    private boolean processHitTestShift;
+    private int modState;
+
+    private final float[] mousePos = new float[2];
+
+    private boolean mouseOverMenu;
+    private boolean pan;
+    private boolean movedDuringPan;
+    private boolean rotate;
+    private boolean movedDuringRotate;
+    private final float[] origMousePos = new float[2];
+    private final float[] origCameraEulers = new float[2];
+    private final float[] origCameraPos = new float[3];
+
+    private final float cameraEulers[] = { 45, -45 };
+    private final float cameraPos[] = { 0, 0, 0 };
+
+    private final float[] rayStart = new float[3];
+    private final float[] rayEnd = new float[3];
+
+    private boolean markerPositionSet;
+    private final float[] markerPosition = new float[3];
+    private boolean showSample;
+
+    public void start() {
+        glfwSetErrorCallback(errorfun = GLFWErrorCallback.createPrint(System.err));
+        if (!glfwInit()) {
+            throw new IllegalStateException("Unable to initialize GLFW");
+        }
+        glfwDefaultWindowHints();
+        glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+        glfwWindowHint(GLFW_SRGB_CAPABLE, GL_TRUE);
+        glfwWindowHint(GLFW_RED_BITS, 8);
+        glfwWindowHint(GLFW_GREEN_BITS, 8);
+        glfwWindowHint(GLFW_BLUE_BITS, 8);
+        glfwWindowHint(GLFW_SAMPLES, 4);
+        glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
+        glfwWindowHint(GLFW_DEPTH_BITS, 24);
+
+        // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+        // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+        // glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+        // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+        // PointerBuffer monitors = glfwGetMonitors();
+        long monitor = glfwGetPrimaryMonitor();
+        // if (monitors.limit() > 1) {
+        // monitor = monitors.get(1);
+        // }
+        GLFWVidMode mode = glfwGetVideoMode(monitor);
+        // glfwWindowHint(GLFW_RED_BITS, mode.redBits());
+        // glfwWindowHint(GLFW_GREEN_BITS, mode.greenBits());
+        // glfwWindowHint(GLFW_BLUE_BITS, mode.blueBits());
+        // glfwWindowHint(GLFW_REFRESH_RATE, mode.refreshRate());
+
+        float aspect = 16.0f / 9.0f;
+        width = Math.min(mode.width(), (int) (mode.height() * aspect)) - 80;
+        height = mode.height() - 80;
+
+        long window = glfwCreateWindow(width, height, title, NULL, NULL);
+        if (window == NULL) {
+            throw new RuntimeException("Failed to create the GLFW window");
+        }
+        // -- move somewhere else:
+        glfwSetWindowPos(window, (mode.width() - width) / 2, (mode.height() - height) / 2);
+        // glfwSetWindowMonitor(window.getWindow(), monitor, 0, 0, mode.width(), mode.height(), mode.refreshRate());
+        glfwShowWindow(window);
+
+        glfwMakeContextCurrent(window);
+        glfwSwapInterval(-1);
+        capabilities = createCapabilities();
+        if (capabilities.OpenGL43) {
+            GL43.glDebugMessageControl(GL43.GL_DEBUG_SOURCE_API, GL43.GL_DEBUG_TYPE_OTHER, GL43.GL_DEBUG_SEVERITY_NOTIFICATION,
+                    (IntBuffer) null, false);
+        } else if (capabilities.GL_ARB_debug_output) {
+            ARBDebugOutput.glDebugMessageControlARB(ARBDebugOutput.GL_DEBUG_SOURCE_API_ARB, ARBDebugOutput.GL_DEBUG_TYPE_OTHER_ARB,
+                    ARBDebugOutput.GL_DEBUG_SEVERITY_LOW_ARB, (IntBuffer) null, false);
+        }
+        String vendor = glGetString(GL_VENDOR);
+        logger.debug(vendor);
+        String version = glGetString(GL_VERSION);
+        logger.debug(version);
+        String renderGl = glGetString(GL_RENDERER);
+        logger.debug(renderGl);
+        String glslString = glGetString(GL_SHADING_LANGUAGE_VERSION);
+        logger.debug(glslString);
+        Mouse mouse = new Mouse(window);
+        mouse.addListener(new MouseListener() {
+
+            @Override
+            public void scroll(double xoffset, double yoffset) {
+
+            }
+
+            @Override
+            public void position(double x, double y) {
+                mousePos[0] = (float) x;
+                mousePos[1] = (float) y;
+                int dx = (int) (mousePos[0] - origMousePos[0]);
+                int dy = (int) (mousePos[1] - origMousePos[1]);
+                if (rotate) {
+                    cameraEulers[0] = origCameraEulers[0] + dy * 0.25f;
+                    cameraEulers[1] = origCameraEulers[1] + dx * 0.25f;
+                    if (dx * dx + dy * dy > 3 * 3) {
+                        movedDuringRotate = true;
+                    }
+                }
+            }
+
+            @Override
+            public void button(int button, int mods, boolean down) {
+                modState = mods;
+                if (down) {
+                    if (button == 1) {
+                        if (!mouseOverMenu) {
+                            // Rotate view
+                            rotate = true;
+                            movedDuringRotate = false;
+                            origMousePos[0] = mousePos[0];
+                            origMousePos[1] = mousePos[1];
+                            origCameraEulers[0] = cameraEulers[0];
+                            origCameraEulers[1] = cameraEulers[1];
+                        }
+                    } else if (button == 2) {
+                        if (!mouseOverMenu) {
+                            // Pan view
+                            pan = true;
+                            movedDuringPan = false;
+                            origMousePos[0] = mousePos[0];
+                            origMousePos[1] = mousePos[1];
+                            origCameraPos[0] = cameraPos[0];
+                            origCameraPos[1] = cameraPos[1];
+                            origCameraPos[2] = cameraPos[2];
+                        }
+                    }
+                } else {
+                    // Handle mouse clicks here.
+                    if (button == 1) {
+                        rotate = false;
+                        if (!mouseOverMenu) {
+                            if (!movedDuringRotate) {
+                                processHitTest = true;
+                                processHitTestShift = true;
+                            }
+                        }
+                    } else if (button == 0) {
+                        if (!mouseOverMenu) {
+                            processHitTest = true;
+                            processHitTestShift = (mods & GLFW_MOD_SHIFT) != 0 ? true : false;
+                        }
+                    } else if (button == 2) {
+                        pan = false;
+                    }
+                }
+            }
+        });
+
+        SettingsUI settingsUI = new SettingsUI();
+        ToolsUI toolsUI = new ToolsUI(offMeshConnectionTool, convexVolumeTool, testNavmeshTool);
+
+        nuklearUI = new NuklearUI(window, mouse, settingsUI, toolsUI);
+
+        DemoInputGeomProvider geom = new ObjImporter().load(getClass().getClassLoader().getResourceAsStream("nav_test.obj"));
+        sample = new Sample(geom, null, null, settingsUI, dd);
+        setSample();
+        toolsUI.setEnabled(true);
+        showSample = true;
+
+        float camr = 1000;
+
+        // Fog.
+        float fogColor[] = { 0.32f, 0.31f, 0.30f, 1.0f };
+
+        glEnable(GL_FOG);
+        glFogi(GL_FOG_MODE, GL_LINEAR);
+        glFogf(GL_FOG_START, camr * 0.1f);
+        glFogf(GL_FOG_END, camr * 1.25f);
+        glFogfv(GL_FOG_COLOR, fogColor);
+
+        glEnable(GL_CULL_FACE);
+        glDepthFunc(GL_LEQUAL);
+
+        while (!glfwWindowShouldClose(window)) {
+            nuklearUI.inputBegin();
+            glfwPollEvents();
+            nuklearUI.inputEnd(window);
+
+            // Set the viewport.
+            glViewport(0, 0, width, height);
+            int[] viewport = new int[4];
+            glGetIntegerv(GL_VIEWPORT, viewport);
+
+            // Clear the screen
+            glClearColor(0.3f, 0.3f, 0.32f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glDisable(GL_TEXTURE_2D);
+            glEnable(GL_DEPTH_TEST);
+
+            // Compute the projection matrix.
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            GLU.gluPerspective(50.0f, (float) width / (float) height, 1.0f, camr);
+            float[] projectionMatrix = new float[16];
+            glGetFloatv(GL_PROJECTION_MATRIX, projectionMatrix);
+
+            // Compute the modelview matrix.
+            glMatrixMode(GL_MODELVIEW);
+            glLoadIdentity();
+            glRotatef(cameraEulers[0], 1, 0, 0);
+            glRotatef(cameraEulers[1], 0, 1, 0);
+            glTranslatef(-cameraPos[0], -cameraPos[1], -cameraPos[2]);
+            float[] modelviewMatrix = new float[16];
+            glGetFloatv(GL_MODELVIEW_MATRIX, modelviewMatrix);
+
+            int width = viewport[2];
+            int height = viewport[3];
+            /*
+             * try (MemoryStack stack = stackPush()) { IntBuffer w = stack.mallocInt(1); IntBuffer h =
+             * stack.mallocInt(1); glfwGetWindowSize(win, w, h); width = w.get(0); height = h.get(0); }
+             */
+            mouseOverMenu = nuklearUI.layout(window, 0, 0, width, height, (int) mousePos[0], (int) mousePos[1]);
+
+            if (pan) {
+                int dx = (int) (mousePos[0] - origMousePos[0]);
+                int dy = (int) (mousePos[1] - origMousePos[1]);
+                if (dx * dx + dy * dy > 3 * 3) {
+                    movedDuringPan = true;
+                }
+                cameraPos[0] = origCameraPos[0];
+                cameraPos[1] = origCameraPos[1];
+                cameraPos[2] = origCameraPos[2];
+
+                cameraPos[0] -= 0.1f * dx * modelviewMatrix[0];
+                cameraPos[1] -= 0.1f * dx * modelviewMatrix[4];
+                cameraPos[2] -= 0.1f * dx * modelviewMatrix[8];
+
+                cameraPos[0] += 0.1f * dy * modelviewMatrix[1];
+                cameraPos[1] += 0.1f * dy * modelviewMatrix[5];
+                cameraPos[2] += 0.1f * dy * modelviewMatrix[9];
+            }
+
+            NavMesh navMesh;
+            if (settingsUI.isBuildTriggered()) {
+                if (!building) {
+
+                    float m_cellSize = settingsUI.getCellSize();
+                    float m_cellHeight = settingsUI.getCellHeight();
+                    float m_agentHeight = settingsUI.getAgentHeight();
+                    float m_agentRadius = settingsUI.getAgentRadius();
+                    float m_agentMaxClimb = settingsUI.getAgentMaxClimb();
+                    float m_agentMaxSlope = settingsUI.getAgentMaxSlope();
+                    int m_regionMinSize = settingsUI.getMinRegionSize();
+                    int m_regionMergeSize = settingsUI.getMergedRegionSize();
+                    float m_edgeMaxLen = 12.0f;
+                    float m_edgeMaxError = 1.3f;
+                    int m_vertsPerPoly = 6;
+                    float m_detailSampleDist = 6.0f;
+                    float m_detailSampleMaxError = 1.0f;
+                    long t = System.nanoTime();
+                    Tupple2<RecastBuilderResult, MeshData> buildResult = new SoloNavMeshBuilder().build(geom, settingsUI.getPartitioning(),
+                            m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize,
+                            m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError,
+                            settingsUI.isFilterLowHangingObstacles(), settingsUI.isFilterLedgeSpans(),
+                            settingsUI.isFilterWalkableLowHeightSpans());
+                    MeshData meshData = buildResult.second;
+                    // Update poly flags from areas.
+                    for (int i = 0; i < meshData.polys.length; ++i) {
+                        if (meshData.polys[i].getArea() == SampleAreaModifications.SAMPLE_POLYAREA_TYPE_WALKABLE) {
+                            meshData.polys[i].setArea(SampleAreaModifications.SAMPLE_POLYAREA_TYPE_GROUND);
+                        }
+                        if (meshData.polys[i].getArea() == SampleAreaModifications.SAMPLE_POLYAREA_TYPE_GROUND
+                                || meshData.polys[i].getArea() == SampleAreaModifications.SAMPLE_POLYAREA_TYPE_GRASS
+                                || meshData.polys[i].getArea() == SampleAreaModifications.SAMPLE_POLYAREA_TYPE_ROAD) {
+                            meshData.polys[i].flags = SampleAreaModifications.SAMPLE_POLYFLAGS_WALK;
+                        } else if (meshData.polys[i].getArea() == SampleAreaModifications.SAMPLE_POLYAREA_TYPE_WATER) {
+                            meshData.polys[i].flags = SampleAreaModifications.SAMPLE_POLYFLAGS_SWIM;
+                        } else if (meshData.polys[i].getArea() == SampleAreaModifications.SAMPLE_POLYAREA_TYPE_DOOR) {
+                            meshData.polys[i].flags = SampleAreaModifications.SAMPLE_POLYFLAGS_DOOR;
+                        }
+                    }
+
+                    navMesh = new NavMesh(meshData, m_vertsPerPoly, 0);
+                    settingsUI.setBuildTime((System.nanoTime() - t) / 1_000_000);
+                    sample = new Sample(geom, buildResult.first, navMesh, settingsUI, dd);
+                    setSample();
+                }
+            } else {
+                building = false;
+            }
+
+            if (!mouseOverMenu) {
+                GLU.glhUnProjectf(mousePos[0], viewport[3] - 1 - mousePos[1], 0.0f, modelviewMatrix, projectionMatrix, viewport, rayStart);
+                GLU.glhUnProjectf(mousePos[0], viewport[3] - 1 - mousePos[1], 1.0f, modelviewMatrix, projectionMatrix, viewport, rayEnd);
+
+                // Hit test mesh.
+                sample.getInputGeom().raycastMesh(rayStart, rayEnd);
+                if (processHitTest && sample != null) {
+                    Optional<Float> hit = sample.getInputGeom().raycastMesh(rayStart, rayEnd);
+                    if (hit.isPresent()) {
+                        float hitTime = hit.get();
+                        if ((modState & GLFW_MOD_CONTROL) != 0) {
+                            // Marker
+                            markerPositionSet = true;
+                            markerPosition[0] = rayStart[0] + (rayEnd[0] - rayStart[0]) * hitTime;
+                            markerPosition[1] = rayStart[1] + (rayEnd[1] - rayStart[1]) * hitTime;
+                            markerPosition[2] = rayStart[2] + (rayEnd[2] - rayStart[2]) * hitTime;
+                        } else {
+                            float[] pos = new float[3];
+                            pos[0] = rayStart[0] + (rayEnd[0] - rayStart[0]) * hitTime;
+                            pos[1] = rayStart[1] + (rayEnd[1] - rayStart[1]) * hitTime;
+                            pos[2] = rayStart[2] + (rayEnd[2] - rayStart[2]) * hitTime;
+                            Tool tool = toolsUI.getTool();
+                            if (tool != null) {
+                                tool.handleClick(rayStart, pos, processHitTestShift);
+                            }
+                        }
+                    } else {
+                        if ((modState & GLFW_MOD_CONTROL) != 0) {
+                            // Marker
+                            markerPositionSet = false;
+                        }
+                    }
+                }
+                processHitTest = false;
+            }
+
+            // Draw bounds
+            float[] bmin = geom.getMeshBoundsMin();
+            float[] bmax = geom.getMeshBoundsMax();
+
+            if (showSample) {
+                camr = (float) (Math
+                        .sqrt(DemoMath.sqr(bmax[0] - bmin[0]) + DemoMath.sqr(bmax[1] - bmin[1]) + DemoMath.sqr(bmax[2] - bmin[2])) / 2);
+                cameraPos[0] = (bmax[0] + bmin[0]) / 2 + camr;
+                cameraPos[1] = (bmax[1] + bmin[1]) / 2 + camr;
+                cameraPos[2] = (bmax[2] + bmin[2]) / 2 + camr;
+                camr *= 3;
+                cameraEulers[0] = 45;
+                cameraEulers[1] = -45;
+
+                showSample = false;
+            }
+            glFogf(GL_FOG_START, camr * 0.1f);
+            glFogf(GL_FOG_END, camr * 1.25f);
+
+            renderer.render(sample);
+            Tool tool = toolsUI.getTool();
+            if (tool != null) {
+                tool.handleRender(renderer);
+            }
+            glDisable(GL_FOG);
+
+            // Render GUI
+            glDisable(GL_DEPTH_TEST);
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            // gluOrtho2D(0, width, 0, height);
+            glMatrixMode(GL_MODELVIEW);
+            glLoadIdentity();
+            nuklearUI.render(window);
+            glfwSwapBuffers(window);
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+            }
+        }
+
+    }
+
+    private void setSample() {
+        offMeshConnectionTool.setSample(sample);
+        convexVolumeTool.setSample(sample);
+        testNavmeshTool.setSample(sample);
+    }
+
+    public static void main(String[] args) {
+        new RecastDemo().start();
+    }
+}

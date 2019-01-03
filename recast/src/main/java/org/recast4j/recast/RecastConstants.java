@@ -69,12 +69,7 @@ public class RecastConstants {
                                                          /// simplification.
 
     public enum PartitionType {
-        WATERSHED, MONOTONE, LAYERS;
-
-        @Override
-        public String toString() {
-            return name().substring(0, 1) + name().substring(1).toLowerCase();
-        }
+        WATERSHED, MONOTONE, LAYERS
     }
 
     public static final int RC_LOG_WARNING = 1;
