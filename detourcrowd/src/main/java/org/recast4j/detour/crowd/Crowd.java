@@ -41,7 +41,7 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.function.IntFunction;
 
-import org.recast4j.detour.ClosesPointOnPolyResult;
+import org.recast4j.detour.ClosestPointOnPolyResult;
 import org.recast4j.detour.DefaultQueryFilter;
 import org.recast4j.detour.FindNearestPolyResult;
 import org.recast4j.detour.FindPathResult;
@@ -702,7 +702,7 @@ public class Crowd {
                     if (reqPath.get(reqPath.size() - 1) != ag.targetRef) {
                         // Partial path, constrain target position inside the
                         // last polygon.
-                        ClosesPointOnPolyResult cr = m_navquery.closestPointOnPoly(reqPath.get(reqPath.size() - 1), ag.targetPos);
+                        ClosestPointOnPolyResult cr = m_navquery.closestPointOnPoly(reqPath.get(reqPath.size() - 1), ag.targetPos);
                         reqPos = cr.getClosest();
                     } else {
                         vCopy(reqPos, ag.targetPos);
@@ -827,7 +827,7 @@ public class Crowd {
                         if (res.get(res.size() - 1) != ag.targetRef) {
                             // Partial path, constrain target position inside
                             // the last polygon.
-                            ClosesPointOnPolyResult cr = m_navquery.closestPointOnPoly(res.get(res.size() - 1), targetPos);
+                            ClosestPointOnPolyResult cr = m_navquery.closestPointOnPoly(res.get(res.size() - 1), targetPos);
                             targetPos = cr.getClosest();
                         }
                     }

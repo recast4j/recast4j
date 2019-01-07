@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -21,93 +21,109 @@ package org.recast4j.recast;
 import org.recast4j.recast.RecastConstants.PartitionType;
 
 public class RecastConfig {
-	public final PartitionType partitionType;
+    public final PartitionType partitionType;
 
-	/** The width/height size of tile's on the xz-plane. [Limit: >= 0] [Units: vx] **/
-	public final int tileSize;
+    /** The width/height size of tile's on the xz-plane. [Limit: >= 0] [Units: vx] **/
+    public final int tileSize;
 
-	/** The xz-plane cell size to use for fields. [Limit: > 0] [Units: wu] **/
-	public final float cs;
+    /** The xz-plane cell size to use for fields. [Limit: > 0] [Units: wu] **/
+    public final float cs;
 
-	/** The y-axis cell size to use for fields. [Limit: > 0] [Units: wu] **/
-	public final float ch;
+    /** The y-axis cell size to use for fields. [Limit: > 0] [Units: wu] **/
+    public final float ch;
 
-	/** The maximum slope that is considered walkable. [Limits: 0 <= value < 90] [Units: Degrees] **/
-	public final float walkableSlopeAngle;
+    /** The maximum slope that is considered walkable. [Limits: 0 <= value < 90] [Units: Degrees] **/
+    public final float walkableSlopeAngle;
 
-	/**
-	 * Minimum floor to 'ceiling' height that will still allow the floor area to be considered walkable. [Limit: >= 3]
-	 * [Units: vx]
-	 **/
-	public final int walkableHeight;
+    /**
+     * Minimum floor to 'ceiling' height that will still allow the floor area to be considered walkable. [Limit: >= 3]
+     * [Units: vx]
+     **/
+    public final int walkableHeight;
 
-	/** Maximum ledge height that is considered to still be traversable. [Limit: >=0] [Units: vx] **/
-	public final int walkableClimb;
+    /** Maximum ledge height that is considered to still be traversable. [Limit: >=0] [Units: vx] **/
+    public final int walkableClimb;
 
-	/**
-	 * The distance to erode/shrink the walkable area of the heightfield away from obstructions. [Limit: >=0] [Units:
-	 * vx]
-	 **/
-	public final int walkableRadius;
+    /**
+     * The distance to erode/shrink the walkable area of the heightfield away from obstructions. [Limit: >=0] [Units:
+     * vx]
+     **/
+    public final int walkableRadius;
 
-	/** The maximum allowed length for contour edges along the border of the mesh. [Limit: >=0] [Units: vx] **/
-	public final int maxEdgeLen;
+    /** The maximum allowed length for contour edges along the border of the mesh. [Limit: >=0] [Units: vx] **/
+    public final int maxEdgeLen;
 
-	/**
-	 * The maximum distance a simplfied contour's border edges should deviate the original raw contour. [Limit: >=0]
-	 * [Units: vx]
-	 **/
-	public final float maxSimplificationError;
+    /**
+     * The maximum distance a simplfied contour's border edges should deviate the original raw contour. [Limit: >=0]
+     * [Units: vx]
+     **/
+    public final float maxSimplificationError;
 
-	/** The minimum number of cells allowed to form isolated island areas. [Limit: >=0] [Units: vx] **/
-	public final int minRegionArea;
+    /** The minimum number of cells allowed to form isolated island areas. [Limit: >=0] [Units: vx] **/
+    public final int minRegionArea;
 
-	/**
-	 * Any regions with a span count smaller than this value will, if possible, be merged with larger regions. [Limit:
-	 * >=0] [Units: vx]
-	 **/
-	public final int mergeRegionArea;
+    /**
+     * Any regions with a span count smaller than this value will, if possible, be merged with larger regions. [Limit:
+     * >=0] [Units: vx]
+     **/
+    public final int mergeRegionArea;
 
-	/**
-	 * The maximum number of vertices allowed for polygons generated during the contour to polygon conversion process.
-	 * [Limit: >= 3]
-	 **/
-	public final int maxVertsPerPoly;
+    /**
+     * The maximum number of vertices allowed for polygons generated during the contour to polygon conversion process.
+     * [Limit: >= 3]
+     **/
+    public final int maxVertsPerPoly;
 
-	/**
-	 * Sets the sampling distance to use when generating the detail mesh. (For height detail only.) [Limits: 0 or >=
-	 * 0.9] [Units: wu]
-	 **/
-	public final float detailSampleDist;
+    /**
+     * Sets the sampling distance to use when generating the detail mesh. (For height detail only.) [Limits: 0 or >=
+     * 0.9] [Units: wu]
+     **/
+    public final float detailSampleDist;
 
-	/**
-	 * The maximum distance the detail mesh surface should deviate from heightfield data. (For height detail only.)
-	 * [Limit: >=0] [Units: wu]
-	 **/
-	public final float detailSampleMaxError;
+    /**
+     * The maximum distance the detail mesh surface should deviate from heightfield data. (For height detail only.)
+     * [Limit: >=0] [Units: wu]
+     **/
+    public final float detailSampleMaxError;
 
-	public final AreaModification walkableAreaMod;
+    public final AreaModification walkableAreaMod;
+    public final boolean filterLowHangingObstacles;
+    public final boolean filterLedgeSpans;
+    public final boolean filterWalkableLowHeightSpans;
 
-	public RecastConfig(PartitionType partitionType, float cellSize, float cellHeight, float agentHeight,
-			float agentRadius, float agentMaxClimb, float agentMaxSlope, int regionMinSize, int regionMergeSize,
-			float edgeMaxLen, float edgeMaxError, int vertsPerPoly, float detailSampleDist, float detailSampleMaxError,
-			int tileSize, AreaModification walkableAreaMod) {
-		this.partitionType = partitionType;
-		this.cs = cellSize;
-		this.ch = cellHeight;
-		this.walkableSlopeAngle = agentMaxSlope;
-		this.walkableHeight = (int) Math.ceil(agentHeight / ch);
-		this.walkableClimb = (int) Math.floor(agentMaxClimb / ch);
-		this.walkableRadius = (int) Math.ceil(agentRadius / cs);
-		this.maxEdgeLen = (int) (edgeMaxLen / cellSize);
-		this.maxSimplificationError = edgeMaxError;
-		this.minRegionArea = regionMinSize * regionMinSize; // Note: area = size*size
-		this.mergeRegionArea = regionMergeSize * regionMergeSize; // Note: area = size*size
-		this.maxVertsPerPoly = vertsPerPoly;
-		this.detailSampleDist = detailSampleDist < 0.9f ? 0 : cellSize * detailSampleDist;
-		this.detailSampleMaxError = cellHeight * detailSampleMaxError;
-		this.tileSize = tileSize;
-		this.walkableAreaMod = walkableAreaMod;
-	}
+    public RecastConfig(PartitionType partitionType, float cellSize, float cellHeight, float agentHeight,
+            float agentRadius, float agentMaxClimb, float agentMaxSlope, int regionMinSize, int regionMergeSize,
+            float edgeMaxLen, float edgeMaxError, int vertsPerPoly, float detailSampleDist, float detailSampleMaxError,
+            int tileSize, AreaModification walkableAreaMod) {
+        this(partitionType, cellSize, cellHeight, agentHeight, agentRadius, agentMaxClimb, agentMaxSlope, regionMinSize,
+                regionMergeSize, edgeMaxLen, edgeMaxError, vertsPerPoly, detailSampleDist, detailSampleMaxError,
+                tileSize, walkableAreaMod, true, true, true);
+    }
+
+    public RecastConfig(PartitionType partitionType, float cellSize, float cellHeight, float agentHeight,
+            float agentRadius, float agentMaxClimb, float agentMaxSlope, int regionMinSize, int regionMergeSize,
+            float edgeMaxLen, float edgeMaxError, int vertsPerPoly, float detailSampleDist, float detailSampleMaxError,
+            int tileSize, AreaModification walkableAreaMod, boolean filterLowHangingObstacles, boolean filterLedgeSpans,
+            boolean filterWalkableLowHeightSpans) {
+        this.partitionType = partitionType;
+        cs = cellSize;
+        ch = cellHeight;
+        walkableSlopeAngle = agentMaxSlope;
+        walkableHeight = (int) Math.ceil(agentHeight / ch);
+        walkableClimb = (int) Math.floor(agentMaxClimb / ch);
+        walkableRadius = (int) Math.ceil(agentRadius / cs);
+        maxEdgeLen = (int) (edgeMaxLen / cellSize);
+        maxSimplificationError = edgeMaxError;
+        minRegionArea = regionMinSize * regionMinSize; // Note: area = size*size
+        mergeRegionArea = regionMergeSize * regionMergeSize; // Note: area = size*size
+        maxVertsPerPoly = vertsPerPoly;
+        this.detailSampleDist = detailSampleDist < 0.9f ? 0 : cellSize * detailSampleDist;
+        this.detailSampleMaxError = cellHeight * detailSampleMaxError;
+        this.tileSize = tileSize;
+        this.walkableAreaMod = walkableAreaMod;
+        this.filterLowHangingObstacles = filterLowHangingObstacles;
+        this.filterLedgeSpans = filterLedgeSpans;
+        this.filterWalkableLowHeightSpans = filterWalkableLowHeightSpans;
+    }
 
 }

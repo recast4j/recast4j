@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -25,92 +25,90 @@ import java.util.Map;
 
 public class NodePool {
 
-	Map<Long, List<Node>> m_map = new HashMap<>();
-	ArrayList<Node> m_nodes = new ArrayList<Node>();
+    private final Map<Long, List<Node>> m_map = new HashMap<>();
+    private final ArrayList<Node> m_nodes = new ArrayList<>();
 
-	public NodePool() {
+    public NodePool() {
 
-	}
+    }
 
-	public void clear() {
-		m_nodes.clear();
-		m_map.clear();
-	}
+    public void clear() {
+        m_nodes.clear();
+        m_map.clear();
+    }
 
-	List<Node> findNodes(long id) {
-		List<Node> nodes = m_map.get(id);
-		if (nodes == null) {
-			nodes = new ArrayList<>();
-		}
-		return nodes;
-	}
+    List<Node> findNodes(long id) {
+        List<Node> nodes = m_map.get(id);
+        if (nodes == null) {
+            nodes = new ArrayList<>();
+        }
+        return nodes;
+    }
 
-	Node findNode(long id) {
-		List<Node> nodes = m_map.get(id);
-		if (nodes != null && !nodes.isEmpty()) {
-			return nodes.get(0);
-		}
-		return null;
-	}
+    Node findNode(long id) {
+        List<Node> nodes = m_map.get(id);
+        if (nodes != null && !nodes.isEmpty()) {
+            return nodes.get(0);
+        }
+        return null;
+    }
 
-	Node findNode(long id, int state) {
-		List<Node> nodes = m_map.get(id);
-		if (nodes != null) {
-			for (Node node : nodes) {
-				if (node.state == state) {
-					return node;
-				}
-			}
-		}
-		return null;
-	}
+    Node findNode(long id, int state) {
+        List<Node> nodes = m_map.get(id);
+        if (nodes != null) {
+            for (Node node : nodes) {
+                if (node.state == state) {
+                    return node;
+                }
+            }
+        }
+        return null;
+    }
 
-	Node getNode(long id, int state) {
-		List<Node> nodes = m_map.get(id);
-		if (nodes != null) {
-			for (Node node : nodes) {
-				if (node.state == state) {
-					return node;
-				}
-			}
-		}
-		return create(id, state);
-	}
+    Node getNode(long id, int state) {
+        List<Node> nodes = m_map.get(id);
+        if (nodes != null) {
+            for (Node node : nodes) {
+                if (node.state == state) {
+                    return node;
+                }
+            }
+        }
+        return create(id, state);
+    }
 
-	protected Node create(long id, int state) {
-		Node node = new Node(m_nodes.size() + 1);
-		node.id = id;
-		node.state = state;
-		m_nodes.add(node);
-		List<Node> nodes = m_map.get(id);
-		if (nodes == null) {
-			nodes = new ArrayList<>();
-			m_map.put(id, nodes);
-		}
-		nodes.add(node);
-		return node;
-	}
+    protected Node create(long id, int state) {
+        Node node = new Node(m_nodes.size() + 1);
+        node.id = id;
+        node.state = state;
+        m_nodes.add(node);
+        List<Node> nodes = m_map.get(id);
+        if (nodes == null) {
+            nodes = new ArrayList<>();
+            m_map.put(id, nodes);
+        }
+        nodes.add(node);
+        return node;
+    }
 
-	public int getNodeIdx(Node node) {
-		return node != null ? node.index : 0;
-	}
+    public int getNodeIdx(Node node) {
+        return node != null ? node.index : 0;
+    }
 
-	public Node getNodeAtIdx(int idx) {
-		return idx != 0 ? m_nodes.get(idx - 1) : null;
-	}
+    public Node getNodeAtIdx(int idx) {
+        return idx != 0 ? m_nodes.get(idx - 1) : null;
+    }
 
-	public int getNodeCount() {
-		return m_nodes.size();
-	}
+    public int getNodeCount() {
+        return m_nodes.size();
+    }
 
-	public Node getNode(long ref) {
-		return getNode(ref, 0);
-	}
+    public Node getNode(long ref) {
+        return getNode(ref, 0);
+    }
 
-	/*
-	
-	inline int getMaxNodes() const { return m_maxNodes; }
-	inline dtNodeIndex getFirst(int bucket) const { return m_first[bucket]; }
-	inline dtNodeIndex getNext(int i) const { return m_next[i]; }
-	*/
+    public Map<Long, List<Node>> getNodeMap() {
+        return m_map;
+    }
+
 }

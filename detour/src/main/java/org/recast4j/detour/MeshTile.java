@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -25,22 +25,22 @@ import java.util.List;
  * Defines a navigation mesh tile.
  */
 public class MeshTile {
-	final int index;
-	/** Counter describing modifications to the tile. */
-	int salt;
-	/** The tile data. */
-	public MeshData data;
-	/** The tile links. */
-	final List<Link> links = new ArrayList<>();
-	/** Index to the next free link. */
-	int linksFreeList = NavMesh.DT_NULL_LINK;
-	/** Tile flags. (See: #dtTileFlags) */
-	int flags;
-	/** The next free tile, or the next tile in the spatial grid. */
-	MeshTile next;
+    final int index;
+    /** Counter describing modifications to the tile. */
+    int salt;
+    /** The tile data. */
+    public MeshData data;
+    /** The tile links. */
+    public final List<Link> links = new ArrayList<>();
+    /** Index to the next free link. */
+    int linksFreeList = NavMesh.DT_NULL_LINK;
+    /** Tile flags. (See: #dtTileFlags) */
+    int flags;
+    /** The next free tile, or the next tile in the spatial grid. */
+    MeshTile next;
 
-	public MeshTile(int index) {
-		this.index = index;
-	}
+    public MeshTile(int index) {
+        this.index = index;
+    }
 
 }
