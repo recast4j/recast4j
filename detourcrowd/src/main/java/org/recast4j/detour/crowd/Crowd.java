@@ -525,9 +525,10 @@ public class Crowd {
         updateAgentParameters(idx, params);
 
         // Find nearest position on navmesh and place the agent there.
-        FindNearestPolyResult nearest = m_navquery.findNearestPoly(pos, m_ext, m_filters[ag.params.queryFilterType]);
+        FindNearestPolyResult nearestPoly = m_navquery.findNearestPoly(pos, m_ext, m_filters[ag.params.queryFilterType]);
+        float[] nearest = nearestPoly.getNearestPos() != null ? nearestPoly.getNearestPos() : pos;
 
-        ag.corridor.reset(nearest.getNearestRef(), nearest.getNearestPos());
+        ag.corridor.reset(nearestPoly.getNearestRef(), nearest);
         ag.boundary.reset();
         ag.partial = false;
 
@@ -537,11 +538,11 @@ public class Crowd {
         vSet(ag.dvel, 0, 0, 0);
         vSet(ag.nvel, 0, 0, 0);
         vSet(ag.vel, 0, 0, 0);
-        vCopy(ag.npos, nearest.getNearestPos());
+        vCopy(ag.npos, nearest);
 
         ag.desiredSpeed = 0;
 
-        if (nearest.getNearestRef() != 0) {
+        if (nearestPoly.getNearestRef() != 0) {
             ag.state = CrowdAgentState.DT_CROWDAGENT_STATE_WALKING;
         } else {
             ag.state = CrowdAgentState.DT_CROWDAGENT_STATE_INVALID;
@@ -907,10 +908,10 @@ public class Crowd {
             if (!m_navquery.isValidPolyRef(agentRef, m_filters[ag.params.queryFilterType])) {
                 // Current location is not valid, try to reposition.
                 // TODO: this can snap agents, how to handle that?
-                FindNearestPolyResult fnp = m_navquery.findNearestPoly(ag.npos, m_ext, m_filters[ag.params.queryFilterType]);
-                agentRef = fnp.getNearestRef();
-                if (fnp.getNearestPos() != null) {
-                    vCopy(agentPos, fnp.getNearestPos());
+                FindNearestPolyResult nearestPoly = m_navquery.findNearestPoly(ag.npos, m_ext, m_filters[ag.params.queryFilterType]);
+                agentRef = nearestPoly.getNearestRef();
+                if (nearestPoly.getNearestPos() != null) {
+                    vCopy(agentPos, nearestPoly.getNearestPos());
                 }
 
                 if (agentRef == 0) {
