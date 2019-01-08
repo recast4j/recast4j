@@ -56,7 +56,6 @@ import org.lwjgl.nuklear.NkContext;
 import org.lwjgl.nuklear.NkMouse;
 import org.lwjgl.nuklear.NkVec2;
 import org.lwjgl.system.MemoryStack;
-import org.recast4j.demo.Mouse;
 
 public class NuklearUI {
 
@@ -66,6 +65,7 @@ public class NuklearUI {
     final NkColor white;
     private final NuklearUIModule[] modules;
     private final NuklearGL glContext;
+    private boolean mouseOverUI;
 
     public NuklearUI(long window, Mouse mouse, NuklearUIModule... modules) {
         allocator = NkAllocator.create();
@@ -95,9 +95,11 @@ public class NuklearUI {
 
             @Override
             public void scroll(double xoffset, double yoffset) {
-                try (MemoryStack stack = stackPush()) {
-                    NkVec2 scroll = NkVec2.mallocStack(stack).x((float) xoffset).y((float) yoffset);
-                    nk_input_scroll(ctx, scroll);
+                if (mouseOverUI) {
+                    try (MemoryStack stack = stackPush()) {
+                        NkVec2 scroll = NkVec2.mallocStack(stack).x((float) xoffset).y((float) yoffset);
+                        nk_input_scroll(ctx, scroll);
+                    }
                 }
             }
 
@@ -168,7 +170,7 @@ public class NuklearUI {
     }
 
     public boolean layout(long win, int x, int y, int width, int height, int mouseX, int mouseY) {
-        boolean mouseOverUI = false;
+        mouseOverUI = false;
         for (NuklearUIModule m : modules) {
             mouseOverUI = m.layout(ctx, x, y, width, height, mouseX, mouseY) | mouseOverUI;
         }

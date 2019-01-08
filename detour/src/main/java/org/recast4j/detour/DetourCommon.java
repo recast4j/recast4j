@@ -18,6 +18,8 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
+import java.util.Optional;
+
 public class DetourCommon {
 
     static float EPS = 1e-4f;
@@ -317,7 +319,7 @@ public class DetourCommon {
         return new Tupple2<>(dx * dx + dz * dz, t);
     }
 
-    static Tupple2<Boolean, Float> closestHeightPointTriangle(float[] p, float[] a, float[] b, float[] c) {
+    static Optional<Float> closestHeightPointTriangle(float[] p, float[] a, float[] b, float[] c) {
         float[] v0 = vSub(c, a);
         float[] v1 = vSub(b, a);
         float[] v2 = vSub(p, a);
@@ -334,10 +336,10 @@ public class DetourCommon {
         // If point lies inside the triangle, return interpolated ycoord.
         if (u >= epsilon && v >= epsilon && (u+v) <= denom - epsilon) {
             float h = a[1] + (v0[1]*u + v1[1]*v) / denom;
-            return new Tupple2<>(true, h);
+            return Optional.of(h);
         }
 
-        return new Tupple2<>(false, null);
+        return Optional.empty();
     }
 
     /// @par
@@ -579,17 +581,17 @@ public class DetourCommon {
         return a[0] * b[2] - a[2] * b[0];
     }
 
-    static Tupple3<Boolean, Float, Float> intersectSegSeg2D(float[] ap, float[] aq, float[] bp, float[] bq) {
+    static Optional<Tupple2<Float, Float>> intersectSegSeg2D(float[] ap, float[] aq, float[] bp, float[] bq) {
         float[] u = vSub(aq, ap);
         float[] v = vSub(bq, bp);
         float[] w = vSub(ap, bp);
         float d = vperpXZ(u, v);
         if (Math.abs(d) < 1e-6f) {
-            return new Tupple3<>(false, 0f, 0f);
+            return Optional.empty();
         }
         float s = vperpXZ(v, w) / d;
         float t = vperpXZ(u, w) / d;
-        return new Tupple3<>(true, s, t);
+        return Optional.of(new Tupple2<>(s, t));
     }
 
     public static float[] vScale(float[] in, float scale) {

@@ -5,10 +5,16 @@ import static org.lwjgl.nuklear.Nuklear.nk_label;
 import static org.lwjgl.nuklear.Nuklear.nk_layout_row_dynamic;
 import static org.lwjgl.nuklear.Nuklear.nk_option_label;
 import static org.lwjgl.nuklear.Nuklear.nk_spacing;
+import static org.recast4j.detour.DetourCommon.vCopy;
+import static org.recast4j.detour.DetourCommon.vLerp;
+import static org.recast4j.detour.DetourCommon.vMad;
+import static org.recast4j.detour.DetourCommon.vNormalize;
+import static org.recast4j.detour.DetourCommon.vSub;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.lwjgl.nuklear.NkContext;
 import org.recast4j.demo.builder.SampleAreaModifications;
@@ -18,12 +24,15 @@ import org.recast4j.demo.draw.NavMeshRenderer;
 import org.recast4j.demo.draw.RecastDebugDraw;
 import org.recast4j.demo.math.DemoMath;
 import org.recast4j.demo.sample.Sample;
+import org.recast4j.demo.tool.PathUtils.SteerTarget;
 import org.recast4j.detour.DefaultQueryFilter;
+import org.recast4j.detour.DetourCommon;
 import org.recast4j.detour.FindDistanceToWallResult;
 import org.recast4j.detour.FindLocalNeighbourhoodResult;
 import org.recast4j.detour.FindPolysAroundResult;
 import org.recast4j.detour.GetPolyWallSegmentsResult;
 import org.recast4j.detour.MeshTile;
+import org.recast4j.detour.MoveAlongSurfaceResult;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.detour.Poly;
@@ -56,14 +65,23 @@ public class TestNavmeshTool implements Tool {
     private List<Long> m_parent;
     private float m_neighbourhoodRadius;
     private final float[] m_queryPoly = new float[12];
+    private List<float[]> m_smoothPath;
 
     private enum ToolMode {
-        PATHFIND_FOLLOW, PATHFIND_STRAIGHT, PATHFIND_SLICED, DISTANCE_TO_WALL, RAYCAST, FIND_POLYS_IN_CIRCLE, FIND_POLYS_IN_SHAPE, FIND_LOCAL_NEIGHBOURHOOD
+        PATHFIND_FOLLOW,
+        PATHFIND_STRAIGHT,
+        PATHFIND_SLICED,
+        DISTANCE_TO_WALL,
+        RAYCAST,
+        FIND_POLYS_IN_CIRCLE,
+        FIND_POLYS_IN_SHAPE,
+        FIND_LOCAL_NEIGHBOURHOOD
     }
 
     public TestNavmeshTool() {
-        m_filter = new DefaultQueryFilter(SampleAreaModifications.SAMPLE_POLYFLAGS_ALL ^ SampleAreaModifications.SAMPLE_POLYFLAGS_DISABLED,
-                0, new float[] { 1f, 10f, 1f, 1f, 2f, 1.5f });
+        m_filter = new DefaultQueryFilter(
+                SampleAreaModifications.SAMPLE_POLYFLAGS_ALL ^ SampleAreaModifications.SAMPLE_POLYFLAGS_DISABLED, 0,
+                new float[] { 1f, 10f, 1f, 1f, 2f, 1.5f });
     }
 
     @Override
@@ -89,10 +107,10 @@ public class TestNavmeshTool implements Tool {
         int previousStraightPathOptions = m_straightPathOptions;
         int previousIncludeFlags = m_filter.getIncludeFlags();
 
-//        nk_layout_row_dynamic(ctx, 20, 1);
-//        if (nk_option_label(ctx, "Pathfind Follow", m_toolMode == ToolMode.PATHFIND_FOLLOW)) {
-//            m_toolMode = ToolMode.PATHFIND_FOLLOW;
-//        }
+        nk_layout_row_dynamic(ctx, 20, 1);
+        if (nk_option_label(ctx, "Pathfind Follow", m_toolMode == ToolMode.PATHFIND_FOLLOW)) {
+            m_toolMode = ToolMode.PATHFIND_FOLLOW;
+        }
         nk_layout_row_dynamic(ctx, 20, 1);
         if (nk_option_label(ctx, "Pathfind Straight", m_toolMode == ToolMode.PATHFIND_STRAIGHT)) {
             m_toolMode = ToolMode.PATHFIND_STRAIGHT;
@@ -113,10 +131,10 @@ public class TestNavmeshTool implements Tool {
             nk_layout_row_dynamic(ctx, 5, 1);
             nk_spacing(ctx, 1);
         }
-//        nk_layout_row_dynamic(ctx, 20, 1);
-//        if (nk_option_label(ctx, "Pathfind Sliced", m_toolMode == ToolMode.PATHFIND_SLICED)) {
-//            m_toolMode = ToolMode.PATHFIND_SLICED;
-//        }
+        // nk_layout_row_dynamic(ctx, 20, 1);
+        // if (nk_option_label(ctx, "Pathfind Sliced", m_toolMode == ToolMode.PATHFIND_SLICED)) {
+        // m_toolMode = ToolMode.PATHFIND_SLICED;
+        // }
         nk_layout_row_dynamic(ctx, 5, 1);
         nk_spacing(ctx, 1);
         nk_layout_row_dynamic(ctx, 20, 1);
@@ -151,16 +169,20 @@ public class TestNavmeshTool implements Tool {
         nk_label(ctx, "Include Flags", NK_TEXT_ALIGN_LEFT);
         nk_layout_row_dynamic(ctx, 20, 1);
         int includeFlags = 0;
-        if (nk_option_label(ctx, "Walk", (m_filter.getIncludeFlags() & SampleAreaModifications.SAMPLE_POLYFLAGS_WALK) != 0)) {
+        if (nk_option_label(ctx, "Walk",
+                (m_filter.getIncludeFlags() & SampleAreaModifications.SAMPLE_POLYFLAGS_WALK) != 0)) {
             includeFlags |= SampleAreaModifications.SAMPLE_POLYFLAGS_WALK;
         }
-        if (nk_option_label(ctx, "Swim", (m_filter.getIncludeFlags() & SampleAreaModifications.SAMPLE_POLYFLAGS_SWIM) != 0)) {
+        if (nk_option_label(ctx, "Swim",
+                (m_filter.getIncludeFlags() & SampleAreaModifications.SAMPLE_POLYFLAGS_SWIM) != 0)) {
             includeFlags |= SampleAreaModifications.SAMPLE_POLYFLAGS_SWIM;
         }
-        if (nk_option_label(ctx, "Door", (m_filter.getIncludeFlags() & SampleAreaModifications.SAMPLE_POLYFLAGS_DOOR) != 0)) {
+        if (nk_option_label(ctx, "Door",
+                (m_filter.getIncludeFlags() & SampleAreaModifications.SAMPLE_POLYFLAGS_DOOR) != 0)) {
             includeFlags |= SampleAreaModifications.SAMPLE_POLYFLAGS_DOOR;
         }
-        if (nk_option_label(ctx, "Jump", (m_filter.getIncludeFlags() & SampleAreaModifications.SAMPLE_POLYFLAGS_JUMP) != 0)) {
+        if (nk_option_label(ctx, "Jump",
+                (m_filter.getIncludeFlags() & SampleAreaModifications.SAMPLE_POLYFLAGS_JUMP) != 0)) {
             includeFlags |= SampleAreaModifications.SAMPLE_POLYFLAGS_JUMP;
         }
         m_filter.setIncludeFlags(includeFlags);
@@ -179,18 +201,124 @@ public class TestNavmeshTool implements Tool {
         if (m_sample == null || m_sample.getNavMesh() == null) {
             return;
         }
+        NavMeshQuery m_navQuery = m_sample.getNavMeshQuery();
         if (m_sposSet) {
-            m_startRef = m_sample.getNavMeshQuery().findNearestPoly(m_spos, m_polyPickExt, m_filter).getNearestRef();
+            m_startRef = m_navQuery.findNearestPoly(m_spos, m_polyPickExt, m_filter).getNearestRef();
         } else {
             m_startRef = 0;
         }
         if (m_eposSet) {
-            m_endRef = m_sample.getNavMeshQuery().findNearestPoly(m_epos, m_polyPickExt, m_filter).getNearestRef();
+            m_endRef = m_navQuery.findNearestPoly(m_epos, m_polyPickExt, m_filter).getNearestRef();
         } else {
             m_endRef = 0;
         }
-        NavMeshQuery m_navQuery = m_sample.getNavMeshQuery();
-        if (m_toolMode == ToolMode.PATHFIND_STRAIGHT) {
+        NavMesh m_navMesh = m_sample.getNavMesh();
+        if (m_toolMode == ToolMode.PATHFIND_FOLLOW) {
+            // m_pathIterNum = 0;
+            if (m_sposSet && m_eposSet && m_startRef != 0 && m_endRef != 0) {
+                m_polys = m_navQuery.findPath(m_startRef, m_endRef, m_spos, m_epos, m_filter).getRefs();
+                if (!m_polys.isEmpty()) {
+                    List<Long> polys = new ArrayList<>(m_polys);
+                    // Iterate over the path to find smooth path on the detail mesh surface.
+                    float[] iterPos = m_navQuery.closestPointOnPoly(m_startRef, m_spos).getClosest();
+                    float[] targetPos = m_navQuery.closestPointOnPoly(polys.get(polys.size() - 1), m_epos).getClosest();
+                    //
+                    float STEP_SIZE = 0.5f;
+                    float SLOP = 0.01f;
+                    //
+                    m_smoothPath = new ArrayList<>();
+                    m_smoothPath.add(iterPos);
+                    //
+                    // Move towards target a small advancement at a time until target reached or
+                    // when ran out of memory to store the path.
+                    while (!polys.isEmpty() && m_smoothPath.size() < MAX_SMOOTH) {
+                        // Find location to steer towards.
+                        Optional<SteerTarget> steerTarget = PathUtils.getSteerTarget(m_navQuery, iterPos, targetPos,
+                                SLOP, polys);
+                        if (!steerTarget.isPresent()) {
+                            break;
+                        }
+                        boolean endOfPath = (steerTarget.get().steerPosFlag & NavMeshQuery.DT_STRAIGHTPATH_END) != 0
+                                ? true
+                                : false;
+                        boolean offMeshConnection = (steerTarget.get().steerPosFlag
+                                & NavMeshQuery.DT_STRAIGHTPATH_OFFMESH_CONNECTION) != 0 ? true : false;
+
+                        // Find movement delta.
+                        float[] delta = vSub(steerTarget.get().steerPos, iterPos);
+                        float len = (float) Math.sqrt(DemoMath.vDot(delta, delta));
+                        // If the steer target is end of path or off-mesh link, do not move past the location.
+                        if ((endOfPath || offMeshConnection) && len < STEP_SIZE) {
+                            len = 1;
+                        } else {
+                            len = STEP_SIZE / len;
+                        }
+                        float[] moveTgt = vMad(iterPos, delta, len);
+                        // Move
+                        MoveAlongSurfaceResult result = m_navQuery.moveAlongSurface(polys.get(0), iterPos, moveTgt,
+                                m_filter);
+                        iterPos = new float[3];
+                        iterPos[0] = result.getResultPos()[0];
+                        iterPos[2] = result.getResultPos()[2];
+                        //
+                        // npolys = fixupCorridor(polys, npolys, MAX_POLYS, visited, nvisited);
+                        // npolys = fixupShortcuts(polys, npolys, m_navQuery);
+                        //
+                        iterPos[1] = m_navQuery.getPolyHeight(polys.get(0), result.getResultPos());
+                        //
+                        // Handle end of path and off-mesh links when close enough.
+                        if (endOfPath && PathUtils.inRange(iterPos, steerTarget.get().steerPos, SLOP, 1.0f)) {
+                            // Reached end of path.
+                            vCopy(iterPos, targetPos);
+                            if (m_smoothPath.size() < MAX_SMOOTH) {
+                                m_smoothPath.add(iterPos);
+                            }
+                            break;
+                        } else if (offMeshConnection
+                                && PathUtils.inRange(iterPos, steerTarget.get().steerPos, SLOP, 1.0f)) {
+                            // Reached off-mesh connection.
+                            // Advance the path up to and over the off-mesh connection.
+                            long prevRef = 0;
+                            long polyRef = polys.get(0);
+                            int npos = 0;
+                            while (npos < polys.size() && polyRef != steerTarget.get().steerPosRef) {
+                                prevRef = polyRef;
+                                polyRef = polys.get(npos);
+                                npos++;
+                            }
+                            polys = polys.subList(npos, polys.size());
+
+                            // Handle the connection.
+                            Tupple2<float[], float[]> offMeshCon = m_navMesh.getOffMeshConnectionPolyEndPoints(prevRef,
+                                    polyRef);
+                            float[] startPos = offMeshCon.first;
+                            float[] endPos = offMeshCon.second;
+                            // if (dtStatusSucceed(status))
+                            {
+                                if (m_smoothPath.size() < MAX_SMOOTH) {
+                                    m_smoothPath.add(startPos);
+                                    // Hack to make the dotted path not visible during off-mesh connection.
+                                    if ((m_smoothPath.size() & 1) != 0) {
+                                        m_smoothPath.add(startPos);
+                                    }
+                                }
+                                // Move position at the other side of the off-mesh link.
+                                vCopy(iterPos, endPos);
+                                iterPos[1] = m_navQuery.getPolyHeight(polys.get(0), iterPos);
+                            }
+                        }
+
+                        // Store results.
+                        if (m_smoothPath.size() < MAX_SMOOTH) {
+                            m_smoothPath.add(iterPos);
+                        }
+                    }
+                }
+            } else {
+                m_polys = null;
+                m_smoothPath = null;
+            }
+        } else if (m_toolMode == ToolMode.PATHFIND_STRAIGHT) {
             if (m_sposSet && m_eposSet && m_startRef != 0 && m_endRef != 0) {
                 m_polys = m_navQuery.findPath(m_startRef, m_endRef, m_spos, m_epos, m_filter).getRefs();
                 if (!m_polys.isEmpty()) {
@@ -199,7 +327,8 @@ public class TestNavmeshTool implements Tool {
                     if (m_polys.get(m_polys.size() - 1) != m_endRef) {
                         epos = m_navQuery.closestPointOnPoly(m_polys.get(m_polys.size() - 1), m_epos).getClosest();
                     }
-                    m_straightPath = m_navQuery.findStraightPath(m_spos, epos, m_polys, MAX_POLYS, m_straightPathOptions);
+                    m_straightPath = m_navQuery.findStraightPath(m_spos, epos, m_polys, MAX_POLYS,
+                            m_straightPathOptions);
                 }
             } else {
                 m_straightPath = null;
@@ -216,7 +345,7 @@ public class TestNavmeshTool implements Tool {
                         m_hitResult = false;
                     } else {
                         // Hit
-                        m_hitPos = DemoMath.vLerp(m_spos, m_epos, hit.t);
+                        m_hitPos = vLerp(m_spos, m_epos, hit.t);
                         m_hitNormal = Arrays.copyOf(hit.hitNormal, hit.hitNormal.length);
                         m_hitResult = true;
                     }
@@ -276,8 +405,8 @@ public class TestNavmeshTool implements Tool {
         } else if (m_toolMode == ToolMode.FIND_LOCAL_NEIGHBOURHOOD) {
             if (m_sposSet && m_startRef != 0) {
                 m_neighbourhoodRadius = m_sample.getSettingsUI().getAgentRadius() * 20.0f;
-                FindLocalNeighbourhoodResult result = m_navQuery.findLocalNeighbourhood(m_startRef, m_spos, m_neighbourhoodRadius,
-                        m_filter);
+                FindLocalNeighbourhoodResult result = m_navQuery.findLocalNeighbourhood(m_startRef, m_spos,
+                        m_neighbourhoodRadius, m_filter);
                 m_polys = result.getRefs();
                 m_parent = result.getParentRefs();
             }
@@ -323,18 +452,17 @@ public class TestNavmeshTool implements Tool {
                     dd.debugDrawNavMeshPoly(m_navMesh, poly, pathCol);
                 }
             }
-            /*
-            if (m_nsmoothPath != null)
-            {
+            if (m_smoothPath != null) {
                 dd.depthMask(false);
-                int spathCol = DebugDraw.duRGBA(0,0,0,220);
+                int spathCol = DebugDraw.duRGBA(0, 0, 0, 220);
                 dd.begin(DebugDrawPrimitives.LINES, 3.0f);
-                for (int i = 0; i < m_nsmoothPath; ++i) {
-                    dd.vertex(m_smoothPath[i*3], m_smoothPath[i*3+1]+0.1f, m_smoothPath[i*3+2], spathCol);
+                for (int i = 0; i < m_smoothPath.size(); ++i) {
+                    dd.vertex(m_smoothPath.get(i)[0], m_smoothPath.get(i)[1] + 0.1f, m_smoothPath.get(i)[2], spathCol);
                 }
                 dd.end();
                 dd.depthMask(true);
             }
+            /*
             if (m_pathIterNum)
             {
                 duDebugDrawNavMeshPoly(&dd, *m_navMesh, m_pathIterPolys[0], DebugDraw.duRGBA(255,255,255,128));
@@ -391,8 +519,10 @@ public class TestNavmeshTool implements Tool {
                     } else {
                         col = spathCol;
                     }
-                    dd.vertex(straightPathItem.getPos()[0], straightPathItem.getPos()[1] + 0.4f, straightPathItem.getPos()[2], col);
-                    dd.vertex(straightPathItem2.getPos()[0], straightPathItem2.getPos()[1] + 0.4f, straightPathItem2.getPos()[2], col);
+                    dd.vertex(straightPathItem.getPos()[0], straightPathItem.getPos()[1] + 0.4f,
+                            straightPathItem.getPos()[2], col);
+                    dd.vertex(straightPathItem2.getPos()[0], straightPathItem2.getPos()[1] + 0.4f,
+                            straightPathItem2.getPos()[2], col);
                 }
                 dd.end();
                 dd.begin(DebugDrawPrimitives.POINTS, 6.0f);
@@ -408,7 +538,8 @@ public class TestNavmeshTool implements Tool {
                     } else {
                         col = spathCol;
                     }
-                    dd.vertex(straightPathItem.getPos()[0], straightPathItem.getPos()[1] + 0.4f, straightPathItem.getPos()[2], col);
+                    dd.vertex(straightPathItem.getPos()[0], straightPathItem.getPos()[1] + 0.4f,
+                            straightPathItem.getPos()[2], col);
                 }
                 dd.end();
                 dd.depthMask(true);
@@ -429,14 +560,17 @@ public class TestNavmeshTool implements Tool {
                 for (int i = 0; i < m_straightPath.size() - 1; ++i) {
                     StraightPathItem straightPathItem = m_straightPath.get(i);
                     StraightPathItem straightPathItem2 = m_straightPath.get(i + 1);
-                    dd.vertex(straightPathItem.getPos()[0], straightPathItem.getPos()[1] + 0.4f, straightPathItem.getPos()[2], spathCol);
-                    dd.vertex(straightPathItem2.getPos()[0], straightPathItem2.getPos()[1] + 0.4f, straightPathItem2.getPos()[2], spathCol);
+                    dd.vertex(straightPathItem.getPos()[0], straightPathItem.getPos()[1] + 0.4f,
+                            straightPathItem.getPos()[2], spathCol);
+                    dd.vertex(straightPathItem2.getPos()[0], straightPathItem2.getPos()[1] + 0.4f,
+                            straightPathItem2.getPos()[2], spathCol);
                 }
                 dd.end();
                 dd.begin(DebugDrawPrimitives.POINTS, 4.0f);
                 for (int i = 0; i < m_straightPath.size(); ++i) {
                     StraightPathItem straightPathItem = m_straightPath.get(i);
-                    dd.vertex(straightPathItem.getPos()[0], straightPathItem.getPos()[1] + 0.4f, straightPathItem.getPos()[2], spathCol);
+                    dd.vertex(straightPathItem.getPos()[0], straightPathItem.getPos()[1] + 0.4f,
+                            straightPathItem.getPos()[2], spathCol);
                 }
                 dd.end();
 
@@ -444,7 +578,8 @@ public class TestNavmeshTool implements Tool {
                     int hitCol = DebugDraw.duRGBA(0, 0, 0, 128);
                     dd.begin(DebugDrawPrimitives.LINES, 2.0f);
                     dd.vertex(m_hitPos[0], m_hitPos[1] + 0.4f, m_hitPos[2], hitCol);
-                    dd.vertex(m_hitPos[0] + m_hitNormal[0] * agentRadius, m_hitPos[1] + 0.4f + m_hitNormal[1] * agentRadius,
+                    dd.vertex(m_hitPos[0] + m_hitNormal[0] * agentRadius,
+                            m_hitPos[1] + 0.4f + m_hitNormal[1] * agentRadius,
                             m_hitPos[2] + m_hitNormal[2] * agentRadius, hitCol);
                     dd.end();
                 }
@@ -454,8 +589,8 @@ public class TestNavmeshTool implements Tool {
             dd.debugDrawNavMeshPoly(m_navMesh, m_startRef, startCol);
             dd.depthMask(false);
             if (m_spos != null) {
-                dd.debugDrawCircle(m_spos[0], m_spos[1] + agentHeight / 2, m_spos[2], m_distanceToWall, DebugDraw.duRGBA(64, 16, 0, 220),
-                        2.0f);
+                dd.debugDrawCircle(m_spos[0], m_spos[1] + agentHeight / 2, m_spos[2], m_distanceToWall,
+                        DebugDraw.duRGBA(64, 16, 0, 220), 2.0f);
             }
             if (m_hitPos != null) {
                 dd.begin(DebugDrawPrimitives.LINES, 3.0f);
@@ -473,7 +608,8 @@ public class TestNavmeshTool implements Tool {
                         dd.depthMask(false);
                         float[] p0 = getPolyCenter(m_navMesh, m_parent.get(i));
                         float[] p1 = getPolyCenter(m_navMesh, m_polys.get(i));
-                        dd.debugDrawArc(p0[0], p0[1], p0[2], p1[0], p1[1], p1[2], 0.25f, 0.0f, 0.4f, DebugDraw.duRGBA(0, 0, 0, 128), 2.0f);
+                        dd.debugDrawArc(p0[0], p0[1], p0[2], p1[0], p1[1], p1[2], 0.25f, 0.0f, 0.4f,
+                                DebugDraw.duRGBA(0, 0, 0, 128), 2.0f);
                         dd.depthMask(true);
                     }
                     dd.depthMask(true);
@@ -485,7 +621,8 @@ public class TestNavmeshTool implements Tool {
                 float dx = m_epos[0] - m_spos[0];
                 float dz = m_epos[2] - m_spos[2];
                 float dist = (float) Math.sqrt(dx * dx + dz * dz);
-                dd.debugDrawCircle(m_spos[0], m_spos[1] + agentHeight / 2, m_spos[2], dist, DebugDraw.duRGBA(64, 16, 0, 220), 2.0f);
+                dd.debugDrawCircle(m_spos[0], m_spos[1] + agentHeight / 2, m_spos[2], dist,
+                        DebugDraw.duRGBA(64, 16, 0, 220), 2.0f);
                 dd.depthMask(true);
             }
         } else if (m_toolMode == ToolMode.FIND_POLYS_IN_SHAPE) {
@@ -497,7 +634,8 @@ public class TestNavmeshTool implements Tool {
                         dd.depthMask(false);
                         float[] p0 = getPolyCenter(m_navMesh, m_parent.get(i));
                         float[] p1 = getPolyCenter(m_navMesh, m_polys.get(i));
-                        dd.debugDrawArc(p0[0], p0[1], p0[2], p1[0], p1[1], p1[2], 0.25f, 0.0f, 0.4f, DebugDraw.duRGBA(0, 0, 0, 128), 2.0f);
+                        dd.debugDrawArc(p0[0], p0[1], p0[2], p1[0], p1[1], p1[2], 0.25f, 0.0f, 0.4f,
+                                DebugDraw.duRGBA(0, 0, 0, 128), 2.0f);
                         dd.depthMask(true);
                     }
                     dd.depthMask(true);
@@ -524,57 +662,45 @@ public class TestNavmeshTool implements Tool {
                         dd.depthMask(false);
                         float[] p0 = getPolyCenter(m_navMesh, m_parent.get(i));
                         float[] p1 = getPolyCenter(m_navMesh, m_polys.get(i));
-                        dd.debugDrawArc(p0[0], p0[1], p0[2], p1[0], p1[1], p1[2], 0.25f, 0.0f, 0.4f, DebugDraw.duRGBA(0, 0, 0, 128), 2.0f);
+                        dd.debugDrawArc(p0[0], p0[1], p0[2], p1[0], p1[1], p1[2], 0.25f, 0.0f, 0.4f,
+                                DebugDraw.duRGBA(0, 0, 0, 128), 2.0f);
                         dd.depthMask(true);
                     }
                     dd.depthMask(true);
                     if (m_sample.getNavMeshQuery() != null) {
-                        // int MAX_SEGS = DT_VERTS_PER_POLYGON*4;
-                        // float segs[MAX_SEGS*6];
-                        // dtPolyRef refs[MAX_SEGS];
-                        // memset(refs, 0, sizeof(dtPolyRef)*MAX_SEGS);
-                        // int nsegs = 0;
-                        GetPolyWallSegmentsResult result = m_sample.getNavMeshQuery().getPolyWallSegments(m_polys.get(i), false, m_filter);
+                        GetPolyWallSegmentsResult result = m_sample.getNavMeshQuery()
+                                .getPolyWallSegments(m_polys.get(i), false, m_filter);
                         dd.begin(DebugDrawPrimitives.LINES, 2.0f);
 
                         for (int j = 0; j < result.getSegmentVerts().size(); ++j) {
                             float[] s = result.getSegmentVerts().get(j);
-                            //
-                            // // Skip too distant segments.
-                            // float tseg;
-                            // float distSqr = dtDistancePtSegSqr2D(m_spos, s, s+3, tseg);
-                            // if (distSqr > DemoMath.sqr(m_neighbourhoodRadius)) {
-                            // continue;
-                            // }
-                            //
-                            // float delta[3], norm[3], p0[3], p1[3];
-                            // float delta = DemoMath.vSub(s, s)
-                            // dtVsub(delta, s+3,s);
-                            // dtVmad(p0, s, delta, 0.5f);
-                            // norm[0] = delta[2];
-                            // norm[1] = 0;
-                            // norm[2] = -delta[0];
-                            // dtVnormalize(norm);
-                            // dtVmad(p1, p0, norm, agentRadius*0.5f);
-                            //
-                            // // Skip backfacing segments.
-                            // if (refs[j])
-                            // {
-                            // unsigned int col = duRGBA(255,255,255,32);
-                            // dd.vertex(s[0],s[1]+agentClimb,s[2],col);
-                            // dd.vertex(s[3],s[4]+agentClimb,s[5],col);
-                            // }
-                            // else
-                            // {
-                            // unsigned int col = duRGBA(192,32,16,192);
-                            // if (dtTriArea2D(m_spos, s, s+3) < 0.0f)
-                            // col = duRGBA(96,32,16,192);
-                            //
-                            // dd.vertex(p0[0],p0[1]+agentClimb,p0[2],col);
-                            // dd.vertex(p1[0],p1[1]+agentClimb,p1[2],col);
-                            //
-                            // dd.vertex(s[0],s[1]+agentClimb,s[2],col);
-                            // dd.vertex(s[3],s[4]+agentClimb,s[5],col);
+                            float[] s3 = new float[] { s[3], s[4], s[5] };
+                            // Skip too distant segments.
+                            Tupple2<Float, Float> distSqr = DetourCommon.distancePtSegSqr2D(m_spos, s, 0, 3);
+                            if (distSqr.first > DemoMath.sqr(m_neighbourhoodRadius)) {
+                                continue;
+                            }
+                            float[] delta = vSub(s3, s);
+                            float[] p0 = vMad(s, delta, 0.5f);
+                            float[] norm = new float[] { delta[2], 0, -delta[0] };
+                            vNormalize(norm);
+                            float[] p1 = vMad(p0, norm, agentRadius * 0.5f);
+                            // Skip backfacing segments.
+                            if (result.getSegmentRefs().get(j) != 0) {
+                                int col = DebugDraw.duRGBA(255, 255, 255, 32);
+                                dd.vertex(s[0], s[1] + agentClimb, s[2], col);
+                                dd.vertex(s[3], s[4] + agentClimb, s[5], col);
+                            } else {
+                                int col = DebugDraw.duRGBA(192, 32, 16, 192);
+                                if (DetourCommon.triArea2D(m_spos, s, s3) < 0.0f) {
+                                    col = DebugDraw.duRGBA(96, 32, 16, 192);
+                                }
+                                dd.vertex(p0[0], p0[1] + agentClimb, p0[2], col);
+                                dd.vertex(p1[0], p1[1] + agentClimb, p1[2], col);
+
+                                dd.vertex(s[0], s[1] + agentClimb, s[2], col);
+                                dd.vertex(s[3], s[4] + agentClimb, s[5], col);
+                            }
                         }
                     }
                     dd.end();

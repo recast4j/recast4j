@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 import org.recast4j.detour.DetourCommon.IntersectResult;
@@ -447,9 +448,9 @@ public class NavMeshQuery {
                                 tile.data.detailVerts[index + 2] };
                     }
                 }
-                Tupple2<Boolean, Float> heightResult = closestHeightPointTriangle(closest, v[0], v[1], v[2]);
-                if (heightResult.first) {
-                    closest[1] = heightResult.second;
+                Optional<Float> heightResult = closestHeightPointTriangle(closest, v[0], v[1], v[2]);
+                if (heightResult.isPresent()) {
+                    closest[1] = heightResult.get();
                     break;
                 }
             }
@@ -549,9 +550,9 @@ public class NavMeshQuery {
                                 tile.data.detailVerts[index + 2] };
                     }
                 }
-                Tupple2<Boolean, Float> heightResult = closestHeightPointTriangle(pos, v[0], v[1], v[2]);
-                if (heightResult.first) {
-                    return heightResult.second;
+                Optional<Float> heightResult = closestHeightPointTriangle(pos, v[0], v[1], v[2]);
+                if (heightResult.isPresent()) {
+                    return heightResult.get();
                 }
             }
         }
@@ -1381,9 +1382,9 @@ public class NavMeshQuery {
             }
 
             // Append intersection
-            Tupple3<Boolean, Float, Float> interect = intersectSegSeg2D(startPos, endPos, left, right);
-            if (interect.first) {
-                float t = interect.third;
+            Optional<Tupple2<Float,Float>> interect = intersectSegSeg2D(startPos, endPos, left, right);
+            if (interect.isPresent()) {
+                float t = interect.get().second;
                 float[] pt = vLerp(left, right, t);
                 stat = appendVertex(pt, 0, path.get(i + 1), straightPath, maxStraightPath);
                 if (!stat.isInProgress()) {
@@ -1421,13 +1422,16 @@ public class NavMeshQuery {
     /// @returns The status flags for the query.
     public List<StraightPathItem> findStraightPath(float[] startPos, float[] endPos, List<Long> path,
             int maxStraightPath, int options) {
+
+        assert !path.isEmpty() : "Empty path";
+
+        List<StraightPathItem> straightPath = new ArrayList<>();
         if (path.isEmpty()) {
-            throw new IllegalArgumentException("Empty path");
+            return straightPath;
         }
         // TODO: Should this be callers responsibility?
         float[] closestStartPos = closestPointOnPolyBoundary(path.get(0), startPos);
         float[] closestEndPos = closestPointOnPolyBoundary(path.get(path.size() - 1), endPos);
-        List<StraightPathItem> straightPath = new ArrayList<>();
         // Add start point.
         Status stat = appendVertex(closestStartPos, DT_STRAIGHTPATH_START, path.get(0), straightPath, maxStraightPath);
         if (!stat.isInProgress()) {

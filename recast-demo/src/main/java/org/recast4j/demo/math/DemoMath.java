@@ -27,14 +27,6 @@ public class DemoMath {
         return dx * dx + dy * dy + dz * dz;
     }
 
-    public static float[] vSub(float[] v1, float[] v2) {
-        float[] dest = new float[3];
-        dest[0] = v1[0] - v2[0];
-        dest[1] = v1[1] - v2[1];
-        dest[2] = v1[2] - v2[2];
-        return dest;
-    }
-
     public static float[] vCross(float[] v1, float[] v2) {
         float[] dest = new float[3];
         dest[0] = v1[1] * v2[2] - v1[2] * v2[1];
@@ -51,11 +43,4 @@ public class DemoMath {
         return f * f;
     }
 
-    public static float[] vLerp(float[] v1, float[] v2, float t) {
-        float[] dest = new float[3];
-        dest[0] = v1[0] + (v2[0] - v1[0]) * t;
-        dest[1] = v1[1] + (v2[1] - v1[1]) * t;
-        dest[2] = v1[2] + (v2[2] - v1[2]) * t;
-        return dest;
-    }
 }

@@ -7,14 +7,29 @@
 
 	<groupId>org.recast4j</groupId>
 	<artifactId>recast-demo</artifactId>
-	<version>1.0.8-SNAPSHOT</version>
+	<version>1.0.9-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>recast-demo</name>
-	<url>http://maven.apache.org</url>
+	<description>Navigation Mesh Construction and Path-finding Toolkit.</description>
+	<url>http://recast4j.org</url>
+	<licenses>
+		<license>
+			<name>Zlib License</name>
+			<url>https://github.com/ppiastucki/recast4j/blob/master/License.txt</url>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<name>Piotr Piastucki</name>
+			<email>piotr@jtilia.org</email>
+			<organization>jtilia</organization>
+			<organizationUrl>https://github.com/ppiastucki</organizationUrl>
+		</developer>
+	</developers>
 	<properties>
 		<lwjgl.version>3.2.0</lwjgl.version>
-		<java.version>1.8</java.version>
+		<java.version>11</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -72,7 +87,37 @@
 			<dependencies>
 				<dependency>
 					<groupId>org.lwjgl</groupId>
+					<artifactId>lwjgl</artifactId>
+					<version>${lwjgl.version}</version>
+					<classifier>natives-windows</classifier>
+				</dependency>
+				<dependency>
+					<groupId>org.lwjgl</groupId>
+					<artifactId>lwjgl-glfw</artifactId>
+					<version>${lwjgl.version}</version>
+					<classifier>natives-windows</classifier>
+				</dependency>
+				<dependency>
+					<groupId>org.lwjgl</groupId>
+					<artifactId>lwjgl-opengl</artifactId>
+					<version>${lwjgl.version}</version>
+					<classifier>natives-windows</classifier>
+				</dependency>
+				<dependency>
+					<groupId>org.lwjgl</groupId>
+					<artifactId>lwjgl-stb</artifactId>
+					<version>${lwjgl.version}</version>
+					<classifier>natives-windows</classifier>
+				</dependency>
+				<dependency>
+					<groupId>org.lwjgl</groupId>
 					<artifactId>lwjgl-tinyfd</artifactId>
+					<version>${lwjgl.version}</version>
+					<classifier>natives-windows</classifier>
+				</dependency>
+				<dependency>
+					<groupId>org.lwjgl</groupId>
+					<artifactId>lwjgl-nuklear</artifactId>
 					<version>${lwjgl.version}</version>
 					<classifier>natives-windows</classifier>
 				</dependency>
@@ -172,12 +217,12 @@
 		<dependency>
 			<groupId>org.recast4j</groupId>
 			<artifactId>recast</artifactId>
-			<version>1.0.8-SNAPSHOT</version>
+			<version>1.0.8</version>
 		</dependency>
 		<dependency>
 			<groupId>org.recast4j</groupId>
 			<artifactId>detour</artifactId>
-			<version>1.0.8-SNAPSHOT</version>
+			<version>1.0.8</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

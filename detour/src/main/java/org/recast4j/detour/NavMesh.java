@@ -37,6 +37,7 @@ import static org.recast4j.detour.DetourCommon.vSub;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class NavMesh {
 
@@ -1013,9 +1014,9 @@ public class NavMesh {
                                 tile.data.detailVerts[index + 2] };
                     }
                 }
-                Tupple2<Boolean, Float> heightResult = closestHeightPointTriangle(closest, v[0], v[1], v[2]);
-                if (heightResult.first) {
-                    closest[1] = heightResult.second;
+                Optional<Float> heightResult = closestHeightPointTriangle(closest, v[0], v[1], v[2]);
+                if (heightResult.isPresent()) {
+                    closest[1] = heightResult.get();
                     break;
                 }
             }
