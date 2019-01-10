@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -20,28 +20,22 @@ package org.recast4j.detour;
 
 //TODO: (PP) Add comments
 public class FindRandomPointResult {
-	private final Status status;
-	private final long randomRef;
-	private final float[] randomPt;
+    private final long randomRef;
+    private final float[] randomPt;
 
-	public FindRandomPointResult(Status status, long randomRef, float[] randomPt) {
-		this.status = status;
-		this.randomRef = randomRef;
-		this.randomPt = randomPt;
-	}
+    public FindRandomPointResult(long randomRef, float[] randomPt) {
+        this.randomRef = randomRef;
+        this.randomPt = randomPt;
+    }
 
-	public Status getStatus() {
-		return status;
-	}
+    /// @param[out] randomRef The reference id of the random location.
+    public long getRandomRef() {
+        return randomRef;
+    }
 
-	/// @param[out] randomRef The reference id of the random location.
-	public long getRandomRef() {
-		return randomRef;
-	}
-
-	/// @param[out] randomPt The random location.
-	public float[] getRandomPt() {
-		return randomPt;
-	}
+    /// @param[out] randomPt The random location.
+    public float[] getRandomPt() {
+        return randomPt;
+    }
 
 }

@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -19,26 +19,22 @@ freely, subject to the following restrictions:
 package org.recast4j.detour;
 
 public enum Status {
-	
-	FAILURE,
-	SUCCSESS,
-	IN_PROGRESS, 
-	PARTIAL_RESULT;
-	
-	public boolean isFailed() {
-		return this == FAILURE;
-	}
 
-	public boolean isInProgress() {
-		return this == IN_PROGRESS;
-	}
+    FAILURE, SUCCSESS, IN_PROGRESS, PARTIAL_RESULT, FAILURE_INVALID_PARAM;
 
-	public boolean isSuccess() {
-		return this == Status.SUCCSESS || this == Status.PARTIAL_RESULT;
-	}
+    public boolean isFailed() {
+        return this == FAILURE || this == FAILURE_INVALID_PARAM;
+    }
 
-	public boolean isPartial() {
-		return this == Status.PARTIAL_RESULT;
-	}
+    public boolean isInProgress() {
+        return this == IN_PROGRESS;
+    }
+
+    public boolean isSuccess() {
+        return this == Status.SUCCSESS || this == Status.PARTIAL_RESULT;
+    }
+
+    public boolean isPartial() {
+        return this == Status.PARTIAL_RESULT;
+    }
 }
-

@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -20,22 +20,22 @@ package org.recast4j.detour;
 
 public class ClosestPointOnPolyResult {
 
-	private final boolean posOverPoly;
-	private final float[] closest;
+    private final boolean posOverPoly;
+    private final float[] closest;
 
-	public ClosestPointOnPolyResult(boolean posOverPoly, float[] closest) {
-		this.posOverPoly = posOverPoly;
-		this.closest = closest;
-	}
+    public ClosestPointOnPolyResult(boolean posOverPoly, float[] closest) {
+        this.posOverPoly = posOverPoly;
+        this.closest = closest;
+    }
 
-	/** Returns true if the position is over the polygon. */
-	public boolean isPosOverPoly() {
-		return posOverPoly;
-	}
+    /** Returns true if the position is over the polygon. */
+    public boolean isPosOverPoly() {
+        return posOverPoly;
+    }
 
-	/** Returns the closest point on the polygon. [(x, y, z)] */
-	public float[] getClosest() {
-		return closest;
-	}
+    /** Returns the closest point on the polygon. [(x, y, z)] */
+    public float[] getClosest() {
+        return closest;
+    }
 
 }

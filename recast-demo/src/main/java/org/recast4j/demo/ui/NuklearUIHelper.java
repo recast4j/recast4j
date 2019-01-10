@@ -25,7 +25,7 @@ import static org.lwjgl.nuklear.Nuklear.nk_combo_begin_label;
 import static org.lwjgl.nuklear.Nuklear.nk_combo_end;
 import static org.lwjgl.nuklear.Nuklear.nk_combo_item_label;
 import static org.lwjgl.nuklear.Nuklear.nk_layout_row_dynamic;
-import static org.lwjgl.nuklear.Nuklear.nk_option_label;
+import static org.lwjgl.nuklear.Nuklear.nk_option_text;
 import static org.lwjgl.nuklear.Nuklear.nk_propertyf;
 import static org.lwjgl.nuklear.Nuklear.nk_rgb_cf;
 import static org.lwjgl.nuklear.Nuklear.nk_widget_width;
@@ -60,7 +60,7 @@ public class NuklearUIHelper {
         try (MemoryStack stack = stackPush()) {
             for (T v : values) {
                 nk_layout_row_dynamic(ctx, 20, 1);
-                if (nk_option_label(ctx, nameFormatter.apply(v), currentValue == v)) {
+                if (nk_option_text(ctx, nameFormatter.apply(v), currentValue == v)) {
                     currentValue = v;
                 }
             }

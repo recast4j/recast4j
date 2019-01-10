@@ -32,6 +32,7 @@ import org.recast4j.detour.NodePool;
 import org.recast4j.detour.OffMeshConnection;
 import org.recast4j.detour.Poly;
 import org.recast4j.detour.PolyDetail;
+import org.recast4j.detour.Result;
 import org.recast4j.detour.Tupple2;
 import org.recast4j.recast.CompactCell;
 import org.recast4j.recast.CompactHeightfield;
@@ -50,7 +51,8 @@ public class RecastDebugDraw extends DebugDraw {
     public static final int DRAWNAVMESH_CLOSEDLIST = 0x02;
     public static final int DRAWNAVMESH_COLOR_TILES = 0x04;
 
-    public void debugDrawTriMeshSlope(float[] verts, int[] tris, float[] normals, float walkableSlopeAngle, float texScale) {
+    public void debugDrawTriMeshSlope(float[] verts, int[] tris, float[] normals, float walkableSlopeAngle,
+            float texScale) {
 
         float walkableThr = (float) Math.cos(walkableSlopeAngle / 180.0f * Math.PI);
 
@@ -144,8 +146,8 @@ public class RecastDebugDraw extends DebugDraw {
                 for (int k = 0; k < 3; ++k) {
                     int v = tile.data.detailTris[t + k];
                     if (v < p.vertCount) {
-                        vertex(tile.data.verts[p.verts[v] * 3], tile.data.verts[p.verts[v] * 3 + 1], tile.data.verts[p.verts[v] * 3 + 2],
-                                col);
+                        vertex(tile.data.verts[p.verts[v] * 3], tile.data.verts[p.verts[v] * 3 + 1],
+                                tile.data.verts[p.verts[v] * 3 + 2], col);
                     } else {
                         vertex(tile.data.detailVerts[(pd.vertBase + v - p.vertCount) * 3],
                                 tile.data.detailVerts[(pd.vertBase + v - p.vertCount) * 3 + 1],
@@ -216,8 +218,8 @@ public class RecastDebugDraw extends DebugDraw {
                 vertex(con.pos[3], con.pos[4] + 0.2f, con.pos[5], duRGBA(0, 48, 64, 196));
 
                 // Connection arc.
-                appendArc(con.pos[0], con.pos[1], con.pos[2], con.pos[3], con.pos[4], con.pos[5], 0.25f, (con.flags & 1) != 0 ? 0.6f : 0,
-                        0.6f, col);
+                appendArc(con.pos[0], con.pos[1], con.pos[2], con.pos[3], con.pos[4], con.pos[5], 0.25f,
+                        (con.flags & 1) != 0 ? 0.6f : 0, 0.6f, col);
 
             }
 
@@ -278,7 +280,8 @@ public class RecastDebugDraw extends DebugDraw {
 
                 float[] v0 = new float[] { tile.data.verts[p.verts[j] * 3], tile.data.verts[p.verts[j] * 3 + 1],
                         tile.data.verts[p.verts[j] * 3 + 2] };
-                float[] v1 = new float[] { tile.data.verts[p.verts[(j + 1) % nj] * 3], tile.data.verts[p.verts[(j + 1) % nj] * 3 + 1],
+                float[] v1 = new float[] { tile.data.verts[p.verts[(j + 1) % nj] * 3],
+                        tile.data.verts[p.verts[(j + 1) % nj] * 3 + 1],
                         tile.data.verts[p.verts[(j + 1) % nj] * 3 + 2] };
 
                 // Draw detail mesh edges which align with the actual poly edge.
@@ -348,7 +351,8 @@ public class RecastDebugDraw extends DebugDraw {
             }
             appendBoxWire(tile.data.header.bmin[0] + n.bmin[0] * cs, tile.data.header.bmin[1] + n.bmin[1] * cs,
                     tile.data.header.bmin[2] + n.bmin[2] * cs, tile.data.header.bmin[0] + n.bmax[0] * cs,
-                    tile.data.header.bmin[1] + n.bmax[1] * cs, tile.data.header.bmin[2] + n.bmax[2] * cs, duRGBA(255, 255, 255, 128));
+                    tile.data.header.bmin[1] + n.bmax[1] * cs, tile.data.header.bmin[2] + n.bmax[2] * cs,
+                    duRGBA(255, 255, 255, 128));
         }
         end();
     }
@@ -855,11 +859,14 @@ public class RecastDebugDraw extends DebugDraw {
             int color = duIntToCol(i, 192);
 
             for (int j = 0; j < ntris; ++j) {
-                vertex(dmesh.verts[verts + dmesh.tris[tris + j * 4 + 0] * 3], dmesh.verts[verts + dmesh.tris[tris + j * 4 + 0] * 3 + 1],
+                vertex(dmesh.verts[verts + dmesh.tris[tris + j * 4 + 0] * 3],
+                        dmesh.verts[verts + dmesh.tris[tris + j * 4 + 0] * 3 + 1],
                         dmesh.verts[verts + dmesh.tris[tris + j * 4 + 0] * 3 + 2], color);
-                vertex(dmesh.verts[verts + dmesh.tris[tris + j * 4 + 1] * 3], dmesh.verts[verts + dmesh.tris[tris + j * 4 + 1] * 3 + 1],
+                vertex(dmesh.verts[verts + dmesh.tris[tris + j * 4 + 1] * 3],
+                        dmesh.verts[verts + dmesh.tris[tris + j * 4 + 1] * 3 + 1],
                         dmesh.verts[verts + dmesh.tris[tris + j * 4 + 1] * 3 + 2], color);
-                vertex(dmesh.verts[verts + dmesh.tris[tris + j * 4 + 2] * 3], dmesh.verts[verts + dmesh.tris[tris + j * 4 + 2] * 3 + 1],
+                vertex(dmesh.verts[verts + dmesh.tris[tris + j * 4 + 2] * 3],
+                        dmesh.verts[verts + dmesh.tris[tris + j * 4 + 2] * 3 + 1],
                         dmesh.verts[verts + dmesh.tris[tris + j * 4 + 2] * 3 + 2], color);
             }
         }
@@ -883,9 +890,11 @@ public class RecastDebugDraw extends DebugDraw {
                     if (ef == 0) {
                         // Internal edge
                         if (dmesh.tris[t + kp] < dmesh.tris[t + k]) {
-                            vertex(dmesh.verts[verts + dmesh.tris[t + kp] * 3], dmesh.verts[verts + dmesh.tris[t + kp] * 3 + 1],
+                            vertex(dmesh.verts[verts + dmesh.tris[t + kp] * 3],
+                                    dmesh.verts[verts + dmesh.tris[t + kp] * 3 + 1],
                                     dmesh.verts[verts + dmesh.tris[t + kp] * 3 + 2], coli);
-                            vertex(dmesh.verts[verts + dmesh.tris[t + k] * 3], dmesh.verts[verts + dmesh.tris[t + k] * 3 + 1],
+                            vertex(dmesh.verts[verts + dmesh.tris[t + k] * 3],
+                                    dmesh.verts[verts + dmesh.tris[t + k] * 3 + 1],
                                     dmesh.verts[verts + dmesh.tris[t + k] * 3 + 2], coli);
                         }
                     }
@@ -911,9 +920,11 @@ public class RecastDebugDraw extends DebugDraw {
                     int ef = (dmesh.tris[t + 3] >> (kp * 2)) & 0x3;
                     if (ef != 0) {
                         // Ext edge
-                        vertex(dmesh.verts[verts + dmesh.tris[t + kp] * 3], dmesh.verts[verts + dmesh.tris[t + kp] * 3 + 1],
+                        vertex(dmesh.verts[verts + dmesh.tris[t + kp] * 3],
+                                dmesh.verts[verts + dmesh.tris[t + kp] * 3 + 1],
                                 dmesh.verts[verts + dmesh.tris[t + kp] * 3 + 2], cole);
-                        vertex(dmesh.verts[verts + dmesh.tris[t + k] * 3], dmesh.verts[verts + dmesh.tris[t + k] * 3 + 1],
+                        vertex(dmesh.verts[verts + dmesh.tris[t + k] * 3],
+                                dmesh.verts[verts + dmesh.tris[t + k] * 3 + 1],
                                 dmesh.verts[verts + dmesh.tris[t + k] * 3 + 2], cole);
                     }
                 }
@@ -929,7 +940,8 @@ public class RecastDebugDraw extends DebugDraw {
             int nverts = dmesh.meshes[m + 1];
             int verts = bverts * 3;
             for (int j = 0; j < nverts; ++j) {
-                vertex(dmesh.verts[verts + j * 3], dmesh.verts[verts + j * 3 + 1], dmesh.verts[verts + j * 3 + 2], colv);
+                vertex(dmesh.verts[verts + j * 3], dmesh.verts[verts + j * 3 + 1], dmesh.verts[verts + j * 3 + 2],
+                        colv);
             }
         }
         end();
@@ -997,10 +1009,11 @@ public class RecastDebugDraw extends DebugDraw {
         if (ref == 0) {
             return;
         }
-        Tupple2<MeshTile, Poly> tileAndPoly = mesh.getTileAndPolyByRef(ref);
-        if (tileAndPoly == null) {
+        Result<Tupple2<MeshTile, Poly>> tileAndPolyResult = mesh.getTileAndPolyByRef(ref);
+        if (tileAndPolyResult.failed()) {
             return;
         }
+        Tupple2<MeshTile, Poly> tileAndPoly = tileAndPolyResult.result;
         MeshTile tile = tileAndPoly.first;
         Poly poly = tileAndPoly.second;
 
@@ -1015,8 +1028,8 @@ public class RecastDebugDraw extends DebugDraw {
             begin(DebugDrawPrimitives.LINES, 2.0f);
 
             // Connection arc.
-            appendArc(con.pos[0], con.pos[1], con.pos[2], con.pos[3], con.pos[4], con.pos[5], 0.25f, (con.flags & 1) != 0 ? 0.6f : 0.0f,
-                    0.6f, c);
+            appendArc(con.pos[0], con.pos[1], con.pos[2], con.pos[3], con.pos[4], con.pos[5], 0.25f,
+                    (con.flags & 1) != 0 ? 0.6f : 0.0f, 0.6f, c);
 
             end();
         } else {
@@ -1032,8 +1045,11 @@ public class RecastDebugDraw extends DebugDraw {
                                 tile.data.verts[poly.verts[tile.data.detailTris[t + j]] * 3 + 2], c);
                     } else {
                         vertex(tile.data.detailVerts[(pd.vertBase + tile.data.detailTris[t + j] - poly.vertCount) * 3],
-                                tile.data.detailVerts[(pd.vertBase + tile.data.detailTris[t + j] - poly.vertCount) * 3 + 1],
-                                tile.data.detailVerts[(pd.vertBase + tile.data.detailTris[t + j] - poly.vertCount) * 3 + 2], c);
+                                tile.data.detailVerts[(pd.vertBase + tile.data.detailTris[t + j] - poly.vertCount) * 3
+                                        + 1],
+                                tile.data.detailVerts[(pd.vertBase + tile.data.detailTris[t + j] - poly.vertCount) * 3
+                                        + 2],
+                                c);
                     }
                 }
             }

@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -22,22 +22,22 @@ import java.util.List;
 
 public class MoveAlongSurfaceResult {
 
-	/** The result position of the mover. [(x, y, z)] */
-	private final float[] resultPos;
-	/** The reference ids of the polygons visited during the move. */
-	private final List<Long> visited;
+    /** The result position of the mover. [(x, y, z)] */
+    private final float[] resultPos;
+    /** The reference ids of the polygons visited during the move. */
+    private final List<Long> visited;
 
-	public MoveAlongSurfaceResult(float[] resultPos, List<Long> visited) {
-		this.resultPos = resultPos;
-		this.visited = visited;
-	}
+    public MoveAlongSurfaceResult(float[] resultPos, List<Long> visited) {
+        this.resultPos = resultPos;
+        this.visited = visited;
+    }
 
-	public float[] getResultPos() {
-		return resultPos;
-	}
+    public float[] getResultPos() {
+        return resultPos;
+    }
 
-	public List<Long> getVisited() {
-		return visited;
-	}
+    public List<Long> getVisited() {
+        return visited;
+    }
 
 }

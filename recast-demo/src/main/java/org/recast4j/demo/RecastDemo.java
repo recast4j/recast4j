@@ -118,6 +118,7 @@ import org.recast4j.demo.ui.NuklearUI;
 import org.recast4j.detour.MeshData;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.Tupple2;
+import org.recast4j.recast.Recast;
 import org.recast4j.recast.RecastBuilder.RecastBuilderResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -379,6 +380,14 @@ public class RecastDemo {
              * try (MemoryStack stack = stackPush()) { IntBuffer w = stack.mallocInt(1); IntBuffer h =
              * stack.mallocInt(1); glfwGetWindowSize(win, w, h); width = w.get(0); height = h.get(0); }
              */
+            if (geom != null)
+            {
+                float[] bmin = geom.getMeshBoundsMin();
+                float[] bmax = geom.getMeshBoundsMax();
+                int[] voxels = Recast.calcGridSize(bmin, bmax, settingsUI.getCellSize());
+                settingsUI.setVoxels(voxels);
+            }
+
             mouseOverMenu = nuklearUI.layout(window, 0, 0, width, height, (int) mousePos[0], (int) mousePos[1]);
 
             int dx = 0;
@@ -450,6 +459,7 @@ public class RecastDemo {
 
                     navMesh = new NavMesh(meshData, m_vertsPerPoly, 0);
                     settingsUI.setBuildTime((System.nanoTime() - t) / 1_000_000);
+
                     sample = new Sample(geom, buildResult.first, navMesh, settingsUI, dd);
                     toolsUI.setSample(sample);
                 }

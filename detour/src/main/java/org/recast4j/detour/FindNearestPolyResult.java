@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -19,22 +19,22 @@ freely, subject to the following restrictions:
 package org.recast4j.detour;
 
 public class FindNearestPolyResult {
-	private final long nearestRef;
-	private final float[] nearestPos;
+    private final long nearestRef;
+    private final float[] nearestPos;
 
-	public FindNearestPolyResult(long nearestRef, float[] nearestPos) {
-		this.nearestRef = nearestRef;
-		this.nearestPos = nearestPos;
-	}
+    public FindNearestPolyResult(long nearestRef, float[] nearestPos) {
+        this.nearestRef = nearestRef;
+        this.nearestPos = nearestPos;
+    }
 
-	/** Returns the reference id of the nearest polygon. */
-	public long getNearestRef() {
-		return nearestRef;
-	}
+    /** Returns the reference id of the nearest polygon. */
+    public long getNearestRef() {
+        return nearestRef;
+    }
 
-	/** Returns the nearest point on the polygon. [opt] [(x, y, z)] */
-	public float[] getNearestPos() {
-		return nearestPos;
-	}
+    /** Returns the nearest point on the polygon. [opt] [(x, y, z)] */
+    public float[] getNearestPos() {
+        return nearestPos;
+    }
 
 }

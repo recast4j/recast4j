@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -20,26 +20,26 @@ package org.recast4j.detour;
 
 //TODO: (PP) Add comments
 public class FindDistanceToWallResult {
-	private final float distance;
-	private final float[] position;
-	private final float[] normal;
+    private final float distance;
+    private final float[] position;
+    private final float[] normal;
 
-	public FindDistanceToWallResult(float distance, float[] position, float[] normal) {
-		this.distance = distance;
-		this.position = position;
-		this.normal = normal;
-	}
+    public FindDistanceToWallResult(float distance, float[] position, float[] normal) {
+        this.distance = distance;
+        this.position = position;
+        this.normal = normal;
+    }
 
-	public float getDistance() {
-		return distance;
-	}
+    public float getDistance() {
+        return distance;
+    }
 
-	public float[] getPosition() {
-		return position;
-	}
+    public float[] getPosition() {
+        return position;
+    }
 
-	public float[] getNormal() {
-		return normal;
-	}
+    public float[] getNormal() {
+        return normal;
+    }
 
 }

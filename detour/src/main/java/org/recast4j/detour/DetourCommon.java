@@ -329,13 +329,18 @@ public class DetourCommon {
         float u = v1[2] * v2[0] - v1[0] * v2[2];
         float v = v0[0] * v2[2] - v0[2] * v2[0];
 
+        if (denom < 0) {
+            denom = -denom;
+            u = -u;
+            v = -v;
+        }
         // The (sloppy) epsilon is needed to allow to get height of points which
         // are interpolated along the edges of the triangles.
-        float epsilon = - 1e-4f * denom;
+        float epsilon = -1e-4f * denom;
 
         // If point lies inside the triangle, return interpolated ycoord.
-        if (u >= epsilon && v >= epsilon && (u+v) <= denom - epsilon) {
-            float h = a[1] + (v0[1]*u + v1[1]*v) / denom;
+        if (u >= epsilon && v >= epsilon && (u + v) <= denom - epsilon) {
+            float h = a[1] + (v0[1] * u + v1[1] * v) / denom;
             return Optional.of(h);
         }
 
@@ -352,9 +357,8 @@ public class DetourCommon {
         for (i = 0, j = nverts - 1; i < nverts; j = i++) {
             int vi = i * 3;
             int vj = j * 3;
-            if (((verts[vi + 2] > pt[2]) != (verts[vj + 2] > pt[2]))
-                    && (pt[0] < (verts[vj + 0] - verts[vi + 0]) * (pt[2] - verts[vi + 2]) / (verts[vj + 2] - verts[vi + 2])
-                            + verts[vi + 0])) {
+            if (((verts[vi + 2] > pt[2]) != (verts[vj + 2] > pt[2])) && (pt[0] < (verts[vj + 0] - verts[vi + 0])
+                    * (pt[2] - verts[vi + 2]) / (verts[vj + 2] - verts[vi + 2]) + verts[vi + 0])) {
                 c = !c;
             }
         }
@@ -368,9 +372,8 @@ public class DetourCommon {
         for (i = 0, j = nverts - 1; i < nverts; j = i++) {
             int vi = i * 3;
             int vj = j * 3;
-            if (((verts[vi + 2] > pt[2]) != (verts[vj + 2] > pt[2]))
-                    && (pt[0] < (verts[vj + 0] - verts[vi + 0]) * (pt[2] - verts[vi + 2]) / (verts[vj + 2] - verts[vi + 2])
-                            + verts[vi + 0])) {
+            if (((verts[vi + 2] > pt[2]) != (verts[vj + 2] > pt[2])) && (pt[0] < (verts[vj + 0] - verts[vi + 0])
+                    * (pt[2] - verts[vi + 2]) / (verts[vj + 2] - verts[vi + 2]) + verts[vi + 0])) {
                 c = !c;
             }
             Tupple2<Float, Float> edet = distancePtSegSqr2D(pt, verts, vj, vi);
@@ -464,7 +467,8 @@ public class DetourCommon {
         int pb = (tri - 1) * 3;
         int pc = tri * 3;
 
-        return new float[] { a * pts[pa] + b * pts[pb] + c * pts[pc], a * pts[pa + 1] + b * pts[pb + 1] + c * pts[pc + 1],
+        return new float[] { a * pts[pa] + b * pts[pb] + c * pts[pc],
+                a * pts[pa + 1] + b * pts[pb + 1] + c * pts[pc + 1],
                 a * pts[pa + 2] + b * pts[pb + 2] + c * pts[pc + 2] };
     }
 

@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -25,14 +25,14 @@ import java.util.List;
  * Provides information about raycast hit. Filled by NavMeshQuery::raycast
  */
 public class RaycastHit {
-	/** The hit parameter. (Float.MAX_VALUE if no wall hit.) */
-	public float t;
-	/** hitNormal The normal of the nearest wall hit. [(x, y, z)] */
-	public final float[] hitNormal = new float[3];
-	/** Visited polygons. */
-	public final List<Long> path = new ArrayList<>();
-	/** The cost of the path until hit. */
-	public float pathCost;
-	/** The index of the edge on the final polygon where the wall was hit. */
-	public int hitEdgeIndex;
+    /** The hit parameter. (Float.MAX_VALUE if no wall hit.) */
+    public float t;
+    /** hitNormal The normal of the nearest wall hit. [(x, y, z)] */
+    public final float[] hitNormal = new float[3];
+    /** Visited polygons. */
+    public final List<Long> path = new ArrayList<>();
+    /** The cost of the path until hit. */
+    public float pathCost;
+    /** The index of the edge on the final polygon where the wall was hit. */
+    public int hitEdgeIndex;
 }

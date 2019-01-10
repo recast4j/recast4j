@@ -217,12 +217,12 @@
 		<dependency>
 			<groupId>org.recast4j</groupId>
 			<artifactId>recast</artifactId>
-			<version>1.0.8</version>
+			<version>1.0.9-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.recast4j</groupId>
 			<artifactId>detour</artifactId>
-			<version>1.0.8</version>
+			<version>1.0.9-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
