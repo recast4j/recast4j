@@ -109,7 +109,7 @@ public class RecastDebugDraw extends DebugDraw {
         NavMeshQuery q = (flags & DRAWNAVMESH_CLOSEDLIST) != 0 ? query : null;
         for (int i = 0; i < mesh.getMaxTiles(); ++i) {
             MeshTile tile = mesh.getTile(i);
-            if (tile != null) {
+            if (tile != null && tile.data != null) {
                 drawMeshTile(mesh, q, tile, flags);
             }
         }
@@ -334,7 +334,7 @@ public class RecastDebugDraw extends DebugDraw {
 
         for (int i = 0; i < mesh.getMaxTiles(); ++i) {
             MeshTile tile = mesh.getTile(i);
-            if (tile != null) {
+            if (tile != null && tile.data != null && tile.data.header != null) {
                 drawMeshTileBVTree(tile);
             }
         }
@@ -990,7 +990,7 @@ public class RecastDebugDraw extends DebugDraw {
 
         for (int i = 0; i < mesh.getMaxTiles(); ++i) {
             MeshTile tile = mesh.getTile(i);
-            if (tile.data.header == null) {
+            if (tile == null || tile.data == null || tile.data.header == null) {
                 continue;
             }
             long base = mesh.getPolyRefBase(tile);

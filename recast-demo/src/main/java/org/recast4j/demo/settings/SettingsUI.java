@@ -79,7 +79,7 @@ public class SettingsUI implements NuklearUIModule {
     private final FloatBuffer detailSampleDist = BufferUtils.createFloatBuffer(1).put(0, 6f);
     private final FloatBuffer detailSampleMaxError = BufferUtils.createFloatBuffer(1).put(0, 1f);
 
-    private boolean tiled = true;
+    private boolean tiled = false;
     private final IntBuffer tileSize = BufferUtils.createIntBuffer(1).put(0, 32);
 
     public final NkColor white = NkColor.create();
@@ -87,6 +87,10 @@ public class SettingsUI implements NuklearUIModule {
     private boolean buildTriggered;
     private long buildTime;
     private final int[] voxels = new int[2];
+    private final int[] tiles = new int[2];
+    private int maxTiles;
+    private int maxPolys;
+
     private DrawMode drawMode = DrawMode.DRAWMODE_MESH;
 
     @Override
@@ -187,9 +191,16 @@ public class SettingsUI implements NuklearUIModule {
                 nk_label(ctx, "Tiling", NK_TEXT_ALIGN_LEFT);
                 nk_layout_row_dynamic(ctx, 20, 1);
                 tiled = nk_check_text(ctx, "Enable", tiled);
-                nk_layout_row_dynamic(ctx, 20, 1);
-                nk_property_int(ctx, "Tile Size", 0, tileSize, 1024, 1, 1);
-
+                if (tiled) {
+                    nk_layout_row_dynamic(ctx, 20, 1);
+                    nk_property_int(ctx, "Tile Size", 16, tileSize, 1024, 16, 16);
+                    nk_layout_row_dynamic(ctx, 18, 1);
+                    nk_label(ctx, String.format("Tiles %d x %d", tiles[0], tiles[1]), NK_TEXT_ALIGN_RIGHT);
+                    nk_layout_row_dynamic(ctx, 18, 1);
+                    nk_label(ctx, String.format("Max Tiles %d", maxTiles), NK_TEXT_ALIGN_RIGHT);
+                    nk_layout_row_dynamic(ctx, 18, 1);
+                    nk_label(ctx, String.format("Max Polys %d", maxPolys), NK_TEXT_ALIGN_RIGHT);
+                }
                 nk_label(ctx, "Build Time: " + buildTime + "ms", NK_TEXT_ALIGN_LEFT);
 
                 nk_layout_row_dynamic(ctx, 20, 1);
@@ -301,6 +312,19 @@ public class SettingsUI implements NuklearUIModule {
 
     public int getTileSize() {
         return tileSize.get(0);
+    }
+
+    public void setTiles(int[] tiles) {
+        this.tiles[0] = tiles[0];
+        this.tiles[1] = tiles[1];
+    }
+
+    public void setMaxTiles(int maxTiles) {
+        this.maxTiles = maxTiles;
+    }
+
+    public void setMaxPolys(int maxPolys) {
+        this.maxPolys = maxPolys;
     }
 
 }

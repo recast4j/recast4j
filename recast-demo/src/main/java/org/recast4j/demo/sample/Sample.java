@@ -18,6 +18,8 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.demo.sample;
 
+import java.util.List;
+
 import org.recast4j.demo.draw.RecastDebugDraw;
 import org.recast4j.demo.geom.DemoInputGeomProvider;
 import org.recast4j.demo.settings.SettingsUI;
@@ -31,24 +33,23 @@ public class Sample {
     private final NavMesh navMesh;
     private final NavMeshQuery navMeshQuery;
     private final SettingsUI settingsUI;
-    private final RecastBuilderResult recastResult;
+    private final List<RecastBuilderResult> recastResults;
 
-    public Sample(DemoInputGeomProvider inputGeom, RecastBuilderResult recastResult, NavMesh navMesh,
+    public Sample(DemoInputGeomProvider inputGeom, List<RecastBuilderResult> recastResults, NavMesh navMesh,
             SettingsUI settingsUI, RecastDebugDraw debugDraw) {
         this.inputGeom = inputGeom;
-        this.recastResult = recastResult;
+        this.recastResults = recastResults;
         this.navMesh = navMesh;
         this.settingsUI = settingsUI;
         navMeshQuery = navMesh != null ? new NavMeshQuery(navMesh) : null;
-
     }
 
     public DemoInputGeomProvider getInputGeom() {
         return inputGeom;
     }
 
-    public RecastBuilderResult getRecastResult() {
-        return recastResult;
+    public List<RecastBuilderResult> getRecastResults() {
+        return recastResults;
     }
 
     public NavMesh getNavMesh() {

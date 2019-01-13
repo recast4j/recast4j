@@ -90,6 +90,8 @@ import static org.lwjgl.opengl.GL20.GL_SHADING_LANGUAGE_VERSION;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 import java.nio.IntBuffer;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -97,8 +99,8 @@ import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.ARBDebugOutput;
 import org.lwjgl.opengl.GL43;
 import org.lwjgl.opengl.GLCapabilities;
-import org.recast4j.demo.builder.SampleAreaModifications;
 import org.recast4j.demo.builder.SoloNavMeshBuilder;
+import org.recast4j.demo.builder.TileNavMeshBuilder;
 import org.recast4j.demo.draw.GLU;
 import org.recast4j.demo.draw.NavMeshRenderer;
 import org.recast4j.demo.draw.RecastDebugDraw;
@@ -115,7 +117,6 @@ import org.recast4j.demo.tool.ToolsUI;
 import org.recast4j.demo.ui.Mouse;
 import org.recast4j.demo.ui.MouseListener;
 import org.recast4j.demo.ui.NuklearUI;
-import org.recast4j.detour.MeshData;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.Tupple2;
 import org.recast4j.recast.Recast;
@@ -136,9 +137,9 @@ public class RecastDemo {
     private final NavMeshRenderer renderer = new NavMeshRenderer(dd);
     private boolean building = false;
 
-    private final OffMeshConnectionTool offMeshConnectionTool = new OffMeshConnectionTool();
-    private final ConvexVolumeTool convexVolumeTool = new ConvexVolumeTool();
-    private final TestNavmeshTool testNavmeshTool = new TestNavmeshTool();
+    private final SoloNavMeshBuilder soloNavMeshBuilder = new SoloNavMeshBuilder();
+    private final TileNavMeshBuilder tileNavMeshBuilder = new TileNavMeshBuilder();
+
     private Sample sample;
 
     private boolean processHitTest = false;
@@ -315,13 +316,13 @@ public class RecastDemo {
         });
 
         settingsUI = new SettingsUI();
-        toolsUI = new ToolsUI(testNavmeshTool, offMeshConnectionTool, convexVolumeTool);
+        toolsUI = new ToolsUI(new TestNavmeshTool(), new OffMeshConnectionTool(), new ConvexVolumeTool());
 
         nuklearUI = new NuklearUI(window, mouse, settingsUI, toolsUI);
 
         DemoInputGeomProvider geom = new ObjImporter()
                 .load(getClass().getClassLoader().getResourceAsStream("nav_test.obj"));
-        sample = new Sample(geom, null, null, settingsUI, dd);
+        sample = new Sample(geom, Collections.emptyList(), null, settingsUI, dd);
         toolsUI.setSample(sample);
         toolsUI.setEnabled(true);
         showSample = true;
@@ -380,12 +381,14 @@ public class RecastDemo {
              * try (MemoryStack stack = stackPush()) { IntBuffer w = stack.mallocInt(1); IntBuffer h =
              * stack.mallocInt(1); glfwGetWindowSize(win, w, h); width = w.get(0); height = h.get(0); }
              */
-            if (geom != null)
-            {
+            if (geom != null) {
                 float[] bmin = geom.getMeshBoundsMin();
                 float[] bmax = geom.getMeshBoundsMax();
                 int[] voxels = Recast.calcGridSize(bmin, bmax, settingsUI.getCellSize());
                 settingsUI.setVoxels(voxels);
+                settingsUI.setTiles(tileNavMeshBuilder.getTiles(geom, settingsUI.getCellSize(), settingsUI.getTileSize()));
+                settingsUI.setMaxTiles(tileNavMeshBuilder.getMaxTiles(geom, settingsUI.getCellSize(), settingsUI.getTileSize()));
+                settingsUI.setMaxPolys(tileNavMeshBuilder.getMaxPolysPerTile(geom, settingsUI.getCellSize(), settingsUI.getTileSize()));
             }
 
             mouseOverMenu = nuklearUI.layout(window, 0, 0, width, height, (int) mousePos[0], (int) mousePos[1]);
@@ -433,34 +436,28 @@ public class RecastDemo {
                     int m_vertsPerPoly = settingsUI.getVertsPerPoly();
                     float m_detailSampleDist = settingsUI.getDetailSampleDist();
                     float m_detailSampleMaxError = settingsUI.getDetailSampleMaxError();
+                    int m_tileSize = settingsUI.getTileSize();
                     long t = System.nanoTime();
-                    Tupple2<RecastBuilderResult, MeshData> buildResult = new SoloNavMeshBuilder().build(geom,
-                            settingsUI.getPartitioning(), m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
-                            m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen,
-                            m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError,
-                            settingsUI.isFilterLowHangingObstacles(), settingsUI.isFilterLedgeSpans(),
-                            settingsUI.isFilterWalkableLowHeightSpans());
-                    MeshData meshData = buildResult.second;
-                    // Update poly flags from areas.
-                    for (int i = 0; i < meshData.polys.length; ++i) {
-                        if (meshData.polys[i].getArea() == SampleAreaModifications.SAMPLE_POLYAREA_TYPE_WALKABLE) {
-                            meshData.polys[i].setArea(SampleAreaModifications.SAMPLE_POLYAREA_TYPE_GROUND);
-                        }
-                        if (meshData.polys[i].getArea() == SampleAreaModifications.SAMPLE_POLYAREA_TYPE_GROUND
-                                || meshData.polys[i].getArea() == SampleAreaModifications.SAMPLE_POLYAREA_TYPE_GRASS
-                                || meshData.polys[i].getArea() == SampleAreaModifications.SAMPLE_POLYAREA_TYPE_ROAD) {
-                            meshData.polys[i].flags = SampleAreaModifications.SAMPLE_POLYFLAGS_WALK;
-                        } else if (meshData.polys[i].getArea() == SampleAreaModifications.SAMPLE_POLYAREA_TYPE_WATER) {
-                            meshData.polys[i].flags = SampleAreaModifications.SAMPLE_POLYFLAGS_SWIM;
-                        } else if (meshData.polys[i].getArea() == SampleAreaModifications.SAMPLE_POLYAREA_TYPE_DOOR) {
-                            meshData.polys[i].flags = SampleAreaModifications.SAMPLE_POLYFLAGS_DOOR;
-                        }
+
+                    Tupple2<List<RecastBuilderResult>, NavMesh> buildResult;
+                    if (settingsUI.isTiled()) {
+                        buildResult = tileNavMeshBuilder.build(geom, settingsUI.getPartitioning(), m_cellSize,
+                                m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope,
+                                m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly,
+                                m_detailSampleDist, m_detailSampleMaxError, settingsUI.isFilterLowHangingObstacles(),
+                                settingsUI.isFilterLedgeSpans(), settingsUI.isFilterWalkableLowHeightSpans(),
+                                m_tileSize);
+
+                    } else {
+                        buildResult = soloNavMeshBuilder.build(geom, settingsUI.getPartitioning(), m_cellSize,
+                                m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope,
+                                m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly,
+                                m_detailSampleDist, m_detailSampleMaxError, settingsUI.isFilterLowHangingObstacles(),
+                                settingsUI.isFilterLedgeSpans(), settingsUI.isFilterWalkableLowHeightSpans());
                     }
-
-                    navMesh = new NavMesh(meshData, m_vertsPerPoly, 0);
-                    settingsUI.setBuildTime((System.nanoTime() - t) / 1_000_000);
-
+                    navMesh = buildResult.second;
                     sample = new Sample(geom, buildResult.first, navMesh, settingsUI, dd);
+                    settingsUI.setBuildTime((System.nanoTime() - t) / 1_000_000);
                     toolsUI.setSample(sample);
                 }
             } else {
