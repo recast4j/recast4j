@@ -401,7 +401,7 @@ public class NuklearGL {
             // fill convert configuration
             NkConvertConfig config = NkConvertConfig.callocStack(stack).vertex_layout(vertexLayout).vertex_size(20)
                     .vertex_alignment(4).null_texture(null_texture).circle_segment_count(22).curve_segment_count(22)
-                    .arc_segment_count(22).global_alpha(0.75f).shape_AA(AA).line_AA(AA);
+                    .arc_segment_count(22).global_alpha(1f).shape_AA(AA).line_AA(AA);
 
             // setup buffers to load vertices and elements
             NkBuffer vbuf = NkBuffer.mallocStack(stack);

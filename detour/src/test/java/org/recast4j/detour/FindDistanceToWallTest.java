@@ -1,5 +1,5 @@
 /*
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -22,28 +22,28 @@ import org.junit.Test;
 
 public class FindDistanceToWallTest extends AbstractDetourTest {
 
-	float[] distancesToWall = { 0.597511f, 3.201085f, 0.603713f, 2.791475f, 2.815544f };
-	float[][] hitPosition = { { 23.177608f, 10.197294f, -45.742954f }, { 22.331268f, 10.197294f, -4.241272f },
-			{ 18.108675f, 15.743596f, -73.236839f }, { 1.984785f, 10.197294f, -8.441269f },
-			{ -22.315216f, 4.997294f, -11.441269f } };
-	float[][] hitNormal = { { -0.955779f, 0.0f, -0.29408592f }, { 0.0f, 0.0f, 1.0f },
-			{ 0.97014254f, 0.0f, 0.24253564f }, { -1.0f, 0.0f, 0.0f },
-			{ 1.0f, 0.0f, 0.0f } };
+    float[] distancesToWall = { 0.597511f, 3.201085f, 0.603713f, 2.791475f, 2.815544f };
+    float[][] hitPosition = { { 23.177608f, 10.197294f, -45.742954f }, { 22.331268f, 10.197294f, -4.241272f },
+            { 18.108675f, 15.743596f, -73.236839f }, { 1.984785f, 10.197294f, -8.441269f },
+            { -22.315216f, 4.997294f, -11.441269f } };
+    float[][] hitNormal = { { -0.955779f, 0.0f, -0.29408592f }, { 0.0f, 0.0f, 1.0f },
+            { 0.97014254f, 0.0f, 0.24253564f }, { -1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } };
 
-	@Test
-	public void testFindDistanceToWall() {
-		QueryFilter filter = new DefaultQueryFilter();
-		for (int i = 0; i < startRefs.length; i++) {
-			float[] startPos = startPoss[i];
-			FindDistanceToWallResult hit = query.findDistanceToWall(startRefs[i], startPos, 3.5f, filter);
-			Assert.assertEquals(distancesToWall[i], hit.getDistance(), 0.001f);
-			for (int v = 0; v < 3; v++) {
-				Assert.assertEquals(hitPosition[i][v], hit.getPosition()[v], 0.001f);
-			}
-			for (int v = 0; v < 3; v++) {
-				Assert.assertEquals(hitNormal[i][v], hit.getNormal()[v], 0.001f);
-			}
-		}
+    @Test
+    public void testFindDistanceToWall() {
+        QueryFilter filter = new DefaultQueryFilter();
+        for (int i = 0; i < startRefs.length; i++) {
+            float[] startPos = startPoss[i];
+            Result<FindDistanceToWallResult> result = query.findDistanceToWall(startRefs[i], startPos, 3.5f, filter);
+            FindDistanceToWallResult hit = result.result;
+            Assert.assertEquals(distancesToWall[i], hit.getDistance(), 0.001f);
+            for (int v = 0; v < 3; v++) {
+                Assert.assertEquals(hitPosition[i][v], hit.getPosition()[v], 0.001f);
+            }
+            for (int v = 0; v < 3; v++) {
+                Assert.assertEquals(hitNormal[i][v], hit.getNormal()[v], 0.001f);
+            }
+        }
 
-	}
+    }
 }

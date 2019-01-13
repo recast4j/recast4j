@@ -9,10 +9,10 @@ import java.util.List;
 import org.junit.Test;
 import org.recast4j.detour.DefaultQueryFilter;
 import org.recast4j.detour.FindNearestPolyResult;
-import org.recast4j.detour.FindPathResult;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.detour.QueryFilter;
+import org.recast4j.detour.Result;
 import org.recast4j.detour.StraightPathItem;
 import org.recast4j.detour.tilecache.io.TileCacheReader;
 
@@ -26,8 +26,8 @@ public class TileCacheFindPathTest extends AbstractTileCacheTest {
     public TileCacheFindPathTest() throws IOException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("dungeon_all_tiles_tilecache.bin");
         TileCache tcC = new TileCacheReader().read(is, 6, new TestTileCacheMeshProcess());
-        this.navmesh = tcC.getNavMesh();
-        this.query = new NavMeshQuery(navmesh);
+        navmesh = tcC.getNavMesh();
+        query = new NavMeshQuery(navmesh);
     }
 
     @Test
@@ -40,11 +40,11 @@ public class TileCacheFindPathTest extends AbstractTileCacheTest {
         long endRef = findPolyEnd.getNearestRef();
         float[] startPos = findPolyStart.getNearestPos();
         float[] endPos = findPolyEnd.getNearestPos();
-        FindPathResult path = query.findPath(startRef, endRef, startPos, endPos, filter);
+        Result<List<Long>> path = query.findPath(startRef, endRef, startPos, endPos, filter);
         int maxStraightPath = 256;
         int options = 0;
-        List<StraightPathItem> pathStr = query.findStraightPath(startPos, endPos, path.getRefs(), maxStraightPath, options);
-        assertEquals(8, pathStr.size());
+        Result<List<StraightPathItem>> pathStr = query.findStraightPath(startPos, endPos, path.result, maxStraightPath, options);
+        assertEquals(8, pathStr.result.size());
     }
 
 }

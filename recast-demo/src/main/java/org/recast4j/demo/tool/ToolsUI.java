@@ -13,10 +13,13 @@ import static org.lwjgl.nuklear.Nuklear.nk_spacing;
 import static org.lwjgl.nuklear.Nuklear.nk_window_get_bounds;
 import static org.lwjgl.system.MemoryStack.stackPush;
 
+import java.util.Arrays;
+
 import org.lwjgl.nuklear.NkColor;
 import org.lwjgl.nuklear.NkContext;
 import org.lwjgl.nuklear.NkRect;
 import org.lwjgl.system.MemoryStack;
+import org.recast4j.demo.sample.Sample;
 import org.recast4j.demo.ui.NuklearUIModule;
 
 public class ToolsUI implements NuklearUIModule {
@@ -66,6 +69,10 @@ public class ToolsUI implements NuklearUIModule {
 
     public Tool getTool() {
         return currentTool;
+    }
+
+    public void setSample(Sample sample) {
+        Arrays.stream(tools).forEach(t -> t.setSample(sample));
     }
 
 }

@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -44,10 +44,10 @@ import java.util.function.IntFunction;
 import org.recast4j.detour.ClosestPointOnPolyResult;
 import org.recast4j.detour.DefaultQueryFilter;
 import org.recast4j.detour.FindNearestPolyResult;
-import org.recast4j.detour.FindPathResult;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.detour.QueryFilter;
+import org.recast4j.detour.Result;
 import org.recast4j.detour.Status;
 import org.recast4j.detour.Tupple2;
 import org.recast4j.detour.crowd.CrowdAgent.CrowdAgentState;
@@ -56,151 +56,6 @@ import org.recast4j.detour.crowd.ObstacleAvoidanceQuery.ObstacleAvoidanceParams;
 import org.recast4j.detour.crowd.debug.CrowdAgentDebugInfo;
 import org.recast4j.detour.crowd.debug.ObstacleAvoidanceDebugData;
 
-/*
-
-struct dtCrowdAgentDebugInfo
-{
-	int idx;
-	float optStart[3], optEnd[3];
-	dtObstacleAvoidanceDebugData* vod;
-};
-
-/// Provides local steering behaviors for a group of agents.
-/// @ingroup crowd
-class dtCrowd
-{
-	int m_maxAgents;
-	dtCrowdAgent* m_agents;
-	dtCrowdAgent** m_activeAgents;
-	dtCrowdAgentAnimation* m_agentAnims;
-
-	dtPathQueue m_pathq;
-
-	dtObstacleAvoidanceParams m_obstacleQueryParams[DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS];
-	dtObstacleAvoidanceQuery* m_obstacleQuery;
-
-	dtPolyRef* m_pathResult;
-	int m_maxPathResult;
-
-	float m_ext[3];
-
-	dtQueryFilter m_filters[DT_CROWD_MAX_QUERY_FILTER_TYPE];
-
-	float m_maxAgentRadius;
-
-	int m_velocitySampleCount;
-
-	dtNavMeshQuery* m_navquery;
-
-	void updateTopologyOptimization(dtCrowdAgent** agents, int nagents, float dt);
-	void updateMoveRequest(float dt);
-	void checkPathValidity(dtCrowdAgent** agents, int nagents, float dt);
-
-	inline int getAgentIndex(dtCrowdAgent* agent)  { return (int)(agent - m_agents); }
-
-	bool requestMoveTargetReplan(int idx, dtPolyRef ref, float* pos);
-
-	void purge();
-
-public:
-
-	/// Gets the specified agent from the pool.
-	///	 @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
-	/// @return The requested agent.
-	dtCrowdAgent* getAgent(int idx);
-
-	/// Gets the specified agent from the pool.
-	///	 @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
-	/// @return The requested agent.
-	dtCrowdAgent* getEditableAgent(int idx);
-
-	/// The maximum number of agents that can be managed by the object.
-	/// @return The maximum number of agents.
-	int getAgentCount() const;
-
-	/// Adds a new agent to the crowd.
-	///  @param[in]		pos		The requested position of the agent. [(x, y, z)]
-	///  @param[in]		params	The configutation of the agent.
-	/// @return The index of the agent in the agent pool. Or -1 if the agent could not be added.
-	int addAgent(float* pos, dtCrowdAgentParams* params);
-
-	/// Updates the specified agent's configuration.
-	///  @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
-	///  @param[in]		params	The new agent configuration.
-	void updateAgentParameters(int idx, dtCrowdAgentParams* params);
-
-	/// Removes the agent from the crowd.
-	///  @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
-	void removeAgent(int idx);
-
-	/// Submits a new move request for the specified agent.
-	///  @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
-	///  @param[in]		ref		The position's polygon reference.
-	///  @param[in]		pos		The position within the polygon. [(x, y, z)]
-	/// @return True if the request was successfully submitted.
-	bool requestMoveTarget(int idx, dtPolyRef ref, float* pos);
-
-	/// Submits a new move request for the specified agent.
-	///  @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
-	///  @param[in]		vel		The movement velocity. [(x, y, z)]
-	/// @return True if the request was successfully submitted.
-	bool requestMoveVelocity(int idx, float* vel);
-
-	/// Resets any request for the specified agent.
-	///  @param[in]		idx		The agent index. [Limits: 0 <= value < #getAgentCount()]
-	/// @return True if the request was successfully reseted.
-	bool resetMoveTarget(int idx);
-
-	/// Gets the active agents int the agent pool.
-	///  @param[out]	agents		An array of agent pointers. [(#dtCrowdAgent *) * maxAgents]
-	///  @param[in]		maxAgents	The size of the crowd agent array.
-	/// @return The number of agents returned in @p agents.
-	int getActiveAgents(dtCrowdAgent** agents, int maxAgents);
-
-	/// Updates the steering and positions of all agents.
-	///  @param[in]		dt		The time, in seconds, to update the simulation. [Limit: > 0]
-	///  @param[out]	debug	A debug object to load with debug information. [Opt]
-	void update(float dt, dtCrowdAgentDebugInfo* debug);
-
-	/// Gets the filter used by the crowd.
-	/// @return The filter used by the crowd.
-	inline dtQueryFilter* getFilter(int i) { return (i >= 0 && i < DT_CROWD_MAX_QUERY_FILTER_TYPE) ? &m_filters[i] : 0; }
-
-	/// Gets the filter used by the crowd.
-	/// @return The filter used by the crowd.
-	inline dtQueryFilter* getEditableFilter(int i) { return (i >= 0 && i < DT_CROWD_MAX_QUERY_FILTER_TYPE) ? &m_filters[i] : 0; }
-
-	/// Gets the search extents [(x, y, z)] used by the crowd for query operations.
-	/// @return The search extents used by the crowd. [(x, y, z)]
-	float* getQueryExtents() { return m_ext; }
-
-	/// Gets the velocity sample count.
-	/// @return The velocity sample count.
-	inline int getVelocitySampleCount() { return m_velocitySampleCount; }
-
-	/// Gets the crowd's proximity grid.
-	/// @return The crowd's proximity grid.
-	dtProximityGrid* getGrid() { return m_grid; }
-
-	/// Gets the crowd's path request queue.
-	/// @return The crowd's path request queue.
-	dtPathQueue* getPathQueue() { return &m_pathq; }
-
-	/// Gets the query object used by the crowd.
-	dtNavMeshQuery* getNavMeshQuery() { return m_navquery; }
-};
-
-/// Allocates a crowd object using the Detour allocator.
-/// @return A crowd object that is ready for initialization, or null on failure.
-///  @ingroup crowd
-dtCrowd* dtAllocCrowd();
-
-/// Frees the specified crowd object using the Detour allocator.
-///  @param[in]		ptr		A crowd object allocated using #dtAllocCrowd
-///  @ingroup crowd
-void dtFreeCrowd(dtCrowd* ptr);
-
-*/
 /**
  * Members in this module implement local steering and dynamic avoidance features.
  *
@@ -275,17 +130,18 @@ void dtFreeCrowd(dtCrowd* ptr);
  *
  */
 /**
- * This is the core class of the @ref crowd module. See the @ref crowd documentation for a summary of the crowd features. A common
- * method for setting up the crowd is as follows: -# Allocate the crowd -# Set the avoidance configurations using
- * #setObstacleAvoidanceParams(). -# Add agents using #addAgent() and make an initial movement request using #requestMoveTarget().
- * A common process for managing the crowd is as follows: -# Call #update() to allow the crowd to manage its agents. -# Retrieve
- * agent information using #getActiveAgents(). -# Make movement requests using #requestMoveTarget() when movement goal changes. -#
- * Repeat every frame. Some agent configuration settings can be updated using #updateAgentParameters(). But the crowd owns the
- * agent position. So it is not possible to update an active agent's position. If agent position must be fed back into the crowd,
- * the agent must be removed and re-added. Notes: - Path related information is available for newly added agents only after an
- * #update() has been performed. - Agent objects are kept in a pool and re-used. So it is important when using agent objects to
- * check the value of #dtCrowdAgent::active to determine if the agent is actually in use or not. - This class is meant to provide
- * 'local' movement. There is a limit of 256 polygons in the path corridor. So it is not meant to provide automatic pathfinding
+ * This is the core class of the @ref crowd module. See the @ref crowd documentation for a summary of the crowd
+ * features. A common method for setting up the crowd is as follows: -# Allocate the crowd -# Set the avoidance
+ * configurations using #setObstacleAvoidanceParams(). -# Add agents using #addAgent() and make an initial movement
+ * request using #requestMoveTarget(). A common process for managing the crowd is as follows: -# Call #update() to allow
+ * the crowd to manage its agents. -# Retrieve agent information using #getActiveAgents(). -# Make movement requests
+ * using #requestMoveTarget() when movement goal changes. -# Repeat every frame. Some agent configuration settings can
+ * be updated using #updateAgentParameters(). But the crowd owns the agent position. So it is not possible to update an
+ * active agent's position. If agent position must be fed back into the crowd, the agent must be removed and re-added.
+ * Notes: - Path related information is available for newly added agents only after an #update() has been performed. -
+ * Agent objects are kept in a pool and re-used. So it is important when using agent objects to check the value of
+ * #dtCrowdAgent::active to determine if the agent is actually in use or not. - This class is meant to provide 'local'
+ * movement. There is a limit of 256 polygons in the path corridor. So it is not meant to provide automatic pathfinding
  * services over long distances.
  *
  * @see dtAllocCrowd(), dtFreeCrowd(), init(), dtCrowdAgent
@@ -525,7 +381,8 @@ public class Crowd {
         updateAgentParameters(idx, params);
 
         // Find nearest position on navmesh and place the agent there.
-        FindNearestPolyResult nearestPoly = m_navquery.findNearestPoly(pos, m_ext, m_filters[ag.params.queryFilterType]);
+        FindNearestPolyResult nearestPoly = m_navquery.findNearestPoly(pos, m_ext,
+                m_filters[ag.params.queryFilterType]);
         float[] nearest = nearestPoly.getNearestPos() != null ? nearestPoly.getNearestPos() : pos;
 
         ag.corridor.reset(nearestPoly.getNearestRef(), nearest);
@@ -662,7 +519,8 @@ public class Crowd {
     static final int MAX_ITER = 20;
 
     void updateMoveRequest() {
-        PriorityQueue<CrowdAgent> queue = new PriorityQueue<>((a1, a2) -> Float.compare(a2.targetReplanTime, a1.targetReplanTime));
+        PriorityQueue<CrowdAgent> queue = new PriorityQueue<>(
+                (a1, a2) -> Float.compare(a2.targetReplanTime, a1.targetReplanTime));
 
         // Fire off new requests.
         for (int i = 0; i < m_maxAgents; ++i) {
@@ -684,9 +542,10 @@ public class Crowd {
                     throw new IllegalArgumentException("Empty path");
                 }
                 // Quick search towards the goal.
-                m_navquery.initSlicedFindPath(path.get(0), ag.targetRef, ag.npos, ag.targetPos, m_filters[ag.params.queryFilterType], 0);
+                m_navquery.initSlicedFindPath(path.get(0), ag.targetRef, ag.npos, ag.targetPos,
+                        m_filters[ag.params.queryFilterType], 0);
                 m_navquery.updateSlicedFindPath(MAX_ITER);
-                FindPathResult pathFound;
+                Result<List<Long>> pathFound;
                 if (ag.targetReplan) // && npath > 10)
                 {
                     // Try to use existing steady path during replan if
@@ -696,15 +555,20 @@ public class Crowd {
                     // Try to move towards target when goal changes.
                     pathFound = m_navquery.finalizeSlicedFindPath();
                 }
-                List<Long> reqPath = pathFound.getRefs();
+                List<Long> reqPath = pathFound.result;
                 float[] reqPos = new float[3];
-                if (!pathFound.getStatus().isFailed() && reqPath.size() > 0) {
+                if (pathFound.succeeded() && reqPath.size() > 0) {
                     // In progress or succeed.
                     if (reqPath.get(reqPath.size() - 1) != ag.targetRef) {
                         // Partial path, constrain target position inside the
                         // last polygon.
-                        ClosestPointOnPolyResult cr = m_navquery.closestPointOnPoly(reqPath.get(reqPath.size() - 1), ag.targetPos);
-                        reqPos = cr.getClosest();
+                        Result<ClosestPointOnPolyResult> cr = m_navquery
+                                .closestPointOnPoly(reqPath.get(reqPath.size() - 1), ag.targetPos);
+                        if (cr.succeeded()) {
+                            reqPos = cr.result.getClosest();
+                        } else {
+                            reqPath = new ArrayList<>();
+                        }
                     } else {
                         vCopy(reqPos, ag.targetPos);
                     }
@@ -736,8 +600,8 @@ public class Crowd {
 
         while (!queue.isEmpty()) {
             CrowdAgent ag = queue.poll();
-            ag.targetPathqRef = m_pathq.request(ag.corridor.getLastPoly(), ag.targetRef, ag.corridor.getTarget(), ag.targetPos,
-                    m_filters[ag.params.queryFilterType]);
+            ag.targetPathqRef = m_pathq.request(ag.corridor.getLastPoly(), ag.targetRef, ag.corridor.getTarget(),
+                    ag.targetPos, m_filters[ag.params.queryFilterType]);
             if (ag.targetPathqRef != PathQueue.DT_PATHQ_INVALID) {
                 ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_PATH;
             }
@@ -780,9 +644,9 @@ public class Crowd {
                     float[] targetPos = ag.targetPos;
 
                     boolean valid = true;
-                    FindPathResult pathFound = m_pathq.getPathResult(ag.targetPathqRef);
-                    List<Long> res = pathFound.getRefs();
-                    status = pathFound.getStatus();
+                    Result<List<Long>> pathFound = m_pathq.getPathResult(ag.targetPathqRef);
+                    List<Long> res = pathFound.result;
+                    status = pathFound.status;
                     if (status.isFailed() || res.isEmpty()) {
                         valid = false;
                     }
@@ -828,8 +692,13 @@ public class Crowd {
                         if (res.get(res.size() - 1) != ag.targetRef) {
                             // Partial path, constrain target position inside
                             // the last polygon.
-                            ClosestPointOnPolyResult cr = m_navquery.closestPointOnPoly(res.get(res.size() - 1), targetPos);
-                            targetPos = cr.getClosest();
+                            Result<ClosestPointOnPolyResult> cr = m_navquery.closestPointOnPoly(res.get(res.size() - 1),
+                                    targetPos);
+                            if (cr.succeeded()) {
+                                targetPos = cr.result.getClosest();
+                            } else {
+                                valid = false;
+                            }
                         }
                     }
 
@@ -857,7 +726,8 @@ public class Crowd {
             return;
         }
 
-        PriorityQueue<CrowdAgent> queue = new PriorityQueue<>((a1, a2) -> Float.compare(a2.topologyOptTime, a1.topologyOptTime));
+        PriorityQueue<CrowdAgent> queue = new PriorityQueue<>(
+                (a1, a2) -> Float.compare(a2.topologyOptTime, a1.topologyOptTime));
 
         for (int i = 0; i < agents.size(); ++i) {
             CrowdAgent ag = agents.get(i);
@@ -908,7 +778,8 @@ public class Crowd {
             if (!m_navquery.isValidPolyRef(agentRef, m_filters[ag.params.queryFilterType])) {
                 // Current location is not valid, try to reposition.
                 // TODO: this can snap agents, how to handle that?
-                FindNearestPolyResult nearestPoly = m_navquery.findNearestPoly(ag.npos, m_ext, m_filters[ag.params.queryFilterType]);
+                FindNearestPolyResult nearestPoly = m_navquery.findNearestPoly(ag.npos, m_ext,
+                        m_filters[ag.params.queryFilterType]);
                 agentRef = nearestPoly.getNearestRef();
                 if (nearestPoly.getNearestPos() != null) {
                     vCopy(agentPos, nearestPoly.getNearestPos());
@@ -947,7 +818,8 @@ public class Crowd {
                     && ag.targetState != MoveRequestState.DT_CROWDAGENT_TARGET_FAILED) {
                 if (!m_navquery.isValidPolyRef(ag.targetRef, m_filters[ag.params.queryFilterType])) {
                     // Current target is not valid, try to reposition.
-                    FindNearestPolyResult fnp = m_navquery.findNearestPoly(ag.targetPos, m_ext, m_filters[ag.params.queryFilterType]);
+                    FindNearestPolyResult fnp = m_navquery.findNearestPoly(ag.targetPos, m_ext,
+                            m_filters[ag.params.queryFilterType]);
                     ag.targetRef = fnp.getNearestRef();
                     if (fnp.getNearestPos() != null) {
                         vCopy(ag.targetPos, fnp.getNearestPos());
@@ -1047,7 +919,8 @@ public class Crowd {
             }
 
             // Find corners for steering
-            ag.corners = ag.corridor.findCorners(DT_CROWDAGENT_MAX_CORNERS, m_navquery, m_filters[ag.params.queryFilterType]);
+            ag.corners = ag.corridor.findCorners(DT_CROWDAGENT_MAX_CORNERS, m_navquery,
+                    m_filters[ag.params.queryFilterType]);
 
             // Check to see if the corner after the next corner is directly visible,
             // and short cut to there.
@@ -1089,8 +962,8 @@ public class Crowd {
 
                 // Adjust the path over the off-mesh connection.
                 long[] refs = new long[2];
-                if (ag.corridor.moveOverOffmeshConnection(ag.corners.get(ag.corners.size() - 1).getRef(), refs, anim.startPos, anim.endPos,
-                        m_navquery)) {
+                if (ag.corridor.moveOverOffmeshConnection(ag.corners.get(ag.corners.size() - 1).getRef(), refs,
+                        anim.startPos, anim.endPos, m_navquery)) {
                     vCopy(anim.initPos, ag.npos);
                     anim.polyRef = refs[1];
                     anim.active = true;
@@ -1221,13 +1094,13 @@ public class Crowd {
                 ObstacleAvoidanceParams params = m_obstacleQueryParams[ag.params.obstacleAvoidanceType];
 
                 if (adaptive) {
-                    Tupple2<Integer, float[]> nsnvel = m_obstacleQuery.sampleVelocityAdaptive(ag.npos, ag.params.radius, ag.desiredSpeed,
-                            ag.vel, ag.dvel, params, vod);
+                    Tupple2<Integer, float[]> nsnvel = m_obstacleQuery.sampleVelocityAdaptive(ag.npos, ag.params.radius,
+                            ag.desiredSpeed, ag.vel, ag.dvel, params, vod);
                     ns = nsnvel.first;
                     ag.nvel = nsnvel.second;
                 } else {
-                    Tupple2<Integer, float[]> nsnvel = m_obstacleQuery.sampleVelocityGrid(ag.npos, ag.params.radius, ag.desiredSpeed,
-                            ag.vel, ag.dvel, params, vod);
+                    Tupple2<Integer, float[]> nsnvel = m_obstacleQuery.sampleVelocityGrid(ag.npos, ag.params.radius,
+                            ag.desiredSpeed, ag.vel, ag.dvel, params, vod);
                     ns = nsnvel.first;
                     ag.nvel = nsnvel.second;
                 }

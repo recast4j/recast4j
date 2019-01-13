@@ -8,26 +8,27 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteOrder;
+import java.util.List;
 
 import org.junit.Test;
 import org.recast4j.detour.BVNode;
 import org.recast4j.detour.DefaultQueryFilter;
 import org.recast4j.detour.FindNearestPolyResult;
-import org.recast4j.detour.FindPathResult;
 import org.recast4j.detour.MeshData;
 import org.recast4j.detour.MeshTile;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.detour.Poly;
 import org.recast4j.detour.QueryFilter;
+import org.recast4j.detour.Result;
 import org.recast4j.detour.Status;
 import org.recast4j.detour.io.MeshSetWriter;
 
 public class UnityAStarPathfindingImporterTest {
 
     /**
-     * 3 is enough for recast4j as all nodes created by A* Star Pathfinding are triangles. However 6 can be used to to keep the
-     * result compatible with RecastDemo.
+     * 3 is enough for recast4j as all nodes created by A* Star Pathfinding are triangles. However 6 can be used to to
+     * keep the result compatible with RecastDemo.
      */
     static final int MAX_VERTS_PER_POLY = 6;
 
@@ -36,9 +37,9 @@ public class UnityAStarPathfindingImporterTest {
         NavMesh mesh = loadNavMesh("graph.zip");
         float[] startPos = new float[] { 8.200293f, 2.155071f, -26.176147f };
         float[] endPos = new float[] { 11.971109f, 0.000000f, 8.663261f };
-        FindPathResult path = findPath(mesh, startPos, endPos);
-        assertEquals(Status.SUCCSESS, path.getStatus());
-        assertEquals(57, path.getRefs().size());
+        Result<List<Long>> path = findPath(mesh, startPos, endPos);
+        assertEquals(Status.SUCCSESS, path.status);
+        assertEquals(57, path.result.size());
         saveMesh(mesh, "v4_0_6");
     }
 
@@ -47,9 +48,9 @@ public class UnityAStarPathfindingImporterTest {
         NavMesh mesh = loadNavMesh("graph_v4_1_16.zip");
         float[] startPos = new float[] { 22.93f, -2.37f, -5.11f };
         float[] endPos = new float[] { 16.81f, -2.37f, 25.52f };
-        FindPathResult path = findPath(mesh, startPos, endPos);
-        assertTrue(path.getStatus().isSuccess());
-        assertEquals(15, path.getRefs().size());
+        Result<List<Long>> path = findPath(mesh, startPos, endPos);
+        assertTrue(path.status.isSuccess());
+        assertEquals(15, path.result.size());
         saveMesh(mesh, "v4_1_16");
     }
 
@@ -78,11 +79,12 @@ public class UnityAStarPathfindingImporterTest {
     private NavMesh loadNavMesh(String filename) throws Exception {
         // Import the graphs
         UnityAStarPathfindingImporter importer = new UnityAStarPathfindingImporter();
-        NavMesh[] meshes = importer.load(new File(ClassLoader.getSystemResource(filename).getFile()), MAX_VERTS_PER_POLY);
+        NavMesh[] meshes = importer.load(new File(ClassLoader.getSystemResource(filename).getFile()),
+                MAX_VERTS_PER_POLY);
         return meshes[0];
     }
 
-    private FindPathResult findPath(NavMesh mesh, float[] startPos, float[] endPos) {
+    private Result<List<Long>> findPath(NavMesh mesh, float[] startPos, float[] endPos) {
         // Perform a simple pathfinding
         NavMeshQuery query = new NavMeshQuery(mesh);
         QueryFilter filter = new DefaultQueryFilter();

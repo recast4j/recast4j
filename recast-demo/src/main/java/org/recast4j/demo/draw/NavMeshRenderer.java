@@ -23,6 +23,8 @@ import static org.lwjgl.opengl.GL11.glDepthMask;
 import static org.lwjgl.opengl.GL11.glDisable;
 import static org.lwjgl.opengl.GL11.glEnable;
 
+import java.util.List;
+
 import org.recast4j.demo.builder.SampleAreaModifications;
 import org.recast4j.demo.geom.DemoInputGeomProvider;
 import org.recast4j.demo.geom.DemoOffMeshConnection;
@@ -54,7 +56,7 @@ public class NavMeshRenderer {
         }
         NavMeshQuery navQuery = sample.getNavMeshQuery();
         DemoInputGeomProvider geom = sample.getInputGeom();
-        RecastBuilderResult rcBuilderResult = sample.getRecastResult();
+        List<RecastBuilderResult> rcBuilderResults = sample.getRecastResults();
         NavMesh navMesh = sample.getNavMesh();
         SettingsUI settingsUI = sample.getSettingsUI();
         glEnable(GL_FOG);
@@ -100,69 +102,60 @@ public class NavMeshRenderer {
 
         glDepthMask(true);
 
-        if (rcBuilderResult != null && rcBuilderResult.getCompactHeightfield() != null
-                && drawMode == DrawMode.DRAWMODE_COMPACT) {
-            debugDraw.debugDrawCompactHeightfieldSolid(rcBuilderResult.getCompactHeightfield());
-        }
-
-        if (rcBuilderResult != null && rcBuilderResult.getCompactHeightfield() != null
-                && drawMode == DrawMode.DRAWMODE_COMPACT_DISTANCE) {
-            debugDraw.debugDrawCompactHeightfieldDistance(rcBuilderResult.getCompactHeightfield());
-        }
-        if (rcBuilderResult != null && rcBuilderResult.getCompactHeightfield() != null
-                && drawMode == DrawMode.DRAWMODE_COMPACT_REGIONS) {
-            debugDraw.debugDrawCompactHeightfieldRegions(rcBuilderResult.getCompactHeightfield());
-        }
-        if (rcBuilderResult != null && rcBuilderResult.getSolidHeightfield() != null
-                && drawMode == DrawMode.DRAWMODE_VOXELS) {
-            glEnable(GL_FOG);
-            debugDraw.debugDrawHeightfieldSolid(rcBuilderResult.getSolidHeightfield());
-            glDisable(GL_FOG);
-        }
-        if (rcBuilderResult != null && rcBuilderResult.getSolidHeightfield() != null
-                && drawMode == DrawMode.DRAWMODE_VOXELS_WALKABLE) {
-            glEnable(GL_FOG);
-            debugDraw.debugDrawHeightfieldWalkable(rcBuilderResult.getSolidHeightfield());
-            glDisable(GL_FOG);
-        }
-        if (rcBuilderResult != null && rcBuilderResult.getContourSet() != null
-                && drawMode == DrawMode.DRAWMODE_RAW_CONTOURS) {
-            glDepthMask(false);
-            debugDraw.debugDrawRawContours(rcBuilderResult.getContourSet(), 1f);
-            glDepthMask(true);
-        }
-        if (rcBuilderResult != null && rcBuilderResult.getContourSet() != null
-                && drawMode == DrawMode.DRAWMODE_BOTH_CONTOURS) {
-            glDepthMask(false);
-            debugDraw.debugDrawRawContours(rcBuilderResult.getContourSet(), 0.5f);
-            debugDraw.debugDrawContours(rcBuilderResult.getContourSet());
-            glDepthMask(true);
-        }
-        if (rcBuilderResult != null && rcBuilderResult.getContourSet() != null
-                && drawMode == DrawMode.DRAWMODE_CONTOURS) {
-            glDepthMask(false);
-            debugDraw.debugDrawContours(rcBuilderResult.getContourSet());
-            glDepthMask(true);
-        }
-        if (rcBuilderResult != null && rcBuilderResult.getCompactHeightfield() != null
-                && drawMode == DrawMode.DRAWMODE_REGION_CONNECTIONS) {
-            debugDraw.debugDrawCompactHeightfieldRegions(rcBuilderResult.getCompactHeightfield());
-            glDepthMask(false);
-            if (rcBuilderResult.getContourSet() != null) {
-                debugDraw.debugDrawRegionConnections(rcBuilderResult.getContourSet());
+        for (RecastBuilderResult rcBuilderResult : rcBuilderResults) {
+            if (rcBuilderResult.getCompactHeightfield() != null && drawMode == DrawMode.DRAWMODE_COMPACT) {
+                debugDraw.debugDrawCompactHeightfieldSolid(rcBuilderResult.getCompactHeightfield());
             }
-            glDepthMask(true);
-        }
-        if (rcBuilderResult != null && rcBuilderResult.getMesh() != null && drawMode == DrawMode.DRAWMODE_POLYMESH) {
-            glDepthMask(false);
-            debugDraw.debugDrawPolyMesh(rcBuilderResult.getMesh());
-            glDepthMask(true);
-        }
-        if (rcBuilderResult != null && rcBuilderResult.getMeshDetail() != null
-                && drawMode == DrawMode.DRAWMODE_POLYMESH_DETAIL) {
-            glDepthMask(false);
-            debugDraw.debugDrawPolyMeshDetail(rcBuilderResult.getMeshDetail());
-            glDepthMask(true);
+            if (rcBuilderResult.getCompactHeightfield() != null && drawMode == DrawMode.DRAWMODE_COMPACT_DISTANCE) {
+                debugDraw.debugDrawCompactHeightfieldDistance(rcBuilderResult.getCompactHeightfield());
+            }
+            if (rcBuilderResult.getCompactHeightfield() != null && drawMode == DrawMode.DRAWMODE_COMPACT_REGIONS) {
+                debugDraw.debugDrawCompactHeightfieldRegions(rcBuilderResult.getCompactHeightfield());
+            }
+            if (rcBuilderResult.getSolidHeightfield() != null && drawMode == DrawMode.DRAWMODE_VOXELS) {
+                glEnable(GL_FOG);
+                debugDraw.debugDrawHeightfieldSolid(rcBuilderResult.getSolidHeightfield());
+                glDisable(GL_FOG);
+            }
+            if (rcBuilderResult.getSolidHeightfield() != null && drawMode == DrawMode.DRAWMODE_VOXELS_WALKABLE) {
+                glEnable(GL_FOG);
+                debugDraw.debugDrawHeightfieldWalkable(rcBuilderResult.getSolidHeightfield());
+                glDisable(GL_FOG);
+            }
+            if (rcBuilderResult.getContourSet() != null && drawMode == DrawMode.DRAWMODE_RAW_CONTOURS) {
+                glDepthMask(false);
+                debugDraw.debugDrawRawContours(rcBuilderResult.getContourSet(), 1f);
+                glDepthMask(true);
+            }
+            if (rcBuilderResult.getContourSet() != null && drawMode == DrawMode.DRAWMODE_BOTH_CONTOURS) {
+                glDepthMask(false);
+                debugDraw.debugDrawRawContours(rcBuilderResult.getContourSet(), 0.5f);
+                debugDraw.debugDrawContours(rcBuilderResult.getContourSet());
+                glDepthMask(true);
+            }
+            if (rcBuilderResult.getContourSet() != null && drawMode == DrawMode.DRAWMODE_CONTOURS) {
+                glDepthMask(false);
+                debugDraw.debugDrawContours(rcBuilderResult.getContourSet());
+                glDepthMask(true);
+            }
+            if (rcBuilderResult.getCompactHeightfield() != null && drawMode == DrawMode.DRAWMODE_REGION_CONNECTIONS) {
+                debugDraw.debugDrawCompactHeightfieldRegions(rcBuilderResult.getCompactHeightfield());
+                glDepthMask(false);
+                if (rcBuilderResult.getContourSet() != null) {
+                    debugDraw.debugDrawRegionConnections(rcBuilderResult.getContourSet());
+                }
+                glDepthMask(true);
+            }
+            if (rcBuilderResult.getMesh() != null && drawMode == DrawMode.DRAWMODE_POLYMESH) {
+                glDepthMask(false);
+                debugDraw.debugDrawPolyMesh(rcBuilderResult.getMesh());
+                glDepthMask(true);
+            }
+            if (rcBuilderResult.getMeshDetail() != null && drawMode == DrawMode.DRAWMODE_POLYMESH_DETAIL) {
+                glDepthMask(false);
+                debugDraw.debugDrawPolyMeshDetail(rcBuilderResult.getMeshDetail());
+                glDepthMask(true);
+            }
         }
 
         drawConvexVolumes(geom);

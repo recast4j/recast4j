@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -22,20 +22,20 @@ import java.util.List;
 
 public class GetPolyWallSegmentsResult {
 
-	private final List<float[]> segmentVerts;
-	private final List<Long> segmentRefs;
+    private final List<float[]> segmentVerts;
+    private final List<Long> segmentRefs;
 
-	public GetPolyWallSegmentsResult(List<float[]> segmentVerts, List<Long> segmentRefs) {
-		this.segmentVerts = segmentVerts;
-		this.segmentRefs = segmentRefs;
-	}
+    public GetPolyWallSegmentsResult(List<float[]> segmentVerts, List<Long> segmentRefs) {
+        this.segmentVerts = segmentVerts;
+        this.segmentRefs = segmentRefs;
+    }
 
-	public List<float[]> getSegmentVerts() {
-		return segmentVerts;
-	}
+    public List<float[]> getSegmentVerts() {
+        return segmentVerts;
+    }
 
-	public List<Long> getSegmentRefs() {
-		return segmentRefs;
-	}
+    public List<Long> getSegmentRefs() {
+        return segmentRefs;
+    }
 
 }

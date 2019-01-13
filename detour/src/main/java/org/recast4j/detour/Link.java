@@ -26,7 +26,7 @@ package org.recast4j.detour;
  */
 public class Link {
     /** Neighbour reference. (The neighbor that is linked to.) */
-    long ref;
+    public long ref;
     /** Index of the next link. */
     public int next;
     /** Index of the polygon edge that owns this link. */

@@ -24,17 +24,18 @@ import static org.lwjgl.nuklear.Nuklear.NK_WINDOW_MOVABLE;
 import static org.lwjgl.nuklear.Nuklear.NK_WINDOW_TITLE;
 import static org.lwjgl.nuklear.Nuklear.nk_begin;
 import static org.lwjgl.nuklear.Nuklear.nk_button_text;
+import static org.lwjgl.nuklear.Nuklear.nk_check_text;
 import static org.lwjgl.nuklear.Nuklear.nk_end;
 import static org.lwjgl.nuklear.Nuklear.nk_label;
 import static org.lwjgl.nuklear.Nuklear.nk_layout_row_dynamic;
-import static org.lwjgl.nuklear.Nuklear.nk_option_label;
+import static org.lwjgl.nuklear.Nuklear.nk_option_text;
 import static org.lwjgl.nuklear.Nuklear.nk_property_float;
 import static org.lwjgl.nuklear.Nuklear.nk_property_int;
 import static org.lwjgl.nuklear.Nuklear.nk_rect;
 import static org.lwjgl.nuklear.Nuklear.nk_rgb;
+import static org.lwjgl.nuklear.Nuklear.nk_rgba;
 import static org.lwjgl.nuklear.Nuklear.nk_spacing;
-import static org.lwjgl.nuklear.Nuklear.nk_style_pop_color;
-import static org.lwjgl.nuklear.Nuklear.nk_style_push_color;
+import static org.lwjgl.nuklear.Nuklear.nk_style_item_color;
 import static org.lwjgl.nuklear.Nuklear.nk_window_get_bounds;
 import static org.lwjgl.system.MemoryStack.stackPush;
 
@@ -45,6 +46,7 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.nuklear.NkColor;
 import org.lwjgl.nuklear.NkContext;
 import org.lwjgl.nuklear.NkRect;
+import org.lwjgl.nuklear.NkStyleItem;
 import org.lwjgl.system.MemoryStack;
 import org.recast4j.demo.draw.DrawMode;
 import org.recast4j.demo.ui.NuklearUIHelper;
@@ -70,22 +72,48 @@ public class SettingsUI implements NuklearUIModule {
     private boolean filterLedgeSpans = true;
     private boolean filterWalkableLowHeightSpans = true;
 
+    private final FloatBuffer edgeMaxLen = BufferUtils.createFloatBuffer(1).put(0, 12f);
+    private final FloatBuffer edgeMaxError = BufferUtils.createFloatBuffer(1).put(0, 1.3f);
+    private final IntBuffer vertsPerPoly = BufferUtils.createIntBuffer(1).put(0, 6);
+
+    private final FloatBuffer detailSampleDist = BufferUtils.createFloatBuffer(1).put(0, 6f);
+    private final FloatBuffer detailSampleMaxError = BufferUtils.createFloatBuffer(1).put(0, 1f);
+
+    private boolean tiled = false;
+    private final IntBuffer tileSize = BufferUtils.createIntBuffer(1).put(0, 32);
+
     public final NkColor white = NkColor.create();
+    public final NkColor background = NkColor.create();
     private boolean buildTriggered;
     private long buildTime;
+    private final int[] voxels = new int[2];
+    private final int[] tiles = new int[2];
+    private int maxTiles;
+    private int maxPolys;
+
     private DrawMode drawMode = DrawMode.DRAWMODE_MESH;
 
     @Override
     public boolean layout(NkContext ctx, int x, int y, int width, int height, int mouseX, int mouseY) {
         boolean mouseInside = false;
         nk_rgb(255, 255, 255, white);
+        nk_rgba(0, 0, 0, 192, background);
+        try (MemoryStack stack = stackPush()) {
+            ctx.style().text().color().set(white);
+            ctx.style().option().text_normal().set(white);
+            ctx.style().property().label_normal().set(white);
+            ctx.style().window().background().set(background);
+            NkStyleItem styleItem = NkStyleItem.mallocStack(stack);
+            nk_style_item_color(background, styleItem);
+            ctx.style().window().fixed_background().set(styleItem);
+            nk_style_item_color(white, styleItem);
+            ctx.style().option().cursor_hover().set(styleItem);
+            ctx.style().option().cursor_normal().set(styleItem);
+        }
         try (MemoryStack stack = stackPush()) {
             NkRect rect = NkRect.mallocStack(stack);
             if (nk_begin(ctx, "Properties", nk_rect(width - 255, 5, 250, height - 10, rect),
                     NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_TITLE)) {
-
-                nk_style_push_color(ctx, ctx.style().text().color(), white);
-                nk_style_push_color(ctx, ctx.style().option().text_normal(), white);
 
                 nk_layout_row_dynamic(ctx, 5, 1);
                 nk_spacing(ctx, 1);
@@ -96,7 +124,7 @@ public class SettingsUI implements NuklearUIModule {
                 nk_layout_row_dynamic(ctx, 20, 1);
                 nk_property_float(ctx, "Cell Height", 0.1f, cellHeight, 1f, 0.01f, 0.01f);
                 nk_layout_row_dynamic(ctx, 18, 1);
-                nk_label(ctx, "Voxels 100 x 100", NK_TEXT_ALIGN_RIGHT);
+                nk_label(ctx, String.format("Voxels %d x %d", voxels[0], voxels[1]), NK_TEXT_ALIGN_RIGHT);
 
                 nk_layout_row_dynamic(ctx, 18, 1);
                 nk_label(ctx, "Agent", NK_TEXT_ALIGN_LEFT);
@@ -109,6 +137,8 @@ public class SettingsUI implements NuklearUIModule {
                 nk_layout_row_dynamic(ctx, 20, 1);
                 nk_property_float(ctx, "Max Slope", 0f, agentMaxSlope, 90f, 1f, 1f);
 
+                nk_layout_row_dynamic(ctx, 5, 1);
+                nk_spacing(ctx, 1);
                 nk_layout_row_dynamic(ctx, 18, 1);
                 nk_label(ctx, "Region", NK_TEXT_ALIGN_LEFT);
                 nk_layout_row_dynamic(ctx, 20, 1);
@@ -116,26 +146,61 @@ public class SettingsUI implements NuklearUIModule {
                 nk_layout_row_dynamic(ctx, 20, 1);
                 nk_property_int(ctx, "Merged Region Size", 0, mergedRegionSize, 150, 1, 1f);
 
+                nk_layout_row_dynamic(ctx, 5, 1);
+                nk_spacing(ctx, 1);
                 nk_layout_row_dynamic(ctx, 18, 1);
                 nk_label(ctx, "Partitioning", NK_TEXT_ALIGN_LEFT);
                 partitioning = NuklearUIHelper.nk_radio(ctx, PartitionType.values(), partitioning,
                         p -> p.name().substring(0, 1) + p.name().substring(1).toLowerCase());
 
+                nk_layout_row_dynamic(ctx, 5, 1);
+                nk_spacing(ctx, 1);
                 nk_layout_row_dynamic(ctx, 18, 1);
                 nk_label(ctx, "Filtering", NK_TEXT_ALIGN_LEFT);
                 nk_layout_row_dynamic(ctx, 20, 1);
-                filterLowHangingObstacles = nk_option_label(ctx, "Low Hanging Obstacles", filterLowHangingObstacles);
+                filterLowHangingObstacles = nk_option_text(ctx, "Low Hanging Obstacles", filterLowHangingObstacles);
                 nk_layout_row_dynamic(ctx, 20, 1);
-                filterLedgeSpans = nk_option_label(ctx, "Ledge Spans", filterLedgeSpans);
+                filterLedgeSpans = nk_option_text(ctx, "Ledge Spans", filterLedgeSpans);
                 nk_layout_row_dynamic(ctx, 20, 1);
-                filterWalkableLowHeightSpans = nk_option_label(ctx, "Walkable Low Height Spans", filterWalkableLowHeightSpans);
+                filterWalkableLowHeightSpans = nk_option_text(ctx, "Walkable Low Height Spans",
+                        filterWalkableLowHeightSpans);
 
+                nk_layout_row_dynamic(ctx, 5, 1);
+                nk_spacing(ctx, 1);
                 nk_layout_row_dynamic(ctx, 18, 1);
                 nk_label(ctx, "Polygonization", NK_TEXT_ALIGN_LEFT);
+                nk_layout_row_dynamic(ctx, 20, 1);
+                nk_property_float(ctx, "Max Edge Length", 0f, edgeMaxLen, 50f, 1f, 1f);
+                nk_layout_row_dynamic(ctx, 20, 1);
+                nk_property_float(ctx, "Max Edge Error", 0.1f, edgeMaxError, 3f, 0.1f, 0.1f);
+                nk_layout_row_dynamic(ctx, 20, 1);
+                nk_property_int(ctx, "Vert Per Poly", 3, vertsPerPoly, 12, 1, 1);
 
+                nk_layout_row_dynamic(ctx, 5, 1);
+                nk_spacing(ctx, 1);
                 nk_layout_row_dynamic(ctx, 18, 1);
                 nk_label(ctx, "Detail Mesh", NK_TEXT_ALIGN_LEFT);
+                nk_layout_row_dynamic(ctx, 20, 1);
+                nk_property_float(ctx, "Sample Distance", 0f, detailSampleDist, 16f, 1f, 1f);
+                nk_layout_row_dynamic(ctx, 20, 1);
+                nk_property_float(ctx, "Max Sample Error", 0f, detailSampleMaxError, 16f, 1f, 1f);
 
+                nk_layout_row_dynamic(ctx, 5, 1);
+                nk_spacing(ctx, 1);
+                nk_layout_row_dynamic(ctx, 18, 1);
+                nk_label(ctx, "Tiling", NK_TEXT_ALIGN_LEFT);
+                nk_layout_row_dynamic(ctx, 20, 1);
+                tiled = nk_check_text(ctx, "Enable", tiled);
+                if (tiled) {
+                    nk_layout_row_dynamic(ctx, 20, 1);
+                    nk_property_int(ctx, "Tile Size", 16, tileSize, 1024, 16, 16);
+                    nk_layout_row_dynamic(ctx, 18, 1);
+                    nk_label(ctx, String.format("Tiles %d x %d", tiles[0], tiles[1]), NK_TEXT_ALIGN_RIGHT);
+                    nk_layout_row_dynamic(ctx, 18, 1);
+                    nk_label(ctx, String.format("Max Tiles %d", maxTiles), NK_TEXT_ALIGN_RIGHT);
+                    nk_layout_row_dynamic(ctx, 18, 1);
+                    nk_label(ctx, String.format("Max Polys %d", maxPolys), NK_TEXT_ALIGN_RIGHT);
+                }
                 nk_label(ctx, "Build Time: " + buildTime + "ms", NK_TEXT_ALIGN_LEFT);
 
                 nk_layout_row_dynamic(ctx, 20, 1);
@@ -145,10 +210,9 @@ public class SettingsUI implements NuklearUIModule {
                 nk_label(ctx, "Draw", NK_TEXT_ALIGN_LEFT);
                 drawMode = NuklearUIHelper.nk_radio(ctx, DrawMode.values(), drawMode, dm -> dm.toString());
 
-                nk_style_pop_color(ctx);
-                nk_style_pop_color(ctx);
                 nk_window_get_bounds(ctx, rect);
-                if (mouseX >= rect.x() && mouseX <= rect.x() + rect.w() && mouseY >= rect.y() && mouseY <= rect.y() + rect.h()) {
+                if (mouseX >= rect.x() && mouseX <= rect.x() + rect.w() && mouseY >= rect.y()
+                        && mouseY <= rect.y() + rect.h()) {
                     mouseInside = true;
                 }
             }
@@ -216,4 +280,51 @@ public class SettingsUI implements NuklearUIModule {
     public DrawMode getDrawMode() {
         return drawMode;
     }
+
+    public float getEdgeMaxLen() {
+        return edgeMaxLen.get(0);
+    }
+
+    public float getEdgeMaxError() {
+        return edgeMaxError.get(0);
+    }
+
+    public int getVertsPerPoly() {
+        return vertsPerPoly.get(0);
+    }
+
+    public float getDetailSampleDist() {
+        return detailSampleDist.get(0);
+    }
+
+    public float getDetailSampleMaxError() {
+        return detailSampleMaxError.get(0);
+    }
+
+    public void setVoxels(int[] voxels) {
+        this.voxels[0] = voxels[0];
+        this.voxels[1] = voxels[1];
+    }
+
+    public boolean isTiled() {
+        return tiled;
+    }
+
+    public int getTileSize() {
+        return tileSize.get(0);
+    }
+
+    public void setTiles(int[] tiles) {
+        this.tiles[0] = tiles[0];
+        this.tiles[1] = tiles[1];
+    }
+
+    public void setMaxTiles(int maxTiles) {
+        this.maxTiles = maxTiles;
+    }
+
+    public void setMaxPolys(int maxPolys) {
+        this.maxPolys = maxPolys;
+    }
+
 }

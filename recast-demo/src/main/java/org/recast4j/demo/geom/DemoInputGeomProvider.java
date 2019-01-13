@@ -20,7 +20,7 @@ package org.recast4j.demo.geom;
 
 import static org.recast4j.demo.math.DemoMath.vCross;
 import static org.recast4j.demo.math.DemoMath.vDot;
-import static org.recast4j.demo.math.DemoMath.vSub;
+import static org.recast4j.detour.DetourCommon.vSub;
 
 import java.util.ArrayList;
 import java.util.Collections;
