@@ -86,12 +86,16 @@ public class NavMeshRenderer {
         if (navMesh != null && navQuery != null
                 && (drawMode == DrawMode.DRAWMODE_NAVMESH || drawMode == DrawMode.DRAWMODE_NAVMESH_TRANS
                         || drawMode == DrawMode.DRAWMODE_NAVMESH_BVTREE || drawMode == DrawMode.DRAWMODE_NAVMESH_NODES
-                        || drawMode == DrawMode.DRAWMODE_NAVMESH_INVIS)) {
+                        || drawMode == DrawMode.DRAWMODE_NAVMESH_INVIS
+                        || drawMode == DrawMode.DRAWMODE_NAVMESH_PORTALS)) {
             if (drawMode != DrawMode.DRAWMODE_NAVMESH_INVIS) {
                 debugDraw.debugDrawNavMeshWithClosedList(navMesh, navQuery, navMeshDrawFlags);
             }
             if (drawMode == DrawMode.DRAWMODE_NAVMESH_BVTREE) {
                 debugDraw.debugDrawNavMeshBVTree(navMesh);
+            }
+            if (drawMode == DrawMode.DRAWMODE_NAVMESH_PORTALS) {
+                debugDraw.debugDrawNavMeshPortals(navMesh);
             }
             if (drawMode == DrawMode.DRAWMODE_NAVMESH_NODES) {
                 debugDraw.debugDrawNavMeshNodes(navQuery);

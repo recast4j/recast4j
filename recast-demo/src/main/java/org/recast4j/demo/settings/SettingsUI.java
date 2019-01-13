@@ -92,6 +92,7 @@ public class SettingsUI implements NuklearUIModule {
     private int maxPolys;
 
     private DrawMode drawMode = DrawMode.DRAWMODE_MESH;
+    private boolean meshInputTrigerred;
 
     @Override
     public boolean layout(NkContext ctx, int x, int y, int width, int height, int mouseX, int mouseY) {
@@ -114,6 +115,15 @@ public class SettingsUI implements NuklearUIModule {
             NkRect rect = NkRect.mallocStack(stack);
             if (nk_begin(ctx, "Properties", nk_rect(width - 255, 5, 250, height - 10, rect),
                     NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_TITLE)) {
+
+                nk_layout_row_dynamic(ctx, 5, 1);
+                nk_spacing(ctx, 1);
+                nk_layout_row_dynamic(ctx, 18, 1);
+                nk_label(ctx, "Input Mesh", NK_TEXT_ALIGN_LEFT);
+                nk_layout_row_dynamic(ctx, 20, 1);
+                meshInputTrigerred = nk_button_text(ctx, "Choose Mesh...");
+                nk_layout_row_dynamic(ctx, 18, 1);
+                nk_label(ctx, String.format("Verts: %d Tris: %d", 0, 0), NK_TEXT_ALIGN_RIGHT);
 
                 nk_layout_row_dynamic(ctx, 5, 1);
                 nk_spacing(ctx, 1);
@@ -201,7 +211,8 @@ public class SettingsUI implements NuklearUIModule {
                     nk_layout_row_dynamic(ctx, 18, 1);
                     nk_label(ctx, String.format("Max Polys %d", maxPolys), NK_TEXT_ALIGN_RIGHT);
                 }
-                nk_label(ctx, "Build Time: " + buildTime + "ms", NK_TEXT_ALIGN_LEFT);
+                nk_layout_row_dynamic(ctx, 18, 1);
+                nk_label(ctx, String.format("Build Time: %d ms", buildTime), NK_TEXT_ALIGN_LEFT);
 
                 nk_layout_row_dynamic(ctx, 20, 1);
                 buildTriggered = nk_button_text(ctx, "Build");
@@ -325,6 +336,10 @@ public class SettingsUI implements NuklearUIModule {
 
     public void setMaxPolys(int maxPolys) {
         this.maxPolys = maxPolys;
+    }
+
+    public boolean isMeshInputTrigerred() {
+        return meshInputTrigerred;
     }
 
 }

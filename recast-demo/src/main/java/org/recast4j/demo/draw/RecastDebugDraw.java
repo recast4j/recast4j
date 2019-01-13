@@ -1075,4 +1075,80 @@ public class RecastDebugDraw extends DebugDraw {
         vertex(x, y, z + s, col);
     }
 
+    public void debugDrawNavMeshPortals(NavMesh mesh) {
+        for (int i = 0; i < mesh.getMaxTiles(); ++i) {
+            MeshTile tile = mesh.getTile(i);
+            if (tile.data != null && tile.data.header != null) {
+                drawMeshTilePortal(tile);
+            }
+        }
+    }
+
+    private void drawMeshTilePortal(MeshTile tile) {
+        float padx = 0.04f;
+        float pady = tile.data.header.walkableClimb;
+
+        begin(DebugDrawPrimitives.LINES, 2.0f);
+
+        for (int side = 0; side < 8; ++side) {
+            int m = NavMesh.DT_EXT_LINK | (short) side;
+
+            for (int i = 0; i < tile.data.header.polyCount; ++i) {
+                Poly poly = tile.data.polys[i];
+
+                // Create new links.
+                int nv = poly.vertCount;
+                for (int j = 0; j < nv; ++j) {
+                    // Skip edges which do not point to the right side.
+                    if (poly.neis[j] != m)
+                        continue;
+
+                    // Create new links
+                    float[] va = new float[] { tile.data.verts[poly.verts[j] * 3],
+                            tile.data.verts[poly.verts[j] * 3 + 1], tile.data.verts[poly.verts[j] * 3 + 2] };
+                    float[] vb = new float[] { tile.data.verts[poly.verts[(j + 1) % nv] * 3],
+                            tile.data.verts[poly.verts[(j + 1) % nv] * 3 + 1],
+                            tile.data.verts[poly.verts[(j + 1) % nv] * 3 + 2] };
+
+                    if (side == 0 || side == 4) {
+                        int col = side == 0 ? duRGBA(128, 0, 0, 128) : duRGBA(128, 0, 128, 128);
+
+                        float x = va[0] + ((side == 0) ? -padx : padx);
+
+                        vertex(x, va[1] - pady, va[2], col);
+                        vertex(x, va[1] + pady, va[2], col);
+
+                        vertex(x, va[1] + pady, va[2], col);
+                        vertex(x, vb[1] + pady, vb[2], col);
+
+                        vertex(x, vb[1] + pady, vb[2], col);
+                        vertex(x, vb[1] - pady, vb[2], col);
+
+                        vertex(x, vb[1] - pady, vb[2], col);
+                        vertex(x, va[1] - pady, va[2], col);
+                    } else if (side == 2 || side == 6) {
+                        int col = side == 2 ? duRGBA(0, 128, 0, 128) : duRGBA(0, 128, 128, 128);
+
+                        float z = va[2] + ((side == 2) ? -padx : padx);
+
+                        vertex(va[0], va[1] - pady, z, col);
+                        vertex(va[0], va[1] + pady, z, col);
+
+                        vertex(va[0], va[1] + pady, z, col);
+                        vertex(vb[0], vb[1] + pady, z, col);
+
+                        vertex(vb[0], vb[1] + pady, z, col);
+                        vertex(vb[0], vb[1] - pady, z, col);
+
+                        vertex(vb[0], vb[1] - pady, z, col);
+                        vertex(va[0], va[1] - pady, z, col);
+                    }
+
+                }
+            }
+        }
+
+        end();
+
+    }
 }
