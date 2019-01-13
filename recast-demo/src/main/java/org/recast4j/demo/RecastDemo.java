@@ -87,18 +87,25 @@ import static org.lwjgl.opengl.GL11.glRotatef;
 import static org.lwjgl.opengl.GL11.glTranslatef;
 import static org.lwjgl.opengl.GL11.glViewport;
 import static org.lwjgl.opengl.GL20.GL_SHADING_LANGUAGE_VERSION;
+import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.IntBuffer;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.ARBDebugOutput;
 import org.lwjgl.opengl.GL43;
 import org.lwjgl.opengl.GLCapabilities;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.util.tinyfd.TinyFileDialogs;
 import org.recast4j.demo.builder.SoloNavMeshBuilder;
 import org.recast4j.demo.builder.TileNavMeshBuilder;
 import org.recast4j.demo.draw.GLU;
@@ -320,12 +327,7 @@ public class RecastDemo {
 
         nuklearUI = new NuklearUI(window, mouse, settingsUI, toolsUI);
 
-        DemoInputGeomProvider geom = new ObjImporter()
-                .load(getClass().getClassLoader().getResourceAsStream("nav_test.obj"));
-        sample = new Sample(geom, Collections.emptyList(), null, settingsUI, dd);
-        toolsUI.setSample(sample);
-        toolsUI.setEnabled(true);
-        showSample = true;
+        DemoInputGeomProvider geom = loadInputMesh(getClass().getClassLoader().getResourceAsStream("nav_test.obj"));
 
         float camr = 1000;
 
@@ -338,7 +340,6 @@ public class RecastDemo {
         glFogf(GL_FOG_END, camr * 1.25f);
         glFogfv(GL_FOG_COLOR, fogColor);
 
-        glEnable(GL_CULL_FACE);
         glDepthFunc(GL_LEQUAL);
 
         while (!glfwWindowShouldClose(window)) {
@@ -358,6 +359,7 @@ public class RecastDemo {
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glDisable(GL_TEXTURE_2D);
             glEnable(GL_DEPTH_TEST);
+            glEnable(GL_CULL_FACE);
 
             // Compute the projection matrix.
             glMatrixMode(GL_PROJECTION);
@@ -386,9 +388,12 @@ public class RecastDemo {
                 float[] bmax = geom.getMeshBoundsMax();
                 int[] voxels = Recast.calcGridSize(bmin, bmax, settingsUI.getCellSize());
                 settingsUI.setVoxels(voxels);
-                settingsUI.setTiles(tileNavMeshBuilder.getTiles(geom, settingsUI.getCellSize(), settingsUI.getTileSize()));
-                settingsUI.setMaxTiles(tileNavMeshBuilder.getMaxTiles(geom, settingsUI.getCellSize(), settingsUI.getTileSize()));
-                settingsUI.setMaxPolys(tileNavMeshBuilder.getMaxPolysPerTile(geom, settingsUI.getCellSize(), settingsUI.getTileSize()));
+                settingsUI.setTiles(
+                        tileNavMeshBuilder.getTiles(geom, settingsUI.getCellSize(), settingsUI.getTileSize()));
+                settingsUI.setMaxTiles(
+                        tileNavMeshBuilder.getMaxTiles(geom, settingsUI.getCellSize(), settingsUI.getTileSize()));
+                settingsUI.setMaxPolys(tileNavMeshBuilder.getMaxPolysPerTile(geom, settingsUI.getCellSize(),
+                        settingsUI.getTileSize()));
             }
 
             mouseOverMenu = nuklearUI.layout(window, 0, 0, width, height, (int) mousePos[0], (int) mousePos[1]);
@@ -420,7 +425,20 @@ public class RecastDemo {
             scrollZoom = 0;
 
             NavMesh navMesh;
-            if (settingsUI.isBuildTriggered()) {
+            if (settingsUI.isMeshInputTrigerred()) {
+                try (MemoryStack stack = stackPush()) {
+                    PointerBuffer aFilterPatterns = stack.mallocPointer(2);
+                    aFilterPatterns.put(stack.UTF8("*.obj"));
+                    aFilterPatterns.flip();
+                    String filename = TinyFileDialogs.tinyfd_openFileDialog("Open Mesh File", "", aFilterPatterns,
+                            "Mesh File (*.obj)", false);
+                    try (InputStream stream = new FileInputStream(filename)) {
+                        geom = loadInputMesh(stream);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } else if (settingsUI.isBuildTriggered()) {
                 if (!building) {
 
                     float m_cellSize = settingsUI.getCellSize();
@@ -529,12 +547,6 @@ public class RecastDemo {
             glDisable(GL_FOG);
 
             // Render GUI
-            glDisable(GL_DEPTH_TEST);
-            glMatrixMode(GL_PROJECTION);
-            glLoadIdentity();
-            // gluOrtho2D(0, width, 0, height);
-            glMatrixMode(GL_MODELVIEW);
-            glLoadIdentity();
             nuklearUI.render(window);
             glfwSwapBuffers(window);
             try {
@@ -543,6 +555,15 @@ public class RecastDemo {
             }
         }
 
+    }
+
+    private DemoInputGeomProvider loadInputMesh(InputStream stream) {
+        DemoInputGeomProvider geom = new ObjImporter().load(stream);
+        sample = new Sample(geom, Collections.emptyList(), null, settingsUI, dd);
+        toolsUI.setSample(sample);
+        toolsUI.setEnabled(true);
+        showSample = true;
+        return geom;
     }
 
     public static void main(String[] args) {
