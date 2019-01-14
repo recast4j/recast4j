@@ -310,7 +310,7 @@ public class Crowd {
     /// @param[in] params The new configuration.
     public void setObstacleAvoidanceParams(int idx, ObstacleAvoidanceParams params) {
         if (idx >= 0 && idx < DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS) {
-            m_obstacleQueryParams[idx] = params;
+            m_obstacleQueryParams[idx] = new ObstacleAvoidanceParams(params);
         }
     }
 
