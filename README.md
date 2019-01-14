@@ -5,6 +5,8 @@ Recast4j
 
 Java Port of Recast and Detour navigation mesh toolset.
 
+![screenshot of a navmesh baked with the sample program](/recast-demo/screenshot.png?raw=true)
+
 ## Recast
 
 Recast is state of the art navigation mesh construction toolset for games.
