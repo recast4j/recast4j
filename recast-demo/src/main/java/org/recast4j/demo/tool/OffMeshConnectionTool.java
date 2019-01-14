@@ -115,4 +115,10 @@ public class OffMeshConnectionTool implements Tool {
         return "Create Off-Mesh Links";
     }
 
+    @Override
+    public void handleUpdate(float dt) {
+        // TODO Auto-generated method stub
+
+    }
+
 }

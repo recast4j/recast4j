@@ -30,6 +30,8 @@ public interface Tool {
 
     void handleRender(NavMeshRenderer renderer);
 
+    void handleUpdate(float dt);
+
     void layout(NkContext ctx);
 
     String getName();

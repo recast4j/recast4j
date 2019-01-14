@@ -351,4 +351,10 @@ public class ConvexVolumeTool implements Tool {
         return "Create Convex Volumes";
     }
 
+    @Override
+    public void handleUpdate(float dt) {
+        // TODO Auto-generated method stub
+
+    }
+
 }
