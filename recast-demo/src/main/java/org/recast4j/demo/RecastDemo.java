@@ -124,6 +124,7 @@ import org.recast4j.demo.tool.ToolsUI;
 import org.recast4j.demo.ui.Mouse;
 import org.recast4j.demo.ui.MouseListener;
 import org.recast4j.demo.ui.NuklearUI;
+import org.recast4j.detour.DetourCommon;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.Tupple2;
 import org.recast4j.recast.Recast;
@@ -176,6 +177,7 @@ public class RecastDemo {
     private boolean showSample;
     private ToolsUI toolsUI;
     private SettingsUI settingsUI;
+    private long prevFrameTime;
 
     public void start() {
         glfwSetErrorCallback(errorfun = GLFWErrorCallback.createPrint(System.err));
@@ -342,10 +344,46 @@ public class RecastDemo {
 
         glDepthFunc(GL_LEQUAL);
 
+        float timeAcc = 0;
         while (!glfwWindowShouldClose(window)) {
+
+            /*
+             * try (MemoryStack stack = stackPush()) { IntBuffer w = stack.mallocInt(1); IntBuffer h =
+             * stack.mallocInt(1); glfwGetWindowSize(win, w, h); width = w.get(0); height = h.get(0); }
+             */
+            if (geom != null) {
+                float[] bmin = geom.getMeshBoundsMin();
+                float[] bmax = geom.getMeshBoundsMax();
+                int[] voxels = Recast.calcGridSize(bmin, bmax, settingsUI.getCellSize());
+                settingsUI.setVoxels(voxels);
+                settingsUI.setTiles(
+                        tileNavMeshBuilder.getTiles(geom, settingsUI.getCellSize(), settingsUI.getTileSize()));
+                settingsUI.setMaxTiles(
+                        tileNavMeshBuilder.getMaxTiles(geom, settingsUI.getCellSize(), settingsUI.getTileSize()));
+                settingsUI.setMaxPolys(tileNavMeshBuilder.getMaxPolysPerTile(geom, settingsUI.getCellSize(),
+                        settingsUI.getTileSize()));
+            }
+
             nuklearUI.inputBegin();
             glfwPollEvents();
             nuklearUI.inputEnd(window);
+
+            long time = System.nanoTime() / 1000;
+            float dt = (time - prevFrameTime) / 1000000.0f;
+            prevFrameTime = time;
+
+            // Update sample simulation.
+            float SIM_RATE = 20;
+            float DELTA_TIME = 1.0f / SIM_RATE;
+            timeAcc = DetourCommon.clamp(timeAcc + dt, -1.0f, 1.0f);
+            int simIter = 0;
+            while (timeAcc > DELTA_TIME) {
+                timeAcc -= DELTA_TIME;
+                if (simIter < 5 && sample != null) {
+                    toolsUI.handleUpdate(DELTA_TIME);
+                }
+                simIter++;
+            }
 
             // Set the viewport.
             glViewport(0, 0, width, height);
@@ -379,22 +417,6 @@ public class RecastDemo {
 
             int width = viewport[2];
             int height = viewport[3];
-            /*
-             * try (MemoryStack stack = stackPush()) { IntBuffer w = stack.mallocInt(1); IntBuffer h =
-             * stack.mallocInt(1); glfwGetWindowSize(win, w, h); width = w.get(0); height = h.get(0); }
-             */
-            if (geom != null) {
-                float[] bmin = geom.getMeshBoundsMin();
-                float[] bmax = geom.getMeshBoundsMax();
-                int[] voxels = Recast.calcGridSize(bmin, bmax, settingsUI.getCellSize());
-                settingsUI.setVoxels(voxels);
-                settingsUI.setTiles(
-                        tileNavMeshBuilder.getTiles(geom, settingsUI.getCellSize(), settingsUI.getTileSize()));
-                settingsUI.setMaxTiles(
-                        tileNavMeshBuilder.getMaxTiles(geom, settingsUI.getCellSize(), settingsUI.getTileSize()));
-                settingsUI.setMaxPolys(tileNavMeshBuilder.getMaxPolysPerTile(geom, settingsUI.getCellSize(),
-                        settingsUI.getTileSize()));
-            }
 
             mouseOverMenu = nuklearUI.layout(window, 0, 0, width, height, (int) mousePos[0], (int) mousePos[1]);
 

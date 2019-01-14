@@ -75,4 +75,8 @@ public class ToolsUI implements NuklearUIModule {
         Arrays.stream(tools).forEach(t -> t.setSample(sample));
     }
 
+    public void handleUpdate(float dt) {
+        Arrays.stream(tools).forEach(t -> t.handleUpdate(dt));
+    }
+
 }
