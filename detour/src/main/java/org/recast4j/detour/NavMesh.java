@@ -392,7 +392,7 @@ public class NavMesh {
     /// space is full, or there is a tile already at the specified reference.
     ///
     /// The lastRef parameter is used to restore a tile with the same tile
-    /// reference it had previously used. In this case the #dtPolyRef's for the
+    /// reference it had previously used. In this case the #long's for the
     /// tile will be restored to the same values they were before the tile was
     /// removed.
     ///
@@ -1279,5 +1279,101 @@ public class NavMesh {
 
     public int getTileCount() {
         return m_tileCount;
+    }
+
+    public Status setPolyFlags(long ref, int flags) {
+        if (ref == 0) {
+            return Status.FAILURE;
+        }
+        int[] saltTilePoly = decodePolyId(ref);
+        int salt = saltTilePoly[0];
+        int it = saltTilePoly[1];
+        int ip = saltTilePoly[2];
+        if (it >= m_maxTiles) {
+            return Status.FAILURE_INVALID_PARAM;
+        }
+        if (m_tiles[it].salt != salt || m_tiles[it].data == null || m_tiles[it].data.header == null) {
+            return Status.FAILURE_INVALID_PARAM;
+        }
+        MeshTile tile = m_tiles[it];
+        if (ip >= tile.data.header.polyCount) {
+            return Status.FAILURE_INVALID_PARAM;
+        }
+        Poly poly = tile.data.polys[ip];
+
+        // Change flags.
+        poly.flags = flags;
+        return Status.SUCCSESS;
+    }
+
+    public Result<Integer> getPolyFlags(long ref) {
+        if (ref == 0) {
+            return Result.failure();
+        }
+        int[] saltTilePoly = decodePolyId(ref);
+        int salt = saltTilePoly[0];
+        int it = saltTilePoly[1];
+        int ip = saltTilePoly[2];
+        if (it >= m_maxTiles) {
+            return Result.invalidParam();
+        }
+        if (m_tiles[it].salt != salt || m_tiles[it].data == null || m_tiles[it].data.header == null) {
+            return Result.invalidParam();
+        }
+        MeshTile tile = m_tiles[it];
+        if (ip >= tile.data.header.polyCount) {
+            return Result.invalidParam();
+        }
+        Poly poly = tile.data.polys[ip];
+
+        return Result.success(poly.flags);
+    }
+
+    public Status setPolyArea(long ref, char area) {
+        if (ref == 0) {
+            return Status.FAILURE;
+        }
+        int[] saltTilePoly = decodePolyId(ref);
+        int salt = saltTilePoly[0];
+        int it = saltTilePoly[1];
+        int ip = saltTilePoly[2];
+        if (it >= m_maxTiles) {
+            return Status.FAILURE;
+        }
+        if (m_tiles[it].salt != salt || m_tiles[it].data == null || m_tiles[it].data.header == null) {
+            return Status.FAILURE_INVALID_PARAM;
+        }
+        MeshTile tile = m_tiles[it];
+        if (ip >= tile.data.header.polyCount) {
+            return Status.FAILURE_INVALID_PARAM;
+        }
+        Poly poly = tile.data.polys[ip];
+
+        poly.setArea(area);
+
+        return Status.SUCCSESS;
+    }
+
+    public Result<Integer> getPolyArea(long ref) {
+        if (ref == 0) {
+            return Result.failure();
+        }
+        int[] saltTilePoly = decodePolyId(ref);
+        int salt = saltTilePoly[0];
+        int it = saltTilePoly[1];
+        int ip = saltTilePoly[2];
+        if (it >= m_maxTiles) {
+            return Result.invalidParam();
+        }
+        if (m_tiles[it].salt != salt || m_tiles[it].data == null || m_tiles[it].data.header == null) {
+            return Result.invalidParam();
+        }
+        MeshTile tile = m_tiles[it];
+        if (ip >= tile.data.header.polyCount) {
+            return Result.invalidParam();
+        }
+        Poly poly = tile.data.polys[ip];
+
+        return Result.success(poly.getArea());
     }
 }

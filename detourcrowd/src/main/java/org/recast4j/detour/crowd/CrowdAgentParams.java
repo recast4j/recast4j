@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -21,36 +21,38 @@ package org.recast4j.detour.crowd;
 /// Configuration parameters for a crowd agent.
 /// @ingroup crowd
 public class CrowdAgentParams {
-	public float radius;						///< Agent radius. [Limit: >= 0]
-	public float height;						///< Agent height. [Limit: > 0]
-	public float maxAcceleration;				///< Maximum allowed acceleration. [Limit: >= 0]
-	public float maxSpeed;						///< Maximum allowed speed. [Limit: >= 0]
+    public float radius; /// < Agent radius. [Limit: >= 0]
+    public float height; /// < Agent height. [Limit: > 0]
+    public float maxAcceleration; /// < Maximum allowed acceleration. [Limit: >= 0]
+    public float maxSpeed; /// < Maximum allowed speed. [Limit: >= 0]
 
-	/// Defines how close a collision element must be before it is considered for steering behaviors. [Limits: > 0]
-	public float collisionQueryRange;
+    /// Defines how close a collision element must be before it is considered for steering behaviors. [Limits: > 0]
+    public float collisionQueryRange;
 
-	public float pathOptimizationRange;		///< The path visibility optimization range. [Limit: > 0]
+    public float pathOptimizationRange; /// < The path visibility optimization range. [Limit: > 0]
 
-	/// How aggresive the agent manager should be at avoiding collisions with this agent. [Limit: >= 0]
-	public float separationWeight;
+    /// How aggresive the agent manager should be at avoiding collisions with this agent. [Limit: >= 0]
+    public float separationWeight;
 
-	/// Crowd agent update flags.
-	public static final int DT_CROWD_ANTICIPATE_TURNS = 1;
-	public static final int DT_CROWD_OBSTACLE_AVOIDANCE = 2;
-	public static final int DT_CROWD_SEPARATION = 4;
-	public static final int DT_CROWD_OPTIMIZE_VIS = 8;			///< Use #dtPathCorridor::optimizePathVisibility() to optimize the agent path.
-	public static final int DT_CROWD_OPTIMIZE_TOPO = 16;		///< Use dtPathCorridor::optimizePathTopology() to optimize the agent path.
-	
-	/// Flags that impact steering behavior. (See: #UpdateFlags)
-	public int updateFlags;
+    /// Crowd agent update flags.
+    public static final int DT_CROWD_ANTICIPATE_TURNS = 1;
+    public static final int DT_CROWD_OBSTACLE_AVOIDANCE = 2;
+    public static final int DT_CROWD_SEPARATION = 4;
+    public static final int DT_CROWD_OPTIMIZE_VIS = 8; /// < Use #dtPathCorridor::optimizePathVisibility() to optimize
+                                                       /// the agent path.
+    public static final int DT_CROWD_OPTIMIZE_TOPO = 16; /// < Use dtPathCorridor::optimizePathTopology() to optimize
+                                                         /// the agent path.
 
-	/// The index of the avoidance configuration to use for the agent. 
-	/// [Limits: 0 <= value <= #DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS]
-	public int obstacleAvoidanceType;	
+    /// Flags that impact steering behavior. (See: #UpdateFlags)
+    public int updateFlags;
 
-	/// The index of the query filter used by this agent.
-	public int queryFilterType;
+    /// The index of the avoidance configuration to use for the agent.
+    /// [Limits: 0 <= value <= #DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS]
+    public int obstacleAvoidanceType;
 
-	/// User defined data attached to the agent.
-	public Object userData;
+    /// The index of the query filter used by this agent.
+    public int queryFilterType;
+
+    /// User defined data attached to the agent.
+    public Object userData;
 }
