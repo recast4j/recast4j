@@ -154,4 +154,8 @@ public class PathQueue {
         }
         return Result.failure();
     }
+
+    public NavMeshQuery getNavQuery() {
+        return m_navquery;
+    }
 }

@@ -181,8 +181,8 @@ public class Crowd {
     /// Provides neighbor data for agents managed by the crowd.
     /// @ingroup crowd
     /// @see dtCrowdAgent::neis, dtCrowd
-    class CrowdNeighbour {
-        final int idx; /// < The index of the neighbor in the crowd.
+    public class CrowdNeighbour {
+        public final int idx; /// < The index of the neighbor in the crowd.
         final float dist; /// < The distance between the current agent and the neighbor.
 
         public CrowdNeighbour(int idx, float dist) {
@@ -1239,6 +1239,14 @@ public class Crowd {
 
     public QueryFilter getFilter(int i) {
         return i >= 0 && i < DT_CROWD_MAX_QUERY_FILTER_TYPE ? m_filters[i] : null;
+    }
+
+    public ProximityGrid getGrid() {
+        return m_grid;
+    }
+
+    public PathQueue getPathQueue() {
+        return m_pathq;
     }
 
 }

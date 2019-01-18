@@ -44,7 +44,8 @@ public class DebugDraw {
         begin(prim, 1f);
     }
 
-    public void debugDrawCylinderWire(float minx, float miny, float minz, float maxx, float maxy, float maxz, int col, float lineWidth) {
+    public void debugDrawCylinderWire(float minx, float miny, float minz, float maxx, float maxy, float maxz, int col,
+            float lineWidth) {
         begin(DebugDrawPrimitives.LINES, lineWidth);
         appendCylinderWire(minx, miny, minz, maxx, maxy, maxz, col);
         end();
@@ -54,16 +55,20 @@ public class DebugDraw {
     private final float[] cylinderDir = new float[CYLINDER_NUM_SEG * 2];
     private boolean cylinderInit = false;
 
-    void appendCylinderWire(float minx, float miny, float minz, float maxx, float maxy, float maxz, int col) {
-
+    private void initCylinder() {
         if (!cylinderInit) {
             cylinderInit = true;
             for (int i = 0; i < CYLINDER_NUM_SEG; ++i) {
-                float a = (float) (i / (float) CYLINDER_NUM_SEG * Math.PI * 2);
+                float a = (float) (i * Math.PI * 2 / CYLINDER_NUM_SEG);
                 cylinderDir[i * 2] = (float) Math.cos(a);
                 cylinderDir[i * 2 + 1] = (float) Math.sin(a);
             }
         }
+    }
+
+    void appendCylinderWire(float minx, float miny, float minz, float maxx, float maxy, float maxz, int col) {
+
+        initCylinder();
 
         float cx = (maxx + minx) / 2;
         float cz = (maxz + minz) / 2;
@@ -82,7 +87,8 @@ public class DebugDraw {
         }
     }
 
-    public void debugDrawBoxWire(float minx, float miny, float minz, float maxx, float maxy, float maxz, int col, float lineWidth) {
+    public void debugDrawBoxWire(float minx, float miny, float minz, float maxx, float maxy, float maxz, int col,
+            float lineWidth) {
 
         begin(DebugDrawPrimitives.LINES, lineWidth);
         appendBoxWire(minx, miny, minz, maxx, maxy, maxz, col);
@@ -122,8 +128,8 @@ public class DebugDraw {
     }
 
     void appendBox(float minx, float miny, float minz, float maxx, float maxy, float maxz, int[] fcol) {
-        float[][] verts = { { minx, miny, minz }, { maxx, miny, minz }, { maxx, miny, maxz }, { minx, miny, maxz }, { minx, maxy, minz },
-                { maxx, maxy, minz }, { maxx, maxy, maxz }, { minx, maxy, maxz } };
+        float[][] verts = { { minx, miny, minz }, { maxx, miny, minz }, { maxx, miny, maxz }, { minx, miny, maxz },
+                { minx, maxy, minz }, { maxx, maxy, minz }, { maxx, maxy, maxz }, { minx, maxy, maxz } };
         int[] inds = { 7, 6, 5, 4, 0, 1, 2, 3, 1, 5, 6, 2, 3, 7, 4, 0, 2, 6, 7, 3, 0, 4, 5, 1, };
 
         int in = 0;
@@ -139,7 +145,8 @@ public class DebugDraw {
         }
     }
 
-    public void debugDrawArc(float x0, float y0, float z0, float x1, float y1, float z1, float h, float as0, float as1, int col, float lineWidth) {
+    public void debugDrawArc(float x0, float y0, float z0, float x1, float y1, float z1, float h, float as0, float as1,
+            int col, float lineWidth) {
         begin(DebugDrawPrimitives.LINES, lineWidth);
         appendArc(x0, y0, z0, x1, y1, z1, h, as0, as1, col);
         end();
@@ -188,7 +195,8 @@ public class DebugDraw {
     }
 
     private void glColor4ubv(int color) {
-        glColor4ub((byte) (color & 0xFF), (byte) ((color >> 8) & 0xFF), (byte) ((color >> 16) & 0xFF), (byte) ((color >> 24) & 0xFF));
+        glColor4ub((byte) (color & 0xFF), (byte) ((color >> 8) & 0xFF), (byte) ((color >> 16) & 0xFF),
+                (byte) ((color >> 24) & 0xFF));
     }
 
     void vertex(float[] pos, int color, float[] uv) {
@@ -228,7 +236,6 @@ public class DebugDraw {
                 circeDir[i * 2 + 1] = (float) Math.sin(a);
             }
         }
-
         for (int i = 0, j = CIRCLE_NUM_SEG - 1; i < CIRCLE_NUM_SEG; j = i++) {
             vertex(x + circeDir[j * 2 + 0] * r, y, z + circeDir[j * 2 + 1] * r, col);
             vertex(x + circeDir[i * 2 + 0] * r, y, z + circeDir[i * 2 + 1] * r, col);
@@ -239,7 +246,8 @@ public class DebugDraw {
     private static final float PAD = 0.05f;
     private static final float ARC_PTS_SCALE = (1.0f - PAD * 2) / NUM_ARC_PTS;
 
-    public void appendArc(float x0, float y0, float z0, float x1, float y1, float z1, float h, float as0, float as1, int col) {
+    public void appendArc(float x0, float y0, float z0, float x1, float y1, float z1, float h, float as0, float as1,
+            int col) {
         float dx = x1 - x0;
         float dy = y1 - y0;
         float dz = z1 - z0;
@@ -279,6 +287,88 @@ public class DebugDraw {
         res[2] = z0 + dz * u;
     }
 
+    public void debugDrawCross(float x, float y, float z, float size, int col, float lineWidth) {
+        begin(DebugDrawPrimitives.LINES, lineWidth);
+        appendCross(x, y, z, size, col);
+        end();
+    }
+
+    private void appendCross(float x, float y, float z, float s, int col) {
+        vertex(x - s, y, z, col);
+        vertex(x + s, y, z, col);
+        vertex(x, y - s, z, col);
+        vertex(x, y + s, z, col);
+        vertex(x, y, z - s, col);
+        vertex(x, y, z + s, col);
+    }
+
+    public void debugDrawBox(float minx, float miny, float minz, float maxx, float maxy, float maxz, int[] fcol) {
+        begin(DebugDrawPrimitives.QUADS);
+        appendBox(minx, miny, minz, maxx, maxy, maxz, fcol);
+        end();
+    }
+
+    public void debugDrawCylinder(float minx, float miny, float minz, float maxx, float maxy, float maxz, int col) {
+        begin(DebugDrawPrimitives.TRIS);
+        appendCylinder(minx, miny, minz, maxx, maxy, maxz, col);
+        end();
+    }
+
+    void appendCylinder(float minx, float miny, float minz, float maxx, float maxy, float maxz, int col) {
+        initCylinder();
+
+        int col2 = duMultCol(col, 160);
+
+        float cx = (maxx + minx) / 2;
+        float cz = (maxz + minz) / 2;
+        float rx = (maxx - minx) / 2;
+        float rz = (maxz - minz) / 2;
+
+        for (int i = 2; i < CYLINDER_NUM_SEG; ++i) {
+            int a = 0, b = i - 1, c = i;
+            vertex(cx + cylinderDir[a * 2 + 0] * rx, miny, cz + cylinderDir[a * 2 + 1] * rz, col2);
+            vertex(cx + cylinderDir[b * 2 + 0] * rx, miny, cz + cylinderDir[b * 2 + 1] * rz, col2);
+            vertex(cx + cylinderDir[c * 2 + 0] * rx, miny, cz + cylinderDir[c * 2 + 1] * rz, col2);
+        }
+        for (int i = 2; i < CYLINDER_NUM_SEG; ++i) {
+            int a = 0, b = i, c = i - 1;
+            vertex(cx + cylinderDir[a * 2 + 0] * rx, maxy, cz + cylinderDir[a * 2 + 1] * rz, col);
+            vertex(cx + cylinderDir[b * 2 + 0] * rx, maxy, cz + cylinderDir[b * 2 + 1] * rz, col);
+            vertex(cx + cylinderDir[c * 2 + 0] * rx, maxy, cz + cylinderDir[c * 2 + 1] * rz, col);
+        }
+        for (int i = 0, j = CYLINDER_NUM_SEG - 1; i < CYLINDER_NUM_SEG; j = i++) {
+            vertex(cx + cylinderDir[i * 2 + 0] * rx, miny, cz + cylinderDir[i * 2 + 1] * rz, col2);
+            vertex(cx + cylinderDir[j * 2 + 0] * rx, miny, cz + cylinderDir[j * 2 + 1] * rz, col2);
+            vertex(cx + cylinderDir[j * 2 + 0] * rx, maxy, cz + cylinderDir[j * 2 + 1] * rz, col);
+
+            vertex(cx + cylinderDir[i * 2 + 0] * rx, miny, cz + cylinderDir[i * 2 + 1] * rz, col2);
+            vertex(cx + cylinderDir[j * 2 + 0] * rx, maxy, cz + cylinderDir[j * 2 + 1] * rz, col);
+            vertex(cx + cylinderDir[i * 2 + 0] * rx, maxy, cz + cylinderDir[i * 2 + 1] * rz, col);
+        }
+    }
+
+    public void debugDrawArrow(float x0, float y0, float z0, float x1, float y1, float z1, float as0, float as1,
+            int col, float lineWidth) {
+
+        begin(DebugDrawPrimitives.LINES, lineWidth);
+        appendArrow(x0, y0, z0, x1, y1, z1, as0, as1, col);
+        end();
+    }
+
+    public void appendArrow(float x0, float y0, float z0, float x1, float y1, float z1, float as0, float as1, int col) {
+
+        vertex(x0, y0, z0, col);
+        vertex(x1, y1, z1, col);
+
+        // End arrows
+        float[] p = new float[] { x0, y0, z0 };
+        float[] q = new float[] { x1, y1, z1 };
+        if (as0 > 0.001f)
+            appendArrowHead(p, q, as0, col);
+        if (as1 > 0.001f)
+            appendArrowHead(q, p, as1, col);
+    }
+
     void appendArrowHead(float[] p, float[] q, float s, int col) {
         float eps = 0.001f;
         if (vdistSqr(p, q) < eps * eps) {
@@ -293,11 +383,13 @@ public class DebugDraw {
 
         vertex(p, col);
         // vertex(p[0]+az[0]*s+ay[0]*s/2, p[1]+az[1]*s+ay[1]*s/2, p[2]+az[2]*s+ay[2]*s/2, col);
-        vertex(p[0] + az[0] * s + ax[0] * s / 3, p[1] + az[1] * s + ax[1] * s / 3, p[2] + az[2] * s + ax[2] * s / 3, col);
+        vertex(p[0] + az[0] * s + ax[0] * s / 3, p[1] + az[1] * s + ax[1] * s / 3, p[2] + az[2] * s + ax[2] * s / 3,
+                col);
 
         vertex(p, col);
         // vertex(p[0]+az[0]*s-ay[0]*s/2, p[1]+az[1]*s-ay[1]*s/2, p[2]+az[2]*s-ay[2]*s/2, col);
-        vertex(p[0] + az[0] * s - ax[0] * s / 3, p[1] + az[1] * s - ax[1] * s / 3, p[2] + az[2] * s - ax[2] * s / 3, col);
+        vertex(p[0] + az[0] * s - ax[0] * s / 3, p[1] + az[1] * s - ax[1] * s / 3, p[2] + az[2] * s - ax[2] * s / 3,
+                col);
 
     }
 
