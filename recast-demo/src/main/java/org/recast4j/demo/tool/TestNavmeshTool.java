@@ -108,6 +108,7 @@ public class TestNavmeshTool implements Tool {
         ToolMode previousToolMode = m_toolMode;
         int previousStraightPathOptions = m_straightPathOptions;
         int previousIncludeFlags = m_filter.getIncludeFlags();
+        int previousExcludeFlags = m_filter.getExcludeFlags();
 
         nk_layout_row_dynamic(ctx, 20, 1);
         if (nk_option_label(ctx, "Pathfind Follow", m_toolMode == ToolMode.PATHFIND_FOLLOW)) {
@@ -188,8 +189,33 @@ public class TestNavmeshTool implements Tool {
             includeFlags |= SampleAreaModifications.SAMPLE_POLYFLAGS_JUMP;
         }
         m_filter.setIncludeFlags(includeFlags);
+
+        nk_layout_row_dynamic(ctx, 5, 1);
+        nk_spacing(ctx, 1);
+        nk_layout_row_dynamic(ctx, 20, 1);
+        nk_label(ctx, "Exclude Flags", NK_TEXT_ALIGN_LEFT);
+        nk_layout_row_dynamic(ctx, 20, 1);
+        int excludeFlags = 0;
+        if (nk_option_label(ctx, "Walk",
+                (m_filter.getExcludeFlags() & SampleAreaModifications.SAMPLE_POLYFLAGS_WALK) != 0)) {
+            excludeFlags |= SampleAreaModifications.SAMPLE_POLYFLAGS_WALK;
+        }
+        if (nk_option_label(ctx, "Swim",
+                (m_filter.getExcludeFlags() & SampleAreaModifications.SAMPLE_POLYFLAGS_SWIM) != 0)) {
+            excludeFlags |= SampleAreaModifications.SAMPLE_POLYFLAGS_SWIM;
+        }
+        if (nk_option_label(ctx, "Door",
+                (m_filter.getExcludeFlags() & SampleAreaModifications.SAMPLE_POLYFLAGS_DOOR) != 0)) {
+            excludeFlags |= SampleAreaModifications.SAMPLE_POLYFLAGS_DOOR;
+        }
+        if (nk_option_label(ctx, "Jump",
+                (m_filter.getExcludeFlags() & SampleAreaModifications.SAMPLE_POLYFLAGS_JUMP) != 0)) {
+            excludeFlags |= SampleAreaModifications.SAMPLE_POLYFLAGS_JUMP;
+        }
+        m_filter.setExcludeFlags(excludeFlags);
+
         if (previousToolMode != m_toolMode || m_straightPathOptions != previousStraightPathOptions
-                || previousIncludeFlags != includeFlags) {
+                || previousIncludeFlags != includeFlags || previousExcludeFlags != excludeFlags) {
             recalc();
         }
     }
