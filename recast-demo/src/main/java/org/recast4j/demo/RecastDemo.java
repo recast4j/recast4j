@@ -117,6 +117,7 @@ import org.recast4j.demo.math.DemoMath;
 import org.recast4j.demo.sample.Sample;
 import org.recast4j.demo.settings.SettingsUI;
 import org.recast4j.demo.tool.ConvexVolumeTool;
+import org.recast4j.demo.tool.CrowdTool;
 import org.recast4j.demo.tool.OffMeshConnectionTool;
 import org.recast4j.demo.tool.TestNavmeshTool;
 import org.recast4j.demo.tool.Tool;
@@ -325,7 +326,7 @@ public class RecastDemo {
         });
 
         settingsUI = new SettingsUI();
-        toolsUI = new ToolsUI(new TestNavmeshTool(), new OffMeshConnectionTool(), new ConvexVolumeTool());
+        toolsUI = new ToolsUI(new TestNavmeshTool(), new OffMeshConnectionTool(), new ConvexVolumeTool(), new CrowdTool());
 
         nuklearUI = new NuklearUI(window, mouse, settingsUI, toolsUI);
 

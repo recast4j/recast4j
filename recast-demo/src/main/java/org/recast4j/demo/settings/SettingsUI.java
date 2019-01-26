@@ -84,6 +84,7 @@ public class SettingsUI implements NuklearUIModule {
 
     public final NkColor white = NkColor.create();
     public final NkColor background = NkColor.create();
+    public final NkColor transparent = NkColor.create();
     private boolean buildTriggered;
     private long buildTime;
     private final int[] voxels = new int[2];
@@ -99,6 +100,7 @@ public class SettingsUI implements NuklearUIModule {
         boolean mouseInside = false;
         nk_rgb(255, 255, 255, white);
         nk_rgba(0, 0, 0, 192, background);
+        nk_rgba(255, 0, 0, 0, transparent);
         try (MemoryStack stack = stackPush()) {
             ctx.style().text().color().set(white);
             ctx.style().option().text_normal().set(white);
@@ -110,6 +112,11 @@ public class SettingsUI implements NuklearUIModule {
             nk_style_item_color(white, styleItem);
             ctx.style().option().cursor_hover().set(styleItem);
             ctx.style().option().cursor_normal().set(styleItem);
+            nk_style_item_color(transparent, styleItem);
+            ctx.style().tab().node_minimize_button().normal().set(styleItem);
+            ctx.style().tab().node_minimize_button().active().set(styleItem);
+            ctx.style().tab().node_maximize_button().normal().set(styleItem);
+            ctx.style().tab().node_maximize_button().active().set(styleItem);
         }
         try (MemoryStack stack = stackPush()) {
             NkRect rect = NkRect.mallocStack(stack);

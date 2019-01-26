@@ -1060,21 +1060,6 @@ public class RecastDebugDraw extends DebugDraw {
 
     }
 
-    public void debugDrawCross(float x, float y, float z, float size, int col, float lineWidth) {
-        begin(DebugDrawPrimitives.LINES, lineWidth);
-        appendCross(x, y, z, size, col);
-        end();
-    }
-
-    private void appendCross(float x, float y, float z, float s, int col) {
-        vertex(x - s, y, z, col);
-        vertex(x + s, y, z, col);
-        vertex(x, y - s, z, col);
-        vertex(x, y + s, z, col);
-        vertex(x, y, z - s, col);
-        vertex(x, y, z + s, col);
-    }
-
     public void debugDrawNavMeshPortals(NavMesh mesh) {
         for (int i = 0; i < mesh.getMaxTiles(); ++i) {
             MeshTile tile = mesh.getTile(i);
