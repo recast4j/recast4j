@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+Recast4J Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -604,6 +604,20 @@ public class DetourCommon {
         out[1] = in[1] * scale;
         out[2] = in[2] * scale;
         return out;
+    }
+
+    /// Checks that the specified vector's components are all finite.
+    /// @param[in] v A point. [(x, y, z)]
+    /// @return True if all of the point's components are finite, i.e. not NaN
+    /// or any of the infinities.
+    public static boolean vIsFinite(float[] v) {
+        return Float.isFinite(v[0]) && Float.isFinite(v[1]) && Float.isFinite(v[2]);
+    }
+
+    /// Checks that the specified vector's 2D components are finite.
+    /// @param[in] v A point. [(x, y, z)]
+    public static boolean vIsFinite2D(float[] v) {
+        return Float.isFinite(v[0]) && Float.isFinite(v[2]);
     }
 
 }

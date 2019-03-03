@@ -37,6 +37,8 @@ import static org.recast4j.detour.DetourCommon.vDist;
 import static org.recast4j.detour.DetourCommon.vDist2D;
 import static org.recast4j.detour.DetourCommon.vDistSqr;
 import static org.recast4j.detour.DetourCommon.vEqual;
+import static org.recast4j.detour.DetourCommon.vIsFinite;
+import static org.recast4j.detour.DetourCommon.vIsFinite2D;
 import static org.recast4j.detour.DetourCommon.vLenSqr;
 import static org.recast4j.detour.DetourCommon.vLerp;
 import static org.recast4j.detour.DetourCommon.vMad;
@@ -51,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 
@@ -115,6 +118,9 @@ public class NavMeshQuery {
      */
     public Result<FindRandomPointResult> findRandomPoint(QueryFilter filter, FRand frand) {
         // Randomly pick one tile. Assume that all tiles cover roughly the same area.
+        if (Objects.isNull(filter) || Objects.isNull(frand)) {
+            return Result.invalidParam();
+        }
         MeshTile tile = null;
         float tsum = 0.0f;
         for (int i = 0; i < m_nav.getMaxTiles(); i++) {
@@ -216,8 +222,9 @@ public class NavMeshQuery {
             QueryFilter filter, FRand frand) {
 
         // Validate input
-        if (startRef == 0 || !m_nav.isValidPolyRef(startRef)) {
-            return Result.invalidParam("Invalid start ref");
+        if (!m_nav.isValidPolyRef(startRef) || Objects.isNull(centerPos) || !vIsFinite(centerPos) || maxRadius < 0
+                || !Float.isFinite(maxRadius) || Objects.isNull(filter) || Objects.isNull(frand)) {
+            return Result.invalidParam();
         }
 
         Tupple2<MeshTile, Poly> tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(startRef);
@@ -404,6 +411,9 @@ public class NavMeshQuery {
         if (tile == null) {
             return Result.invalidParam("Invalid tile");
         }
+        if (Objects.isNull(pos) || !vIsFinite(pos)) {
+            return Result.invalidParam();
+        }
         // Off-mesh connections don't have detail polygons.
         if (poly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
             int v0 = poly.verts[0] * 3;
@@ -501,6 +511,9 @@ public class NavMeshQuery {
             return Result.invalidParam("Invalid tile");
         }
 
+        if (Objects.isNull(pos) || !vIsFinite(pos)) {
+            return Result.invalidParam();
+        }
         // Collect vertices.
         float[] verts = new float[m_nav.getMaxVertsPerPoly() * 3];
         float[] edged = new float[m_nav.getMaxVertsPerPoly()];
@@ -548,6 +561,10 @@ public class NavMeshQuery {
         }
         MeshTile tile = tileAndPoly.result.first;
         Poly poly = tileAndPoly.result.second;
+
+        if (Objects.isNull(pos) || !vIsFinite2D(pos)) {
+            return Result.invalidParam();
+        }
 
         if (poly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
             int i = poly.verts[0] * 3;
@@ -599,13 +616,16 @@ public class NavMeshQuery {
     /// @param[in] extents The search distance along each axis. [(x, y, z)]
     /// @param[in] filter The polygon filter to apply to the query.
     /// @returns The status flags for the query.
-    public FindNearestPolyResult findNearestPoly(float[] center, float[] halfExtents, QueryFilter filter) {
+    public Result<FindNearestPolyResult> findNearestPoly(float[] center, float[] halfExtents, QueryFilter filter) {
 
         float[] nearestPt = null;
 
         // Get nearby polygons from proximity grid.
-        List<Long> polys = queryPolygons(center, halfExtents, filter);
-
+        Result<List<Long>> polysResult = queryPolygons(center, halfExtents, filter);
+        if (polysResult.failed()) {
+            return Result.of(polysResult.status, polysResult.message);
+        }
+        List<Long> polys = polysResult.result;
         // Find nearest polygon amongst the nearby polygons.
         long nearest = 0;
         float nearestDistanceSqr = Float.MAX_VALUE;
@@ -635,7 +655,7 @@ public class NavMeshQuery {
             }
         }
 
-        return new FindNearestPolyResult(nearest, nearestPt);
+        return Result.success(new FindNearestPolyResult(nearest, nearestPt));
     }
 
     // FIXME: (PP) duplicate?
@@ -725,15 +745,19 @@ public class NavMeshQuery {
      *
      * @param center
      *            The center of the search box. [(x, y, z)]
-     * @param extents
+     * @param halfExtents
      *            The search distance along each axis. [(x, y, z)]
      * @param filter
      *            The polygon filter to apply to the query.
      * @return The reference ids of the polygons that overlap the query box.
      */
-    public List<Long> queryPolygons(float[] center, float[] extents, QueryFilter filter) {
-        float[] bmin = vSub(center, extents);
-        float[] bmax = vAdd(center, extents);
+    public Result<List<Long>> queryPolygons(float[] center, float[] halfExtents, QueryFilter filter) {
+        if (Objects.isNull(center) || !vIsFinite(center) || Objects.isNull(halfExtents) || !vIsFinite(halfExtents)
+                || Objects.isNull(filter)) {
+            // return DT_FAILURE | DT_INVALID_PARAM;
+        }
+        float[] bmin = vSub(center, halfExtents);
+        float[] bmax = vAdd(center, halfExtents);
         // Find tiles the query touches.
         int[] minxy = m_nav.calcTileLoc(bmin);
         int minx = minxy[0];
@@ -751,7 +775,7 @@ public class NavMeshQuery {
                 }
             }
         }
-        return polys;
+        return Result.success(polys);
     }
 
     /**
@@ -776,13 +800,10 @@ public class NavMeshQuery {
      */
     public Result<List<Long>> findPath(long startRef, long endRef, float[] startPos, float[] endPos,
             QueryFilter filter) {
-        if (startRef == 0 || endRef == 0) {
-            return Result.invalidParam("Start or end ref = 0");
-        }
-
         // Validate input
-        if (!m_nav.isValidPolyRef(startRef) || !m_nav.isValidPolyRef(endRef)) {
-            return Result.invalidParam("Invalid start or end ref");
+        if (!m_nav.isValidPolyRef(startRef) || !m_nav.isValidPolyRef(endRef) || Objects.isNull(startPos)
+                || !vIsFinite(startPos) || Objects.isNull(endPos) || !vIsFinite(endPos) || Objects.isNull(filter)) {
+            return Result.invalidParam();
         }
 
         if (startRef == endRef) {
@@ -975,12 +996,9 @@ public class NavMeshQuery {
         m_query.options = options;
         m_query.raycastLimitSqr = Float.MAX_VALUE;
 
-        if (startRef == 0 || endRef == 0) {
-            return Status.FAILURE_INVALID_PARAM;
-        }
-
         // Validate input
-        if (!m_nav.isValidPolyRef(startRef) || !m_nav.isValidPolyRef(endRef)) {
+        if (!m_nav.isValidPolyRef(startRef) || !m_nav.isValidPolyRef(endRef) || Objects.isNull(startPos)
+                || !vIsFinite(startPos) || Objects.isNull(endPos) || !vIsFinite(endPos) || Objects.isNull(filter)) {
             return Status.FAILURE_INVALID_PARAM;
         }
 
@@ -1297,7 +1315,7 @@ public class NavMeshQuery {
     public Result<List<Long>> finalizeSlicedFindPathPartial(List<Long> existing) {
 
         List<Long> path = new ArrayList<>(64);
-        if (existing.size() == 0) {
+        if (Objects.isNull(existing) || existing.size() <= 0) {
             return Result.failure(path);
         }
         if (m_query.status.isFailed()) {
@@ -1464,8 +1482,9 @@ public class NavMeshQuery {
             int maxStraightPath, int options) {
 
         List<StraightPathItem> straightPath = new ArrayList<>();
-        if (path.isEmpty()) {
-            return Result.invalidParam("Empty path");
+        if (Objects.isNull(startPos) || !vIsFinite(startPos) || Objects.isNull(endPos) || !vIsFinite(endPos)
+                || Objects.isNull(path) || path.isEmpty() || path.get(0) == 0 || maxStraightPath <= 0) {
+            return Result.invalidParam();
         }
         // TODO: Should this be callers responsibility?
         Result<float[]> closestStartPosRes = closestPointOnPolyBoundary(path.get(0), startPos);
@@ -1677,11 +1696,9 @@ public class NavMeshQuery {
             QueryFilter filter) {
 
         // Validate input
-        if (startRef == 0) {
-            return Result.invalidParam("Start ref = 0");
-        }
-        if (!m_nav.isValidPolyRef(startRef)) {
-            return Result.invalidParam("Invalid start ref");
+        if (!m_nav.isValidPolyRef(startRef) || Objects.isNull(startPos) || !vIsFinite(startPos)
+                || Objects.isNull(endPos) || !vIsFinite(endPos) || Objects.isNull(filter)) {
+            return Result.invalidParam();
         }
 
         m_tinyNodePool.clear();
@@ -2014,11 +2031,10 @@ public class NavMeshQuery {
     public Result<RaycastHit> raycast(long startRef, float[] startPos, float[] endPos, QueryFilter filter, int options,
             long prevRef) {
         // Validate input
-        if (startRef == 0 || !m_nav.isValidPolyRef(startRef)) {
-            return Result.invalidParam("Invalid start ref");
-        }
-        if (prevRef != 0 && !m_nav.isValidPolyRef(prevRef)) {
-            return Result.invalidParam("Invalid pref ref");
+        if (!m_nav.isValidPolyRef(startRef) || Objects.isNull(startPos) || !vIsFinite(startPos)
+                || Objects.isNull(endPos) || !vIsFinite(endPos) || Objects.isNull(filter)
+                || (prevRef != 0 && !m_nav.isValidPolyRef(prevRef))) {
+            return Result.invalidParam();
         }
 
         RaycastHit hit = new RaycastHit();
@@ -2263,8 +2279,10 @@ public class NavMeshQuery {
             QueryFilter filter) {
 
         // Validate input
-        if (startRef == 0 || !m_nav.isValidPolyRef(startRef)) {
-            return Result.invalidParam("Invalid start ref");
+
+        if (!m_nav.isValidPolyRef(startRef) || Objects.isNull(centerPos) || !vIsFinite(centerPos) || radius < 0
+                || !Float.isFinite(radius) || Objects.isNull(filter)) {
+            return Result.invalidParam();
         }
 
         List<Long> resultRef = new ArrayList<>();
@@ -2422,8 +2440,8 @@ public class NavMeshQuery {
     public Result<FindPolysAroundResult> findPolysAroundShape(long startRef, float[] verts, int nverts,
             QueryFilter filter) {
         // Validate input
-        if (startRef == 0 || !m_nav.isValidPolyRef(startRef)) {
-            return Result.invalidParam("Invalid start ref");
+        if (!m_nav.isValidPolyRef(startRef) || Objects.isNull(verts) || nverts < 3 || Objects.isNull(filter)) {
+            return Result.invalidParam();
         }
 
         List<Long> resultRef = new ArrayList<>();
@@ -2593,8 +2611,9 @@ public class NavMeshQuery {
             QueryFilter filter) {
 
         // Validate input
-        if (startRef == 0 || !m_nav.isValidPolyRef(startRef)) {
-            return Result.invalidParam("Invalid start ref");
+        if (!m_nav.isValidPolyRef(startRef) || Objects.isNull(centerPos) || !vIsFinite(centerPos) || radius < 0
+                || !Float.isFinite(radius) || Objects.isNull(filter)) {
+            return Result.invalidParam();
         }
 
         List<Long> resultRef = new ArrayList<>();
@@ -2781,6 +2800,9 @@ public class NavMeshQuery {
         if (tileAndPoly.failed()) {
             return Result.of(tileAndPoly.status, tileAndPoly.message);
         }
+        if (Objects.isNull(filter)) {
+            return Result.invalidParam();
+        }
         MeshTile tile = tileAndPoly.result.first;
         Poly poly = tileAndPoly.result.second;
 
@@ -2892,8 +2914,9 @@ public class NavMeshQuery {
             QueryFilter filter) {
 
         // Validate input
-        if (startRef == 0 || !m_nav.isValidPolyRef(startRef)) {
-            return Result.invalidParam("Invalid start ref");
+        if (!m_nav.isValidPolyRef(startRef) || Objects.isNull(centerPos) || !vIsFinite(centerPos) || maxRadius < 0
+                || !Float.isFinite(maxRadius) || Objects.isNull(filter)) {
+            return Result.invalidParam();
         }
 
         m_nodePool.clear();
