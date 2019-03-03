@@ -381,11 +381,12 @@ public class Crowd {
         updateAgentParameters(idx, params);
 
         // Find nearest position on navmesh and place the agent there.
-        FindNearestPolyResult nearestPoly = m_navquery.findNearestPoly(pos, m_ext,
+        Result<FindNearestPolyResult> nearestPoly = m_navquery.findNearestPoly(pos, m_ext,
                 m_filters[ag.params.queryFilterType]);
-        float[] nearest = nearestPoly.getNearestPos() != null ? nearestPoly.getNearestPos() : pos;
 
-        ag.corridor.reset(nearestPoly.getNearestRef(), nearest);
+        float[] nearest = nearestPoly.succeeded() ? nearestPoly.result.getNearestPos() : pos;
+        long ref = nearestPoly.succeeded() ? nearestPoly.result.getNearestRef() : 0L;
+        ag.corridor.reset(ref, nearest);
         ag.boundary.reset();
         ag.partial = false;
 
@@ -399,7 +400,7 @@ public class Crowd {
 
         ag.desiredSpeed = 0;
 
-        if (nearestPoly.getNearestRef() != 0) {
+        if (ref != 0) {
             ag.state = CrowdAgentState.DT_CROWDAGENT_STATE_WALKING;
         } else {
             ag.state = CrowdAgentState.DT_CROWDAGENT_STATE_INVALID;
@@ -778,11 +779,11 @@ public class Crowd {
             if (!m_navquery.isValidPolyRef(agentRef, m_filters[ag.params.queryFilterType])) {
                 // Current location is not valid, try to reposition.
                 // TODO: this can snap agents, how to handle that?
-                FindNearestPolyResult nearestPoly = m_navquery.findNearestPoly(ag.npos, m_ext,
+                Result<FindNearestPolyResult> nearestPoly = m_navquery.findNearestPoly(ag.npos, m_ext,
                         m_filters[ag.params.queryFilterType]);
-                agentRef = nearestPoly.getNearestRef();
-                if (nearestPoly.getNearestPos() != null) {
-                    vCopy(agentPos, nearestPoly.getNearestPos());
+                agentRef = nearestPoly.succeeded() ? nearestPoly.result.getNearestRef() : 0L;
+                if (nearestPoly.succeeded()) {
+                    vCopy(agentPos, nearestPoly.result.getNearestPos());
                 }
 
                 if (agentRef == 0) {
@@ -818,11 +819,11 @@ public class Crowd {
                     && ag.targetState != MoveRequestState.DT_CROWDAGENT_TARGET_FAILED) {
                 if (!m_navquery.isValidPolyRef(ag.targetRef, m_filters[ag.params.queryFilterType])) {
                     // Current target is not valid, try to reposition.
-                    FindNearestPolyResult fnp = m_navquery.findNearestPoly(ag.targetPos, m_ext,
+                    Result<FindNearestPolyResult> fnp = m_navquery.findNearestPoly(ag.targetPos, m_ext,
                             m_filters[ag.params.queryFilterType]);
-                    ag.targetRef = fnp.getNearestRef();
-                    if (fnp.getNearestPos() != null) {
-                        vCopy(ag.targetPos, fnp.getNearestPos());
+                    ag.targetRef = fnp.succeeded() ? fnp.result.getNearestRef() : 0L;
+                    if (fnp.succeeded()) {
+                        vCopy(ag.targetPos, fnp.result.getNearestPos());
                     }
                     replan = true;
                 }

@@ -17,6 +17,8 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
+import static org.junit.Assert.assertTrue;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -33,10 +35,11 @@ public class FindNearestPolyTest extends AbstractDetourTest {
         float[] extents = { 2, 4, 2 };
         for (int i = 0; i < startRefs.length; i++) {
             float[] startPos = startPoss[i];
-            FindNearestPolyResult poly = query.findNearestPoly(startPos, extents, filter);
-            Assert.assertEquals(polyRefs[i], poly.getNearestRef());
+            Result<FindNearestPolyResult> poly = query.findNearestPoly(startPos, extents, filter);
+            assertTrue(poly.succeeded());
+            Assert.assertEquals(polyRefs[i], poly.result.getNearestRef());
             for (int v = 0; v < polyPos[i].length; v++) {
-                Assert.assertEquals(polyPos[i][v], poly.getNearestPos()[v], 0.001f);
+                Assert.assertEquals(polyPos[i][v], poly.result.getNearestPos()[v], 0.001f);
             }
         }
 
