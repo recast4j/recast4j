@@ -162,12 +162,14 @@ public class RecastMeshDetail {
         float dz = verts[pt + 2] - verts[p + 2];
         float d = pqx * pqx + pqy * pqy + pqz * pqz;
         float t = pqx * dx + pqy * dy + pqz * dz;
-        if (d > 0)
+        if (d > 0) {
             t /= d;
-        if (t < 0)
+        }
+        if (t < 0) {
             t = 0;
-        else if (t > 1)
+        } else if (t > 1) {
             t = 1;
+        }
 
         dx = verts[p + 0] + t * pqx - verts[pt + 0];
         dy = verts[p + 1] + t * pqy - verts[pt + 1];
@@ -183,12 +185,14 @@ public class RecastMeshDetail {
         float dz = verts[pt + 2] - poly[p + 2];
         float d = pqx * pqx + pqz * pqz;
         float t = pqx * dx + pqz * dz;
-        if (d > 0)
+        if (d > 0) {
             t /= d;
-        if (t < 0)
+        }
+        if (t < 0) {
             t = 0;
-        else if (t > 1)
+        } else if (t > 1) {
             t = 1;
+        }
 
         dx = poly[p + 0] + t * pqx - verts[pt + 0];
         dz = poly[p + 2] + t * pqz - verts[pt + 2];
@@ -203,11 +207,13 @@ public class RecastMeshDetail {
             int vb = tris.get(i * 4 + 1) * 3;
             int vc = tris.get(i * 4 + 2) * 3;
             float d = distPtTri(p, verts, va, vb, vc);
-            if (d < dmin)
+            if (d < dmin) {
                 dmin = d;
+            }
         }
-        if (dmin == Float.MAX_VALUE)
+        if (dmin == Float.MAX_VALUE) {
             return -1;
+        }
         return dmin;
     }
 
@@ -220,8 +226,9 @@ public class RecastMeshDetail {
             int vi = i * 3;
             int vj = j * 3;
             if (((verts[vi + 2] > p[2]) != (verts[vj + 2] > p[2])) && (p[0] < (verts[vj + 0] - verts[vi + 0])
-                    * (p[2] - verts[vi + 2]) / (verts[vj + 2] - verts[vi + 2]) + verts[vi + 0]))
+                    * (p[2] - verts[vi + 2]) / (verts[vj + 2] - verts[vi + 2]) + verts[vi + 0])) {
                 c = !c;
+            }
             dmin = Math.min(dmin, distancePtSeg2d(p, 0, verts, vj, vi));
         }
         return c ? -dmin : dmin;
@@ -279,8 +286,9 @@ public class RecastMeshDetail {
                 // Here we detect if we are about to enter the next ring, and if we are and we have found
                 // a height, we abort the search.
                 if (i + 1 == nextRingIterStart) {
-                    if (h != RC_UNSET_HEIGHT)
+                    if (h != RC_UNSET_HEIGHT) {
                         break;
+                    }
 
                     nextRingIterStart += nextRingIters;
                     nextRingIters += 8;
@@ -301,8 +309,9 @@ public class RecastMeshDetail {
     private static int findEdge(List<Integer> edges, int s, int t) {
         for (int i = 0; i < edges.size() / 4; i++) {
             int e = i * 4;
-            if ((edges.get(e + 0) == s && edges.get(e + 1) == t) || (edges.get(e + 0) == t && edges.get(e + 1) == s))
+            if ((edges.get(e + 0) == s && edges.get(e + 1) == t) || (edges.get(e + 0) == t && edges.get(e + 1) == s)) {
                 return i;
+            }
         }
         return EV_UNDEF;
     }
@@ -323,10 +332,11 @@ public class RecastMeshDetail {
     }
 
     private static void updateLeftFace(List<Integer> edges, int e, int s, int t, int f) {
-        if (edges.get(e + 0) == s && edges.get(e + 1) == t && edges.get(e + 2) == EV_UNDEF)
+        if (edges.get(e + 0) == s && edges.get(e + 1) == t && edges.get(e + 2) == EV_UNDEF) {
             edges.set(e + 2, f);
-        else if (edges.get(e + 1) == s && edges.get(e + 0) == t && edges.get(e + 3) == EV_UNDEF)
+        } else if (edges.get(e + 1) == s && edges.get(e + 0) == t && edges.get(e + 3) == EV_UNDEF) {
             edges.set(e + 3, f);
+        }
     }
 
     private static boolean overlapSegSeg2d(float[] verts, int a, int b, int c, int d) {
@@ -335,8 +345,9 @@ public class RecastMeshDetail {
         if (a1 * a2 < 0.0f) {
             float a3 = vcross2(verts, c, d, a);
             float a4 = a3 + a2 - a1;
-            if (a3 * a4 < 0.0f)
+            if (a3 * a4 < 0.0f) {
                 return true;
+            }
         }
         return false;
     }
@@ -346,10 +357,12 @@ public class RecastMeshDetail {
             int s0 = edges.get(i * 4 + 0);
             int t0 = edges.get(i * 4 + 1);
             // Same or connected edges do not overlap.
-            if (s0 == s1 || s0 == t1 || t0 == s1 || t0 == t1)
+            if (s0 == s1 || s0 == t1 || t0 == s1 || t0 == t1) {
                 continue;
-            if (overlapSegSeg2d(pts, s0 * 3, t0 * 3, s1 * 3, t1 * 3))
+            }
+            if (overlapSegSeg2d(pts, s0 * 3, t0 * 3, s1 * 3, t1 * 3)) {
                 return true;
+            }
         }
         return false;
     }
@@ -377,8 +390,9 @@ public class RecastMeshDetail {
         float[] c = new float[3];
         AtomicReference<Float> r = new AtomicReference<>(-1f);
         for (int u = 0; u < npts; ++u) {
-            if (u == s || u == t)
+            if (u == s || u == t) {
                 continue;
+            }
             if (vcross2(pts, s * 3, t * 3, u * 3) > EPS) {
                 if (r.get() < 0) {
                     // The circle is not updated yet, do it now.
@@ -398,10 +412,12 @@ public class RecastMeshDetail {
                 } else {
                     // Inside epsilon circum circle, do extra tests to make sure the edge is valid.
                     // s-u and t-u cannot overlap with s-pt nor t-pt if they exists.
-                    if (overlapEdges(pts, edges, s, u))
+                    if (overlapEdges(pts, edges, s, u)) {
                         continue;
-                    if (overlapEdges(pts, edges, t, u))
+                    }
+                    if (overlapEdges(pts, edges, t, u)) {
                         continue;
+                    }
                     // Edge is valid.
                     pt = u;
                     circumCircle(pts, s * 3, t * 3, u * 3, c, r);
@@ -416,17 +432,19 @@ public class RecastMeshDetail {
 
             // Add new edge or update face info of old edge.
             e = findEdge(edges, pt, s);
-            if (e == EV_UNDEF)
+            if (e == EV_UNDEF) {
                 addEdge(ctx, edges, maxEdges, pt, s, nfaces, EV_UNDEF);
-            else
+            } else {
                 updateLeftFace(edges, e * 4, pt, s, nfaces);
+            }
 
             // Add new edge or update face info of old edge.
             e = findEdge(edges, t, pt);
-            if (e == EV_UNDEF)
+            if (e == EV_UNDEF) {
                 addEdge(ctx, edges, maxEdges, t, pt, nfaces, EV_UNDEF);
-            else
+            } else {
                 updateLeftFace(edges, e * 4, t, pt, nfaces);
+            }
 
             nfaces++;
         } else {
@@ -439,8 +457,9 @@ public class RecastMeshDetail {
         int nfaces = 0;
         int maxEdges = npts * 10;
         List<Integer> edges = new ArrayList<>(64);
-        for (int i = 0, j = nhull - 1; i < nhull; j = i++)
+        for (int i = 0, j = nhull - 1; i < nhull; j = i++) {
             addEdge(ctx, edges, maxEdges, hull[j], hull[i], EV_HULL, EV_UNDEF);
+        }
         int currentEdge = 0;
         while (currentEdge < edges.size() / 4) {
             if (edges.get(currentEdge * 4 + 2) == EV_UNDEF) {
@@ -453,8 +472,9 @@ public class RecastMeshDetail {
         }
         // Create tris
         tris.clear();
-        for (int i = 0; i < nfaces * 4; ++i)
+        for (int i = 0; i < nfaces * 4; ++i) {
             tris.add(-1);
+        }
 
         for (int i = 0; i < edges.size() / 4; ++i) {
             int e = i * 4;
@@ -464,10 +484,11 @@ public class RecastMeshDetail {
                 if (tris.get(t + 0) == -1) {
                     tris.set(t + 0, edges.get(e + 0));
                     tris.set(t + 1, edges.get(e + 1));
-                } else if (tris.get(t + 0) == edges.get(e + 1))
+                } else if (tris.get(t + 0) == edges.get(e + 1)) {
                     tris.set(t + 2, edges.get(e + 0));
-                else if (tris.get(t + 1) == edges.get(e + 0))
+                } else if (tris.get(t + 1) == edges.get(e + 0)) {
                     tris.set(t + 2, edges.get(e + 1));
+                }
             }
             if (edges.get(e + 2) >= 0) {
                 // Right
@@ -475,10 +496,11 @@ public class RecastMeshDetail {
                 if (tris.get(t + 0) == -1) {
                     tris.set(t + 0, edges.get(e + 1));
                     tris.set(t + 1, edges.get(e + 0));
-                } else if (tris.get(t + 0) == edges.get(e + 0))
+                } else if (tris.get(t + 0) == edges.get(e + 0)) {
                     tris.set(t + 2, edges.get(e + 1));
-                else if (tris.get(t + 1) == edges.get(e + 1))
+                } else if (tris.get(t + 1) == edges.get(e + 1)) {
                     tris.set(t + 2, edges.get(e + 0));
+                }
             }
         }
 
@@ -509,8 +531,9 @@ public class RecastMeshDetail {
             int p2 = ni * 3;
             float maxEdgeDist = 0;
             for (int j = 0; j < nverts; j++) {
-                if (j == i || j == ni)
+                if (j == i || j == ni) {
                     continue;
+                }
                 float d = distancePtSeg2d(verts, j * 3, verts, p1, p2);
                 maxEdgeDist = Math.max(maxEdgeDist, d);
             }
@@ -527,7 +550,9 @@ public class RecastMeshDetail {
         float dmin = Float.MAX_VALUE;
         for (int i = 0; i < nhull; i++) {
             if (hull[i] >= nin)
+             {
                 continue; // Ears are triangles with original vertices as middle vertex while others are actually line
+            }
                           // segments on edges
             int pi = RecastMesh.prev(i, nhull);
             int ni = RecastMesh.next(i, nhull);
@@ -601,8 +626,9 @@ public class RecastMeshDetail {
 
         nverts = nin;
 
-        for (int i = 0; i < nin; ++i)
+        for (int i = 0; i < nin; ++i) {
             RecastVectors.copy(verts, i * 3, in, i * 3);
+        }
         tris.clear();
 
         float cs = chf.cs;
@@ -642,10 +668,12 @@ public class RecastMeshDetail {
                 float dz = in[vi + 2] - in[vj + 2];
                 float d = (float) Math.sqrt(dx * dx + dz * dz);
                 int nn = 1 + (int) Math.floor(d / sampleDist);
-                if (nn >= MAX_VERTS_PER_EDGE)
+                if (nn >= MAX_VERTS_PER_EDGE) {
                     nn = MAX_VERTS_PER_EDGE - 1;
-                if (nverts + nn >= MAX_VERTS)
+                }
+                if (nverts + nn >= MAX_VERTS) {
                     nn = MAX_VERTS - 1 - nverts;
+                }
 
                 for (int k = 0; k <= nn; ++k) {
                     float u = (float) k / (float) nn;
@@ -679,8 +707,9 @@ public class RecastMeshDetail {
                     // If the max deviation is larger than accepted error,
                     // add new point, else continue to next segment.
                     if (maxi != -1 && maxd > sampleMaxError * sampleMaxError) {
-                        for (int m = nidx; m > k; --m)
+                        for (int m = nidx; m > k; --m) {
                             idx[m] = idx[m - 1];
+                        }
                         idx[k + 1] = maxi;
                         nidx++;
                     } else {
@@ -745,8 +774,9 @@ public class RecastMeshDetail {
                     pt[1] = (bmax[1] + bmin[1]) * 0.5f;
                     pt[2] = z * sampleDist;
                     // Make sure the samples are not too close to the edges.
-                    if (distToPoly(nin, in, pt) > -sampleDist / 2)
+                    if (distToPoly(nin, in, pt) > -sampleDist / 2) {
                         continue;
+                    }
                     samples.add(x);
                     samples.add(getHeight(pt[0], pt[1], pt[2], cs, ics, chf.ch, heightSearchRadius, hp));
                     samples.add(z);
@@ -759,8 +789,9 @@ public class RecastMeshDetail {
             // or when the max error is within treshold.
             int nsamples = samples.size() / 4;
             for (int iter = 0; iter < nsamples; ++iter) {
-                if (nverts >= MAX_VERTS)
+                if (nverts >= MAX_VERTS) {
                     break;
+                }
 
                 // Find sample with most error.
                 float[] bestpt = new float[3];
@@ -769,7 +800,9 @@ public class RecastMeshDetail {
                 for (int i = 0; i < nsamples; ++i) {
                     int s = i * 4;
                     if (samples.get(s + 3) != 0)
+                     {
                         continue; // skip added.
+                    }
                     float[] pt = new float[3];
                     // The sample location is jittered to get rid of some bad triangulations
                     // which are cause by symmetrical data from the grid structure.
@@ -778,7 +811,9 @@ public class RecastMeshDetail {
                     pt[2] = samples.get(s + 2) * sampleDist + getJitterY(i) * cs * 0.1f;
                     float d = distToTriMesh(pt, verts, nverts, tris, tris.size() / 4);
                     if (d < 0)
+                     {
                         continue; // did not hit the mesh.
+                    }
                     if (d > bestd) {
                         bestd = d;
                         besti = i;
@@ -786,8 +821,9 @@ public class RecastMeshDetail {
                     }
                 }
                 // If the max error is within accepted threshold, stop tesselating.
-                if (bestd <= sampleMaxError || besti == -1)
+                if (bestd <= sampleMaxError || besti == -1) {
                     break;
+                }
                 // Mark sample as added.
                 samples.set(besti * 4 + 3, 1);
                 // Add the new sample point.
@@ -826,8 +862,9 @@ public class RecastMeshDetail {
                 int ax = verts[meshpoly[poly + j] * 3 + 0] + offset[k * 2 + 0];
                 int ay = verts[meshpoly[poly + j] * 3 + 1];
                 int az = verts[meshpoly[poly + j] * 3 + 2] + offset[k * 2 + 1];
-                if (ax < hp.xmin || ax >= hp.xmin + hp.width || az < hp.ymin || az >= hp.ymin + hp.height)
+                if (ax < hp.xmin || ax >= hp.xmin + hp.width || az < hp.ymin || az >= hp.ymin + hp.height) {
                     continue;
+                }
 
                 CompactCell c = chf.cells[(ax + bs) + (az + bs) * chf.width];
                 for (int i = c.index, ni = c.index + c.count; i < ni && dmin > 0; ++i) {
@@ -880,10 +917,11 @@ public class RecastMeshDetail {
             // directly towards the center in the Y-axis; otherwise prefer
             // direction in the X-axis
             int directDir;
-            if (cx == pcx)
+            if (cx == pcx) {
                 directDir = rcGetDirForOffset(0, pcy > cy ? 1 : -1);
-            else
+            } else {
                 directDir = rcGetDirForOffset(pcx > cx ? 1 : -1, 0);
+            }
 
             // Push the direct dir last so we start with this on next iteration
             int tmp = dirs[3];
@@ -894,18 +932,21 @@ public class RecastMeshDetail {
 
             for (int i = 0; i < 4; ++i) {
                 int dir = dirs[i];
-                if (GetCon(cs, dir) == RC_NOT_CONNECTED)
+                if (GetCon(cs, dir) == RC_NOT_CONNECTED) {
                     continue;
+                }
 
                 int newX = cx + GetDirOffsetX(dir);
                 int newY = cy + GetDirOffsetY(dir);
 
                 int hpx = newX - hp.xmin;
                 int hpy = newY - hp.ymin;
-                if (hpx < 0 || hpx >= hp.width || hpy < 0 || hpy >= hp.height)
+                if (hpx < 0 || hpx >= hp.width || hpy < 0 || hpy >= hp.height) {
                     continue;
-                if (hp.data[hpx + hpy * hp.width] != 0)
+                }
+                if (hp.data[hpx + hpy * hp.width] != 0) {
                     continue;
+                }
 
                 hp.data[hpx + hpy * hp.width] = 1;
 
@@ -993,8 +1034,9 @@ public class RecastMeshDetail {
         // if the polygon does not contain any points from the current region (rare, but happens)
         // or if it could potentially be overlapping polygons of the same region,
         // then use the center as the seed point.
-        if (empty)
+        if (empty) {
             seedArrayWithPolyCenter(ctx, chf, meshpolys, poly, npoly, verts, bs, hp, queue);
+        }
 
         int head = 0;
 
@@ -1013,19 +1055,22 @@ public class RecastMeshDetail {
 
             CompactSpan cs = chf.spans[ci];
             for (int dir = 0; dir < 4; ++dir) {
-                if (GetCon(cs, dir) == RC_NOT_CONNECTED)
+                if (GetCon(cs, dir) == RC_NOT_CONNECTED) {
                     continue;
+                }
 
                 int ax = cx + GetDirOffsetX(dir);
                 int ay = cy + GetDirOffsetY(dir);
                 int hx = ax - hp.xmin - bs;
                 int hy = ay - hp.ymin - bs;
 
-                if (hx < 0 || hx >= hp.width || hy < 0 || hy >= hp.height)
+                if (hx < 0 || hx >= hp.width || hy < 0 || hy >= hp.height) {
                     continue;
+                }
 
-                if (hp.data[hx + hy * hp.width] != RC_UNSET_HEIGHT)
+                if (hp.data[hx + hy * hp.width] != RC_UNSET_HEIGHT) {
                     continue;
+                }
 
                 int ai = chf.cells[ax + ay * chf.width].index + GetCon(cs, dir);
                 CompactSpan as = chf.spans[ai];
@@ -1041,8 +1086,9 @@ public class RecastMeshDetail {
         float thrSqr = 0.001f * 0.001f;
         for (int i = 0, j = npoly - 1; i < npoly; j = i++) {
             if (distancePtSeg2d(verts, va, vpoly, j * 3, i * 3) < thrSqr
-                    && distancePtSeg2d(verts, vb, vpoly, j * 3, i * 3) < thrSqr)
+                    && distancePtSeg2d(verts, vb, vpoly, j * 3, i * 3) < thrSqr) {
                 return 1;
+            }
         }
         return 0;
     }
@@ -1064,8 +1110,9 @@ public class RecastMeshDetail {
             float sampleDist, float sampleMaxError) {
 
         ctx.startTimer("BUILD_POLYMESHDETAIL");
-        if (mesh.nverts == 0 || mesh.npolys == 0)
+        if (mesh.nverts == 0 || mesh.npolys == 0) {
             return null;
+        }
 
         PolyMeshDetail dmesh = new PolyMeshDetail();
         int nvp = mesh.nvp;
@@ -1092,8 +1139,9 @@ public class RecastMeshDetail {
             bounds[i * 4 + 2] = chf.height;
             bounds[i * 4 + 3] = 0;
             for (int j = 0; j < nvp; ++j) {
-                if (mesh.polys[p + j] == RC_MESH_NULL_IDX)
+                if (mesh.polys[p + j] == RC_MESH_NULL_IDX) {
                     break;
+                }
                 int v = mesh.polys[p + j] * 3;
                 bounds[i * 4 + 0] = Math.min(bounds[i * 4 + 0], mesh.verts[v + 0]);
                 bounds[i * 4 + 1] = Math.max(bounds[i * 4 + 1], mesh.verts[v + 0]);
@@ -1105,8 +1153,9 @@ public class RecastMeshDetail {
             bounds[i * 4 + 1] = Math.min(chf.width, bounds[i * 4 + 1] + 1);
             bounds[i * 4 + 2] = Math.max(0, bounds[i * 4 + 2] - 1);
             bounds[i * 4 + 3] = Math.min(chf.height, bounds[i * 4 + 3] + 1);
-            if (bounds[i * 4 + 0] >= bounds[i * 4 + 1] || bounds[i * 4 + 2] >= bounds[i * 4 + 3])
+            if (bounds[i * 4 + 0] >= bounds[i * 4 + 1] || bounds[i * 4 + 2] >= bounds[i * 4 + 3]) {
                 continue;
+            }
             maxhw = Math.max(maxhw, bounds[i * 4 + 1] - bounds[i * 4 + 0]);
             maxhh = Math.max(maxhh, bounds[i * 4 + 3] - bounds[i * 4 + 2]);
         }
@@ -1131,8 +1180,9 @@ public class RecastMeshDetail {
             // Store polygon vertices for processing.
             int npoly = 0;
             for (int j = 0; j < nvp; ++j) {
-                if (mesh.polys[p + j] == RC_MESH_NULL_IDX)
+                if (mesh.polys[p + j] == RC_MESH_NULL_IDX) {
                     break;
+                }
                 int v = mesh.polys[p + j] * 3;
                 poly[j * 3 + 0] = mesh.verts[v + 0] * cs;
                 poly[j * 3 + 1] = mesh.verts[v + 1] * ch;
@@ -1154,7 +1204,7 @@ public class RecastMeshDetail {
             // Move detail verts to world space.
             for (int j = 0; j < nverts; ++j) {
                 verts[j * 3 + 0] += orig[0];
-                verts[j * 3 + 1] += orig[1] + chf.ch; // Is this offset necessary?
+                verts[j * 3 + 1] += orig[1] + chf.ch; // Is this offset necessary? See https://groups.google.com/d/msg/recastnavigation/UQFN6BGCcV0/-1Ny4koOBpkJ
                 verts[j * 3 + 2] += orig[2];
             }
             // Offset poly too, will be used to flag checking.
@@ -1174,12 +1224,14 @@ public class RecastMeshDetail {
 
             // Store vertices, allocate more memory if necessary.
             if (dmesh.nverts + nverts > vcap) {
-                while (dmesh.nverts + nverts > vcap)
+                while (dmesh.nverts + nverts > vcap) {
                     vcap += 256;
+                }
 
                 float[] newv = new float[vcap * 3];
-                if (dmesh.nverts != 0)
+                if (dmesh.nverts != 0) {
                     System.arraycopy(dmesh.verts, 0, newv, 0, 3 * dmesh.nverts);
+                }
                 dmesh.verts = newv;
             }
             for (int j = 0; j < nverts; ++j) {
@@ -1191,11 +1243,13 @@ public class RecastMeshDetail {
 
             // Store triangles, allocate more memory if necessary.
             if (dmesh.ntris + ntris > tcap) {
-                while (dmesh.ntris + ntris > tcap)
+                while (dmesh.ntris + ntris > tcap) {
                     tcap += 256;
+                }
                 int[] newt = new int[tcap * 4];
-                if (dmesh.ntris != 0)
+                if (dmesh.ntris != 0) {
                     System.arraycopy(dmesh.tris, 0, newt, 0, 4 * dmesh.ntris);
+                }
                 dmesh.tris = newt;
             }
             for (int j = 0; j < ntris; ++j) {
@@ -1225,8 +1279,9 @@ public class RecastMeshDetail {
         int maxMeshes = 0;
 
         for (int i = 0; i < nmeshes; ++i) {
-            if (meshes[i] == null)
+            if (meshes[i] == null) {
                 continue;
+            }
             maxVerts += meshes[i].nverts;
             maxTris += meshes[i].ntris;
             maxMeshes += meshes[i].nmeshes;
@@ -1242,8 +1297,9 @@ public class RecastMeshDetail {
         // Merge datas.
         for (int i = 0; i < nmeshes; ++i) {
             PolyMeshDetail dm = meshes[i];
-            if (dm == null)
+            if (dm == null) {
                 continue;
+            }
             for (int j = 0; j < dm.nmeshes; ++j) {
                 int dst = mesh.nmeshes * 4;
                 int src = j * 4;
