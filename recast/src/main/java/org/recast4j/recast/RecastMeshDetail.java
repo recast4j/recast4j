@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4J copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -549,11 +549,10 @@ public class RecastMeshDetail {
         // This tends to favor well formed triangles as starting point.
         float dmin = Float.MAX_VALUE;
         for (int i = 0; i < nhull; i++) {
-            if (hull[i] >= nin)
-             {
+            if (hull[i] >= nin) {
                 continue; // Ears are triangles with original vertices as middle vertex while others are actually line
             }
-                          // segments on edges
+            // segments on edges
             int pi = RecastMesh.prev(i, nhull);
             int ni = RecastMesh.next(i, nhull);
             int pv = hull[pi] * 3;
@@ -799,8 +798,7 @@ public class RecastMeshDetail {
                 int besti = -1;
                 for (int i = 0; i < nsamples; ++i) {
                     int s = i * 4;
-                    if (samples.get(s + 3) != 0)
-                     {
+                    if (samples.get(s + 3) != 0) {
                         continue; // skip added.
                     }
                     float[] pt = new float[3];
@@ -810,8 +808,7 @@ public class RecastMeshDetail {
                     pt[1] = samples.get(s + 1) * chf.ch;
                     pt[2] = samples.get(s + 2) * sampleDist + getJitterY(i) * cs * 0.1f;
                     float d = distToTriMesh(pt, verts, nverts, tris, tris.size() / 4);
-                    if (d < 0)
-                     {
+                    if (d < 0) {
                         continue; // did not hit the mesh.
                     }
                     if (d > bestd) {
@@ -1082,7 +1079,8 @@ public class RecastMeshDetail {
     }
 
     static int getEdgeFlags(float[] verts, int va, int vb, float[] vpoly, int npoly) {
-        // Return true if edge (va,vb) is part of the polygon.
+        // The flag returned by this function matches getDetailTriEdgeFlags in Detour.
+        // Figure out if edge (va,vb) is part of the polygon boundary.
         float thrSqr = 0.001f * 0.001f;
         for (int i = 0, j = npoly - 1; i < npoly; j = i++) {
             if (distancePtSeg2d(verts, va, vpoly, j * 3, i * 3) < thrSqr
@@ -1204,7 +1202,8 @@ public class RecastMeshDetail {
             // Move detail verts to world space.
             for (int j = 0; j < nverts; ++j) {
                 verts[j * 3 + 0] += orig[0];
-                verts[j * 3 + 1] += orig[1] + chf.ch; // Is this offset necessary? See https://groups.google.com/d/msg/recastnavigation/UQFN6BGCcV0/-1Ny4koOBpkJ
+                verts[j * 3 + 1] += orig[1] + chf.ch; // Is this offset necessary? See
+                                                      // https://groups.google.com/d/msg/recastnavigation/UQFN6BGCcV0/-1Ny4koOBpkJ
                 verts[j * 3 + 2] += orig[2];
             }
             // Offset poly too, will be used to flag checking.
