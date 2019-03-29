@@ -326,6 +326,10 @@ public class DetourCommon {
 
         // Compute scaled barycentric coordinates
         float denom = v0[0] * v1[2] - v0[2] * v1[0];
+        if (Math.abs(denom) < EPS) {
+            return Optional.empty();
+        }
+
         float u = v1[2] * v2[0] - v1[0] * v2[2];
         float v = v0[0] * v2[2] - v0[2] * v2[0];
 
@@ -334,12 +338,9 @@ public class DetourCommon {
             u = -u;
             v = -v;
         }
-        // The (sloppy) epsilon is needed to allow to get height of points which
-        // are interpolated along the edges of the triangles.
-        float epsilon = -1e-4f * denom;
 
         // If point lies inside the triangle, return interpolated ycoord.
-        if (u >= epsilon && v >= epsilon && (u + v) <= denom - epsilon) {
+        if (u >= 0.0f && v >= 0.0f && (u + v) <= denom) {
             float h = a[1] + (v0[1] * u + v1[1] * v) / denom;
             return Optional.of(h);
         }

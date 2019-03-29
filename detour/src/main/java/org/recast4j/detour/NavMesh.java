@@ -20,15 +20,15 @@ package org.recast4j.detour;
 
 import static org.recast4j.detour.DetourCommon.clamp;
 import static org.recast4j.detour.DetourCommon.closestHeightPointTriangle;
-import static org.recast4j.detour.DetourCommon.distancePtPolyEdgesSqr;
+import static org.recast4j.detour.DetourCommon.distancePtSegSqr2D;
 import static org.recast4j.detour.DetourCommon.nextPow2;
 import static org.recast4j.detour.DetourCommon.oppositeTile;
 import static org.recast4j.detour.DetourCommon.overlapBounds;
 import static org.recast4j.detour.DetourCommon.overlapQuantBounds;
+import static org.recast4j.detour.DetourCommon.pointInPolygon;
 import static org.recast4j.detour.DetourCommon.sqr;
 import static org.recast4j.detour.DetourCommon.vAdd;
 import static org.recast4j.detour.DetourCommon.vCopy;
-import static org.recast4j.detour.DetourCommon.vDist;
 import static org.recast4j.detour.DetourCommon.vLenSqr;
 import static org.recast4j.detour.DetourCommon.vLerp;
 import static org.recast4j.detour.DetourCommon.vMax;
@@ -44,6 +44,7 @@ public class NavMesh {
     static int DT_SALT_BITS = 16;
     static int DT_TILE_BITS = 28;
     static int DT_POLY_BITS = 20;
+    public static final int DT_DETAIL_EDGE_BOUNDARY = 0x01;
 
     /// A flag that indicates that an entity links to an external entity.
     /// (E.g. A polygon edge is a portal that links to another polygon.)
@@ -998,77 +999,132 @@ public class NavMesh {
      * @param pos
      * @return
      */
-    ClosestPointOnPolyResult closestPointOnPoly(long ref, float[] pos) {
-        Tupple2<MeshTile, Poly> tileAndPoly = getTileAndPolyByRefUnsafe(ref);
-        MeshTile tile = tileAndPoly.first;
-        Poly poly = tileAndPoly.second;
-        // Off-mesh connections don't have detail polygons.
-        if (poly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
-            int v0 = poly.verts[0] * 3;
-            int v1 = poly.verts[1] * 3;
-            float d0 = vDist(pos, tile.data.verts, v0);
-            float d1 = vDist(pos, tile.data.verts, v1);
-            float u = d0 / (d0 + d1);
-            float[] closest = vLerp(tile.data.verts, v0, v1, u);
-            return new ClosestPointOnPolyResult(false, closest);
+    float[] closestPointOnDetailEdges(MeshTile tile, Poly poly, float[] pos, boolean onlyBoundary) {
+        int ANY_BOUNDARY_EDGE = (DT_DETAIL_EDGE_BOUNDARY << 0) | (DT_DETAIL_EDGE_BOUNDARY << 2)
+                | (DT_DETAIL_EDGE_BOUNDARY << 4);
+        int ip = poly.index;
+        PolyDetail pd = tile.data.detailMeshes[ip];
+
+        float dmin = Float.MAX_VALUE;
+        float tmin = 0;
+        float[] pmin = null;
+        float[] pmax = null;
+
+        for (int i = 0; i < pd.triCount; i++) {
+            int ti = (pd.triBase + i) * 4;
+            int[] tris = tile.data.detailTris;
+            if (onlyBoundary && (tris[ti + 3] & ANY_BOUNDARY_EDGE) == 0) {
+                continue;
+            }
+
+            float[][] v = new float[3][];
+            for (int j = 0; j < 3; ++j) {
+                if (tris[ti + j] < poly.vertCount) {
+                    int index = poly.verts[tris[ti + j]] * 3;
+                    v[j] = new float[] { tile.data.verts[index], tile.data.verts[index + 1],
+                            tile.data.verts[index + 2] };
+                } else {
+                    int index = (pd.vertBase + (tris[ti + j] - poly.vertCount)) * 3;
+                    v[j] = new float[] { tile.data.detailVerts[index], tile.data.detailVerts[index + 1],
+                            tile.data.detailVerts[index + 2] };
+                }
+            }
+
+            for (int k = 0, j = 2; k < 3; j = k++) {
+                if ((getDetailTriEdgeFlags(tris[3], j) & DT_DETAIL_EDGE_BOUNDARY) == 0
+                        && (onlyBoundary || tris[j] < tris[k])) {
+                    // Only looking at boundary edges and this is internal, or
+                    // this is an inner edge that we will see again or have already seen.
+                    continue;
+                }
+
+                Tupple2<Float, Float> dt = distancePtSegSqr2D(pos, v[j], v[k]);
+                float d = dt.first;
+                float t = dt.second;
+                if (d < dmin) {
+                    dmin = d;
+                    tmin = t;
+                    pmin = v[j];
+                    pmax = v[k];
+                }
+            }
         }
 
-        // Clamp point to be inside the polygon.
+        return vLerp(pmin, pmax, tmin);
+    }
+
+    Optional<Float> getPolyHeight(MeshTile tile, Poly poly, float[] pos) {
+        // Off-mesh connections do not have detail polys and getting height
+        // over them does not make sense.
+        if (poly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
+            return Optional.empty();
+        }
+
+        int ip = poly.index;
+        PolyDetail pd = tile.data.detailMeshes[ip];
+
         float[] verts = new float[m_maxVertPerPoly * 3];
-        float[] edged = new float[m_maxVertPerPoly];
-        float[] edget = new float[m_maxVertPerPoly];
         int nv = poly.vertCount;
         for (int i = 0; i < nv; ++i) {
             System.arraycopy(tile.data.verts, poly.verts[i] * 3, verts, i * 3, 3);
         }
 
-        boolean posOverPoly = false;
-        float[] closest = new float[3];
-        vCopy(closest, pos);
-        if (!distancePtPolyEdgesSqr(pos, verts, nv, edged, edget)) {
-            // Point is outside the polygon, dtClamp to nearest edge.
-            float dmin = edged[0];
-            int imin = 0;
-            for (int i = 1; i < nv; ++i) {
-                if (edged[i] < dmin) {
-                    dmin = edged[i];
-                    imin = i;
-                }
-            }
-            int va = imin * 3;
-            int vb = ((imin + 1) % nv) * 3;
-            closest = vLerp(verts, va, vb, edget[imin]);
-            posOverPoly = false;
-        } else {
-            posOverPoly = true;
+        if (!pointInPolygon(pos, verts, nv)) {
+            return Optional.empty();
         }
 
         // Find height at the location.
-        int ip = poly.index;
-        if (tile.data.detailMeshes != null && tile.data.detailMeshes.length > ip) {
-            PolyDetail pd = tile.data.detailMeshes[ip];
-            for (int j = 0; j < pd.triCount; ++j) {
-                int t = (pd.triBase + j) * 4;
-                float[][] v = new float[3][];
-                for (int k = 0; k < 3; ++k) {
-                    if (tile.data.detailTris[t + k] < poly.vertCount) {
-                        int index = poly.verts[tile.data.detailTris[t + k]] * 3;
-                        v[k] = new float[] { tile.data.verts[index], tile.data.verts[index + 1],
-                                tile.data.verts[index + 2] };
-                    } else {
-                        int index = (pd.vertBase + (tile.data.detailTris[t + k] - poly.vertCount)) * 3;
-                        v[k] = new float[] { tile.data.detailVerts[index], tile.data.detailVerts[index + 1],
-                                tile.data.detailVerts[index + 2] };
-                    }
-                }
-                Optional<Float> heightResult = closestHeightPointTriangle(closest, v[0], v[1], v[2]);
-                if (heightResult.isPresent()) {
-                    closest[1] = heightResult.get();
-                    break;
+        for (int j = 0; j < pd.triCount; ++j) {
+            int t = (pd.triBase + j) * 4;
+            float[][] v = new float[3][];
+            for (int k = 0; k < 3; ++k) {
+                if (tile.data.detailTris[t + k] < poly.vertCount) {
+                    int index = poly.verts[tile.data.detailTris[t + k]] * 3;
+                    v[k] = new float[] { tile.data.verts[index], tile.data.verts[index + 1],
+                            tile.data.verts[index + 2] };
+                } else {
+                    int index = (pd.vertBase + (tile.data.detailTris[t + k] - poly.vertCount)) * 3;
+                    v[k] = new float[] { tile.data.detailVerts[index], tile.data.detailVerts[index + 1],
+                            tile.data.detailVerts[index + 2] };
                 }
             }
+            Optional<Float> h = closestHeightPointTriangle(pos, v[0], v[1], v[2]);
+            if (h.isPresent()) {
+                return h;
+            }
         }
-        return new ClosestPointOnPolyResult(posOverPoly, closest);
+
+        // If all triangle checks failed above (can happen with degenerate triangles
+        // or larger floating point values) the point is on an edge, so just select
+        // closest. This should almost never happen so the extra iteration here is
+        // ok.
+        float[] closest = closestPointOnDetailEdges(tile, poly, pos, false);
+        return Optional.of(closest[1]);
+    }
+
+    ClosestPointOnPolyResult closestPointOnPoly(long ref, float[] pos) {
+        Tupple2<MeshTile, Poly> tileAndPoly = getTileAndPolyByRefUnsafe(ref);
+        MeshTile tile = tileAndPoly.first;
+        Poly poly = tileAndPoly.second;
+        float[] closest = new float[3];
+        vCopy(closest, pos);
+        Optional<Float> h = getPolyHeight(tile, poly, pos);
+        if (h.isPresent()) {
+            closest[1] = h.get();
+            return new ClosestPointOnPolyResult(true, closest);
+        }
+
+        // Off-mesh connections don't have detail polygons.
+        if (poly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
+            int i = poly.verts[0] * 3;
+            float[] v0 = new float[] { tile.data.verts[i], tile.data.verts[i + 1], tile.data.verts[i + 2] };
+            i = poly.verts[1] * 3;
+            float[] v1 = new float[] { tile.data.verts[i], tile.data.verts[i + 1], tile.data.verts[i + 2] };
+            Tupple2<Float, Float> dt = distancePtSegSqr2D(pos, v0, v1);
+            return new ClosestPointOnPolyResult(false, vLerp(v0, v1, dt.second));
+        }
+        // Outside poly that is not an offmesh connection.
+        return new ClosestPointOnPolyResult(false, closestPointOnDetailEdges(tile, poly, pos, true));
     }
 
     FindNearestPolyResult findNearestPolyInTile(MeshTile tile, float[] center, float[] extents) {
@@ -1376,4 +1432,18 @@ public class NavMesh {
 
         return Result.success(poly.getArea());
     }
+
+    /**
+     * Get flags for edge in detail triangle.
+     *
+     * @param triFlags
+     *            The flags for the triangle (last component of detail vertices above).
+     * @param edgeIndex
+     *            The index of the first vertex of the edge. For instance, if 0,
+     * @return flags for edge AB.
+     */
+    public static int getDetailTriEdgeFlags(int triFlags, int edgeIndex) {
+        return (triFlags >> (edgeIndex * 2)) & 0x3;
+    }
+
 }

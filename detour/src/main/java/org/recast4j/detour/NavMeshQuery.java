@@ -19,7 +19,6 @@ freely, subject to the following restrictions:
 package org.recast4j.detour;
 
 import static org.recast4j.detour.DetourCommon.clamp;
-import static org.recast4j.detour.DetourCommon.closestHeightPointTriangle;
 import static org.recast4j.detour.DetourCommon.distancePtPolyEdgesSqr;
 import static org.recast4j.detour.DetourCommon.distancePtSegSqr2D;
 import static org.recast4j.detour.DetourCommon.intersectSegSeg2D;
@@ -34,7 +33,6 @@ import static org.recast4j.detour.DetourCommon.triArea2D;
 import static org.recast4j.detour.DetourCommon.vAdd;
 import static org.recast4j.detour.DetourCommon.vCopy;
 import static org.recast4j.detour.DetourCommon.vDist;
-import static org.recast4j.detour.DetourCommon.vDist2D;
 import static org.recast4j.detour.DetourCommon.vDistSqr;
 import static org.recast4j.detour.DetourCommon.vEqual;
 import static org.recast4j.detour.DetourCommon.vIsFinite;
@@ -50,7 +48,6 @@ import static org.recast4j.detour.Node.DT_NODE_CLOSED;
 import static org.recast4j.detour.Node.DT_NODE_OPEN;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -402,84 +399,10 @@ public class NavMeshQuery {
     /// @param[out] posOverPoly
     /// @returns The status flags for the query.
     public Result<ClosestPointOnPolyResult> closestPointOnPoly(long ref, float[] pos) {
-        Result<Tupple2<MeshTile, Poly>> tileAndPoly = m_nav.getTileAndPolyByRef(ref);
-        if (tileAndPoly.failed()) {
-            return Result.of(tileAndPoly.status, tileAndPoly.message);
-        }
-        MeshTile tile = tileAndPoly.result.first;
-        Poly poly = tileAndPoly.result.second;
-        if (tile == null) {
-            return Result.invalidParam("Invalid tile");
-        }
-        if (Objects.isNull(pos) || !vIsFinite(pos)) {
+        if (!m_nav.isValidPolyRef(ref) || Objects.isNull(pos) || !vIsFinite(pos)) {
             return Result.invalidParam();
         }
-        // Off-mesh connections don't have detail polygons.
-        if (poly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
-            int v0 = poly.verts[0] * 3;
-            int v1 = poly.verts[1] * 3;
-            float d0 = vDist(pos, tile.data.verts, v0);
-            float d1 = vDist(pos, tile.data.verts, v1);
-            float u = d0 / (d0 + d1);
-            float[] closest = vLerp(tile.data.verts, v0, v1, u);
-            return Result.success(new ClosestPointOnPolyResult(false, closest));
-        }
-
-        // Clamp point to be inside the polygon.
-        float[] verts = new float[m_nav.getMaxVertsPerPoly() * 3];
-        float[] edged = new float[m_nav.getMaxVertsPerPoly()];
-        float[] edget = new float[m_nav.getMaxVertsPerPoly()];
-        int nv = poly.vertCount;
-        for (int i = 0; i < nv; ++i) {
-            System.arraycopy(tile.data.verts, poly.verts[i] * 3, verts, i * 3, 3);
-        }
-
-        boolean posOverPoly = false;
-        float[] closest = new float[3];
-        vCopy(closest, pos);
-        if (!distancePtPolyEdgesSqr(pos, verts, nv, edged, edget)) {
-            // Point is outside the polygon, dtClamp to nearest edge.
-            float dmin = edged[0];
-            int imin = 0;
-            for (int i = 1; i < nv; ++i) {
-                if (edged[i] < dmin) {
-                    dmin = edged[i];
-                    imin = i;
-                }
-            }
-            int va = imin * 3;
-            int vb = ((imin + 1) % nv) * 3;
-            closest = vLerp(verts, va, vb, edget[imin]);
-            posOverPoly = false;
-        } else {
-            posOverPoly = true;
-        }
-        int ip = poly.index;
-        if (tile.data.detailMeshes != null && tile.data.detailMeshes.length > ip) {
-            PolyDetail pd = tile.data.detailMeshes[ip];
-            // Find height at the location.
-            for (int j = 0; j < pd.triCount; ++j) {
-                int t = (pd.triBase + j) * 4;
-                float[][] v = new float[3][];
-                for (int k = 0; k < 3; ++k) {
-                    if (tile.data.detailTris[t + k] < poly.vertCount) {
-                        int index = poly.verts[tile.data.detailTris[t + k]] * 3;
-                        v[k] = new float[] { tile.data.verts[index], tile.data.verts[index + 1],
-                                tile.data.verts[index + 2] };
-                    } else {
-                        int index = (pd.vertBase + (tile.data.detailTris[t + k] - poly.vertCount)) * 3;
-                        v[k] = new float[] { tile.data.detailVerts[index], tile.data.detailVerts[index + 1],
-                                tile.data.detailVerts[index + 2] };
-                    }
-                }
-                Optional<Float> heightResult = closestHeightPointTriangle(closest, v[0], v[1], v[2]);
-                if (heightResult.isPresent()) {
-                    closest[1] = heightResult.get();
-                    break;
-                }
-            }
-        }
-        return Result.success(new ClosestPointOnPolyResult(posOverPoly, closest));
+        return Result.success(m_nav.closestPointOnPoly(ref, pos));
     }
 
     /// @par
@@ -566,39 +489,19 @@ public class NavMeshQuery {
             return Result.invalidParam();
         }
 
+        // We used to return success for offmesh connections, but the
+        // getPolyHeight in DetourNavMesh does not do this, so special
+        // case it here.
         if (poly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
             int i = poly.verts[0] * 3;
             float[] v0 = new float[] { tile.data.verts[i], tile.data.verts[i + 1], tile.data.verts[i + 2] };
             i = poly.verts[1] * 3;
             float[] v1 = new float[] { tile.data.verts[i], tile.data.verts[i + 1], tile.data.verts[i + 2] };
-            float d0 = vDist2D(pos, v0);
-            float d1 = vDist2D(pos, v1);
-            float u = d0 / (d0 + d1);
-            return Result.success(v0[1] + (v1[1] - v0[1]) * u);
-        } else {
-            int ip = poly.index;
-            PolyDetail pd = tile.data.detailMeshes[ip];
-            for (int j = 0; j < pd.triCount; ++j) {
-                int t = (pd.triBase + j) * 4;
-                float[][] v = new float[3][];
-                for (int k = 0; k < 3; ++k) {
-                    if (tile.data.detailTris[t + k] < poly.vertCount) {
-                        int index = poly.verts[tile.data.detailTris[t + k]] * 3;
-                        v[k] = new float[] { tile.data.verts[index], tile.data.verts[index + 1],
-                                tile.data.verts[index + 2] };
-                    } else {
-                        int index = (pd.vertBase + (tile.data.detailTris[t + k] - poly.vertCount)) * 3;
-                        v[k] = new float[] { tile.data.detailVerts[index], tile.data.detailVerts[index + 1],
-                                tile.data.detailVerts[index + 2] };
-                    }
-                }
-                Optional<Float> heightResult = closestHeightPointTriangle(pos, v[0], v[1], v[2]);
-                if (heightResult.isPresent()) {
-                    return Result.success(heightResult.get());
-                }
-            }
+            Tupple2<Float, Float> dt = distancePtSegSqr2D(pos, v0, v1);
+            return Result.success(v0[1] + (v1[1] - v0[1]) * dt.second);
         }
-        return Result.invalidParam("Invalid ref " + ref + " pos " + Arrays.toString(pos));
+        Optional<Float> height = m_nav.getPolyHeight(tile, poly, pos);
+        return height.isPresent() ? Result.success(height.get()) : Result.invalidParam();
     }
 
     /// @par
