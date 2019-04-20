@@ -521,7 +521,7 @@ public class NavMeshQuery {
     /// @returns The status flags for the query.
     public Result<FindNearestPolyResult> findNearestPoly(float[] center, float[] halfExtents, QueryFilter filter) {
 
-        float[] nearestPt = null;
+        float[] nearestPt = new float[] {center[0], center[1], center[2]};
 
         // Get nearby polygons from proximity grid.
         Result<List<Long>> polysResult = queryPolygons(center, halfExtents, filter);

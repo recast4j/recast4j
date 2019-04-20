@@ -44,4 +44,32 @@ public class FindNearestPolyTest extends AbstractDetourTest {
         }
 
     }
+
+    @Test
+    public void shouldReturnStartPosWhenNoPolyIsValid() {
+        QueryFilter filter = new QueryFilter() {
+            @Override
+            public boolean passFilter(long ref, MeshTile tile, Poly poly) {
+                return false;
+            }
+
+            @Override
+            public float getCost(float[] pa, float[] pb, long prevRef, MeshTile prevTile,
+                                 Poly prevPoly, long curRef, MeshTile curTile, Poly curPoly,
+                                 long nextRef, MeshTile nextTile, Poly nextPoly) {
+                return 0;
+            }
+        };
+        float[] extents = { 2, 4, 2 };
+        for (int i = 0; i < startRefs.length; i++) {
+            float[] startPos = startPoss[i];
+            Result<FindNearestPolyResult> poly = query.findNearestPoly(startPos, extents, filter);
+            assertTrue(poly.succeeded());
+            Assert.assertEquals(0L, poly.result.getNearestRef());
+            for (int v = 0; v < polyPos[i].length; v++) {
+                Assert.assertEquals(startPos[v], poly.result.getNearestPos()[v], 0.001f);
+            }
+        }
+
+    }
 }
