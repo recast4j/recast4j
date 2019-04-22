@@ -82,7 +82,7 @@ public class SimpleInputGeomProvider implements InputGeomProvider {
 
     @Override
     public List<ConvexVolume> getConvexVolumes() {
-        return new ArrayList<>();
+        return volumes;
     }
 
     public void addConvexVolume(float[] verts, float minh, float maxh, AreaModification areaMod) {
