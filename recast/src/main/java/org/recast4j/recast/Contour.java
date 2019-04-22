@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -21,17 +21,17 @@ package org.recast4j.recast;
 /** Represents a simple, non-overlapping contour in field space. */
 public class Contour {
 
-	/** Simplified contour vertex and connection data. [Size: 4 * #nverts] */
-	public int[] verts;
-	/** The number of vertices in the simplified contour. */
-	public int nverts;
-	/** Raw contour vertex and connection data. [Size: 4 * #nrverts] */
-	public int[] rverts;
-	/** The number of vertices in the raw contour.  */
-	public int nrverts;
-	/** The region id of the contour. */
-	public int area;
-	/** The area id of the contour. */
-	public int reg;
+    /** Simplified contour vertex and connection data. [Size: 4 * #nverts] */
+    public int[] verts;
+    /** The number of vertices in the simplified contour. */
+    public int nverts;
+    /** Raw contour vertex and connection data. [Size: 4 * #nrverts] */
+    public int[] rverts;
+    /** The number of vertices in the raw contour. */
+    public int nrverts;
+    /** The region id of the contour. */
+    public int area;
+    /** The area id of the contour. */
+    public int reg;
 
 }
