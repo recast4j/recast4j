@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -21,13 +21,13 @@ package org.recast4j.recast;
 /** Represents a span in a heightfield. */
 public class Span {
 
-	/** The lower limit of the span. [Limit: < #smax] */
-	public int smin;
-	/** The upper limit of the span. [Limit: <= #RC_SPAN_MAX_HEIGHT] */
-	public int smax;
-	/** The area id assigned to the span. */
-	public int area;
-	/** The next span higher up in column. */
-	public Span next;
+    /** The lower limit of the span. [Limit: < #smax] */
+    public int smin;
+    /** The upper limit of the span. [Limit: <= #RC_SPAN_MAX_HEIGHT] */
+    public int smax;
+    /** The area id assigned to the span. */
+    public int area;
+    /** The next span higher up in column. */
+    public Span next;
 
 }

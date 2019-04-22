@@ -90,8 +90,8 @@ public class Recast {
     /// See the #rcConfig documentation for more information on the configuration parameters.
     ///
     /// @see rcHeightfield, rcClearUnwalkableTriangles, rcRasterizeTriangles
-    public static void clearUnwalkableTriangles(Context ctx, float walkableSlopeAngle, float[] verts, int nv, int[] tris, int nt,
-            int[] areas) {
+    public static void clearUnwalkableTriangles(Context ctx, float walkableSlopeAngle, float[] verts, int nv,
+            int[] tris, int nt, int[] areas) {
         float walkableThr = (float) Math.cos(walkableSlopeAngle / 180.0f * Math.PI);
 
         float norm[] = new float[3];

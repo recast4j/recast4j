@@ -21,34 +21,34 @@ package org.recast4j.recast;
 /** Represents a polygon mesh suitable for use in building a navigation mesh. */
 public class PolyMesh {
 
-	/** The mesh vertices. [Form: (x, y, z) coordinates * #nverts] */
-	public int[] verts;
-	/** Polygon and neighbor data. [Length: #maxpolys * 2 * #nvp] */
-	public int[] polys;
-	/** The region id assigned to each polygon. [Length: #maxpolys] */
-	public int[] regs;
-	/** The area id assigned to each polygon. [Length: #maxpolys] */
-	public int[] areas;
-	/** The number of vertices. */
-	public int nverts;
-	/** The number of polygons. */
-	public int npolys;
-	/** The maximum number of vertices per polygon. */
-	public int nvp;
-	/** The number of allocated polygons. */
-	public int maxpolys;
-	/** The user defined flags for each polygon. [Length: #maxpolys] */
-	public int[] flags;
-	/** The minimum bounds in world space. [(x, y, z)] */
-	public final float[] bmin = new float[3];
-	/** The maximum bounds in world space. [(x, y, z)] */
-	public final float[] bmax = new float[3];
-	/** The size of each cell. (On the xz-plane.) */
-	public float cs;
-	/** The height of each cell. (The minimum increment along the y-axis.) */
-	public float ch;
-	/** The AABB border size used to generate the source data from which the mesh was derived. */
-	public int borderSize;
-	/** The max error of the polygon edges in the mesh. */
-	public float maxEdgeError; 
+    /** The mesh vertices. [Form: (x, y, z) coordinates * #nverts] */
+    public int[] verts;
+    /** Polygon and neighbor data. [Length: #maxpolys * 2 * #nvp] */
+    public int[] polys;
+    /** The region id assigned to each polygon. [Length: #maxpolys] */
+    public int[] regs;
+    /** The area id assigned to each polygon. [Length: #maxpolys] */
+    public int[] areas;
+    /** The number of vertices. */
+    public int nverts;
+    /** The number of polygons. */
+    public int npolys;
+    /** The maximum number of vertices per polygon. */
+    public int nvp;
+    /** The number of allocated polygons. */
+    public int maxpolys;
+    /** The user defined flags for each polygon. [Length: #maxpolys] */
+    public int[] flags;
+    /** The minimum bounds in world space. [(x, y, z)] */
+    public final float[] bmin = new float[3];
+    /** The maximum bounds in world space. [(x, y, z)] */
+    public final float[] bmax = new float[3];
+    /** The size of each cell. (On the xz-plane.) */
+    public float cs;
+    /** The height of each cell. (The minimum increment along the y-axis.) */
+    public float ch;
+    /** The AABB border size used to generate the source data from which the mesh was derived. */
+    public int borderSize;
+    /** The max error of the polygon edges in the mesh. */
+    public float maxEdgeError;
 }

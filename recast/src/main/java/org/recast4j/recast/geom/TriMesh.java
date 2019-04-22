@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -31,7 +31,7 @@ public class TriMesh {
     public TriMesh(float[] vertices, int[] faces) {
         this.vertices = vertices;
         this.faces = faces;
-        this.chunkyTriMesh = new ChunkyTriMesh(vertices, faces, faces.length / 3, 256);
+        chunkyTriMesh = new ChunkyTriMesh(vertices, faces, faces.length / 3, 256);
     }
 
     public int[] getTris() {

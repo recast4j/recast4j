@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -21,37 +21,37 @@ package org.recast4j.recast;
 /** A compact, static heightfield representing unobstructed space. */
 public class CompactHeightfield {
 
-	/** The width of the heightfield. (Along the x-axis in cell units.) */
-	public int width;
-	/** The height of the heightfield. (Along the z-axis in cell units.) */
-	public int height;
-	/** The number of spans in the heightfield. */
-	public int spanCount;
-	/** The walkable height used during the build of the field.  (See: RecastConfig::walkableHeight) */
-	public int walkableHeight;
-	/** The walkable climb used during the build of the field. (See: RecastConfig::walkableClimb) */
-	public int walkableClimb;
-	/** The AABB border size used during the build of the field. (See: RecastConfig::borderSize) */
-	public int borderSize;
-	/** The maximum distance value of any span within the field. */
-	public int maxDistance;
-	/** The maximum region id of any span within the field. */
-	public int maxRegions;
-	/** The minimum bounds in world space. [(x, y, z)] */
-	public final float[] bmin = new float[3];
-	/** The maximum bounds in world space. [(x, y, z)] */
-	public final float[] bmax = new float[3];
-	/** The size of each cell. (On the xz-plane.) */
-	public float cs;
-	/** The height of each cell. (The minimum increment along the y-axis.) */
-	public float ch;
-	/** Array of cells. [Size: #width*#height] */
-	public CompactCell[] cells;
-	/** Array of spans. [Size: #spanCount] */
-	public CompactSpan[] spans;
-	/** Array containing border distance data. [Size: #spanCount] */
-	public int[] dist;
-	/** Array containing area id data. [Size: #spanCount] */
-	public int[] areas;
+    /** The width of the heightfield. (Along the x-axis in cell units.) */
+    public int width;
+    /** The height of the heightfield. (Along the z-axis in cell units.) */
+    public int height;
+    /** The number of spans in the heightfield. */
+    public int spanCount;
+    /** The walkable height used during the build of the field. (See: RecastConfig::walkableHeight) */
+    public int walkableHeight;
+    /** The walkable climb used during the build of the field. (See: RecastConfig::walkableClimb) */
+    public int walkableClimb;
+    /** The AABB border size used during the build of the field. (See: RecastConfig::borderSize) */
+    public int borderSize;
+    /** The maximum distance value of any span within the field. */
+    public int maxDistance;
+    /** The maximum region id of any span within the field. */
+    public int maxRegions;
+    /** The minimum bounds in world space. [(x, y, z)] */
+    public final float[] bmin = new float[3];
+    /** The maximum bounds in world space. [(x, y, z)] */
+    public final float[] bmax = new float[3];
+    /** The size of each cell. (On the xz-plane.) */
+    public float cs;
+    /** The height of each cell. (The minimum increment along the y-axis.) */
+    public float ch;
+    /** Array of cells. [Size: #width*#height] */
+    public CompactCell[] cells;
+    /** Array of spans. [Size: #spanCount] */
+    public CompactSpan[] spans;
+    /** Array containing border distance data. [Size: #spanCount] */
+    public int[] dist;
+    /** Array containing area id data. [Size: #spanCount] */
+    public int[] areas;
 
 }

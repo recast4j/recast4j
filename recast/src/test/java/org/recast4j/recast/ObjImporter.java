@@ -1,5 +1,5 @@
 /*
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -29,10 +29,10 @@ import org.recast4j.recast.geom.SimpleInputGeomProvider;
 
 public class ObjImporter {
 
-	private class ObjImporterContext {
-	    List<Float> vertexPositions = new ArrayList<>();
-	    List<Integer> meshFaces = new ArrayList<>();
-	}
+    private class ObjImporterContext {
+        List<Float> vertexPositions = new ArrayList<>();
+        List<Integer> meshFaces = new ArrayList<>();
+    }
 
     public InputGeomProvider load(InputStream is) {
         ObjImporterContext context = new ObjImporterContext();
@@ -49,10 +49,10 @@ public class ObjImporter {
         } finally {
             if (reader != null) {
                 try {
-					reader.close();
-				} catch (IOException e) {
-					throw new RuntimeException(e.getMessage(), e);
-				}
+                    reader.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e.getMessage(), e);
+                }
             }
         }
         return new SimpleInputGeomProvider(context.vertexPositions, context.meshFaces);
@@ -69,10 +69,10 @@ public class ObjImporter {
 
     private void readVertex(String line, ObjImporterContext context) {
         if (line.startsWith("v ")) {
-        	float[] vert = readVector3f(line);
-        	for (float vp : vert) {
-        		context.vertexPositions.add(vp);
-        	}
+            float[] vert = readVector3f(line);
+            for (float vp : vert) {
+                context.vertexPositions.add(vp);
+            }
         }
     }
 
@@ -81,20 +81,19 @@ public class ObjImporter {
         if (v.length < 4) {
             throw new RuntimeException("Invalid vector, expected 3 coordinates, found " + (v.length - 1));
         }
-        return new float[]{Float.parseFloat(v[1]), Float.parseFloat(v[2]), Float.parseFloat(v[3])};
+        return new float[] { Float.parseFloat(v[1]), Float.parseFloat(v[2]), Float.parseFloat(v[3]) };
     }
 
     private void readFace(String line, ObjImporterContext context) {
         String[] v = line.split("\\s+");
         if (v.length < 4) {
-            throw new RuntimeException("Invalid number of face vertices: 3 coordinates expected, found "
-                    + v.length);
+            throw new RuntimeException("Invalid number of face vertices: 3 coordinates expected, found " + v.length);
         }
         for (int j = 0; j < v.length - 3; j++) {
-    		context.meshFaces.add(readFaceVertex(v[1], context));
-        	for (int i = 0; i < 2; i++) {
-        		context.meshFaces.add(readFaceVertex(v[2 + j + i], context));
-        	}
+            context.meshFaces.add(readFaceVertex(v[1], context));
+            for (int i = 0; i < 2; i++) {
+                context.meshFaces.add(readFaceVertex(v[2 + j + i], context));
+            }
         }
     }
 

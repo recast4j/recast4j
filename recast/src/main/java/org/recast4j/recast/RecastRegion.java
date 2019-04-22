@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015-2018 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -484,8 +484,8 @@ public class RecastRegion {
         List<Integer> floors;
 
         Region(int i) {
-            this.id = i;
-            this.ymin = 0xFFFF;
+            id = i;
+            ymin = 0xFFFF;
             connections = new ArrayList<>();
             floors = new ArrayList<>();
         }
