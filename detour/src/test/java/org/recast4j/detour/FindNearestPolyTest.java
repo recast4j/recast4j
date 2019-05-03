@@ -54,9 +54,8 @@ public class FindNearestPolyTest extends AbstractDetourTest {
             }
 
             @Override
-            public float getCost(float[] pa, float[] pb, long prevRef, MeshTile prevTile,
-                                 Poly prevPoly, long curRef, MeshTile curTile, Poly curPoly,
-                                 long nextRef, MeshTile nextTile, Poly nextPoly) {
+            public float getCost(float[] pa, float[] pb, long prevRef, MeshTile prevTile, Poly prevPoly, long curRef,
+                    MeshTile curTile, Poly curPoly, long nextRef, MeshTile nextTile, Poly nextPoly) {
                 return 0;
             }
         };

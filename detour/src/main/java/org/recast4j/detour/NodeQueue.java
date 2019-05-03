@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -22,30 +22,30 @@ import java.util.PriorityQueue;
 
 public class NodeQueue {
 
-	private final PriorityQueue<Node> m_heap = new PriorityQueue<>((n1, n2) -> Float.compare(n1.total, n2.total));
-	
-	public void clear() {
-		m_heap.clear();
-	}
-	
-	public Node top() {
-		return m_heap.peek();
-	}
+    private final PriorityQueue<Node> m_heap = new PriorityQueue<>((n1, n2) -> Float.compare(n1.total, n2.total));
 
-	public Node pop() {
-		return m_heap.poll();
-	}
-	
-	public void push(Node node) {
-		m_heap.offer(node);
-	}
+    public void clear() {
+        m_heap.clear();
+    }
 
-	public void modify(Node node) {
-		m_heap.remove(node);
-		m_heap.offer(node);
-	}
+    public Node top() {
+        return m_heap.peek();
+    }
 
-	public boolean isEmpty() {
-		return m_heap.isEmpty();
-	}
+    public Node pop() {
+        return m_heap.poll();
+    }
+
+    public void push(Node node) {
+        m_heap.offer(node);
+    }
+
+    public void modify(Node node) {
+        m_heap.remove(node);
+        m_heap.offer(node);
+    }
+
+    public boolean isEmpty() {
+        return m_heap.isEmpty();
+    }
 }

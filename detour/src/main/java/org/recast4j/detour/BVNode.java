@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -20,15 +20,15 @@ package org.recast4j.detour;
 
 /**
  * Bounding volume node.
- * 
+ *
  * @note This structure is rarely if ever used by the end user.
  * @see MeshTile
  */
 public class BVNode {
-	/** Minimum bounds of the node's AABB. [(x, y, z)] */
-	public int bmin[] = new int[3];
-	/** Maximum bounds of the node's AABB. [(x, y, z)] */
-	public int bmax[] = new int[3];
-	/** The node's index. (Negative for escape sequence.) */
-	public int i;
+    /** Minimum bounds of the node's AABB. [(x, y, z)] */
+    public int bmin[] = new int[3];
+    /** Maximum bounds of the node's AABB. [(x, y, z)] */
+    public int bmax[] = new int[3];
+    /** The node's index. (Negative for escape sequence.) */
+    public int i;
 }

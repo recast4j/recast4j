@@ -1,5 +1,6 @@
 /*
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
+recast4j copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -19,14 +20,14 @@ package org.recast4j.detour;
 
 public class Tupple3<T, S, U> {
 
-	public final T first;
-	public final S second;
-	public final U third;
+    public final T first;
+    public final S second;
+    public final U third;
 
-	public Tupple3(T first, S second, U third) {
-		this.first = first;
-		this.second = second;
-		this.third = third;
-	}
+    public Tupple3(T first, S second, U third) {
+        this.first = first;
+        this.second = second;
+        this.third = third;
+    }
 
 }
