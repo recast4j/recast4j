@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015-2018 Piotr Piastucki piotr@jtilia.org
+recast4j copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -20,8 +20,8 @@ package org.recast4j.detour;
 
 public interface QueryFilter {
 
-	boolean passFilter(long ref, MeshTile tile, Poly poly);
+    boolean passFilter(long ref, MeshTile tile, Poly poly);
 
-	float getCost(float[] pa, float[] pb, long prevRef, MeshTile prevTile, Poly prevPoly, long curRef, MeshTile curTile,
-			Poly curPoly, long nextRef, MeshTile nextTile, Poly nextPoly);
+    float getCost(float[] pa, float[] pb, long prevRef, MeshTile prevTile, Poly prevPoly, long curRef, MeshTile curTile,
+            Poly curPoly, long nextRef, MeshTile nextTile, Poly nextPoly);
 }

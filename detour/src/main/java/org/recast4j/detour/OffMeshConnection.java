@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -23,21 +23,21 @@ package org.recast4j.detour;
  * traversable connection made up to two vertices.
  */
 public class OffMeshConnection {
-	/** The endpoints of the connection. [(ax, ay, az, bx, by, bz)] */
-	public float[] pos = new float[6];
-	/** The radius of the endpoints. [Limit: >= 0] */
-	public float rad;
-	/** The polygon reference of the connection within the tile. */
-	public int poly;
-	/**
-	 * Link flags.
-	 * 
-	 * @note These are not the connection's user defined flags. Those are assigned via the connection's Poly definition.
-	 *       These are link flags used for internal purposes.
-	 */
-	public int flags;
-	/** End point side. */
-	public int side;
-	/** The id of the offmesh connection. (User assigned when the navigation mesh is built.) */
-	public int userId;
+    /** The endpoints of the connection. [(ax, ay, az, bx, by, bz)] */
+    public float[] pos = new float[6];
+    /** The radius of the endpoints. [Limit: >= 0] */
+    public float rad;
+    /** The polygon reference of the connection within the tile. */
+    public int poly;
+    /**
+     * Link flags.
+     *
+     * @note These are not the connection's user defined flags. Those are assigned via the connection's Poly definition.
+     *       These are link flags used for internal purposes.
+     */
+    public int flags;
+    /** End point side. */
+    public int side;
+    /** The id of the offmesh connection. (User assigned when the navigation mesh is built.) */
+    public int userId;
 }

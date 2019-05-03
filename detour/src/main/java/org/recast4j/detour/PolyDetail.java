@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -20,12 +20,12 @@ package org.recast4j.detour;
 
 /** Defines the location of detail sub-mesh data within a dtMeshTile. */
 public class PolyDetail {
-	/** The offset of the vertices in the MeshTile::detailVerts array. */
-	public int vertBase;
-	/** The offset of the triangles in the MeshTile::detailTris array. */
-	public int triBase;
-	/** The number of vertices in the sub-mesh. */
-	public int vertCount;
-	/** The number of triangles in the sub-mesh. */
-	public int triCount;
+    /** The offset of the vertices in the MeshTile::detailVerts array. */
+    public int vertBase;
+    /** The offset of the triangles in the MeshTile::detailTris array. */
+    public int triBase;
+    /** The number of vertices in the sub-mesh. */
+    public int vertCount;
+    /** The number of triangles in the sub-mesh. */
+    public int triCount;
 }

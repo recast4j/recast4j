@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -19,19 +19,20 @@ freely, subject to the following restrictions:
 package org.recast4j.detour;
 
 /**
- *  Configuration parameters used to define multi-tile navigation meshes.
- *  The values are used to allocate space during the initialization of a navigation mesh.
- *  @see NavMesh
+ * Configuration parameters used to define multi-tile navigation meshes. The values are used to allocate space during
+ * the initialization of a navigation mesh.
+ *
+ * @see NavMesh
  */
 public class NavMeshParams {
-	/** The world space origin of the navigation mesh's tile space. [(x, y, z)] */
-	public final float[] orig = new float[3]; 
-	/** The width of each tile. (Along the x-axis.) */
-	public float tileWidth;
-	/** The height of each tile. (Along the z-axis.) */
-	public float tileHeight;
-	/** The maximum number of tiles the navigation mesh can contain. */
-	public int maxTiles;
-	/** The maximum number of polygons each tile can contain. */
-	public int maxPolys; 
+    /** The world space origin of the navigation mesh's tile space. [(x, y, z)] */
+    public final float[] orig = new float[3];
+    /** The width of each tile. (Along the x-axis.) */
+    public float tileWidth;
+    /** The height of each tile. (Along the z-axis.) */
+    public float tileHeight;
+    /** The maximum number of tiles the navigation mesh can contain. */
+    public int maxTiles;
+    /** The maximum number of polygons each tile can contain. */
+    public int maxPolys;
 }

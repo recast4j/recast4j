@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
+recast4j copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -521,7 +521,7 @@ public class NavMeshQuery {
     /// @returns The status flags for the query.
     public Result<FindNearestPolyResult> findNearestPoly(float[] center, float[] halfExtents, QueryFilter filter) {
 
-        float[] nearestPt = new float[] {center[0], center[1], center[2]};
+        float[] nearestPt = new float[] { center[0], center[1], center[2] };
 
         // Get nearby polygons from proximity grid.
         Result<List<Long>> polysResult = queryPolygons(center, halfExtents, filter);

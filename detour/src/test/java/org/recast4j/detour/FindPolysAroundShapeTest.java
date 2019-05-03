@@ -86,8 +86,8 @@ public class FindPolysAroundShapeTest extends AbstractDetourTest {
         for (int i = 0; i < startRefs.length; i++) {
             long startRef = startRefs[i];
             float[] startPos = startPoss[i];
-            Result<FindPolysAroundResult> polys = query.findPolysAroundShape(startRef, getQueryPoly(startPos, endPoss[i]), 4,
-                    filter);
+            Result<FindPolysAroundResult> polys = query.findPolysAroundShape(startRef,
+                    getQueryPoly(startPos, endPoss[i]), 4, filter);
             Assert.assertEquals(refs[i].length, polys.result.getRefs().size());
             for (int v = 0; v < refs[i].length; v++) {
                 boolean found = false;
