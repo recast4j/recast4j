@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -20,11 +20,11 @@ package org.recast4j.detour.crowd;
 
 public class CrowdAgentAnimation {
 
-	public boolean active;
-	public float[] initPos = new float[3];
-	public float[] startPos = new float[3];
-	public float[] endPos = new float[3];
-	public long polyRef;
-	public float t, tmax;
+    public boolean active;
+    public float[] initPos = new float[3];
+    public float[] startPos = new float[3];
+    public float[] endPos = new float[3];
+    public long polyRef;
+    public float t, tmax;
 
 }

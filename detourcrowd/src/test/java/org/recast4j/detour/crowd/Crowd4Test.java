@@ -1,5 +1,6 @@
 /*
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
+recast4j copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
