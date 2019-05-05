@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -24,14 +24,14 @@ import org.recast4j.detour.QueryFilter;
 import org.recast4j.detour.Status;
 
 public class PathQuery {
-	long ref;
-	/// Path find start and end location.
-	float[] startPos = new float[3], endPos = new float[3];
-	long startRef, endRef;
-	/// Result.
-	List<Long> path;
-	/// State.
-	Status status;
-	int keepAlive;
-	QueryFilter filter; /// < TODO: This is potentially dangerous!
+    long ref;
+    /// Path find start and end location.
+    float[] startPos = new float[3], endPos = new float[3];
+    long startRef, endRef;
+    /// Result.
+    List<Long> path;
+    /// State.
+    Status status;
+    int keepAlive;
+    QueryFilter filter; /// < TODO: This is potentially dangerous!
 }
