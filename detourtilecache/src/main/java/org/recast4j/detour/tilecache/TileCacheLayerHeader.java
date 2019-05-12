@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -20,16 +20,16 @@ package org.recast4j.detour.tilecache;
 
 public class TileCacheLayerHeader {
 
-	public static final int DT_TILECACHE_MAGIC = 'D'<<24 | 'T'<<16 | 'L'<<8 | 'R'; ///< 'DTLR';
-	public static final int DT_TILECACHE_VERSION = 1;
+    public static final int DT_TILECACHE_MAGIC = 'D' << 24 | 'T' << 16 | 'L' << 8 | 'R'; /// < 'DTLR';
+    public static final int DT_TILECACHE_VERSION = 1;
 
-	public int magic; /// < Data magic
-	public int version; /// < Data version
-	public int tx, ty, tlayer;
-	public float[] bmin = new float[3];
-	public float[] bmax = new float[3];
-	public int hmin, hmax; /// < Height min/max range
-	public int width, height; /// < Dimension of the layer.
-	public int minx, maxx, miny, maxy; /// < Usable sub-region.
+    public int magic; /// < Data magic
+    public int version; /// < Data version
+    public int tx, ty, tlayer;
+    public float[] bmin = new float[3];
+    public float[] bmax = new float[3];
+    public int hmin, hmax; /// < Height min/max range
+    public int width, height; /// < Dimension of the layer.
+    public int minx, maxx, miny, maxy; /// < Usable sub-region.
 
 }

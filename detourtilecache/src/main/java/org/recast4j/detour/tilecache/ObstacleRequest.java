@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -20,6 +20,6 @@ package org.recast4j.detour.tilecache;
 
 public class ObstacleRequest {
 
-	ObstacleRequestAction action;
-	long ref;
+    ObstacleRequestAction action;
+    long ref;
 }

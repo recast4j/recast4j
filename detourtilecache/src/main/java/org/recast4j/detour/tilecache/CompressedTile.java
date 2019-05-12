@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -19,16 +19,16 @@ freely, subject to the following restrictions:
 package org.recast4j.detour.tilecache;
 
 public class CompressedTile {
-	final int index;
-	int salt; /// < Counter describing modifications to the tile.
-	TileCacheLayerHeader header;
-	public byte[] data;
-	int compressed; // offset of compressed data
-	int flags;
-	CompressedTile next;
+    final int index;
+    int salt; /// < Counter describing modifications to the tile.
+    TileCacheLayerHeader header;
+    public byte[] data;
+    int compressed; // offset of compressed data
+    int flags;
+    CompressedTile next;
 
-	public CompressedTile(int index) {
-		this.index = index;
-		this.salt = 1;
-	}
+    public CompressedTile(int index) {
+        this.index = index;
+        salt = 1;
+    }
 }
