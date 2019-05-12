@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -19,15 +19,15 @@ freely, subject to the following restrictions:
 package org.recast4j.detour.tilecache;
 
 public class TileCachePolyMesh {
-	int nvp;
-	int nverts;				///< Number of vertices.
-	int npolys;				///< Number of polygons.
-	int[] verts;	///< Vertices of the mesh, 3 elements per vertex.
-	int[] polys;	///< Polygons of the mesh, nvp*2 elements per polygon.
-	int[] flags;	///< Per polygon flags.
-	int[] areas;	///< Area ID of polygons.
+    int nvp;
+    int nverts; /// < Number of vertices.
+    int npolys; /// < Number of polygons.
+    int[] verts; /// < Vertices of the mesh, 3 elements per vertex.
+    int[] polys; /// < Polygons of the mesh, nvp*2 elements per polygon.
+    int[] flags; /// < Per polygon flags.
+    int[] areas; /// < Area ID of polygons.
 
-	public TileCachePolyMesh(int nvp) {
-		this.nvp = nvp;
-	}
+    public TileCachePolyMesh(int nvp) {
+        this.nvp = nvp;
+    }
 }

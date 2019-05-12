@@ -1,6 +1,6 @@
 /*
 Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-Recast4J Copyright (c) 2015 Piotr Piastucki piotr@jtilia.org
+recast4j copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -23,29 +23,28 @@ import java.util.List;
 
 public class TileCacheObstacle {
 
-	public enum TileCacheObstacleType {
-		CYLINDER,
-		BOX,
-		ORIENTED_BOX
-	};
-	final int index;
-	TileCacheObstacleType type;
-	final float[] pos = new float[3];
-	final float[] bmin = new float[3];
-	final float[] bmax = new float[3];
-	float radius, height;
-	final float[] center = new float[3];
-	final float[] extents = new float[3];
-	final float[] rotAux = new float[2]; //{ cos(0.5f*angle)*sin(-0.5f*angle); cos(0.5f*angle)*cos(0.5f*angle) - 0.5 }
-	List<Long> touched = new ArrayList<>();
-	final List<Long> pending = new ArrayList<>();
-	int salt;
-	ObstacleState state = ObstacleState.DT_OBSTACLE_EMPTY;
-	TileCacheObstacle next;
+    public enum TileCacheObstacleType {
+        CYLINDER, BOX, ORIENTED_BOX
+    };
 
-	public TileCacheObstacle(int index) {
-		salt = 1;
-		this.index = index;
-	}
+    final int index;
+    TileCacheObstacleType type;
+    final float[] pos = new float[3];
+    final float[] bmin = new float[3];
+    final float[] bmax = new float[3];
+    float radius, height;
+    final float[] center = new float[3];
+    final float[] extents = new float[3];
+    final float[] rotAux = new float[2]; // { cos(0.5f*angle)*sin(-0.5f*angle); cos(0.5f*angle)*cos(0.5f*angle) - 0.5 }
+    List<Long> touched = new ArrayList<>();
+    final List<Long> pending = new ArrayList<>();
+    int salt;
+    ObstacleState state = ObstacleState.DT_OBSTACLE_EMPTY;
+    TileCacheObstacle next;
+
+    public TileCacheObstacle(int index) {
+        salt = 1;
+        this.index = index;
+    }
 
 }
