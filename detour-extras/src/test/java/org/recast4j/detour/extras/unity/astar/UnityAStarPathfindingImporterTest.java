@@ -1,5 +1,5 @@
 /*
-recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
+recast4j copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
