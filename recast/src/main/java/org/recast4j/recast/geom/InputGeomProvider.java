@@ -18,8 +18,6 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast.geom;
 
-import java.util.List;
-
 import org.recast4j.recast.ConvexVolume;
 
 public interface InputGeomProvider {
@@ -30,6 +28,6 @@ public interface InputGeomProvider {
 
     Iterable<TriMesh> meshes();
 
-    List<ConvexVolume> getConvexVolumes();
+    Iterable<ConvexVolume> convexVolumes();
 
 }

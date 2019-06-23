@@ -310,7 +310,7 @@ public class RecastBuilder {
         // Erode the walkable area by agent radius.
         RecastArea.erodeWalkableArea(ctx, cfg.walkableRadius, chf);
         // (Optional) Mark areas.
-        for (ConvexVolume vol : geomProvider.getConvexVolumes()) {
+        for (ConvexVolume vol : geomProvider.convexVolumes()) {
             RecastArea.markConvexPolyArea(ctx, vol.verts, vol.hmin, vol.hmax, vol.areaMod, chf);
         }
         return chf;
