@@ -81,7 +81,7 @@ public class SimpleInputGeomProvider implements InputGeomProvider {
     }
 
     @Override
-    public List<ConvexVolume> getConvexVolumes() {
+    public List<ConvexVolume> convexVolumes() {
         return volumes;
     }
 
