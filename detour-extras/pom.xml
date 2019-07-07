@@ -3,20 +3,20 @@
     <parent>
         <groupId>org.recast4j</groupId>
         <artifactId>parent</artifactId>
-        <version>1.2.5</version>
+        <version>1.2.6-SNAPSHOT</version>
     </parent>
     <artifactId>detour-extras</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.recast4j</groupId>
             <artifactId>detour</artifactId>
-            <version>1.2.5</version>
+            <version>1.2.6-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.recast4j</groupId>
             <artifactId>detour</artifactId>
             <type>test-jar</type>
-            <version>1.2.5</version>
+            <version>1.2.6-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
