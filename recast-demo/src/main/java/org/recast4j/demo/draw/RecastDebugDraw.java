@@ -301,6 +301,9 @@ public class RecastDebugDraw extends DebugDraw {
                         }
                     }
                     for (int m = 0, n = 2; m < 3; n = m++) {
+                        if ((NavMesh.getDetailTriEdgeFlags(tile.data.detailTris[t + 3], n) & NavMesh.DT_DETAIL_EDGE_BOUNDARY) == 0)
+                            continue;
+
                         if (((tile.data.detailTris[t + 3] >> (n * 2)) & 0x3) == 0) {
                             continue; // Skip inner detail edges.
                         }
@@ -1136,4 +1139,5 @@ public class RecastDebugDraw extends DebugDraw {
         end();
 
     }
+
 }

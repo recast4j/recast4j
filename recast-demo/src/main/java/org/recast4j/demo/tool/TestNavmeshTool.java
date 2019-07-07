@@ -231,12 +231,12 @@ public class TestNavmeshTool implements Tool {
         }
         NavMeshQuery m_navQuery = m_sample.getNavMeshQuery();
         if (m_sposSet) {
-            m_startRef = m_navQuery.findNearestPoly(m_spos, m_polyPickExt, m_filter).getNearestRef();
+            m_startRef = m_navQuery.findNearestPoly(m_spos, m_polyPickExt, m_filter).result.getNearestRef();
         } else {
             m_startRef = 0;
         }
         if (m_eposSet) {
-            m_endRef = m_navQuery.findNearestPoly(m_epos, m_polyPickExt, m_filter).getNearestRef();
+            m_endRef = m_navQuery.findNearestPoly(m_epos, m_polyPickExt, m_filter).result.getNearestRef();
         } else {
             m_endRef = 0;
         }

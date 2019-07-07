@@ -18,27 +18,10 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.demo.draw;
 
-import static org.lwjgl.opengl.GL11.GL_LINES;
-import static org.lwjgl.opengl.GL11.GL_POINTS;
-import static org.lwjgl.opengl.GL11.GL_QUADS;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
-import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
-import static org.lwjgl.opengl.GL11.glBegin;
-import static org.lwjgl.opengl.GL11.glColor4ub;
-import static org.lwjgl.opengl.GL11.glDepthMask;
-import static org.lwjgl.opengl.GL11.glDisable;
-import static org.lwjgl.opengl.GL11.glEnable;
-import static org.lwjgl.opengl.GL11.glEnd;
-import static org.lwjgl.opengl.GL11.glLineWidth;
-import static org.lwjgl.opengl.GL11.glPointSize;
-import static org.lwjgl.opengl.GL11.glTexCoord2f;
-import static org.lwjgl.opengl.GL11.glTexCoord2fv;
-import static org.lwjgl.opengl.GL11.glVertex3f;
-import static org.lwjgl.opengl.GL11.glVertex3fv;
-
 public class DebugDraw {
 
     private final GLCheckerTexture g_tex = new GLCheckerTexture();
+    private final OpenGLDraw openGlDraw = new ModernOpenGLDraw();
 
     public void begin(DebugDrawPrimitives prim) {
         begin(prim, 1f);
@@ -152,69 +135,28 @@ public class DebugDraw {
         end();
     }
 
-    public void depthMask(boolean state) {
-        glDepthMask(state);
-    }
-
-    void texture(boolean state) {
-        if (state) {
-            glEnable(GL_TEXTURE_2D);
-            g_tex.bind();
-        } else {
-            glDisable(GL_TEXTURE_2D);
-        }
-    }
-
     public void begin(DebugDrawPrimitives prim, float size) {
-        switch (prim) {
-        case POINTS:
-            glPointSize(size);
-            glBegin(GL_POINTS);
-            break;
-        case LINES:
-            glLineWidth(size);
-            glBegin(GL_LINES);
-            break;
-        case TRIS:
-            glBegin(GL_TRIANGLES);
-            break;
-        case QUADS:
-            glBegin(GL_QUADS);
-            break;
-        }
+        getOpenGlDraw().begin(prim, size);
     }
 
     void vertex(float[] pos, int color) {
-        glColor4ubv(color);
-        glVertex3fv(pos);
+        getOpenGlDraw().vertex(pos, color);
     }
 
     public void vertex(float x, float y, float z, int color) {
-        glColor4ubv(color);
-        glVertex3f(x, y, z);
-    }
-
-    private void glColor4ubv(int color) {
-        glColor4ub((byte) (color & 0xFF), (byte) ((color >> 8) & 0xFF), (byte) ((color >> 16) & 0xFF),
-                (byte) ((color >> 24) & 0xFF));
+        getOpenGlDraw().vertex(x, y, z, color);
     }
 
     void vertex(float[] pos, int color, float[] uv) {
-        glColor4ubv(color);
-        glTexCoord2fv(uv);
-        glVertex3fv(pos);
+        getOpenGlDraw().vertex(pos, color, uv);
     }
 
     void vertex(float x, float y, float z, int color, float u, float v) {
-        glColor4ubv(color);
-        glTexCoord2f(u, v);
-        glVertex3f(x, y, z);
+        getOpenGlDraw().vertex(x, y, z, color, u, v);
     }
 
     public void end() {
-        glEnd();
-        glLineWidth(1.0f);
-        glPointSize(1.0f);
+        getOpenGlDraw().end();
     }
 
     public void debugDrawCircle(float x, float y, float z, float r, int col, float lineWidth) {
@@ -509,5 +451,54 @@ public class DebugDraw {
 
     public static int duDarkenCol(int col) {
         return ((col >> 1) & 0x007f7f7f) | (col & 0xff000000);
+    }
+
+    public void fog(float start, float end) {
+        getOpenGlDraw().fog(start, end);
+    }
+
+    public void fog(boolean state) {
+        getOpenGlDraw().fog(state);
+    }
+
+    public void depthMask(boolean state) {
+        getOpenGlDraw().depthMask(state);
+    }
+
+    void texture(boolean state) {
+        getOpenGlDraw().texture(g_tex, state);
+    }
+
+    public void init(float fogDistance) {
+        getOpenGlDraw().init();
+    }
+
+    public void clear() {
+        getOpenGlDraw().clear();
+    }
+
+    public float[] projectionMatrix(float fovy, float aspect, float near, float far) {
+        float[] projectionMatrix = new float[16];
+        GLU.glhPerspectivef2(projectionMatrix, fovy, aspect, near, far);
+        getOpenGlDraw().projectionMatrix(projectionMatrix);
+        return projectionMatrix;
+    }
+
+    public float[] viewMatrix(float[] cameraPos, float[] cameraEulers) {
+        float[] rx = GLU.build_4x4_rotation_matrix(cameraEulers[0], 1, 0, 0);
+        float[] ry = GLU.build_4x4_rotation_matrix(cameraEulers[1], 0, 1, 0);
+        float[] r = GLU.mul(rx, ry);
+        float[] t = new float[16];
+        t[0] = t[5] = t[10] = t[15] = 1;
+        t[12] = -cameraPos[0];
+        t[13] = -cameraPos[1];
+        t[14] = -cameraPos[2];
+        float[] viewMatrix = GLU.mul(r, t);
+        getOpenGlDraw().viewMatrix(viewMatrix);
+        return viewMatrix;
+    }
+
+    private OpenGLDraw getOpenGlDraw() {
+        return openGlDraw;
     }
 }

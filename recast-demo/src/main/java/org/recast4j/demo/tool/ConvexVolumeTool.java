@@ -146,7 +146,7 @@ public class ConvexVolumeTool implements Tool {
         if (shift) {
             // Delete
             int nearestIndex = -1;
-            List<ConvexVolume> vols = geom.getConvexVolumes();
+            List<ConvexVolume> vols = geom.convexVolumes();
             for (int i = 0; i < vols.size(); ++i) {
                 if (pointInPoly(vols.get(i).verts, p) && p[1] >= vols.get(i).hmin && p[1] <= vols.get(i).hmax) {
                     nearestIndex = i;
@@ -154,7 +154,7 @@ public class ConvexVolumeTool implements Tool {
             }
             // If end point close enough, delete it.
             if (nearestIndex != -1) {
-                geom.getConvexVolumes().remove(nearestIndex);
+                geom.convexVolumes().remove(nearestIndex);
             }
         } else {
             // Create
@@ -354,7 +354,44 @@ public class ConvexVolumeTool implements Tool {
     @Override
     public void handleUpdate(float dt) {
         // TODO Auto-generated method stub
-
     }
 
+    public static void main(String[] args) {
+        ConvexVolumeTool t = new ConvexVolumeTool();
+        List<Float> points = new ArrayList<>();
+        //  0
+        points.add(0f);
+        points.add(-10f);
+        points.add(3f);
+        //  1
+        points.add(1f);
+        points.add(-10f);
+        points.add(1f);
+        //  2
+        points.add(2f);
+        points.add(-10f);
+        points.add(2f);
+        //  3
+        points.add(4f);
+        points.add(-10f);
+        points.add(4f);
+        //  4
+        points.add(0f);
+        points.add(-10f);
+        points.add(0f);
+        //  5
+        points.add(1f);
+        points.add(-10f);
+        points.add(2f);
+        //  6
+        points.add(3f);
+        points.add(-10f);
+        points.add(1f);
+        //  7
+        points.add(3f);
+        points.add(-10f);
+        points.add(3f);
+        List<Integer> h = t.convexhull(points);
+        System.err.println(h);
+    }
 }
