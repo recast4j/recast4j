@@ -1,12 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>org.recast4j</groupId>
         <artifactId>parent</artifactId>
-        <version>1.2.4-SNAPSHOT</version>
+        <version>1.2.4</version>
     </parent>
 
     <artifactId>detour-crowd</artifactId>
@@ -30,26 +28,26 @@
         <dependency>
             <groupId>org.recast4j</groupId>
             <artifactId>detour</artifactId>
-            <version>1.2.4-SNAPSHOT</version>
+            <version>1.2.4</version>
         </dependency>
         <dependency>
             <groupId>org.recast4j</groupId>
             <artifactId>recast</artifactId>
-            <version>1.2.4-SNAPSHOT</version>
+            <version>1.2.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.recast4j</groupId>
             <artifactId>recast</artifactId>
             <type>test-jar</type>
-            <version>1.2.4-SNAPSHOT</version>
+            <version>1.2.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.recast4j</groupId>
             <artifactId>detour</artifactId>
             <type>test-jar</type>
-            <version>1.2.4-SNAPSHOT</version>
+            <version>1.2.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
