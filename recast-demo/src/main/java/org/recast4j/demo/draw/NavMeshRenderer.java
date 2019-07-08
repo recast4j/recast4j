@@ -18,11 +18,6 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.demo.draw;
 
-import static org.lwjgl.opengl.GL11.GL_FOG;
-import static org.lwjgl.opengl.GL11.glDepthMask;
-import static org.lwjgl.opengl.GL11.glDisable;
-import static org.lwjgl.opengl.GL11.glEnable;
-
 import java.util.List;
 
 import org.recast4j.demo.builder.SampleAreaModifications;
@@ -59,8 +54,8 @@ public class NavMeshRenderer {
         List<RecastBuilderResult> rcBuilderResults = sample.getRecastResults();
         NavMesh navMesh = sample.getNavMesh();
         SettingsUI settingsUI = sample.getSettingsUI();
-        glEnable(GL_FOG);
-        glDepthMask(true);
+        debugDraw.fog(true);
+        debugDraw.depthMask(true);
         DrawMode drawMode = settingsUI.getDrawMode();
 
         float texScale = 1.0f / (settingsUI.getCellSize() * 10.0f);
@@ -72,8 +67,8 @@ public class NavMeshRenderer {
             drawOffMeshConnections(geom, false);
         }
 
-        glDisable(GL_FOG);
-        glDepthMask(false);
+        debugDraw.fog(false);
+        debugDraw.depthMask(false);
         // Draw bounds
         float[] bmin = geom.getMeshBoundsMin();
         float[] bmax = geom.getMeshBoundsMax();
@@ -104,7 +99,7 @@ public class NavMeshRenderer {
             }
         }
 
-        glDepthMask(true);
+        debugDraw.depthMask(true);
 
         for (RecastBuilderResult rcBuilderResult : rcBuilderResults) {
             if (rcBuilderResult.getCompactHeightfield() != null && drawMode == DrawMode.DRAWMODE_COMPACT) {
@@ -117,48 +112,48 @@ public class NavMeshRenderer {
                 debugDraw.debugDrawCompactHeightfieldRegions(rcBuilderResult.getCompactHeightfield());
             }
             if (rcBuilderResult.getSolidHeightfield() != null && drawMode == DrawMode.DRAWMODE_VOXELS) {
-                glEnable(GL_FOG);
+                debugDraw.fog(true);
                 debugDraw.debugDrawHeightfieldSolid(rcBuilderResult.getSolidHeightfield());
-                glDisable(GL_FOG);
+                debugDraw.fog(false);
             }
             if (rcBuilderResult.getSolidHeightfield() != null && drawMode == DrawMode.DRAWMODE_VOXELS_WALKABLE) {
-                glEnable(GL_FOG);
+                debugDraw.fog(true);
                 debugDraw.debugDrawHeightfieldWalkable(rcBuilderResult.getSolidHeightfield());
-                glDisable(GL_FOG);
+                debugDraw.fog(false);
             }
             if (rcBuilderResult.getContourSet() != null && drawMode == DrawMode.DRAWMODE_RAW_CONTOURS) {
-                glDepthMask(false);
+                debugDraw.depthMask(false);
                 debugDraw.debugDrawRawContours(rcBuilderResult.getContourSet(), 1f);
-                glDepthMask(true);
+                debugDraw.depthMask(true);
             }
             if (rcBuilderResult.getContourSet() != null && drawMode == DrawMode.DRAWMODE_BOTH_CONTOURS) {
-                glDepthMask(false);
+                debugDraw.depthMask(false);
                 debugDraw.debugDrawRawContours(rcBuilderResult.getContourSet(), 0.5f);
                 debugDraw.debugDrawContours(rcBuilderResult.getContourSet());
-                glDepthMask(true);
+                debugDraw.depthMask(true);
             }
             if (rcBuilderResult.getContourSet() != null && drawMode == DrawMode.DRAWMODE_CONTOURS) {
-                glDepthMask(false);
+                debugDraw.depthMask(false);
                 debugDraw.debugDrawContours(rcBuilderResult.getContourSet());
-                glDepthMask(true);
+                debugDraw.depthMask(true);
             }
             if (rcBuilderResult.getCompactHeightfield() != null && drawMode == DrawMode.DRAWMODE_REGION_CONNECTIONS) {
                 debugDraw.debugDrawCompactHeightfieldRegions(rcBuilderResult.getCompactHeightfield());
-                glDepthMask(false);
+                debugDraw.depthMask(false);
                 if (rcBuilderResult.getContourSet() != null) {
                     debugDraw.debugDrawRegionConnections(rcBuilderResult.getContourSet());
                 }
-                glDepthMask(true);
+                debugDraw.depthMask(true);
             }
             if (rcBuilderResult.getMesh() != null && drawMode == DrawMode.DRAWMODE_POLYMESH) {
-                glDepthMask(false);
+                debugDraw.depthMask(false);
                 debugDraw.debugDrawPolyMesh(rcBuilderResult.getMesh());
-                glDepthMask(true);
+                debugDraw.depthMask(true);
             }
             if (rcBuilderResult.getMeshDetail() != null && drawMode == DrawMode.DRAWMODE_POLYMESH_DETAIL) {
-                glDepthMask(false);
+                debugDraw.depthMask(false);
                 debugDraw.debugDrawPolyMeshDetail(rcBuilderResult.getMeshDetail());
-                glDepthMask(true);
+                debugDraw.depthMask(true);
             }
         }
 
@@ -197,8 +192,8 @@ public class NavMeshRenderer {
 
         debugDraw.begin(DebugDrawPrimitives.TRIS);
 
-        for (int i = 0; i < geom.getConvexVolumes().size(); ++i) {
-            ConvexVolume vol = geom.getConvexVolumes().get(i);
+        for (int i = 0; i < geom.convexVolumes().size(); ++i) {
+            ConvexVolume vol = geom.convexVolumes().get(i);
             int col = DebugDraw.duTransCol(DebugDraw.areaToCol(vol.areaMod.getMaskedValue()), 32);
             for (int j = 0, k = vol.verts.length - 3; j < vol.verts.length; k = j, j += 3) {
                 float[] va = new float[] { vol.verts[k], vol.verts[k + 1], vol.verts[k + 2] };
@@ -221,8 +216,8 @@ public class NavMeshRenderer {
         debugDraw.end();
 
         debugDraw.begin(DebugDrawPrimitives.LINES, 2.0f);
-        for (int i = 0; i < geom.getConvexVolumes().size(); ++i) {
-            ConvexVolume vol = geom.getConvexVolumes().get(i);
+        for (int i = 0; i < geom.convexVolumes().size(); ++i) {
+            ConvexVolume vol = geom.convexVolumes().get(i);
             int col = DebugDraw.duTransCol(DebugDraw.areaToCol(vol.areaMod.getMaskedValue()), 220);
             for (int j = 0, k = vol.verts.length - 3; j < vol.verts.length; k = j, j += 3) {
                 float[] va = new float[] { vol.verts[k], vol.verts[k + 1], vol.verts[k + 2] };
@@ -238,8 +233,8 @@ public class NavMeshRenderer {
         debugDraw.end();
 
         debugDraw.begin(DebugDrawPrimitives.POINTS, 3.0f);
-        for (int i = 0; i < geom.getConvexVolumes().size(); ++i) {
-            ConvexVolume vol = geom.getConvexVolumes().get(i);
+        for (int i = 0; i < geom.convexVolumes().size(); ++i) {
+            ConvexVolume vol = geom.convexVolumes().get(i);
             int col = DebugDraw
                     .duDarkenCol(DebugDraw.duTransCol(DebugDraw.areaToCol(vol.areaMod.getMaskedValue()), 220));
             for (int j = 0; j < vol.verts.length; j += 3) {

@@ -154,8 +154,8 @@ public class CrowdTool implements Tool {
             if (nav != null && navquery != null) {
                 QueryFilter filter = new DefaultQueryFilter();
                 float[] halfExtents = crowd.getQueryExtents();
-                FindNearestPolyResult result = navquery.findNearestPoly(p, halfExtents, filter);
-                long ref = result.getNearestRef();
+                Result<FindNearestPolyResult> result = navquery.findNearestPoly(p, halfExtents, filter);
+                long ref = result.result.getNearestRef();
                 if (ref != 0) {
                     Result<Integer> flags = nav.getPolyFlags(ref);
                     if (flags.succeeded()) {
@@ -309,9 +309,9 @@ public class CrowdTool implements Tool {
                 }
             }
         } else {
-            FindNearestPolyResult result = navquery.findNearestPoly(p, halfExtents, filter);
-            m_targetRef = result.getNearestRef();
-            m_targetPos = result.getNearestPos();
+            Result<FindNearestPolyResult> result = navquery.findNearestPoly(p, halfExtents, filter);
+            m_targetRef = result.result.getNearestRef();
+            m_targetPos = result.result.getNearestPos();
             if (m_agentDebug.idx != -1) {
                 CrowdAgent ag = crowd.getAgent(m_agentDebug.idx);
                 if (ag != null && ag.active) {

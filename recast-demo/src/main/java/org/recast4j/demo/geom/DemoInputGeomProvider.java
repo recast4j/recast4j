@@ -116,7 +116,7 @@ public class DemoInputGeomProvider implements InputGeomProvider {
     }
 
     @Override
-    public List<ConvexVolume> getConvexVolumes() {
+    public List<ConvexVolume> convexVolumes() {
         return convexVolumes;
     }
 

@@ -19,11 +19,16 @@ freely, subject to the following restrictions:
 package org.recast4j.demo;
 
 import static org.lwjgl.glfw.GLFW.GLFW_BLUE_BITS;
+import static org.lwjgl.glfw.GLFW.GLFW_CONTEXT_VERSION_MAJOR;
+import static org.lwjgl.glfw.GLFW.GLFW_CONTEXT_VERSION_MINOR;
 import static org.lwjgl.glfw.GLFW.GLFW_DEPTH_BITS;
 import static org.lwjgl.glfw.GLFW.GLFW_DOUBLEBUFFER;
 import static org.lwjgl.glfw.GLFW.GLFW_GREEN_BITS;
 import static org.lwjgl.glfw.GLFW.GLFW_MOD_CONTROL;
 import static org.lwjgl.glfw.GLFW.GLFW_MOD_SHIFT;
+import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_CORE_PROFILE;
+import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_FORWARD_COMPAT;
+import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_PROFILE;
 import static org.lwjgl.glfw.GLFW.GLFW_RED_BITS;
 import static org.lwjgl.glfw.GLFW.GLFW_RESIZABLE;
 import static org.lwjgl.glfw.GLFW.GLFW_SAMPLES;
@@ -44,47 +49,14 @@ import static org.lwjgl.glfw.GLFW.glfwSwapInterval;
 import static org.lwjgl.glfw.GLFW.glfwWindowHint;
 import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
 import static org.lwjgl.opengl.GL.createCapabilities;
-import static org.lwjgl.opengl.GL11.GL_BLEND;
-import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
 import static org.lwjgl.opengl.GL11.GL_FALSE;
-import static org.lwjgl.opengl.GL11.GL_FOG;
-import static org.lwjgl.opengl.GL11.GL_FOG_COLOR;
-import static org.lwjgl.opengl.GL11.GL_FOG_END;
-import static org.lwjgl.opengl.GL11.GL_FOG_MODE;
-import static org.lwjgl.opengl.GL11.GL_FOG_START;
-import static org.lwjgl.opengl.GL11.GL_LEQUAL;
-import static org.lwjgl.opengl.GL11.GL_LINEAR;
-import static org.lwjgl.opengl.GL11.GL_MODELVIEW;
-import static org.lwjgl.opengl.GL11.GL_MODELVIEW_MATRIX;
-import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_PROJECTION;
-import static org.lwjgl.opengl.GL11.GL_PROJECTION_MATRIX;
 import static org.lwjgl.opengl.GL11.GL_RENDERER;
-import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 import static org.lwjgl.opengl.GL11.GL_TRUE;
 import static org.lwjgl.opengl.GL11.GL_VENDOR;
 import static org.lwjgl.opengl.GL11.GL_VERSION;
 import static org.lwjgl.opengl.GL11.GL_VIEWPORT;
-import static org.lwjgl.opengl.GL11.glBlendFunc;
-import static org.lwjgl.opengl.GL11.glClear;
-import static org.lwjgl.opengl.GL11.glClearColor;
-import static org.lwjgl.opengl.GL11.glDepthFunc;
-import static org.lwjgl.opengl.GL11.glDisable;
-import static org.lwjgl.opengl.GL11.glEnable;
-import static org.lwjgl.opengl.GL11.glFogf;
-import static org.lwjgl.opengl.GL11.glFogfv;
-import static org.lwjgl.opengl.GL11.glFogi;
-import static org.lwjgl.opengl.GL11.glGetFloatv;
 import static org.lwjgl.opengl.GL11.glGetIntegerv;
 import static org.lwjgl.opengl.GL11.glGetString;
-import static org.lwjgl.opengl.GL11.glLoadIdentity;
-import static org.lwjgl.opengl.GL11.glMatrixMode;
-import static org.lwjgl.opengl.GL11.glRotatef;
-import static org.lwjgl.opengl.GL11.glTranslatef;
 import static org.lwjgl.opengl.GL11.glViewport;
 import static org.lwjgl.opengl.GL20.GL_SHADING_LANGUAGE_VERSION;
 import static org.lwjgl.system.MemoryStack.stackPush;
@@ -196,10 +168,10 @@ public class RecastDemo {
         glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
         glfwWindowHint(GLFW_DEPTH_BITS, 24);
 
-        // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-        // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-        // glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-        // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
         // PointerBuffer monitors = glfwGetMonitors();
@@ -245,6 +217,10 @@ public class RecastDemo {
         logger.debug(renderGl);
         String glslString = glGetString(GL_SHADING_LANGUAGE_VERSION);
         logger.debug(glslString);
+
+        float camr = 1000;
+        dd.init(camr);
+
         Mouse mouse = new Mouse(window);
         mouse.addListener(new MouseListener() {
 
@@ -275,6 +251,12 @@ public class RecastDemo {
                         movedDuringRotate = true;
                     }
                 }
+                if (pan) {
+                    cameraPos[0] = origCameraPos[0] + dx * 0.25f;
+                    if (dx * dx + dy * dy > 3 * 3) {
+                        movedDuringPan = true;
+                    }
+                }
             }
 
             @Override
@@ -296,6 +278,7 @@ public class RecastDemo {
                             // Pan view
                             pan = true;
                             movedDuringPan = false;
+                            System.out.println("PAN!!");
                             origMousePos[0] = mousePos[0];
                             origMousePos[1] = mousePos[1];
                             origCameraPos[0] = cameraPos[0];
@@ -326,24 +309,12 @@ public class RecastDemo {
         });
 
         settingsUI = new SettingsUI();
-        toolsUI = new ToolsUI(new TestNavmeshTool(), new OffMeshConnectionTool(), new ConvexVolumeTool(), new CrowdTool());
+        toolsUI = new ToolsUI(new TestNavmeshTool(), new OffMeshConnectionTool(), new ConvexVolumeTool(),
+                new CrowdTool());
 
         nuklearUI = new NuklearUI(window, mouse, settingsUI, toolsUI);
 
         DemoInputGeomProvider geom = loadInputMesh(getClass().getClassLoader().getResourceAsStream("nav_test.obj"));
-
-        float camr = 1000;
-
-        // Fog.
-        float fogColor[] = { 0.32f, 0.31f, 0.30f, 1.0f };
-
-        glEnable(GL_FOG);
-        glFogi(GL_FOG_MODE, GL_LINEAR);
-        glFogf(GL_FOG_START, camr * 0.1f);
-        glFogf(GL_FOG_END, camr * 1.25f);
-        glFogfv(GL_FOG_COLOR, fogColor);
-
-        glDepthFunc(GL_LEQUAL);
 
         float timeAcc = 0;
         while (!glfwWindowShouldClose(window)) {
@@ -387,37 +358,14 @@ public class RecastDemo {
             }
 
             // Set the viewport.
-            glViewport(0, 0, width, height);
-            int[] viewport = new int[4];
-            glGetIntegerv(GL_VIEWPORT, viewport);
+            //glViewport(0, 0, width, height);
+            int[] viewport = new int[] {0, 0, width, height};
+        //    glGetIntegerv(GL_VIEWPORT, viewport);
 
             // Clear the screen
-            glClearColor(0.3f, 0.3f, 0.32f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glDisable(GL_TEXTURE_2D);
-            glEnable(GL_DEPTH_TEST);
-            glEnable(GL_CULL_FACE);
-
-            // Compute the projection matrix.
-            glMatrixMode(GL_PROJECTION);
-            glLoadIdentity();
-            GLU.gluPerspective(50.0f, (float) width / (float) height, 1.0f, camr);
-            float[] projectionMatrix = new float[16];
-            glGetFloatv(GL_PROJECTION_MATRIX, projectionMatrix);
-
-            // Compute the modelview matrix.
-            glMatrixMode(GL_MODELVIEW);
-            glLoadIdentity();
-            glRotatef(cameraEulers[0], 1, 0, 0);
-            glRotatef(cameraEulers[1], 0, 1, 0);
-            glTranslatef(-cameraPos[0], -cameraPos[1], -cameraPos[2]);
-            float[] modelviewMatrix = new float[16];
-            glGetFloatv(GL_MODELVIEW_MATRIX, modelviewMatrix);
-
-            int width = viewport[2];
-            int height = viewport[3];
+            dd.clear();
+            float[] projectionMatrix = dd.projectionMatrix(50f, (float) width / (float) height, 1.0f, camr);
+            float[] modelviewMatrix = dd.viewMatrix(cameraPos, cameraEulers);
 
             mouseOverMenu = nuklearUI.layout(window, 0, 0, width, height, (int) mousePos[0], (int) mousePos[1]);
 
@@ -559,15 +507,13 @@ public class RecastDemo {
 
                 showSample = false;
             }
-            glFogf(GL_FOG_START, camr * 0.1f);
-            glFogf(GL_FOG_END, camr * 1.25f);
-
+            dd.fog(camr * 0.1f, camr * 1.25f);
             renderer.render(sample);
             Tool tool = toolsUI.getTool();
             if (tool != null) {
                 tool.handleRender(renderer);
             }
-            glDisable(GL_FOG);
+            dd.fog(false);
 
             // Render GUI
             nuklearUI.render(window);
