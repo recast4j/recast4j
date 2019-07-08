@@ -27,6 +27,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_GREEN_BITS;
 import static org.lwjgl.glfw.GLFW.GLFW_MOD_CONTROL;
 import static org.lwjgl.glfw.GLFW.GLFW_MOD_SHIFT;
 import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_CORE_PROFILE;
+import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_FORWARD_COMPAT;
 import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_PROFILE;
 import static org.lwjgl.glfw.GLFW.GLFW_RED_BITS;
 import static org.lwjgl.glfw.GLFW.GLFW_RESIZABLE;
@@ -169,7 +170,7 @@ public class RecastDemo {
 
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-        //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
@@ -357,9 +358,9 @@ public class RecastDemo {
             }
 
             // Set the viewport.
-            glViewport(0, 0, width, height);
-            int[] viewport = new int[4];
-            glGetIntegerv(GL_VIEWPORT, viewport);
+            //glViewport(0, 0, width, height);
+            int[] viewport = new int[] {0, 0, width, height};
+        //    glGetIntegerv(GL_VIEWPORT, viewport);
 
             // Clear the screen
             dd.clear();
