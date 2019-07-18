@@ -54,10 +54,7 @@ import static org.lwjgl.opengl.GL11.GL_RENDERER;
 import static org.lwjgl.opengl.GL11.GL_TRUE;
 import static org.lwjgl.opengl.GL11.GL_VENDOR;
 import static org.lwjgl.opengl.GL11.GL_VERSION;
-import static org.lwjgl.opengl.GL11.GL_VIEWPORT;
-import static org.lwjgl.opengl.GL11.glGetIntegerv;
 import static org.lwjgl.opengl.GL11.glGetString;
-import static org.lwjgl.opengl.GL11.glViewport;
 import static org.lwjgl.opengl.GL20.GL_SHADING_LANGUAGE_VERSION;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
@@ -88,6 +85,7 @@ import org.recast4j.demo.io.ObjImporter;
 import org.recast4j.demo.math.DemoMath;
 import org.recast4j.demo.sample.Sample;
 import org.recast4j.demo.settings.SettingsUI;
+import org.recast4j.demo.tool.AnnotationBuilderTool;
 import org.recast4j.demo.tool.ConvexVolumeTool;
 import org.recast4j.demo.tool.CrowdTool;
 import org.recast4j.demo.tool.OffMeshConnectionTool;
@@ -310,7 +308,7 @@ public class RecastDemo {
 
         settingsUI = new SettingsUI();
         toolsUI = new ToolsUI(new TestNavmeshTool(), new OffMeshConnectionTool(), new ConvexVolumeTool(),
-                new CrowdTool());
+                new CrowdTool(), new AnnotationBuilderTool());
 
         nuklearUI = new NuklearUI(window, mouse, settingsUI, toolsUI);
 
@@ -358,9 +356,9 @@ public class RecastDemo {
             }
 
             // Set the viewport.
-            //glViewport(0, 0, width, height);
-            int[] viewport = new int[] {0, 0, width, height};
-        //    glGetIntegerv(GL_VIEWPORT, viewport);
+            // glViewport(0, 0, width, height);
+            int[] viewport = new int[] { 0, 0, width, height };
+            // glGetIntegerv(GL_VIEWPORT, viewport);
 
             // Clear the screen
             dd.clear();

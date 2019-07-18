@@ -43,8 +43,8 @@ public class CrowdTool implements Tool {
         CREATE, MOVE_TARGET, SELECT, TOGGLE_POLYS
     }
 
-    private final CrowdToolParams m_toolParams = new CrowdToolParams();
-    private Sample m_sample;
+    private final CrowdToolParams toolParams = new CrowdToolParams();
+    private Sample sample;
     private NavMesh m_nav;
     private Crowd crowd;
     private final CrowdAgentDebugInfo m_agentDebug = new CrowdAgentDebugInfo();
@@ -72,18 +72,18 @@ public class CrowdTool implements Tool {
     }
 
     @Override
-    public void setSample(Sample sample) {
+    public void setSample(Sample psample) {
         // TODO Auto-generated method stub
-        if (m_sample != sample) {
-            m_sample = sample;
+        if (sample != psample) {
+            sample = psample;
         }
 
-        NavMesh nav = m_sample.getNavMesh();
+        NavMesh nav = sample.getNavMesh();
 
         if (nav != null && m_nav != nav) {
             m_nav = nav;
 
-            crowd = new Crowd(MAX_AGENTS, m_sample.getSettingsUI().getAgentRadius(), nav,
+            crowd = new Crowd(MAX_AGENTS, sample.getSettingsUI().getAgentRadius(), nav,
                     __ -> new DefaultQueryFilter(SampleAreaModifications.SAMPLE_POLYFLAGS_ALL,
                             SampleAreaModifications.SAMPLE_POLYFLAGS_DISABLED,
                             new float[] { 1f, 10f, 1f, 1f, 2f, 1.5f }));
@@ -125,9 +125,9 @@ public class CrowdTool implements Tool {
 
     @Override
     public void handleClick(float[] s, float[] p, boolean shift) {
-        if (m_sample == null || crowd == null)
+        if (sample == null || crowd == null)
             return;
-        DemoInputGeomProvider geom = m_sample.getInputGeom();
+        DemoInputGeomProvider geom = sample.getInputGeom();
         if (geom == null)
             return;
 
@@ -149,8 +149,8 @@ public class CrowdTool implements Tool {
             int ahit = hitTestAgents(s, p);
             hilightAgent(ahit);
         } else if (m_mode == ToolMode.TOGGLE_POLYS) {
-            NavMesh nav = m_sample.getNavMesh();
-            NavMeshQuery navquery = m_sample.getNavMeshQuery();
+            NavMesh nav = sample.getNavMesh();
+            NavMeshQuery navquery = sample.getNavMeshQuery();
             if (nav != null && navquery != null) {
                 QueryFilter filter = new DefaultQueryFilter();
                 float[] halfExtents = crowd.getQueryExtents();
@@ -176,15 +176,15 @@ public class CrowdTool implements Tool {
     private void addAgent(float[] p) {
 
         CrowdAgentParams ap = new CrowdAgentParams();
-        ap.radius = m_sample.getSettingsUI().getAgentRadius();
-        ap.height = m_sample.getSettingsUI().getAgentHeight();
+        ap.radius = sample.getSettingsUI().getAgentRadius();
+        ap.height = sample.getSettingsUI().getAgentHeight();
         ap.maxAcceleration = 8.0f;
         ap.maxSpeed = 3.5f;
         ap.collisionQueryRange = ap.radius * 12.0f;
         ap.pathOptimizationRange = ap.radius * 30.0f;
         ap.updateFlags = getUpdateFlags();
-        ap.obstacleAvoidanceType = m_toolParams.m_obstacleAvoidanceType.get(0);
-        ap.separationWeight = m_toolParams.m_separationWeight.get(0);
+        ap.obstacleAvoidanceType = toolParams.m_obstacleAvoidanceType.get(0);
+        ap.separationWeight = toolParams.m_separationWeight.get(0);
 
         int idx = crowd.addAgent(p, ap);
         if (idx != -1) {
@@ -204,7 +204,7 @@ public class CrowdTool implements Tool {
     }
 
     private int hitTestAgents(float[] s, float[] p) {
-        if (m_sample == null)
+        if (sample == null)
             return -1;
 
         int isel = -1;
@@ -283,11 +283,11 @@ public class CrowdTool implements Tool {
     }
 
     void setMoveTarget(float[] p, boolean adjust) {
-        if (m_sample == null || crowd == null)
+        if (sample == null || crowd == null)
             return;
 
         // Find nearest point on navmesh and set move request to that location.
-        NavMeshQuery navquery = m_sample.getNavMeshQuery();
+        NavMeshQuery navquery = sample.getNavMeshQuery();
         QueryFilter filter = crowd.getFilter(0);
         float[] halfExtents = crowd.getQueryExtents();
 
@@ -339,12 +339,12 @@ public class CrowdTool implements Tool {
     @Override
     public void handleRender(NavMeshRenderer renderer) {
         RecastDebugDraw dd = renderer.getDebugDraw();
-        float rad = m_sample.getSettingsUI().getAgentRadius();
-        NavMesh nav = m_sample.getNavMesh();
+        float rad = sample.getSettingsUI().getAgentRadius();
+        NavMesh nav = sample.getNavMesh();
         if (nav == null || crowd == null)
             return;
 
-        if (m_toolParams.m_showNodes && crowd.getPathQueue() != null) {
+        if (toolParams.m_showNodes && crowd.getPathQueue() != null) {
             NavMeshQuery navquery = crowd.getPathQueue().getNavQuery();
             if (navquery != null) {
                 dd.debugDrawNavMeshNodes(navquery);
@@ -353,9 +353,9 @@ public class CrowdTool implements Tool {
         dd.depthMask(false);
 
         // Draw paths
-        if (m_toolParams.m_showPath) {
+        if (toolParams.m_showPath) {
             for (int i = 0; i < crowd.getAgentCount(); i++) {
-                if (!m_toolParams.m_showDetailAll && i != m_agentDebug.idx)
+                if (!toolParams.m_showDetailAll && i != m_agentDebug.idx)
                     continue;
                 CrowdAgent ag = crowd.getAgent(i);
                 if (!ag.active)
@@ -373,7 +373,7 @@ public class CrowdTool implements Tool {
                     DebugDraw.duRGBA(255, 255, 255, 192), 2.0f);
 
         // Occupancy grid.
-        if (m_toolParams.m_showGrid) {
+        if (toolParams.m_showGrid) {
             float gridy = -Float.MAX_VALUE;
             for (int i = 0; i < crowd.getAgentCount(); ++i) {
                 CrowdAgent ag = crowd.getAgent(i);
@@ -432,7 +432,7 @@ public class CrowdTool implements Tool {
 
         // Corners & co
         for (int i = 0; i < crowd.getAgentCount(); i++) {
-            if (m_toolParams.m_showDetailAll == false && i != m_agentDebug.idx)
+            if (toolParams.m_showDetailAll == false && i != m_agentDebug.idx)
                 continue;
             CrowdAgent ag = crowd.getAgent(i);
             if (!ag.active)
@@ -441,7 +441,7 @@ public class CrowdTool implements Tool {
             float radius = ag.params.radius;
             float[] pos = ag.npos;
 
-            if (m_toolParams.m_showCorners) {
+            if (toolParams.m_showCorners) {
                 if (!ag.corners.isEmpty()) {
                     dd.begin(DebugDrawPrimitives.LINES, 2.0f);
                     for (int j = 0; j < ag.corners.size(); ++j) {
@@ -459,7 +459,7 @@ public class CrowdTool implements Tool {
 
                     dd.end();
 
-                    if (m_toolParams.m_anticipateTurns) {
+                    if (toolParams.m_anticipateTurns) {
                         /*                  float dvel[3], pos[3];
                          calcSmoothSteerDirection(ag.pos, ag.cornerVerts, ag.ncorners, dvel);
                          pos[0] = ag.pos[0] + dvel[0];
@@ -483,7 +483,7 @@ public class CrowdTool implements Tool {
                 }
             }
 
-            if (m_toolParams.m_showCollisionSegments) {
+            if (toolParams.m_showCollisionSegments) {
                 float[] center = ag.boundary.getCenter();
                 dd.debugDrawCross(center[0], center[1] + radius, center[2], 0.2f, DebugDraw.duRGBA(192, 0, 128, 255),
                         2.0f);
@@ -504,7 +504,7 @@ public class CrowdTool implements Tool {
                 dd.end();
             }
 
-            if (m_toolParams.m_showNeis) {
+            if (toolParams.m_showNeis) {
                 dd.debugDrawCircle(pos[0], pos[1] + radius, pos[2], ag.params.collisionQueryRange,
                         DebugDraw.duRGBA(0, 192, 128, 128), 2.0f);
 
@@ -521,7 +521,7 @@ public class CrowdTool implements Tool {
                 dd.end();
             }
 
-            if (m_toolParams.m_showOpt) {
+            if (toolParams.m_showOpt) {
                 dd.begin(DebugDrawPrimitives.LINES, 2.0f);
                 dd.vertex(m_agentDebug.optStart[0], m_agentDebug.optStart[1] + 0.3f, m_agentDebug.optStart[2],
                         DebugDraw.duRGBA(0, 128, 0, 192));
@@ -571,9 +571,9 @@ public class CrowdTool implements Tool {
                     pos[1] + height, pos[2] + radius, col);
         }
 
-        if (m_toolParams.m_showVO) {
+        if (toolParams.m_showVO) {
             for (int i = 0; i < crowd.getAgentCount(); i++) {
-                if (m_toolParams.m_showDetailAll == false && i != m_agentDebug.idx)
+                if (toolParams.m_showDetailAll == false && i != m_agentDebug.idx)
                     continue;
                 CrowdAgent ag = crowd.getAgent(i);
                 if (!ag.active)
@@ -652,7 +652,7 @@ public class CrowdTool implements Tool {
     private void updateTick(float dt) {
         if (crowd == null)
             return;
-        NavMesh nav = m_sample.getNavMesh();
+        NavMesh nav = sample.getNavMesh();
         if (nav == null)
             return;
 
@@ -706,60 +706,60 @@ public class CrowdTool implements Tool {
             m_mode = ToolMode.TOGGLE_POLYS;
         }
         nk_layout_row_dynamic(ctx, 20, 1);
-        if (nk_tree_state_push(ctx, 0, "Options", m_toolParams.m_expandOptions)) {
-            boolean m_optimizeVis = m_toolParams.m_optimizeVis;
-            boolean m_optimizeTopo = m_toolParams.m_optimizeTopo;
-            boolean m_anticipateTurns = m_toolParams.m_anticipateTurns;
-            boolean m_obstacleAvoidance = m_toolParams.m_obstacleAvoidance;
-            boolean m_separation = m_toolParams.m_separation;
-            int m_obstacleAvoidanceType = m_toolParams.m_obstacleAvoidanceType.get(0);
-            float m_separationWeight = m_toolParams.m_separationWeight.get(0);
+        if (nk_tree_state_push(ctx, 0, "Options", toolParams.m_expandOptions)) {
+            boolean m_optimizeVis = toolParams.m_optimizeVis;
+            boolean m_optimizeTopo = toolParams.m_optimizeTopo;
+            boolean m_anticipateTurns = toolParams.m_anticipateTurns;
+            boolean m_obstacleAvoidance = toolParams.m_obstacleAvoidance;
+            boolean m_separation = toolParams.m_separation;
+            int m_obstacleAvoidanceType = toolParams.m_obstacleAvoidanceType.get(0);
+            float m_separationWeight = toolParams.m_separationWeight.get(0);
             nk_layout_row_dynamic(ctx, 20, 1);
-            m_toolParams.m_optimizeVis = nk_option_text(ctx, "Optimize Visibility", m_toolParams.m_optimizeVis);
+            toolParams.m_optimizeVis = nk_option_text(ctx, "Optimize Visibility", toolParams.m_optimizeVis);
             nk_layout_row_dynamic(ctx, 20, 1);
-            m_toolParams.m_optimizeTopo = nk_option_text(ctx, "Optimize Topology", m_toolParams.m_optimizeTopo);
+            toolParams.m_optimizeTopo = nk_option_text(ctx, "Optimize Topology", toolParams.m_optimizeTopo);
             nk_layout_row_dynamic(ctx, 20, 1);
-            m_toolParams.m_anticipateTurns = nk_option_text(ctx, "Anticipate Turns", m_toolParams.m_anticipateTurns);
+            toolParams.m_anticipateTurns = nk_option_text(ctx, "Anticipate Turns", toolParams.m_anticipateTurns);
             nk_layout_row_dynamic(ctx, 20, 1);
-            m_toolParams.m_obstacleAvoidance = nk_option_text(ctx, "Obstacle Avoidance",
-                    m_toolParams.m_obstacleAvoidance);
+            toolParams.m_obstacleAvoidance = nk_option_text(ctx, "Obstacle Avoidance",
+                    toolParams.m_obstacleAvoidance);
             nk_layout_row_dynamic(ctx, 20, 1);
-            nk_property_int(ctx, "Avoidance Quality", 0, m_toolParams.m_obstacleAvoidanceType, 3, 1, 0.1f);
+            nk_property_int(ctx, "Avoidance Quality", 0, toolParams.m_obstacleAvoidanceType, 3, 1, 0.1f);
             nk_layout_row_dynamic(ctx, 20, 1);
-            m_toolParams.m_separation = nk_option_text(ctx, "Separation", m_toolParams.m_separation);
+            toolParams.m_separation = nk_option_text(ctx, "Separation", toolParams.m_separation);
             nk_layout_row_dynamic(ctx, 20, 1);
-            nk_property_float(ctx, "Separation Weight", 0f, m_toolParams.m_separationWeight, 20f, 0.01f, 0.01f);
-            if (m_optimizeVis != m_toolParams.m_optimizeVis || m_optimizeTopo != m_toolParams.m_optimizeTopo
-                    || m_anticipateTurns != m_toolParams.m_anticipateTurns
-                    || m_obstacleAvoidance != m_toolParams.m_obstacleAvoidance
-                    || m_separation != m_toolParams.m_separation
-                    || m_obstacleAvoidanceType != m_toolParams.m_obstacleAvoidanceType.get(0)
-                    || m_separationWeight != m_toolParams.m_separationWeight.get(0)) {
+            nk_property_float(ctx, "Separation Weight", 0f, toolParams.m_separationWeight, 20f, 0.01f, 0.01f);
+            if (m_optimizeVis != toolParams.m_optimizeVis || m_optimizeTopo != toolParams.m_optimizeTopo
+                    || m_anticipateTurns != toolParams.m_anticipateTurns
+                    || m_obstacleAvoidance != toolParams.m_obstacleAvoidance
+                    || m_separation != toolParams.m_separation
+                    || m_obstacleAvoidanceType != toolParams.m_obstacleAvoidanceType.get(0)
+                    || m_separationWeight != toolParams.m_separationWeight.get(0)) {
                 updateAgentParams();
             }
             nk_tree_state_pop(ctx);
         }
         nk_layout_row_dynamic(ctx, 5, 1);
         nk_spacing(ctx, 1);
-        if (nk_tree_state_push(ctx, 0, "Selected Debug Draw", m_toolParams.m_expandSelectedDebugDraw)) {
+        if (nk_tree_state_push(ctx, 0, "Selected Debug Draw", toolParams.m_expandSelectedDebugDraw)) {
             nk_layout_row_dynamic(ctx, 20, 1);
-            m_toolParams.m_showCorners = nk_option_text(ctx, "Show Corners", m_toolParams.m_showCorners);
+            toolParams.m_showCorners = nk_option_text(ctx, "Show Corners", toolParams.m_showCorners);
             nk_layout_row_dynamic(ctx, 20, 1);
-            m_toolParams.m_showCollisionSegments = nk_option_text(ctx, "Show Collision Segs",
-                    m_toolParams.m_showCollisionSegments);
+            toolParams.m_showCollisionSegments = nk_option_text(ctx, "Show Collision Segs",
+                    toolParams.m_showCollisionSegments);
             nk_layout_row_dynamic(ctx, 20, 1);
-            m_toolParams.m_showPath = nk_option_text(ctx, "Show Path", m_toolParams.m_showPath);
+            toolParams.m_showPath = nk_option_text(ctx, "Show Path", toolParams.m_showPath);
             nk_layout_row_dynamic(ctx, 20, 1);
-            m_toolParams.m_showVO = nk_option_text(ctx, "Show VO", m_toolParams.m_showVO);
+            toolParams.m_showVO = nk_option_text(ctx, "Show VO", toolParams.m_showVO);
             nk_layout_row_dynamic(ctx, 20, 1);
-            m_toolParams.m_showOpt = nk_option_text(ctx, "Show Path Optimization", m_toolParams.m_showOpt);
+            toolParams.m_showOpt = nk_option_text(ctx, "Show Path Optimization", toolParams.m_showOpt);
             nk_layout_row_dynamic(ctx, 20, 1);
-            m_toolParams.m_showNeis = nk_option_text(ctx, "Show Neighbours", m_toolParams.m_showNeis);
+            toolParams.m_showNeis = nk_option_text(ctx, "Show Neighbours", toolParams.m_showNeis);
             nk_tree_state_pop(ctx);
         }
         nk_layout_row_dynamic(ctx, 5, 1);
         nk_spacing(ctx, 1);
-        if (nk_tree_state_push(ctx, 0, "Debug Draw", m_toolParams.m_expandDebugDraw)) {
+        if (nk_tree_state_push(ctx, 0, "Debug Draw", toolParams.m_expandDebugDraw)) {
             nk_tree_state_pop(ctx);
         }
         nk_layout_row_dynamic(ctx, 5, 1);
@@ -787,27 +787,27 @@ public class CrowdTool implements Tool {
             params.queryFilterType = ag.params.queryFilterType;
             params.userData = ag.params.userData;
             params.updateFlags = updateFlags;
-            params.obstacleAvoidanceType = m_toolParams.m_obstacleAvoidanceType.get(0);
-            params.separationWeight = m_toolParams.m_separationWeight.get(0);
+            params.obstacleAvoidanceType = toolParams.m_obstacleAvoidanceType.get(0);
+            params.separationWeight = toolParams.m_separationWeight.get(0);
             crowd.updateAgentParameters(i, params);
         }
     }
 
     private int getUpdateFlags() {
         int updateFlags = 0;
-        if (m_toolParams.m_anticipateTurns) {
+        if (toolParams.m_anticipateTurns) {
             updateFlags |= CrowdAgentParams.DT_CROWD_ANTICIPATE_TURNS;
         }
-        if (m_toolParams.m_optimizeVis) {
+        if (toolParams.m_optimizeVis) {
             updateFlags |= CrowdAgentParams.DT_CROWD_OPTIMIZE_VIS;
         }
-        if (m_toolParams.m_optimizeTopo) {
+        if (toolParams.m_optimizeTopo) {
             updateFlags |= CrowdAgentParams.DT_CROWD_OPTIMIZE_TOPO;
         }
-        if (m_toolParams.m_obstacleAvoidance) {
+        if (toolParams.m_obstacleAvoidance) {
             updateFlags |= CrowdAgentParams.DT_CROWD_OBSTACLE_AVOIDANCE;
         }
-        if (m_toolParams.m_separation) {
+        if (toolParams.m_separation) {
             updateFlags |= CrowdAgentParams.DT_CROWD_SEPARATION;
         }
         return updateFlags;
