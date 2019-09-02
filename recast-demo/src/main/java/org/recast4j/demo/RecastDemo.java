@@ -85,7 +85,7 @@ import org.recast4j.demo.io.ObjImporter;
 import org.recast4j.demo.math.DemoMath;
 import org.recast4j.demo.sample.Sample;
 import org.recast4j.demo.settings.SettingsUI;
-import org.recast4j.demo.tool.AnnotationBuilderTool;
+import org.recast4j.demo.tool.JumpLinkBuilderTool;
 import org.recast4j.demo.tool.ConvexVolumeTool;
 import org.recast4j.demo.tool.CrowdTool;
 import org.recast4j.demo.tool.OffMeshConnectionTool;
@@ -234,6 +234,12 @@ public class RecastDemo {
                         scrollZoom -= 1.0f;
                     }
                 }
+                float[] modelviewMatrix = dd.viewMatrix(cameraPos, cameraEulers);
+                cameraPos[0] += scrollZoom * 2.0f * modelviewMatrix[2];
+                cameraPos[1] += scrollZoom * 2.0f * modelviewMatrix[6];
+                cameraPos[2] += scrollZoom * 2.0f * modelviewMatrix[10];
+                scrollZoom = 0;
+
             }
 
             @Override
@@ -250,7 +256,18 @@ public class RecastDemo {
                     }
                 }
                 if (pan) {
-                    cameraPos[0] = origCameraPos[0] + dx * 0.25f;
+                    float[] modelviewMatrix = dd.viewMatrix(cameraPos, cameraEulers);
+                    cameraPos[0] = origCameraPos[0];
+                    cameraPos[1] = origCameraPos[1];
+                    cameraPos[2] = origCameraPos[2];
+
+                    cameraPos[0] -= 0.1f * dx * modelviewMatrix[0];
+                    cameraPos[1] -= 0.1f * dx * modelviewMatrix[4];
+                    cameraPos[2] -= 0.1f * dx * modelviewMatrix[8];
+
+                    cameraPos[0] += 0.1f * dy * modelviewMatrix[1];
+                    cameraPos[1] += 0.1f * dy * modelviewMatrix[5];
+                    cameraPos[2] += 0.1f * dy * modelviewMatrix[9];
                     if (dx * dx + dy * dy > 3 * 3) {
                         movedDuringPan = true;
                     }
@@ -276,7 +293,6 @@ public class RecastDemo {
                             // Pan view
                             pan = true;
                             movedDuringPan = false;
-                            System.out.println("PAN!!");
                             origMousePos[0] = mousePos[0];
                             origMousePos[1] = mousePos[1];
                             origCameraPos[0] = cameraPos[0];
@@ -308,7 +324,7 @@ public class RecastDemo {
 
         settingsUI = new SettingsUI();
         toolsUI = new ToolsUI(new TestNavmeshTool(), new OffMeshConnectionTool(), new ConvexVolumeTool(),
-                new CrowdTool(), new AnnotationBuilderTool());
+                new CrowdTool(), new JumpLinkBuilderTool());
 
         nuklearUI = new NuklearUI(window, mouse, settingsUI, toolsUI);
 
@@ -366,32 +382,6 @@ public class RecastDemo {
             float[] modelviewMatrix = dd.viewMatrix(cameraPos, cameraEulers);
 
             mouseOverMenu = nuklearUI.layout(window, 0, 0, width, height, (int) mousePos[0], (int) mousePos[1]);
-
-            int dx = 0;
-            int dy = 0;
-            if (pan) {
-                dx = (int) (mousePos[0] - origMousePos[0]);
-                dy = (int) (mousePos[1] - origMousePos[1]);
-                if (dx * dx + dy * dy > 3 * 3) {
-                    movedDuringPan = true;
-                }
-                cameraPos[0] = origCameraPos[0];
-                cameraPos[1] = origCameraPos[1];
-                cameraPos[2] = origCameraPos[2];
-
-                cameraPos[0] -= 0.1f * dx * modelviewMatrix[0];
-                cameraPos[1] -= 0.1f * dx * modelviewMatrix[4];
-                cameraPos[2] -= 0.1f * dx * modelviewMatrix[8];
-
-                cameraPos[0] += 0.1f * dy * modelviewMatrix[1];
-                cameraPos[1] += 0.1f * dy * modelviewMatrix[5];
-                cameraPos[2] += 0.1f * dy * modelviewMatrix[9];
-            }
-
-            cameraPos[0] += scrollZoom * 2.0f * modelviewMatrix[2];
-            cameraPos[1] += scrollZoom * 2.0f * modelviewMatrix[6];
-            cameraPos[2] += scrollZoom * 2.0f * modelviewMatrix[10];
-            scrollZoom = 0;
 
             NavMesh navMesh;
             if (settingsUI.isMeshInputTrigerred()) {

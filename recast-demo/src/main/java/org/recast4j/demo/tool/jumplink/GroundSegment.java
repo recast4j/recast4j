@@ -1,4 +1,4 @@
-package org.recast4j.demo.tool.annotation;
+package org.recast4j.demo.tool.jumplink;
 
 public class GroundSegment {
     public final float p[] = new float[3];
