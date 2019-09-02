@@ -279,7 +279,7 @@ public class Crowd {
         m_maxAgentRadius = maxAgentRadius;
         vSet(m_ext, m_maxAgentRadius * 2.0f, m_maxAgentRadius * 1.5f, m_maxAgentRadius * 2.0f);
 
-        m_grid = new ProximityGrid(m_maxAgents * 4, maxAgentRadius * 3);
+        m_grid = new ProximityGrid(maxAgentRadius * 3);
         m_obstacleQuery = new ObstacleAvoidanceQuery(6, 8);
 
         for (int i = 0; i < DT_CROWD_MAX_QUERY_FILTER_TYPE; i++) {

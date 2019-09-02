@@ -68,9 +68,9 @@ public class ProximityGrid {
     private final Map<ItemKey, List<Integer>> items;
     int[] m_bounds = new int[4];
 
-    public ProximityGrid(float m_cellSize, float m_invCellSize) {
+    public ProximityGrid(float m_cellSize) {
         this.m_cellSize = m_cellSize;
-        this.m_invCellSize = m_invCellSize;
+        m_invCellSize = 1.0f / m_cellSize;
         items = new HashMap<>();
     }
 
