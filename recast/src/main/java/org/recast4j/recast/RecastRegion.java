@@ -1446,7 +1446,7 @@ public class RecastRegion {
 
         // If overlapping regions were found during merging, split those regions.
         if (overlaps.size() > 0) {
-            throw new RuntimeException("rcBuildRegions: " + overlaps.size() + " overlapping regions.");
+            ctx.warn("rcBuildRegions: " + overlaps.size() + " overlapping regions.");
         }
 
         ctx.stopTimer("BUILD_REGIONS_FILTER");
