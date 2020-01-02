@@ -3,7 +3,7 @@ package org.recast4j.demo.tool;
 import java.nio.FloatBuffer;
 
 import org.lwjgl.BufferUtils;
-import org.recast4j.demo.tool.jumplink.JumpLinkBuilder.EdgeSamplerType;
+import org.recast4j.detour.extras.jumplink.JumpLinkType;
 
 public class JumpLinkBuilderToolParams {
 
@@ -21,11 +21,10 @@ public class JumpLinkBuilderToolParams {
     final FloatBuffer climbDownDistance = BufferUtils.createFloatBuffer(1).put(0, 0.4f);
     final FloatBuffer climbDownMaxHeight = BufferUtils.createFloatBuffer(1).put(0, 3.2f);
     final FloatBuffer climbDownMinHeight = BufferUtils.createFloatBuffer(1).put(0, 1.5f);
-    final FloatBuffer edgeJumpStartDistance = BufferUtils.createFloatBuffer(1).put(0, 0f);
     final FloatBuffer edgeJumpEndDistance = BufferUtils.createFloatBuffer(1).put(0, 2f);
-    final FloatBuffer edgeJumpHeight = BufferUtils.createFloatBuffer(1).put(0, 0.5f);
+    final FloatBuffer edgeJumpHeight = BufferUtils.createFloatBuffer(1).put(0, 0.4f);
     final FloatBuffer edgeJumpDownMaxHeight = BufferUtils.createFloatBuffer(1).put(0, 2.5f);
-    final FloatBuffer edgeJumpDownMinHeight = BufferUtils.createFloatBuffer(1).put(0, 1f);
-    int buildTypes = (1 << EdgeSamplerType.EDGE_CLIMB_DOWN.ordinal()) | (1 << EdgeSamplerType.EDGE_JUMP.ordinal());
+    final FloatBuffer edgeJumpUpMaxHeight = BufferUtils.createFloatBuffer(1).put(0, 0.3f);
+    int buildTypes = (1 << JumpLinkType.EDGE_CLIMB_DOWN.ordinal()) | (1 << JumpLinkType.EDGE_JUMP.ordinal());
 
 }

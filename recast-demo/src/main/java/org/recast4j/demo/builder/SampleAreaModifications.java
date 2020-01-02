@@ -28,6 +28,7 @@ public class SampleAreaModifications {
     public static final int SAMPLE_POLYAREA_TYPE_DOOR = 0x3;
     public static final int SAMPLE_POLYAREA_TYPE_GRASS = 0x4;
     public static final int SAMPLE_POLYAREA_TYPE_JUMP = 0x5;
+    public static final int SAMPLE_POLYAREA_TYPE_JUMP_AUTO = 0x6;
     public static final int SAMPLE_POLYAREA_TYPE_WALKABLE = 0x3f;
 
     public static AreaModification SAMPLE_AREAMOD_WALKABLE = new AreaModification(SAMPLE_POLYAREA_TYPE_WALKABLE);

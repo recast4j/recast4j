@@ -9,6 +9,11 @@
     <dependencies>
         <dependency>
             <groupId>org.recast4j</groupId>
+            <artifactId>recast</artifactId>
+            <version>1.2.6-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.recast4j</groupId>
             <artifactId>detour</artifactId>
             <version>1.2.6-SNAPSHOT</version>
         </dependency>

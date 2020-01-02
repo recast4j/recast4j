@@ -18,6 +18,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.demo.geom;
 
+import static java.util.stream.Collectors.toList;
 import static org.recast4j.demo.math.DemoMath.vCross;
 import static org.recast4j.demo.math.DemoMath.vDot;
 import static org.recast4j.detour.DetourCommon.vSub;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.recast4j.demo.geom.ChunkyTriMesh.ChunkyTriMeshNode;
 import org.recast4j.recast.AreaModification;
@@ -131,6 +133,10 @@ public class DemoInputGeomProvider implements InputGeomProvider {
 
     public void addOffMeshConnection(float[] start, float[] end, float radius, boolean bidir, int area, int flags) {
         offMeshConnections.add(new DemoOffMeshConnection(start, end, radius, bidir, area, flags));
+    }
+
+    public void removeOffMeshConnections(Predicate<DemoOffMeshConnection> filter) {
+        offMeshConnections.retainAll(offMeshConnections.stream().filter(c -> !filter.test(c)).collect(toList()));
     }
 
     public Optional<Float> raycastMesh(float[] src, float[] dst) {

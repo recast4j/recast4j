@@ -24,6 +24,9 @@ import static org.lwjgl.nuklear.Nuklear.nk_label;
 import static org.lwjgl.nuklear.Nuklear.nk_layout_row_dynamic;
 import static org.lwjgl.nuklear.Nuklear.nk_option_label;
 import static org.lwjgl.nuklear.Nuklear.nk_property_float;
+import static org.recast4j.demo.draw.DebugDraw.duRGBA;
+import static org.recast4j.demo.draw.DebugDrawPrimitives.LINES;
+import static org.recast4j.demo.draw.DebugDrawPrimitives.POINTS;
 
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
@@ -33,8 +36,6 @@ import java.util.List;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.nuklear.NkContext;
 import org.recast4j.demo.builder.SampleAreaModifications;
-import org.recast4j.demo.draw.DebugDraw;
-import org.recast4j.demo.draw.DebugDrawPrimitives;
 import org.recast4j.demo.draw.NavMeshRenderer;
 import org.recast4j.demo.draw.RecastDebugDraw;
 import org.recast4j.demo.geom.DemoInputGeomProvider;
@@ -289,26 +290,26 @@ public class ConvexVolumeTool implements Tool {
         minh -= boxDescent.get(0);
         maxh = minh + boxHeight.get(0);
 
-        dd.begin(DebugDrawPrimitives.POINTS, 4.0f);
+        dd.begin(POINTS, 4.0f);
         for (int i = 0; i < pts.size(); i += 3) {
-            int col = DebugDraw.duRGBA(255, 255, 255, 255);
+            int col = duRGBA(255, 255, 255, 255);
             if (i == pts.size() - 3) {
-                col = DebugDraw.duRGBA(240, 32, 16, 255);
+                col = duRGBA(240, 32, 16, 255);
             }
             dd.vertex(pts.get(i + 0), pts.get(i + 1) + 0.1f, pts.get(i + 2), col);
         }
         dd.end();
 
-        dd.begin(DebugDrawPrimitives.LINES, 2.0f);
+        dd.begin(LINES, 2.0f);
         for (int i = 0, j = hull.size() - 1; i < hull.size(); j = i++) {
             int vi = hull.get(j) * 3;
             int vj = hull.get(i) * 3;
-            dd.vertex(pts.get(vj + 0), minh, pts.get(vj + 2), DebugDraw.duRGBA(255, 255, 255, 64));
-            dd.vertex(pts.get(vi + 0), minh, pts.get(vi + 2), DebugDraw.duRGBA(255, 255, 255, 64));
-            dd.vertex(pts.get(vj + 0), maxh, pts.get(vj + 2), DebugDraw.duRGBA(255, 255, 255, 64));
-            dd.vertex(pts.get(vi + 0), maxh, pts.get(vi + 2), DebugDraw.duRGBA(255, 255, 255, 64));
-            dd.vertex(pts.get(vj + 0), minh, pts.get(vj + 2), DebugDraw.duRGBA(255, 255, 255, 64));
-            dd.vertex(pts.get(vj + 0), maxh, pts.get(vj + 2), DebugDraw.duRGBA(255, 255, 255, 64));
+            dd.vertex(pts.get(vj + 0), minh, pts.get(vj + 2), duRGBA(255, 255, 255, 64));
+            dd.vertex(pts.get(vi + 0), minh, pts.get(vi + 2), duRGBA(255, 255, 255, 64));
+            dd.vertex(pts.get(vj + 0), maxh, pts.get(vj + 2), duRGBA(255, 255, 255, 64));
+            dd.vertex(pts.get(vi + 0), maxh, pts.get(vi + 2), duRGBA(255, 255, 255, 64));
+            dd.vertex(pts.get(vj + 0), minh, pts.get(vj + 2), duRGBA(255, 255, 255, 64));
+            dd.vertex(pts.get(vj + 0), maxh, pts.get(vj + 2), duRGBA(255, 255, 255, 64));
         }
         dd.end();
     }

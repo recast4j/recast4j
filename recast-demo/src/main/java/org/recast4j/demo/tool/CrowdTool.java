@@ -8,14 +8,17 @@ import static org.lwjgl.nuklear.Nuklear.nk_property_int;
 import static org.lwjgl.nuklear.Nuklear.nk_spacing;
 import static org.lwjgl.nuklear.Nuklear.nk_tree_state_pop;
 import static org.lwjgl.nuklear.Nuklear.nk_tree_state_push;
+import static org.recast4j.demo.draw.DebugDraw.duDarkenCol;
+import static org.recast4j.demo.draw.DebugDraw.duLerpCol;
+import static org.recast4j.demo.draw.DebugDraw.duRGBA;
+import static org.recast4j.demo.draw.DebugDrawPrimitives.LINES;
+import static org.recast4j.demo.draw.DebugDrawPrimitives.QUADS;
 
 import java.util.List;
 import java.util.Optional;
 
 import org.lwjgl.nuklear.NkContext;
 import org.recast4j.demo.builder.SampleAreaModifications;
-import org.recast4j.demo.draw.DebugDraw;
-import org.recast4j.demo.draw.DebugDrawPrimitives;
 import org.recast4j.demo.draw.NavMeshRenderer;
 import org.recast4j.demo.draw.RecastDebugDraw;
 import org.recast4j.demo.geom.DemoInputGeomProvider;
@@ -363,14 +366,14 @@ public class CrowdTool implements Tool {
                 List<Long> path = ag.corridor.getPath();
                 int npath = ag.corridor.getPathCount();
                 for (int j = 0; j < npath; ++j) {
-                    dd.debugDrawNavMeshPoly(nav, path.get(j), DebugDraw.duRGBA(255, 255, 255, 24));
+                    dd.debugDrawNavMeshPoly(nav, path.get(j), duRGBA(255, 255, 255, 24));
                 }
             }
         }
 
         if (m_targetRef != 0)
             dd.debugDrawCross(m_targetPos[0], m_targetPos[1] + 0.1f, m_targetPos[2], rad,
-                    DebugDraw.duRGBA(255, 255, 255, 192), 2.0f);
+                    duRGBA(255, 255, 255, 192), 2.0f);
 
         // Occupancy grid.
         if (toolParams.m_showGrid) {
@@ -384,7 +387,7 @@ public class CrowdTool implements Tool {
             }
             gridy += 1.0f;
 
-            dd.begin(DebugDrawPrimitives.QUADS);
+            dd.begin(QUADS);
             ProximityGrid grid = crowd.getGrid();
             int[] bounds = grid.getBounds();
             float cs = grid.getCellSize();
@@ -393,7 +396,7 @@ public class CrowdTool implements Tool {
                     int count = grid.getItemCountAt(x, y);
                     if (count == 0)
                         continue;
-                    int col = DebugDraw.duRGBA(128, 0, 0, Math.min(count * 40, 255));
+                    int col = duRGBA(128, 0, 0, Math.min(count * 40, 255));
                     dd.vertex(x * cs, gridy, y * cs, col);
                     dd.vertex(x * cs, gridy, y * cs + cs, col);
                     dd.vertex(x * cs + cs, gridy, y * cs + cs, col);
@@ -412,7 +415,7 @@ public class CrowdTool implements Tool {
             AgentTrail trail = m_trails[i];
             float[] pos = ag.npos;
 
-            dd.begin(DebugDrawPrimitives.LINES, 3.0f);
+            dd.begin(LINES, 3.0f);
             float[] prev = new float[3];
             float preva = 1;
             DetourCommon.vCopy(prev, pos);
@@ -420,9 +423,9 @@ public class CrowdTool implements Tool {
                 int idx = (trail.htrail + AGENT_MAX_TRAIL - j) % AGENT_MAX_TRAIL;
                 int v = idx * 3;
                 float a = 1 - j / (float) AGENT_MAX_TRAIL;
-                dd.vertex(prev[0], prev[1] + 0.1f, prev[2], DebugDraw.duRGBA(0, 0, 0, (int) (128 * preva)));
+                dd.vertex(prev[0], prev[1] + 0.1f, prev[2], duRGBA(0, 0, 0, (int) (128 * preva)));
                 dd.vertex(trail.trail[v], trail.trail[v + 1] + 0.1f, trail.trail[v + 2],
-                        DebugDraw.duRGBA(0, 0, 0, (int) (128 * a)));
+                        duRGBA(0, 0, 0, (int) (128 * a)));
                 preva = a;
                 DetourCommon.vCopy(prev, trail.trail, v);
             }
@@ -443,18 +446,18 @@ public class CrowdTool implements Tool {
 
             if (toolParams.m_showCorners) {
                 if (!ag.corners.isEmpty()) {
-                    dd.begin(DebugDrawPrimitives.LINES, 2.0f);
+                    dd.begin(LINES, 2.0f);
                     for (int j = 0; j < ag.corners.size(); ++j) {
                         float[] va = j == 0 ? pos : ag.corners.get(j - 1).getPos();
                         float[] vb = ag.corners.get(j).getPos();
-                        dd.vertex(va[0], va[1] + radius, va[2], DebugDraw.duRGBA(128, 0, 0, 192));
-                        dd.vertex(vb[0], vb[1] + radius, vb[2], DebugDraw.duRGBA(128, 0, 0, 192));
+                        dd.vertex(va[0], va[1] + radius, va[2], duRGBA(128, 0, 0, 192));
+                        dd.vertex(vb[0], vb[1] + radius, vb[2], duRGBA(128, 0, 0, 192));
                     }
                     if ((ag.corners.get(ag.corners.size() - 1).getFlags()
                             & NavMeshQuery.DT_STRAIGHTPATH_OFFMESH_CONNECTION) != 0) {
                         float[] v = ag.corners.get(ag.corners.size() - 1).getPos();
-                        dd.vertex(v[0], v[1], v[2], DebugDraw.duRGBA(192, 0, 0, 192));
-                        dd.vertex(v[0], v[1] + radius * 2, v[2], DebugDraw.duRGBA(192, 0, 0, 192));
+                        dd.vertex(v[0], v[1], v[2], duRGBA(192, 0, 0, 192));
+                        dd.vertex(v[0], v[1] + radius * 2, v[2], duRGBA(192, 0, 0, 192));
                     }
 
                     dd.end();
@@ -472,11 +475,11 @@ public class CrowdTool implements Tool {
 
                          dd.begin(DU_DRAW_LINES, 2.0f);
 
-                         dd.vertex(ag.pos[0],y,ag.pos[2], DebugDraw.duRGBA(255,0,0,192));
-                         dd.vertex(pos[0],y,pos[2], DebugDraw.duRGBA(255,0,0,192));
+                         dd.vertex(ag.pos[0],y,ag.pos[2], duRGBA(255,0,0,192));
+                         dd.vertex(pos[0],y,pos[2], duRGBA(255,0,0,192));
 
-                         dd.vertex(pos[0],y,pos[2], DebugDraw.duRGBA(255,0,0,192));
-                         dd.vertex(tgt[0],y,tgt[2], DebugDraw.duRGBA(255,0,0,192));
+                         dd.vertex(pos[0],y,pos[2], duRGBA(255,0,0,192));
+                         dd.vertex(tgt[0],y,tgt[2], duRGBA(255,0,0,192));
 
                          dd.end();*/
                     }
@@ -485,19 +488,19 @@ public class CrowdTool implements Tool {
 
             if (toolParams.m_showCollisionSegments) {
                 float[] center = ag.boundary.getCenter();
-                dd.debugDrawCross(center[0], center[1] + radius, center[2], 0.2f, DebugDraw.duRGBA(192, 0, 128, 255),
+                dd.debugDrawCross(center[0], center[1] + radius, center[2], 0.2f, duRGBA(192, 0, 128, 255),
                         2.0f);
                 dd.debugDrawCircle(center[0], center[1] + radius, center[2], ag.params.collisionQueryRange,
-                        DebugDraw.duRGBA(192, 0, 128, 128), 2.0f);
+                        duRGBA(192, 0, 128, 128), 2.0f);
 
-                dd.begin(DebugDrawPrimitives.LINES, 3.0f);
+                dd.begin(LINES, 3.0f);
                 for (int j = 0; j < ag.boundary.getSegmentCount(); ++j) {
-                    int col = DebugDraw.duRGBA(192, 0, 128, 192);
+                    int col = duRGBA(192, 0, 128, 192);
                     float[] s = ag.boundary.getSegment(j);
                     float[] s0 = new float[] { s[0], s[1], s[2] };
                     float[] s3 = new float[] { s[3], s[4], s[5] };
                     if (DetourCommon.triArea2D(pos, s0, s3) < 0.0f)
-                        col = DebugDraw.duDarkenCol(col);
+                        col = duDarkenCol(col);
 
                     dd.appendArrow(s[0], s[1] + 0.2f, s[2], s[3], s[4] + 0.2f, s[5], 0.0f, 0.3f, col);
                 }
@@ -506,27 +509,27 @@ public class CrowdTool implements Tool {
 
             if (toolParams.m_showNeis) {
                 dd.debugDrawCircle(pos[0], pos[1] + radius, pos[2], ag.params.collisionQueryRange,
-                        DebugDraw.duRGBA(0, 192, 128, 128), 2.0f);
+                        duRGBA(0, 192, 128, 128), 2.0f);
 
-                dd.begin(DebugDrawPrimitives.LINES, 2.0f);
+                dd.begin(LINES, 2.0f);
                 for (int j = 0; j < ag.neis.size(); ++j) {
                     // Get 'n'th active agent.
                     // TODO: fix this properly.
                     CrowdAgent nei = crowd.getAgent(ag.neis.get(j).idx);
                     if (nei != null) {
-                        dd.vertex(pos[0], pos[1] + radius, pos[2], DebugDraw.duRGBA(0, 192, 128, 128));
-                        dd.vertex(nei.npos[0], nei.npos[1] + radius, nei.npos[2], DebugDraw.duRGBA(0, 192, 128, 128));
+                        dd.vertex(pos[0], pos[1] + radius, pos[2], duRGBA(0, 192, 128, 128));
+                        dd.vertex(nei.npos[0], nei.npos[1] + radius, nei.npos[2], duRGBA(0, 192, 128, 128));
                     }
                 }
                 dd.end();
             }
 
             if (toolParams.m_showOpt) {
-                dd.begin(DebugDrawPrimitives.LINES, 2.0f);
+                dd.begin(LINES, 2.0f);
                 dd.vertex(m_agentDebug.optStart[0], m_agentDebug.optStart[1] + 0.3f, m_agentDebug.optStart[2],
-                        DebugDraw.duRGBA(0, 128, 0, 192));
+                        duRGBA(0, 128, 0, 192));
                 dd.vertex(m_agentDebug.optEnd[0], m_agentDebug.optEnd[1] + 0.3f, m_agentDebug.optEnd[2],
-                        DebugDraw.duRGBA(0, 128, 0, 192));
+                        duRGBA(0, 128, 0, 192));
                 dd.end();
             }
         }
@@ -540,9 +543,9 @@ public class CrowdTool implements Tool {
             float radius = ag.params.radius;
             float[] pos = ag.npos;
 
-            int col = DebugDraw.duRGBA(0, 0, 0, 32);
+            int col = duRGBA(0, 0, 0, 32);
             if (m_agentDebug.idx == i)
-                col = DebugDraw.duRGBA(255, 0, 0, 128);
+                col = duRGBA(255, 0, 0, 128);
 
             dd.debugDrawCircle(pos[0], pos[1], pos[2], radius, col, 2.0f);
         }
@@ -556,16 +559,16 @@ public class CrowdTool implements Tool {
             float radius = ag.params.radius;
             float[] pos = ag.npos;
 
-            int col = DebugDraw.duRGBA(220, 220, 220, 128);
+            int col = duRGBA(220, 220, 220, 128);
             if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_REQUESTING
                     || ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_QUEUE)
-                col = DebugDraw.duLerpCol(col, DebugDraw.duRGBA(128, 0, 255, 128), 32);
+                col = duLerpCol(col, duRGBA(128, 0, 255, 128), 32);
             else if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_PATH)
-                col = DebugDraw.duLerpCol(col, DebugDraw.duRGBA(128, 0, 255, 128), 128);
+                col = duLerpCol(col, duRGBA(128, 0, 255, 128), 128);
             else if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_FAILED)
-                col = DebugDraw.duRGBA(255, 32, 16, 128);
+                col = duRGBA(255, 32, 16, 128);
             else if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY)
-                col = DebugDraw.duLerpCol(col, DebugDraw.duRGBA(64, 255, 0, 128), 128);
+                col = duLerpCol(col, duRGBA(64, 255, 0, 128), 128);
 
             dd.debugDrawCylinder(pos[0] - radius, pos[1] + radius * 0.1f, pos[2] - radius, pos[0] + radius,
                     pos[1] + height, pos[2] + radius, col);
@@ -586,17 +589,17 @@ public class CrowdTool implements Tool {
                 float dy = ag.npos[1] + ag.params.height;
                 float dz = ag.npos[2];
 
-                dd.debugDrawCircle(dx, dy, dz, ag.params.maxSpeed, DebugDraw.duRGBA(255, 255, 255, 64), 2.0f);
+                dd.debugDrawCircle(dx, dy, dz, ag.params.maxSpeed, duRGBA(255, 255, 255, 64), 2.0f);
 
-                dd.begin(DebugDrawPrimitives.QUADS);
+                dd.begin(QUADS);
                 for (int j = 0; j < vod.getSampleCount(); ++j) {
                     float[] p = vod.getSampleVelocity(j);
                     float sr = vod.getSampleSize(j);
                     float pen = vod.getSamplePenalty(j);
                     float pen2 = vod.getSamplePreferredSidePenalty(j);
-                    int col = DebugDraw.duLerpCol(DebugDraw.duRGBA(255, 255, 255, 220),
-                            DebugDraw.duRGBA(128, 96, 0, 220), (int) (pen * 255));
-                    col = DebugDraw.duLerpCol(col, DebugDraw.duRGBA(128, 0, 0, 220), (int) (pen2 * 128));
+                    int col = duLerpCol(duRGBA(255, 255, 255, 220),
+                            duRGBA(128, 96, 0, 220), (int) (pen * 255));
+                    col = duLerpCol(col, duRGBA(128, 0, 0, 220), (int) (pen2 * 128));
                     dd.vertex(dx + p[0] - sr, dy, dz + p[2] - sr, col);
                     dd.vertex(dx + p[0] - sr, dy, dz + p[2] + sr, col);
                     dd.vertex(dx + p[0] + sr, dy, dz + p[2] + sr, col);
@@ -618,25 +621,25 @@ public class CrowdTool implements Tool {
             float[] vel = ag.vel;
             float[] dvel = ag.dvel;
 
-            int col = DebugDraw.duRGBA(220, 220, 220, 192);
+            int col = duRGBA(220, 220, 220, 192);
             if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_REQUESTING
                     || ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_QUEUE)
-                col = DebugDraw.duLerpCol(col, DebugDraw.duRGBA(128, 0, 255, 192), 32);
+                col = duLerpCol(col, duRGBA(128, 0, 255, 192), 32);
             else if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_PATH)
-                col = DebugDraw.duLerpCol(col, DebugDraw.duRGBA(128, 0, 255, 192), 128);
+                col = duLerpCol(col, duRGBA(128, 0, 255, 192), 128);
             else if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_FAILED)
-                col = DebugDraw.duRGBA(255, 32, 16, 192);
+                col = duRGBA(255, 32, 16, 192);
             else if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY)
-                col = DebugDraw.duLerpCol(col, DebugDraw.duRGBA(64, 255, 0, 192), 128);
+                col = duLerpCol(col, duRGBA(64, 255, 0, 192), 128);
 
             dd.debugDrawCircle(pos[0], pos[1] + height, pos[2], radius, col, 2.0f);
 
             dd.debugDrawArrow(pos[0], pos[1] + height, pos[2], pos[0] + dvel[0], pos[1] + height + dvel[1],
-                    pos[2] + dvel[2], 0.0f, 0.4f, DebugDraw.duRGBA(0, 192, 255, 192),
+                    pos[2] + dvel[2], 0.0f, 0.4f, duRGBA(0, 192, 255, 192),
                     (m_agentDebug.idx == i) ? 2.0f : 1.0f);
 
             dd.debugDrawArrow(pos[0], pos[1] + height, pos[2], pos[0] + vel[0], pos[1] + height + vel[1],
-                    pos[2] + vel[2], 0.0f, 0.4f, DebugDraw.duRGBA(0, 0, 0, 160), 2.0f);
+                    pos[2] + vel[2], 0.0f, 0.4f, duRGBA(0, 0, 0, 160), 2.0f);
         }
 
         dd.depthMask(true);

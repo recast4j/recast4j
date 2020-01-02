@@ -1,4 +1,4 @@
-package org.recast4j.demo.tool.jumplink;
+package org.recast4j.detour.extras.jumplink;
 
 public class Edge {
 

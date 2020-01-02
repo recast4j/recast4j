@@ -20,12 +20,12 @@ package org.recast4j.demo.tool;
 
 import static org.lwjgl.nuklear.Nuklear.nk_layout_row_dynamic;
 import static org.lwjgl.nuklear.Nuklear.nk_option_label;
+import static org.recast4j.demo.draw.DebugDraw.duRGBA;
 
 import java.util.Arrays;
 
 import org.lwjgl.nuklear.NkContext;
 import org.recast4j.demo.builder.SampleAreaModifications;
-import org.recast4j.demo.draw.DebugDraw;
 import org.recast4j.demo.draw.NavMeshRenderer;
 import org.recast4j.demo.draw.RecastDebugDraw;
 import org.recast4j.demo.geom.DemoInputGeomProvider;
@@ -42,7 +42,7 @@ public class OffMeshConnectionTool implements Tool {
 
     @Override
     public void setSample(Sample m_sample) {
-        this.sample = m_sample;
+        sample = m_sample;
     }
 
     @Override
@@ -94,7 +94,7 @@ public class OffMeshConnectionTool implements Tool {
         float s = sample.getSettingsUI().getAgentRadius();
 
         if (hitPosSet) {
-            dd.debugDrawCross(hitPos[0], hitPos[1] + 0.1f, hitPos[2], s, DebugDraw.duRGBA(0, 0, 0, 128), 2.0f);
+            dd.debugDrawCross(hitPos[0], hitPos[1] + 0.1f, hitPos[2], s, duRGBA(0, 0, 0, 128), 2.0f);
         }
         DemoInputGeomProvider geom = sample.getInputGeom();
         if (geom != null) {
