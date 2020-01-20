@@ -5,6 +5,9 @@ import static org.lwjgl.nuklear.Nuklear.nk_label;
 import static org.lwjgl.nuklear.Nuklear.nk_layout_row_dynamic;
 import static org.lwjgl.nuklear.Nuklear.nk_option_label;
 import static org.lwjgl.nuklear.Nuklear.nk_spacing;
+import static org.recast4j.demo.draw.DebugDraw.duRGBA;
+import static org.recast4j.demo.draw.DebugDrawPrimitives.LINES;
+import static org.recast4j.demo.draw.DebugDrawPrimitives.POINTS;
 import static org.recast4j.detour.DetourCommon.vCopy;
 import static org.recast4j.detour.DetourCommon.vLerp;
 import static org.recast4j.detour.DetourCommon.vMad;
@@ -18,8 +21,6 @@ import java.util.Optional;
 
 import org.lwjgl.nuklear.NkContext;
 import org.recast4j.demo.builder.SampleAreaModifications;
-import org.recast4j.demo.draw.DebugDraw;
-import org.recast4j.demo.draw.DebugDrawPrimitives;
 import org.recast4j.demo.draw.NavMeshRenderer;
 import org.recast4j.demo.draw.RecastDebugDraw;
 import org.recast4j.demo.math.DemoMath;
@@ -289,13 +290,17 @@ public class TestNavmeshTool implements Tool {
 
                         iterPos = new float[3];
                         iterPos[0] = moveAlongSurface.getResultPos()[0];
+                        iterPos[1] = moveAlongSurface.getResultPos()[1];
                         iterPos[2] = moveAlongSurface.getResultPos()[2];
 
                         List<Long> visited = result.result.getVisited();
                         polys = PathUtils.fixupCorridor(polys, visited);
                         polys = PathUtils.fixupShortcuts(polys, m_navQuery);
 
-                        iterPos[1] = m_navQuery.getPolyHeight(polys.get(0), moveAlongSurface.getResultPos()).result;
+                        Result<Float> polyHeight = m_navQuery.getPolyHeight(polys.get(0), moveAlongSurface.getResultPos());
+                        if (polyHeight.succeeded()) {
+                            iterPos[1] = polyHeight.result;
+                        }
 
                         // Handle end of path and off-mesh links when close enough.
                         if (endOfPath && PathUtils.inRange(iterPos, steerTarget.get().steerPos, SLOP, 1.0f)) {
@@ -477,9 +482,9 @@ public class TestNavmeshTool implements Tool {
             return;
         }
         RecastDebugDraw dd = renderer.getDebugDraw();
-        int startCol = DebugDraw.duRGBA(128, 25, 0, 192);
-        int endCol = DebugDraw.duRGBA(51, 102, 0, 129);
-        int pathCol = DebugDraw.duRGBA(0, 0, 0, 64);
+        int startCol = duRGBA(128, 25, 0, 192);
+        int endCol = duRGBA(51, 102, 0, 129);
+        int pathCol = duRGBA(0, 0, 0, 64);
 
         float agentRadius = m_sample.getSettingsUI().getAgentRadius();
         float agentHeight = m_sample.getSettingsUI().getAgentHeight();
@@ -512,8 +517,8 @@ public class TestNavmeshTool implements Tool {
             }
             if (m_smoothPath != null) {
                 dd.depthMask(false);
-                int spathCol = DebugDraw.duRGBA(0, 0, 0, 220);
-                dd.begin(DebugDrawPrimitives.LINES, 3.0f);
+                int spathCol = duRGBA(0, 0, 0, 220);
+                dd.begin(LINES, 3.0f);
                 for (int i = 0; i < m_smoothPath.size(); ++i) {
                     dd.vertex(m_smoothPath.get(i)[0], m_smoothPath.get(i)[1] + 0.1f, m_smoothPath.get(i)[2], spathCol);
                 }
@@ -565,9 +570,9 @@ public class TestNavmeshTool implements Tool {
             }
             if (m_straightPath != null) {
                 dd.depthMask(false);
-                int spathCol = DebugDraw.duRGBA(64, 16, 0, 220);
-                int offMeshCol = DebugDraw.duRGBA(128, 96, 0, 220);
-                dd.begin(DebugDrawPrimitives.LINES, 2.0f);
+                int spathCol = duRGBA(64, 16, 0, 220);
+                int offMeshCol = duRGBA(128, 96, 0, 220);
+                dd.begin(LINES, 2.0f);
                 for (int i = 0; i < m_straightPath.size() - 1; ++i) {
                     StraightPathItem straightPathItem = m_straightPath.get(i);
                     StraightPathItem straightPathItem2 = m_straightPath.get(i + 1);
@@ -583,7 +588,7 @@ public class TestNavmeshTool implements Tool {
                             straightPathItem2.getPos()[2], col);
                 }
                 dd.end();
-                dd.begin(DebugDrawPrimitives.POINTS, 6.0f);
+                dd.begin(POINTS, 6.0f);
                 for (int i = 0; i < m_straightPath.size(); ++i) {
                     StraightPathItem straightPathItem = m_straightPath.get(i);
                     int col;
@@ -613,8 +618,8 @@ public class TestNavmeshTool implements Tool {
                 }
 
                 dd.depthMask(false);
-                int spathCol = m_hitResult ? DebugDraw.duRGBA(64, 16, 0, 220) : DebugDraw.duRGBA(240, 240, 240, 220);
-                dd.begin(DebugDrawPrimitives.LINES, 2.0f);
+                int spathCol = m_hitResult ? duRGBA(64, 16, 0, 220) : duRGBA(240, 240, 240, 220);
+                dd.begin(LINES, 2.0f);
                 for (int i = 0; i < m_straightPath.size() - 1; ++i) {
                     StraightPathItem straightPathItem = m_straightPath.get(i);
                     StraightPathItem straightPathItem2 = m_straightPath.get(i + 1);
@@ -624,7 +629,7 @@ public class TestNavmeshTool implements Tool {
                             straightPathItem2.getPos()[2], spathCol);
                 }
                 dd.end();
-                dd.begin(DebugDrawPrimitives.POINTS, 4.0f);
+                dd.begin(POINTS, 4.0f);
                 for (int i = 0; i < m_straightPath.size(); ++i) {
                     StraightPathItem straightPathItem = m_straightPath.get(i);
                     dd.vertex(straightPathItem.getPos()[0], straightPathItem.getPos()[1] + 0.4f,
@@ -633,8 +638,8 @@ public class TestNavmeshTool implements Tool {
                 dd.end();
 
                 if (m_hitResult) {
-                    int hitCol = DebugDraw.duRGBA(0, 0, 0, 128);
-                    dd.begin(DebugDrawPrimitives.LINES, 2.0f);
+                    int hitCol = duRGBA(0, 0, 0, 128);
+                    dd.begin(LINES, 2.0f);
                     dd.vertex(m_hitPos[0], m_hitPos[1] + 0.4f, m_hitPos[2], hitCol);
                     dd.vertex(m_hitPos[0] + m_hitNormal[0] * agentRadius,
                             m_hitPos[1] + 0.4f + m_hitNormal[1] * agentRadius,
@@ -648,12 +653,12 @@ public class TestNavmeshTool implements Tool {
             dd.depthMask(false);
             if (m_spos != null) {
                 dd.debugDrawCircle(m_spos[0], m_spos[1] + agentHeight / 2, m_spos[2], m_distanceToWall,
-                        DebugDraw.duRGBA(64, 16, 0, 220), 2.0f);
+                        duRGBA(64, 16, 0, 220), 2.0f);
             }
             if (m_hitPos != null) {
-                dd.begin(DebugDrawPrimitives.LINES, 3.0f);
-                dd.vertex(m_hitPos[0], m_hitPos[1] + 0.02f, m_hitPos[2], DebugDraw.duRGBA(0, 0, 0, 192));
-                dd.vertex(m_hitPos[0], m_hitPos[1] + agentHeight, m_hitPos[2], DebugDraw.duRGBA(0, 0, 0, 192));
+                dd.begin(LINES, 3.0f);
+                dd.vertex(m_hitPos[0], m_hitPos[1] + 0.02f, m_hitPos[2], duRGBA(0, 0, 0, 192));
+                dd.vertex(m_hitPos[0], m_hitPos[1] + agentHeight, m_hitPos[2], duRGBA(0, 0, 0, 192));
                 dd.end();
             }
             dd.depthMask(true);
@@ -667,7 +672,7 @@ public class TestNavmeshTool implements Tool {
                         float[] p0 = getPolyCenter(m_navMesh, m_parent.get(i));
                         float[] p1 = getPolyCenter(m_navMesh, m_polys.get(i));
                         dd.debugDrawArc(p0[0], p0[1], p0[2], p1[0], p1[1], p1[2], 0.25f, 0.0f, 0.4f,
-                                DebugDraw.duRGBA(0, 0, 0, 128), 2.0f);
+                                duRGBA(0, 0, 0, 128), 2.0f);
                         dd.depthMask(true);
                     }
                     dd.depthMask(true);
@@ -679,8 +684,8 @@ public class TestNavmeshTool implements Tool {
                 float dx = m_epos[0] - m_spos[0];
                 float dz = m_epos[2] - m_spos[2];
                 float dist = (float) Math.sqrt(dx * dx + dz * dz);
-                dd.debugDrawCircle(m_spos[0], m_spos[1] + agentHeight / 2, m_spos[2], dist,
-                        DebugDraw.duRGBA(64, 16, 0, 220), 2.0f);
+                dd.debugDrawCircle(m_spos[0], m_spos[1] + agentHeight / 2, m_spos[2], dist, duRGBA(64, 16, 0, 220),
+                        2.0f);
                 dd.depthMask(true);
             }
         } else if (m_toolMode == ToolMode.FIND_POLYS_IN_SHAPE) {
@@ -693,7 +698,7 @@ public class TestNavmeshTool implements Tool {
                         float[] p0 = getPolyCenter(m_navMesh, m_parent.get(i));
                         float[] p1 = getPolyCenter(m_navMesh, m_polys.get(i));
                         dd.debugDrawArc(p0[0], p0[1], p0[2], p1[0], p1[1], p1[2], 0.25f, 0.0f, 0.4f,
-                                DebugDraw.duRGBA(0, 0, 0, 128), 2.0f);
+                                duRGBA(0, 0, 0, 128), 2.0f);
                         dd.depthMask(true);
                     }
                     dd.depthMask(true);
@@ -702,8 +707,8 @@ public class TestNavmeshTool implements Tool {
 
             if (m_sposSet && m_eposSet) {
                 dd.depthMask(false);
-                int col = DebugDraw.duRGBA(64, 16, 0, 220);
-                dd.begin(DebugDrawPrimitives.LINES, 2.0f);
+                int col = duRGBA(64, 16, 0, 220);
+                dd.begin(LINES, 2.0f);
                 for (int i = 0, j = 3; i < 4; j = i++) {
                     dd.vertex(m_queryPoly[j * 3], m_queryPoly[j * 3 + 1], m_queryPoly[j * 3 + 2], col);
                     dd.vertex(m_queryPoly[i * 3], m_queryPoly[i * 3 + 1], m_queryPoly[i * 3 + 2], col);
@@ -721,7 +726,7 @@ public class TestNavmeshTool implements Tool {
                         float[] p0 = getPolyCenter(m_navMesh, m_parent.get(i));
                         float[] p1 = getPolyCenter(m_navMesh, m_polys.get(i));
                         dd.debugDrawArc(p0[0], p0[1], p0[2], p1[0], p1[1], p1[2], 0.25f, 0.0f, 0.4f,
-                                DebugDraw.duRGBA(0, 0, 0, 128), 2.0f);
+                                duRGBA(0, 0, 0, 128), 2.0f);
                         dd.depthMask(true);
                     }
                     dd.depthMask(true);
@@ -729,7 +734,7 @@ public class TestNavmeshTool implements Tool {
                         Result<GetPolyWallSegmentsResult> result = m_sample.getNavMeshQuery()
                                 .getPolyWallSegments(m_polys.get(i), false, m_filter);
                         if (result.succeeded()) {
-                            dd.begin(DebugDrawPrimitives.LINES, 2.0f);
+                            dd.begin(LINES, 2.0f);
                             GetPolyWallSegmentsResult wallSegments = result.result;
                             for (int j = 0; j < wallSegments.getSegmentVerts().size(); ++j) {
                                 float[] s = wallSegments.getSegmentVerts().get(j);
@@ -746,13 +751,13 @@ public class TestNavmeshTool implements Tool {
                                 float[] p1 = vMad(p0, norm, agentRadius * 0.5f);
                                 // Skip backfacing segments.
                                 if (wallSegments.getSegmentRefs().get(j) != 0) {
-                                    int col = DebugDraw.duRGBA(255, 255, 255, 32);
+                                    int col = duRGBA(255, 255, 255, 32);
                                     dd.vertex(s[0], s[1] + agentClimb, s[2], col);
                                     dd.vertex(s[3], s[4] + agentClimb, s[5], col);
                                 } else {
-                                    int col = DebugDraw.duRGBA(192, 32, 16, 192);
+                                    int col = duRGBA(192, 32, 16, 192);
                                     if (DetourCommon.triArea2D(m_spos, s, s3) < 0.0f) {
-                                        col = DebugDraw.duRGBA(96, 32, 16, 192);
+                                        col = duRGBA(96, 32, 16, 192);
                                     }
                                     dd.vertex(p0[0], p0[1] + agentClimb, p0[2], col);
                                     dd.vertex(p1[0], p1[1] + agentClimb, p1[2], col);
@@ -771,7 +776,7 @@ public class TestNavmeshTool implements Tool {
                 if (m_sposSet) {
                     dd.depthMask(false);
                     dd.debugDrawCircle(m_spos[0], m_spos[1] + agentHeight / 2, m_spos[2], m_neighbourhoodRadius,
-                            DebugDraw.duRGBA(64, 16, 0, 220), 2.0f);
+                            duRGBA(64, 16, 0, 220), 2.0f);
                     dd.depthMask(true);
                 }
             }
@@ -782,9 +787,9 @@ public class TestNavmeshTool implements Tool {
         dd.depthMask(false);
         // Agent dimensions.
         dd.debugDrawCylinderWire(pos[0] - r, pos[1] + 0.02f, pos[2] - r, pos[0] + r, pos[1] + h, pos[2] + r, col, 2.0f);
-        dd.debugDrawCircle(pos[0], pos[1] + c, pos[2], r, DebugDraw.duRGBA(0, 0, 0, 64), 1.0f);
-        int colb = DebugDraw.duRGBA(0, 0, 0, 196);
-        dd.begin(DebugDrawPrimitives.LINES);
+        dd.debugDrawCircle(pos[0], pos[1] + c, pos[2], r, duRGBA(0, 0, 0, 64), 1.0f);
+        int colb = duRGBA(0, 0, 0, 196);
+        dd.begin(LINES);
         dd.vertex(pos[0], pos[1] - c, pos[2], colb);
         dd.vertex(pos[0], pos[1] + c, pos[2], colb);
         dd.vertex(pos[0] - r / 2, pos[1] + 0.02f, pos[2], colb);

@@ -139,7 +139,7 @@ public class DebugDraw {
         getOpenGlDraw().begin(prim, size);
     }
 
-    void vertex(float[] pos, int color) {
+    public void vertex(float[] pos, int color) {
         getOpenGlDraw().vertex(pos, color);
     }
 

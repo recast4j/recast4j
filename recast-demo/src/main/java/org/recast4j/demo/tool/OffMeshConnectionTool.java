@@ -20,12 +20,12 @@ package org.recast4j.demo.tool;
 
 import static org.lwjgl.nuklear.Nuklear.nk_layout_row_dynamic;
 import static org.lwjgl.nuklear.Nuklear.nk_option_label;
+import static org.recast4j.demo.draw.DebugDraw.duRGBA;
 
 import java.util.Arrays;
 
 import org.lwjgl.nuklear.NkContext;
 import org.recast4j.demo.builder.SampleAreaModifications;
-import org.recast4j.demo.draw.DebugDraw;
 import org.recast4j.demo.draw.NavMeshRenderer;
 import org.recast4j.demo.draw.RecastDebugDraw;
 import org.recast4j.demo.geom.DemoInputGeomProvider;
@@ -35,22 +35,22 @@ import org.recast4j.demo.sample.Sample;
 
 public class OffMeshConnectionTool implements Tool {
 
-    private Sample m_sample;
-    private boolean m_hitPosSet;
-    private float[] m_hitPos;
-    private boolean m_bidir;
+    private Sample sample;
+    private boolean hitPosSet;
+    private float[] hitPos;
+    private boolean bidir;
 
     @Override
     public void setSample(Sample m_sample) {
-        this.m_sample = m_sample;
+        sample = m_sample;
     }
 
     @Override
     public void handleClick(float[] s, float[] p, boolean shift) {
-        if (m_sample == null) {
+        if (sample == null) {
             return;
         }
-        DemoInputGeomProvider geom = m_sample.getInputGeom();
+        DemoInputGeomProvider geom = sample.getInputGeom();
         if (geom == null) {
             return;
         }
@@ -62,7 +62,7 @@ public class OffMeshConnectionTool implements Tool {
             DemoOffMeshConnection nearestConnection = null;
             for (DemoOffMeshConnection offMeshCon : geom.getOffMeshConnections()) {
                 float d = Math.min(DemoMath.vDistSqr(p, offMeshCon.verts, 0), DemoMath.vDistSqr(p, offMeshCon.verts, 3));
-                if (d < nearestDist && Math.sqrt(d) < m_sample.getSettingsUI().getAgentRadius()) {
+                if (d < nearestDist && Math.sqrt(d) < sample.getSettingsUI().getAgentRadius()) {
                     nearestDist = d;
                     nearestConnection = offMeshCon;
                 }
@@ -72,14 +72,14 @@ public class OffMeshConnectionTool implements Tool {
             }
         } else {
             // Create
-            if (!m_hitPosSet) {
-                m_hitPos = Arrays.copyOf(p, p.length);
-                m_hitPosSet = true;
+            if (!hitPosSet) {
+                hitPos = Arrays.copyOf(p, p.length);
+                hitPosSet = true;
             } else {
                 int area = SampleAreaModifications.SAMPLE_POLYAREA_TYPE_JUMP;
                 int flags = SampleAreaModifications.SAMPLE_POLYFLAGS_JUMP;
-                geom.addOffMeshConnection(m_hitPos, p, m_sample.getSettingsUI().getAgentRadius(), m_bidir, area, flags);
-                m_hitPosSet = false;
+                geom.addOffMeshConnection(hitPos, p, sample.getSettingsUI().getAgentRadius(), bidir, area, flags);
+                hitPosSet = false;
             }
         }
 
@@ -87,16 +87,16 @@ public class OffMeshConnectionTool implements Tool {
 
     @Override
     public void handleRender(NavMeshRenderer renderer) {
-        if (m_sample == null) {
+        if (sample == null) {
             return;
         }
         RecastDebugDraw dd = renderer.getDebugDraw();
-        float s = m_sample.getSettingsUI().getAgentRadius();
+        float s = sample.getSettingsUI().getAgentRadius();
 
-        if (m_hitPosSet) {
-            dd.debugDrawCross(m_hitPos[0], m_hitPos[1] + 0.1f, m_hitPos[2], s, DebugDraw.duRGBA(0, 0, 0, 128), 2.0f);
+        if (hitPosSet) {
+            dd.debugDrawCross(hitPos[0], hitPos[1] + 0.1f, hitPos[2], s, duRGBA(0, 0, 0, 128), 2.0f);
         }
-        DemoInputGeomProvider geom = m_sample.getInputGeom();
+        DemoInputGeomProvider geom = sample.getInputGeom();
         if (geom != null) {
             renderer.drawOffMeshConnections(geom, true);
         }
@@ -105,9 +105,9 @@ public class OffMeshConnectionTool implements Tool {
     @Override
     public void layout(NkContext ctx) {
         nk_layout_row_dynamic(ctx, 20, 1);
-        m_bidir = !nk_option_label(ctx, "One Way", !m_bidir);
+        bidir = !nk_option_label(ctx, "One Way", !bidir);
         nk_layout_row_dynamic(ctx, 20, 1);
-        m_bidir = nk_option_label(ctx, "Bidirectional", m_bidir);
+        bidir = nk_option_label(ctx, "Bidirectional", bidir);
     }
 
     @Override
