@@ -572,6 +572,7 @@ public class NavMesh {
 
         tile.flags = 0;
         tile.links.clear();
+		tile.linksFreeList=NavMesh.DT_NULL_LINK;
 
         // Update salt, salt should never be zero.
         tile.salt = (tile.salt + 1) & ((1 << DT_SALT_BITS) - 1);
