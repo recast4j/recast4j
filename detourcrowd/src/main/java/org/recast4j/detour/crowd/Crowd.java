@@ -1201,12 +1201,12 @@ public class Crowd {
         }
 
         // Update agents using off-mesh connection.
-        for (int i = 0; i < m_maxAgents; ++i) {
-            CrowdAgentAnimation anim = m_agents[i].animation;
+        for (int i = 0; i < agents.size(); ++i) {
+            CrowdAgent ag = agents.get(i);
+            CrowdAgentAnimation anim = ag.animation;
             if (!anim.active) {
                 continue;
             }
-            CrowdAgent ag = m_agents[i];
 
             anim.t += dt;
             if (anim.t > anim.tmax) {
