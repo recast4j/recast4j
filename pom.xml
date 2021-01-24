@@ -140,7 +140,9 @@
                         <configuration>
                             <source>8</source>
                             <detectJavaApiLink>false</detectJavaApiLink>
-                            <additionalparam>-Xdoclint:none</additionalparam>
+                            <additionalOptions>
+                                <additionalOption>-Xdoclint:none</additionalOption>
+                            </additionalOptions>
                         </configuration>
                         <executions>
                             <execution>
