@@ -1,6 +1,7 @@
 package org.recast4j.detour.extras.jumplink;
 
-import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.recast4j.detour.MeshTile;
 import org.recast4j.detour.NavMesh;
@@ -66,24 +67,21 @@ class NavMeshGroundSampler extends AbstractGroundSampler {
     private Tupple2<Boolean, Float> getNavMeshHeight(NavMeshQuery navMeshQuery, float[] pt, float cs,
             float heightRange) {
         float[] halfExtents = new float[] { cs, heightRange, cs };
-        Result<List<Long>> result = navMeshQuery.queryPolygons(pt, halfExtents, filter);
-        float minHeight = pt[1];
         float maxHeight = pt[1] + heightRange;
-        boolean found = false;
-        if (result.succeeded()) {
-            for (long ref : result.result) {
-                Result<Float> h = navMeshQuery.getPolyHeight(ref, pt);
-                if (h.succeeded()) {
-                    float y = h.result;
-                    if (y > minHeight && y < maxHeight) {
-                        minHeight = y;
-                        found = true;
-                    }
+        AtomicBoolean found = new AtomicBoolean();
+        AtomicReference<Float> minHeight = new AtomicReference<>(pt[1]);
+        navMeshQuery.queryPolygons(pt, halfExtents, filter, (tile, poly, ref) -> {
+            Result<Float> h = navMeshQuery.getPolyHeight(ref, pt);
+            if (h.succeeded()) {
+                float y = h.result;
+                if (y > minHeight.get() && y < maxHeight) {
+                    minHeight.set(y);
+                    found.set(true);
                 }
             }
-        }
-        if (found) {
-            return new Tupple2<>(true, minHeight);
+        });
+        if (found.get()) {
+            return new Tupple2<>(true, minHeight.get());
         }
         return new Tupple2<>(false, pt[1]);
     }

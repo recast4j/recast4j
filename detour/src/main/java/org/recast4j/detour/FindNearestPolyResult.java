@@ -21,20 +21,26 @@ package org.recast4j.detour;
 public class FindNearestPolyResult {
     private final long nearestRef;
     private final float[] nearestPos;
+    private final boolean overPoly;
 
-    public FindNearestPolyResult(long nearestRef, float[] nearestPos) {
+    public FindNearestPolyResult(long nearestRef, float[] nearestPos, boolean overPoly) {
         this.nearestRef = nearestRef;
         this.nearestPos = nearestPos;
+        this.overPoly = overPoly;
     }
 
-    /** Returns the reference id of the nearest polygon. */
+    /** Returns the reference id of the nearest polygon. 0 if no polygon is found. */
     public long getNearestRef() {
         return nearestRef;
     }
 
-    /** Returns the nearest point on the polygon. [opt] [(x, y, z)] */
+    /** Returns the nearest point on the polygon. [opt] [(x, y, z)]. Unchanged if no polygon is found. */
     public float[] getNearestPos() {
         return nearestPos;
+    }
+
+    public boolean isOverPoly() {
+        return overPoly;
     }
 
 }

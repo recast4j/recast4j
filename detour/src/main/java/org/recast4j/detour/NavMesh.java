@@ -1130,6 +1130,7 @@ public class NavMesh {
 
     FindNearestPolyResult findNearestPolyInTile(MeshTile tile, float[] center, float[] extents) {
         float[] nearestPt = null;
+        boolean overPoly = false;
         float[] bmin = vSub(center, extents);
         float[] bmax = vAdd(center, extents);
 
@@ -1159,9 +1160,10 @@ public class NavMesh {
                 nearestPt = closestPtPoly;
                 nearestDistanceSqr = d;
                 nearest = ref;
+                overPoly = posOverPoly;
             }
         }
-        return new FindNearestPolyResult(nearest, nearestPt);
+        return new FindNearestPolyResult(nearest, nearestPt, overPoly);
     }
 
     MeshTile getTileAt(int x, int y, int layer) {

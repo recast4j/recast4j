@@ -37,7 +37,6 @@ import static org.recast4j.detour.DetourCommon.vDistSqr;
 import static org.recast4j.detour.DetourCommon.vEqual;
 import static org.recast4j.detour.DetourCommon.vIsFinite;
 import static org.recast4j.detour.DetourCommon.vIsFinite2D;
-import static org.recast4j.detour.DetourCommon.vLenSqr;
 import static org.recast4j.detour.DetourCommon.vLerp;
 import static org.recast4j.detour.DetourCommon.vMad;
 import static org.recast4j.detour.DetourCommon.vMax;
@@ -504,66 +503,29 @@ public class NavMeshQuery {
         return height.isPresent() ? Result.success(height.get()) : Result.invalidParam();
     }
 
-    /// @par
-    ///
-    /// @note If the search box does not intersect any polygons the search will
-    /// return #DT_SUCCESS, but @p nearestRef will be zero. So if in doubt, check
-    /// @p nearestRef before using @p nearestPt.
-    ///
-    /// @}
-    /// @name Local Query Functions
-    /// @{
-
-    /// Finds the polygon nearest to the specified center point.
-    /// @param[in] center The center of the search box. [(x, y, z)]
-    /// @param[in] extents The search distance along each axis. [(x, y, z)]
-    /// @param[in] filter The polygon filter to apply to the query.
-    /// @returns The status flags for the query.
+    /**
+     * Finds the polygon nearest to the specified center point.
+     * If center and nearestPt point to an equal position, isOverPoly will be true;
+     * however there's also a special case of climb height inside the polygon
+     * @param center The center of the search box. [(x, y, z)]
+     * @param halfExtents The search distance along each axis. [(x, y, z)]
+     * @param filter The polygon filter to apply to the query.
+     * @return FindNearestPolyResult containing nearestRef, nearestPt and overPoly
+     */
     public Result<FindNearestPolyResult> findNearestPoly(float[] center, float[] halfExtents, QueryFilter filter) {
 
-        float[] nearestPt = new float[] { center[0], center[1], center[2] };
-
         // Get nearby polygons from proximity grid.
-        Result<List<Long>> polysResult = queryPolygons(center, halfExtents, filter);
-        if (polysResult.failed()) {
-            return Result.of(polysResult.status, polysResult.message);
-        }
-        List<Long> polys = polysResult.result;
-        // Find nearest polygon amongst the nearby polygons.
-        long nearest = 0;
-        float nearestDistanceSqr = Float.MAX_VALUE;
-        for (int i = 0; i < polys.size(); ++i) {
-            long ref = polys.get(i);
-            Result<ClosestPointOnPolyResult> closest = closestPointOnPoly(ref, center);
-            boolean posOverPoly = closest.result.isPosOverPoly();
-            float[] closestPtPoly = closest.result.getClosest();
-
-            // If a point is directly over a polygon and closer than
-            // climb height, favor that instead of straight line nearest point.
-            float d = 0;
-            float[] diff = vSub(center, closestPtPoly);
-            if (posOverPoly) {
-                Tupple2<MeshTile, Poly> tilaAndPoly = m_nav.getTileAndPolyByRefUnsafe(polys.get(i));
-                MeshTile tile = tilaAndPoly.first;
-                d = Math.abs(diff[1]) - tile.data.header.walkableClimb;
-                d = d > 0 ? d * d : 0;
-            } else {
-                d = vLenSqr(diff);
-            }
-
-            if (d < nearestDistanceSqr) {
-                nearestPt = closestPtPoly;
-                nearestDistanceSqr = d;
-                nearest = ref;
-            }
+        FindNearestPolyQuery query = new FindNearestPolyQuery(this, center);
+        Status status = queryPolygons(center, halfExtents, filter, query);
+        if (status.isFailed()) {
+            return Result.of(status, null);
         }
 
-        return Result.success(new FindNearestPolyResult(nearest, nearestPt));
+        return Result.success(query.result());
     }
 
     // FIXME: (PP) duplicate?
-    protected List<Long> queryPolygonsInTile(MeshTile tile, float[] qmin, float[] qmax, QueryFilter filter) {
-        List<Long> polys = new ArrayList<>();
+    protected void queryPolygonsInTile(MeshTile tile, float[] qmin, float[] qmax, QueryFilter filter, PolyQuery query) {
         if (tile.data.bvTree != null) {
             int nodeIndex = 0;
             float[] tbmin = tile.data.header.bmin;
@@ -598,7 +560,7 @@ public class NavMeshQuery {
                 if (isLeafNode && overlap) {
                     long ref = base | node.i;
                     if (filter.passFilter(ref, tile, tile.data.polys[node.i])) {
-                        polys.add(ref);
+                        query.process(tile, tile.data.polys[node.i], ref);
                     }
                 }
 
@@ -609,7 +571,6 @@ public class NavMeshQuery {
                     nodeIndex += escapeIndex;
                 }
             }
-            return polys;
         } else {
             float[] bmin = new float[3];
             float[] bmax = new float[3];
@@ -634,10 +595,9 @@ public class NavMeshQuery {
                     vMax(bmax, tile.data.verts, v);
                 }
                 if (overlapBounds(qmin, qmax, bmin, bmax)) {
-                    polys.add(ref);
+                    query.process(tile, p, ref);
                 }
             }
-            return polys;
         }
     }
 
@@ -654,7 +614,7 @@ public class NavMeshQuery {
      *            The polygon filter to apply to the query.
      * @return The reference ids of the polygons that overlap the query box.
      */
-    public Result<List<Long>> queryPolygons(float[] center, float[] halfExtents, QueryFilter filter) {
+    public Status queryPolygons(float[] center, float[] halfExtents, QueryFilter filter, PolyQuery query) {
         if (Objects.isNull(center) || !vIsFinite(center) || Objects.isNull(halfExtents) || !vIsFinite(halfExtents)
                 || Objects.isNull(filter)) {
             // return DT_FAILURE | DT_INVALID_PARAM;
@@ -668,17 +628,15 @@ public class NavMeshQuery {
         int[] maxxy = m_nav.calcTileLoc(bmax);
         int maxx = maxxy[0];
         int maxy = maxxy[1];
-        List<Long> polys = new ArrayList<>();
         for (int y = miny; y <= maxy; ++y) {
             for (int x = minx; x <= maxx; ++x) {
                 List<MeshTile> neis = m_nav.getTilesAt(x, y);
                 for (int j = 0; j < neis.size(); ++j) {
-                    List<Long> polysInTile = queryPolygonsInTile(neis.get(j), bmin, bmax, filter);
-                    polys.addAll(polysInTile);
+                    queryPolygonsInTile(neis.get(j), bmin, bmax, filter, query);
                 }
             }
         }
-        return Result.success(polys);
+        return Status.SUCCSESS;
     }
 
     /**
