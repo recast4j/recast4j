@@ -35,6 +35,7 @@ class OffMeshLinkCreator {
                 MeshData endTile = graphData.getTile(l.endNode - nodeOffset);
                 Poly endNode = graphData.getNode(l.endNode - nodeOffset);
                 if (startNode != null && endNode != null) {
+                    // FIXME: Optimise
                     startTile.polys = Arrays.copyOf(startTile.polys, startTile.polys.length + 1);
                     int poly = startTile.header.polyCount;
                     startTile.polys[poly] = new Poly(poly, 2);

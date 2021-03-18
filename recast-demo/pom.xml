@@ -115,22 +115,22 @@
         <dependency>
             <groupId>org.recast4j</groupId>
             <artifactId>recast</artifactId>
-            <version>1.2.6-SNAPSHOT</version>
+            <version>1.2.9-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.recast4j</groupId>
             <artifactId>detour</artifactId>
-            <version>1.2.6-SNAPSHOT</version>
+            <version>1.2.9-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.recast4j</groupId>
             <artifactId>detour-crowd</artifactId>
-            <version>1.2.6-SNAPSHOT</version>
+            <version>1.2.9-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.recast4j</groupId>
             <artifactId>detour-extras</artifactId>
-            <version>1.2.6-SNAPSHOT</version>
+            <version>1.2.9-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

@@ -504,12 +504,15 @@ public class NavMeshQuery {
     }
 
     /**
-     * Finds the polygon nearest to the specified center point.
-     * If center and nearestPt point to an equal position, isOverPoly will be true;
-     * however there's also a special case of climb height inside the polygon
-     * @param center The center of the search box. [(x, y, z)]
-     * @param halfExtents The search distance along each axis. [(x, y, z)]
-     * @param filter The polygon filter to apply to the query.
+     * Finds the polygon nearest to the specified center point. If center and nearestPt point to an equal position,
+     * isOverPoly will be true; however there's also a special case of climb height inside the polygon
+     *
+     * @param center
+     *            The center of the search box. [(x, y, z)]
+     * @param halfExtents
+     *            The search distance along each axis. [(x, y, z)]
+     * @param filter
+     *            The polygon filter to apply to the query.
      * @return FindNearestPolyResult containing nearestRef, nearestPt and overPoly
      */
     public Result<FindNearestPolyResult> findNearestPoly(float[] center, float[] halfExtents, QueryFilter filter) {

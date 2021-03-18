@@ -127,9 +127,6 @@ public class RecastDebugDraw extends DebugDraw {
             if (p.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
                 continue;
             }
-
-            PolyDetail pd = tile.data.detailMeshes[i];
-
             int col;
             if (query != null && query.isInClosedList(base | i)) {
                 col = duRGBA(255, 196, 0, 64);
@@ -141,19 +138,24 @@ public class RecastDebugDraw extends DebugDraw {
                 }
             }
 
-            for (int j = 0; j < pd.triCount; ++j) {
-                int t = (pd.triBase + j) * 4;
-                for (int k = 0; k < 3; ++k) {
-                    int v = tile.data.detailTris[t + k];
-                    if (v < p.vertCount) {
-                        vertex(tile.data.verts[p.verts[v] * 3], tile.data.verts[p.verts[v] * 3 + 1],
-                                tile.data.verts[p.verts[v] * 3 + 2], col);
-                    } else {
-                        vertex(tile.data.detailVerts[(pd.vertBase + v - p.vertCount) * 3],
-                                tile.data.detailVerts[(pd.vertBase + v - p.vertCount) * 3 + 1],
-                                tile.data.detailVerts[(pd.vertBase + v - p.vertCount) * 3 + 2], col);
+            PolyDetail pd = tile.data.detailMeshes[i];
+            if (pd != null) {
+                for (int j = 0; j < pd.triCount; ++j) {
+                    int t = (pd.triBase + j) * 4;
+                    for (int k = 0; k < 3; ++k) {
+                        int v = tile.data.detailTris[t + k];
+                        if (v < p.vertCount) {
+                            vertex(tile.data.verts[p.verts[v] * 3], tile.data.verts[p.verts[v] * 3 + 1],
+                                    tile.data.verts[p.verts[v] * 3 + 2], col);
+                        } else {
+                            vertex(tile.data.detailVerts[(pd.vertBase + v - p.vertCount) * 3],
+                                    tile.data.detailVerts[(pd.vertBase + v - p.vertCount) * 3 + 1],
+                                    tile.data.detailVerts[(pd.vertBase + v - p.vertCount) * 3 + 2], col);
+                        }
                     }
                 }
+            } else {
+                // FIXME: Draw Poly if PolyDetail is unavailable
             }
 
         }
