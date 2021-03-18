@@ -134,7 +134,11 @@ public class RecastDebugDraw extends DebugDraw {
                 if ((flags & DRAWNAVMESH_COLOR_TILES) != 0) {
                     col = tileColor;
                 } else {
-                    col = duTransCol(areaToCol(p.getArea()), 64);
+                    if ((p.flags & SampleAreaModifications.SAMPLE_POLYFLAGS_DISABLED) != 0) {
+                        col = duRGBA(64, 64, 64, 64);
+                    } else {
+                        col = duTransCol(areaToCol(p.getArea()), 64);
+                    }
                 }
             }
 

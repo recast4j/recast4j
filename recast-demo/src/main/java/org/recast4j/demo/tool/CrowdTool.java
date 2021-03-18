@@ -39,6 +39,7 @@ import org.lwjgl.nuklear.NkContext;
 import org.recast4j.demo.builder.SampleAreaModifications;
 import org.recast4j.demo.draw.NavMeshRenderer;
 import org.recast4j.demo.draw.RecastDebugDraw;
+import org.recast4j.demo.geom.Intersections;
 import org.recast4j.demo.sample.Sample;
 import org.recast4j.detour.DefaultQueryFilter;
 import org.recast4j.detour.DetourCommon;
@@ -47,7 +48,6 @@ import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.detour.QueryFilter;
 import org.recast4j.detour.Result;
-import org.recast4j.detour.Tupple2;
 import org.recast4j.detour.crowd.Crowd;
 import org.recast4j.detour.crowd.CrowdAgent;
 import org.recast4j.detour.crowd.CrowdAgent.MoveRequestState;
@@ -231,10 +231,9 @@ public class CrowdTool implements Tool {
                 continue;
             float[] bmin = new float[3], bmax = new float[3];
             getAgentBounds(ag, bmin, bmax);
-            Optional<Tupple2<Float, Float>> isect = isectSegAABB(s, p, bmin, bmax);
+            Optional<float[]> isect = Intersections.intersectSegmentAABB(s, p, bmin, bmax);
             if (isect.isPresent()) {
-                float tmin = isect.get().first;
-                float tmax = isect.get().second;
+                float tmin = isect.get()[0];
                 if (tmin > 0 && tmin < tsel) {
                     isel = i;
                     tsel = tmin;
@@ -255,46 +254,6 @@ public class CrowdTool implements Tool {
         bmax[0] = p[0] + r;
         bmax[1] = p[1] + h;
         bmax[2] = p[2] + r;
-    }
-
-    static Optional<Tupple2<Float, Float>> isectSegAABB(float[] sp, float[] sq, float[] amin, float[] amax) {
-        float EPS = 1e-6f;
-
-        float tmin;
-        float tmax;
-        float[] d = DetourCommon.vSub(sq, sp);
-        tmin = 0; // set to -FLT_MAX to get first hit on line
-        tmax = Float.MAX_VALUE; // set to max distance ray can travel (for segment)
-
-        // For all three slabs
-        for (int i = 0; i < 3; i++) {
-            if (Math.abs(d[i]) < EPS) {
-                // Ray is parallel to slab. No hit if origin not within slab
-                if (sp[i] < amin[i] || sp[i] > amax[i])
-                    return Optional.empty();
-            } else {
-                // Compute intersection t value of ray with near and far plane of slab
-                float ood = 1.0f / d[i];
-                float t1 = (amin[i] - sp[i]) * ood;
-                float t2 = (amax[i] - sp[i]) * ood;
-                // Make t1 be intersection with near plane, t2 with far plane
-                if (t1 > t2) {
-                    float tt = t1;
-                    t1 = t2;
-                    t2 = tt;
-                }
-                // Compute the intersection of slab intersections intervals
-                if (t1 > tmin)
-                    tmin = t1;
-                if (t2 < tmax)
-                    tmax = t2;
-                // Exit with no collision as soon as slab intersection becomes empty
-                if (tmin > tmax)
-                    return Optional.empty();
-            }
-        }
-
-        return Optional.of(new Tupple2<>(tmin, tmax));
     }
 
     void setMoveTarget(float[] p, boolean adjust) {

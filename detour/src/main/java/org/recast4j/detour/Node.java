@@ -18,6 +18,8 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
+import java.util.List;
+
 public class Node {
 
     static int DT_NODE_OPEN = 0x01;
@@ -29,9 +31,9 @@ public class Node {
 
     /** Position of the node. */
     public float[] pos = new float[3];
-    /** Cost from previous node to current node. */
-    float cost;
-    /** Cost up to the node. */
+    /** Cost of reaching the given node. */
+    public float cost;
+    /** Total cost of reaching the goal via the given node including heuristics. */
     float total;
     /** Index to parent node. */
     public int pidx;
@@ -43,6 +45,8 @@ public class Node {
     int flags;
     /** Polygon ref the node corresponds to. */
     long id;
+    /** Shortcut found by raycast. */
+    List<Long> shortcut;
 
     public Node(int index) {
         this.index = index;

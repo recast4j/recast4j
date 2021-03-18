@@ -26,6 +26,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.recast4j.detour.DefaultQueryFilter;
+import org.recast4j.detour.DefaultQueryHeuristic;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.detour.QueryFilter;
@@ -41,8 +42,7 @@ public class TileCacheNavigationTest extends AbstractTileCacheTest {
     protected final long[] endRefs = { 281474986147841L };
     protected final float[][] startPoss = { { 39.447338f, 9.998177f, -0.784811f } };
     protected final float[][] endPoss = { { 19.292645f, 11.611748f, -57.750366f } };
-    private final Status[] statuses = { Status.SUCCSESS, Status.PARTIAL_RESULT, Status.SUCCSESS, Status.SUCCSESS,
-            Status.SUCCSESS };
+    private final Status[] statuses = { Status.SUCCSESS };
     private final long[][] results = { { 281475006070787L, 281475006070785L, 281475005022208L, 281475005022209L,
             281475003973633L, 281475003973634L, 281475003973632L, 281474996633604L, 281474996633605L, 281474996633603L,
             281474995585027L, 281474995585029L, 281474995585026L, 281474995585028L, 281474995585024L, 281474991390721L,
@@ -77,7 +77,7 @@ public class TileCacheNavigationTest extends AbstractTileCacheTest {
     }
 
     @Test
-    public void testFindPath() {
+    public void testFindPathWithDefaultHeuristic() {
         QueryFilter filter = new DefaultQueryFilter();
         for (int i = 0; i < startRefs.length; i++) {
             long startRef = startRefs[i];
@@ -85,6 +85,24 @@ public class TileCacheNavigationTest extends AbstractTileCacheTest {
             float[] startPos = startPoss[i];
             float[] endPos = endPoss[i];
             Result<List<Long>> path = query.findPath(startRef, endRef, startPos, endPos, filter);
+            Assert.assertEquals(statuses[i], path.status);
+            Assert.assertEquals(results[i].length, path.result.size());
+            for (int j = 0; j < results[i].length; j++) {
+                Assert.assertEquals(results[i][j], path.result.get(j).longValue());
+            }
+        }
+    }
+
+    @Test
+    public void testFindPathWithNoHeuristic() {
+        QueryFilter filter = new DefaultQueryFilter();
+        for (int i = 0; i < startRefs.length; i++) {
+            long startRef = startRefs[i];
+            long endRef = endRefs[i];
+            float[] startPos = startPoss[i];
+            float[] endPos = endPoss[i];
+            Result<List<Long>> path = query.findPath(startRef, endRef, startPos, endPos, filter,
+                    new DefaultQueryHeuristic(0.0f), 0, 0);
             Assert.assertEquals(statuses[i], path.status);
             Assert.assertEquals(results[i].length, path.result.size());
             for (int j = 0; j < results[i].length; j++) {
