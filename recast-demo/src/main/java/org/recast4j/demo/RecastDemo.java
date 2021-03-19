@@ -59,6 +59,7 @@ import static org.lwjgl.opengl.GL20.GL_SHADING_LANGUAGE_VERSION;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -81,13 +82,15 @@ import org.recast4j.demo.draw.GLU;
 import org.recast4j.demo.draw.NavMeshRenderer;
 import org.recast4j.demo.draw.RecastDebugDraw;
 import org.recast4j.demo.geom.DemoInputGeomProvider;
+import org.recast4j.demo.geom.NavMeshRaycast;
+import org.recast4j.demo.geom.NavMeshUtils;
 import org.recast4j.demo.io.ObjImporter;
 import org.recast4j.demo.math.DemoMath;
 import org.recast4j.demo.sample.Sample;
 import org.recast4j.demo.settings.SettingsUI;
-import org.recast4j.demo.tool.JumpLinkBuilderTool;
 import org.recast4j.demo.tool.ConvexVolumeTool;
 import org.recast4j.demo.tool.CrowdTool;
+import org.recast4j.demo.tool.JumpLinkBuilderTool;
 import org.recast4j.demo.tool.OffMeshConnectionTool;
 import org.recast4j.demo.tool.TestNavmeshTool;
 import org.recast4j.demo.tool.Tool;
@@ -98,6 +101,8 @@ import org.recast4j.demo.ui.NuklearUI;
 import org.recast4j.detour.DetourCommon;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.Tupple2;
+import org.recast4j.detour.extras.unity.astar.UnityAStarPathfindingImporter;
+import org.recast4j.detour.io.MeshSetReader;
 import org.recast4j.recast.Recast;
 import org.recast4j.recast.RecastBuilder.RecastBuilderResult;
 import org.slf4j.Logger;
@@ -145,7 +150,7 @@ public class RecastDemo {
 
     private boolean markerPositionSet;
     private final float[] markerPosition = new float[3];
-    private boolean showSample;
+    private boolean geomChanged;
     private ToolsUI toolsUI;
     private SettingsUI settingsUI;
     private long prevFrameTime;
@@ -383,7 +388,6 @@ public class RecastDemo {
 
             mouseOverMenu = nuklearUI.layout(window, 0, 0, width, height, (int) mousePos[0], (int) mousePos[1]);
 
-            NavMesh navMesh;
             if (settingsUI.isMeshInputTrigerred()) {
                 try (MemoryStack stack = stackPush()) {
                     PointerBuffer aFilterPatterns = stack.mallocPointer(2);
@@ -391,13 +395,35 @@ public class RecastDemo {
                     aFilterPatterns.flip();
                     String filename = TinyFileDialogs.tinyfd_openFileDialog("Open Mesh File", "", aFilterPatterns,
                             "Mesh File (*.obj)", false);
-                    try (InputStream stream = new FileInputStream(filename)) {
-                        geom = loadInputMesh(stream);
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    if (filename != null) {
+                        try (InputStream stream = new FileInputStream(filename)) {
+                            geom = loadInputMesh(stream);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
-            } else if (settingsUI.isBuildTriggered()) {
+            } else if (settingsUI.isNavMeshInputTrigerred()) {
+                try (MemoryStack stack = stackPush()) {
+                    PointerBuffer aFilterPatterns = stack.mallocPointer(2);
+                    aFilterPatterns.put(stack.UTF8("*.bin"));
+                    aFilterPatterns.put(stack.UTF8("*.zip"));
+                    aFilterPatterns.flip();
+                    String filename = TinyFileDialogs.tinyfd_openFileDialog("Open Nav Mesh File", "", aFilterPatterns,
+                            "Nav Mesh File", false);
+                    if (filename != null) {
+                        File file = new File(filename);
+                        if (file.exists()) {
+                            try {
+                                loadNavMesh(file, filename);
+                                geom = null;
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            } else if (settingsUI.isBuildTriggered() && sample.getInputGeom() != null) {
                 if (!building) {
 
                     float m_cellSize = settingsUI.getCellSize();
@@ -432,7 +458,7 @@ public class RecastDemo {
                                 m_detailSampleDist, m_detailSampleMaxError, settingsUI.isFilterLowHangingObstacles(),
                                 settingsUI.isFilterLedgeSpans(), settingsUI.isFilterWalkableLowHeightSpans());
                     }
-                    navMesh = buildResult.second;
+                    NavMesh navMesh = buildResult.second;
                     sample = new Sample(geom, buildResult.first, navMesh, settingsUI, dd);
                     settingsUI.setBuildTime((System.nanoTime() - t) / 1_000_000);
                     toolsUI.setSample(sample);
@@ -448,9 +474,15 @@ public class RecastDemo {
                         viewport, rayEnd);
 
                 // Hit test mesh.
-                sample.getInputGeom().raycastMesh(rayStart, rayEnd);
+                DemoInputGeomProvider inputGeom = sample.getInputGeom();
                 if (processHitTest && sample != null) {
-                    Optional<Float> hit = sample.getInputGeom().raycastMesh(rayStart, rayEnd);
+                    Optional<Float> hit = Optional.empty();
+                    if (inputGeom != null) {
+                        hit = inputGeom.raycastMesh(rayStart, rayEnd);
+                    }
+                    if (hit.isEmpty() && sample.getNavMesh() != null) {
+                        hit = NavMeshRaycast.raycast(sample.getNavMesh(), rayStart, rayEnd);
+                    }
                     if (hit.isPresent()) {
                         float hitTime = hit.get();
                         if ((modState & GLFW_MOD_CONTROL) != 0) {
@@ -480,20 +512,29 @@ public class RecastDemo {
             }
 
             // Draw bounds
-            float[] bmin = geom.getMeshBoundsMin();
-            float[] bmax = geom.getMeshBoundsMax();
 
-            if (showSample) {
-                camr = (float) (Math.sqrt(DemoMath.sqr(bmax[0] - bmin[0]) + DemoMath.sqr(bmax[1] - bmin[1])
-                        + DemoMath.sqr(bmax[2] - bmin[2])) / 2);
-                cameraPos[0] = (bmax[0] + bmin[0]) / 2 + camr;
-                cameraPos[1] = (bmax[1] + bmin[1]) / 2 + camr;
-                cameraPos[2] = (bmax[2] + bmin[2]) / 2 + camr;
-                camr *= 3;
-                cameraEulers[0] = 45;
-                cameraEulers[1] = -45;
-
-                showSample = false;
+            if (geomChanged) {
+                float[] bmin = null;
+                float[] bmax = null;
+                if (geom != null) {
+                    bmin = geom.getMeshBoundsMin();
+                    bmax = geom.getMeshBoundsMax();
+                } else if (sample != null && sample.getNavMesh() != null) {
+                    float[][] bounds = NavMeshUtils.getNavMeshBounds(sample.getNavMesh());
+                    bmin = bounds[0];
+                    bmax = bounds[1];
+                }
+                if (bmin != null && bmax != null) {
+                    camr = (float) (Math.sqrt(DemoMath.sqr(bmax[0] - bmin[0]) + DemoMath.sqr(bmax[1] - bmin[1])
+                            + DemoMath.sqr(bmax[2] - bmin[2])) / 2);
+                    cameraPos[0] = (bmax[0] + bmin[0]) / 2 + camr;
+                    cameraPos[1] = (bmax[1] + bmin[1]) / 2 + camr;
+                    cameraPos[2] = (bmax[2] + bmin[2]) / 2 + camr;
+                    camr *= 3;
+                    cameraEulers[0] = 45;
+                    cameraEulers[1] = -45;
+                }
+                geomChanged = false;
             }
             dd.fog(camr * 0.1f, camr * 1.25f);
             renderer.render(sample);
@@ -519,8 +560,28 @@ public class RecastDemo {
         sample = new Sample(geom, Collections.emptyList(), null, settingsUI, dd);
         toolsUI.setSample(sample);
         toolsUI.setEnabled(true);
-        showSample = true;
+        geomChanged = true;
         return geom;
+    }
+
+    private void loadNavMesh(File file, String filename) throws Exception {
+        NavMesh mesh = null;
+        if (filename.endsWith(".zip")) {
+            UnityAStarPathfindingImporter importer = new UnityAStarPathfindingImporter();
+            mesh = importer.load(file, 6)[0];
+        } else if (filename.endsWith(".bin")) {
+            MeshSetReader reader = new MeshSetReader();
+            try (FileInputStream fis = new FileInputStream(file)) {
+                mesh = reader.read(fis, 6);
+            }
+        }
+        if (mesh != null) {
+            sample = new Sample(null, Collections.emptyList(), mesh, settingsUI, dd);
+            toolsUI.setSample(sample);
+            toolsUI.setEnabled(true);
+            geomChanged = true;
+
+        }
     }
 
     public static void main(String[] args) {

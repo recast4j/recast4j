@@ -63,20 +63,17 @@ public class NavMeshRenderer {
 
         if (drawMode != DrawMode.DRAWMODE_NAVMESH_TRANS) {
             // Draw mesh
-            debugDraw.debugDrawTriMeshSlope(geom.vertices, geom.faces, geom.normals, m_agentMaxSlope, texScale);
-            drawOffMeshConnections(geom, false);
+            if (geom != null) {
+                debugDraw.debugDrawTriMeshSlope(geom.vertices, geom.faces, geom.normals, m_agentMaxSlope, texScale);
+                drawOffMeshConnections(geom, false);
+            }
         }
 
         debugDraw.fog(false);
         debugDraw.depthMask(false);
-        // Draw bounds
-        float[] bmin = geom.getMeshBoundsMin();
-        float[] bmax = geom.getMeshBoundsMax();
-        debugDraw.debugDrawBoxWire(bmin[0], bmin[1], bmin[2], bmax[0], bmax[1], bmax[2],
-                DebugDraw.duRGBA(255, 255, 255, 128), 1.0f);
-        debugDraw.begin(DebugDrawPrimitives.POINTS, 5.0f);
-        debugDraw.vertex(bmin[0], bmin[1], bmin[2], DebugDraw.duRGBA(255, 255, 255, 128));
-        debugDraw.end();
+        if (geom != null) {
+            drawGeomBounds(geom);
+        }
 
         if (navMesh != null && navQuery != null
                 && (drawMode == DrawMode.DRAWMODE_NAVMESH || drawMode == DrawMode.DRAWMODE_NAVMESH_TRANS
@@ -157,7 +154,20 @@ public class NavMeshRenderer {
             }
         }
 
-        drawConvexVolumes(geom);
+        if (geom != null) {
+            drawConvexVolumes(geom);
+        }
+    }
+
+    private void drawGeomBounds(DemoInputGeomProvider geom) {
+        // Draw bounds
+        float[] bmin = geom.getMeshBoundsMin();
+        float[] bmax = geom.getMeshBoundsMax();
+        debugDraw.debugDrawBoxWire(bmin[0], bmin[1], bmin[2], bmax[0], bmax[1], bmax[2],
+                DebugDraw.duRGBA(255, 255, 255, 128), 1.0f);
+        debugDraw.begin(DebugDrawPrimitives.POINTS, 5.0f);
+        debugDraw.vertex(bmin[0], bmin[1], bmin[2], DebugDraw.duRGBA(255, 255, 255, 128));
+        debugDraw.end();
     }
 
     public void drawOffMeshConnections(DemoInputGeomProvider geom, boolean hilight) {

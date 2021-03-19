@@ -196,6 +196,7 @@ public class RecastSoloMeshTest {
         // you use tiles)
         // * good choice to use for tiled navmesh with medium and small sized
         // tiles
+        long time3 = System.nanoTime();
 
         if (m_partitionType == PartitionType.WATERSHED) {
             // Prepare for region partitioning, by calculating distance field
@@ -244,6 +245,7 @@ public class RecastSoloMeshTest {
         Assert.assertEquals("Mesh Detail Tris", expDetTRis, m_dmesh.ntris);
         long time2 = System.nanoTime();
         System.out.println(filename + " : " + partitionType + "  " + (time2 - time) / 1000000 + " ms");
+        System.out.println("           " + (time3 - time) / 1000000 + " ms");
         saveObj(filename.substring(0, filename.lastIndexOf('.')) + "_" + partitionType + "_detail.obj", m_dmesh);
         saveObj(filename.substring(0, filename.lastIndexOf('.')) + "_" + partitionType + ".obj", m_pmesh);
     }

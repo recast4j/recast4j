@@ -92,8 +92,9 @@ public class SettingsUI implements NuklearUIModule {
     private int maxTiles;
     private int maxPolys;
 
-    private DrawMode drawMode = DrawMode.DRAWMODE_MESH;
+    private DrawMode drawMode = DrawMode.DRAWMODE_NAVMESH;
     private boolean meshInputTrigerred;
+    private boolean navMeshInputTrigerred;
 
     @Override
     public boolean layout(NkContext ctx, int x, int y, int width, int height, int mouseX, int mouseY) {
@@ -126,9 +127,11 @@ public class SettingsUI implements NuklearUIModule {
                 nk_layout_row_dynamic(ctx, 5, 1);
                 nk_spacing(ctx, 1);
                 nk_layout_row_dynamic(ctx, 18, 1);
+                navMeshInputTrigerred = nk_button_text(ctx, "Load Nav Mesh...");
+                nk_layout_row_dynamic(ctx, 18, 1);
                 nk_label(ctx, "Input Mesh", NK_TEXT_ALIGN_LEFT);
                 nk_layout_row_dynamic(ctx, 20, 1);
-                meshInputTrigerred = nk_button_text(ctx, "Choose Mesh...");
+                meshInputTrigerred = nk_button_text(ctx, "Load Source Geom...");
                 nk_layout_row_dynamic(ctx, 18, 1);
                 nk_label(ctx, String.format("Verts: %d Tris: %d", 0, 0), NK_TEXT_ALIGN_RIGHT);
 
@@ -347,6 +350,10 @@ public class SettingsUI implements NuklearUIModule {
 
     public boolean isMeshInputTrigerred() {
         return meshInputTrigerred;
+    }
+
+    public boolean isNavMeshInputTrigerred() {
+        return navMeshInputTrigerred;
     }
 
 }
