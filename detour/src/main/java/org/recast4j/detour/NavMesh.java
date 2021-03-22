@@ -1004,49 +1004,72 @@ public class NavMesh {
         int ANY_BOUNDARY_EDGE = (DT_DETAIL_EDGE_BOUNDARY << 0) | (DT_DETAIL_EDGE_BOUNDARY << 2)
                 | (DT_DETAIL_EDGE_BOUNDARY << 4);
         int ip = poly.index;
-        PolyDetail pd = tile.data.detailMeshes[ip];
-
         float dmin = Float.MAX_VALUE;
         float tmin = 0;
         float[] pmin = null;
         float[] pmax = null;
 
-        for (int i = 0; i < pd.triCount; i++) {
-            int ti = (pd.triBase + i) * 4;
-            int[] tris = tile.data.detailTris;
-            if (onlyBoundary && (tris[ti + 3] & ANY_BOUNDARY_EDGE) == 0) {
-                continue;
-            }
+        if (tile.data.detailMeshes != null) {
 
-            float[][] v = new float[3][];
-            for (int j = 0; j < 3; ++j) {
-                if (tris[ti + j] < poly.vertCount) {
-                    int index = poly.verts[tris[ti + j]] * 3;
-                    v[j] = new float[] { tile.data.verts[index], tile.data.verts[index + 1],
-                            tile.data.verts[index + 2] };
-                } else {
-                    int index = (pd.vertBase + (tris[ti + j] - poly.vertCount)) * 3;
-                    v[j] = new float[] { tile.data.detailVerts[index], tile.data.detailVerts[index + 1],
-                            tile.data.detailVerts[index + 2] };
-                }
-            }
-
-            for (int k = 0, j = 2; k < 3; j = k++) {
-                if ((getDetailTriEdgeFlags(tris[3], j) & DT_DETAIL_EDGE_BOUNDARY) == 0
-                        && (onlyBoundary || tris[j] < tris[k])) {
-                    // Only looking at boundary edges and this is internal, or
-                    // this is an inner edge that we will see again or have already seen.
+            PolyDetail pd = tile.data.detailMeshes[ip];
+            for (int i = 0; i < pd.triCount; i++) {
+                int ti = (pd.triBase + i) * 4;
+                int[] tris = tile.data.detailTris;
+                if (onlyBoundary && (tris[ti + 3] & ANY_BOUNDARY_EDGE) == 0) {
                     continue;
                 }
 
-                Tupple2<Float, Float> dt = distancePtSegSqr2D(pos, v[j], v[k]);
+                float[][] v = new float[3][];
+                for (int j = 0; j < 3; ++j) {
+                    if (tris[ti + j] < poly.vertCount) {
+                        int index = poly.verts[tris[ti + j]] * 3;
+                        v[j] = new float[] { tile.data.verts[index], tile.data.verts[index + 1],
+                                tile.data.verts[index + 2] };
+                    } else {
+                        int index = (pd.vertBase + (tris[ti + j] - poly.vertCount)) * 3;
+                        v[j] = new float[] { tile.data.detailVerts[index], tile.data.detailVerts[index + 1],
+                                tile.data.detailVerts[index + 2] };
+                    }
+                }
+
+                for (int k = 0, j = 2; k < 3; j = k++) {
+                    if ((getDetailTriEdgeFlags(tris[3], j) & DT_DETAIL_EDGE_BOUNDARY) == 0
+                            && (onlyBoundary || tris[j] < tris[k])) {
+                        // Only looking at boundary edges and this is internal, or
+                        // this is an inner edge that we will see again or have already seen.
+                        continue;
+                    }
+
+                    Tupple2<Float, Float> dt = distancePtSegSqr2D(pos, v[j], v[k]);
+                    float d = dt.first;
+                    float t = dt.second;
+                    if (d < dmin) {
+                        dmin = d;
+                        tmin = t;
+                        pmin = v[j];
+                        pmax = v[k];
+                    }
+                }
+            }
+        } else {
+            float[][] v = new float[2][3];
+            for (int j = 0; j < poly.vertCount; ++j) {
+                int k = (j + 1) % poly.vertCount;
+                v[0][0] = tile.data.verts[poly.verts[j] * 3];
+                v[0][1] = tile.data.verts[poly.verts[j] * 3 + 1];
+                v[0][2] = tile.data.verts[poly.verts[j] * 3 + 2];
+                v[1][0] = tile.data.verts[poly.verts[k] * 3];
+                v[1][1] = tile.data.verts[poly.verts[k] * 3 + 1];
+                v[1][2] = tile.data.verts[poly.verts[k] * 3 + 2];
+
+                Tupple2<Float, Float> dt = distancePtSegSqr2D(pos, v[0], v[1]);
                 float d = dt.first;
                 float t = dt.second;
                 if (d < dmin) {
                     dmin = d;
                     tmin = t;
-                    pmin = v[j];
-                    pmax = v[k];
+                    pmin = v[0];
+                    pmax = v[1];
                 }
             }
         }
@@ -1062,7 +1085,6 @@ public class NavMesh {
         }
 
         int ip = poly.index;
-        PolyDetail pd = tile.data.detailMeshes[ip];
 
         float[] verts = new float[m_maxVertPerPoly * 3];
         int nv = poly.vertCount;
@@ -1075,23 +1097,42 @@ public class NavMesh {
         }
 
         // Find height at the location.
-        for (int j = 0; j < pd.triCount; ++j) {
-            int t = (pd.triBase + j) * 4;
-            float[][] v = new float[3][];
-            for (int k = 0; k < 3; ++k) {
-                if (tile.data.detailTris[t + k] < poly.vertCount) {
-                    int index = poly.verts[tile.data.detailTris[t + k]] * 3;
-                    v[k] = new float[] { tile.data.verts[index], tile.data.verts[index + 1],
-                            tile.data.verts[index + 2] };
-                } else {
-                    int index = (pd.vertBase + (tile.data.detailTris[t + k] - poly.vertCount)) * 3;
-                    v[k] = new float[] { tile.data.detailVerts[index], tile.data.detailVerts[index + 1],
-                            tile.data.detailVerts[index + 2] };
+        if (tile.data.detailMeshes != null) {
+            PolyDetail pd = tile.data.detailMeshes[ip];
+            for (int j = 0; j < pd.triCount; ++j) {
+                int t = (pd.triBase + j) * 4;
+                float[][] v = new float[3][];
+                for (int k = 0; k < 3; ++k) {
+                    if (tile.data.detailTris[t + k] < poly.vertCount) {
+                        int index = poly.verts[tile.data.detailTris[t + k]] * 3;
+                        v[k] = new float[] { tile.data.verts[index], tile.data.verts[index + 1],
+                                tile.data.verts[index + 2] };
+                    } else {
+                        int index = (pd.vertBase + (tile.data.detailTris[t + k] - poly.vertCount)) * 3;
+                        v[k] = new float[] { tile.data.detailVerts[index], tile.data.detailVerts[index + 1],
+                                tile.data.detailVerts[index + 2] };
+                    }
+                }
+                Optional<Float> h = closestHeightPointTriangle(pos, v[0], v[1], v[2]);
+                if (h.isPresent()) {
+                    return h;
                 }
             }
-            Optional<Float> h = closestHeightPointTriangle(pos, v[0], v[1], v[2]);
-            if (h.isPresent()) {
-                return h;
+        } else {
+            float[][] v = new float[3][3];
+            v[0][0] = tile.data.verts[poly.verts[0] * 3];
+            v[0][1] = tile.data.verts[poly.verts[0] * 3 + 1];
+            v[0][2] = tile.data.verts[poly.verts[0] * 3 + 2];
+            for (int j = 1; j < poly.vertCount - 1; ++j) {
+                for (int k = 0; k < 2; ++k) {
+                    v[k + 1][0] = tile.data.verts[poly.verts[j + k] * 3];
+                    v[k + 1][1] = tile.data.verts[poly.verts[j + k] * 3 + 1];
+                    v[k + 1][2] = tile.data.verts[poly.verts[j + k] * 3 + 2];
+                }
+                Optional<Float> h = closestHeightPointTriangle(pos, v[0], v[1], v[2]);
+                if (h.isPresent()) {
+                    return h;
+                }
             }
         }
 
