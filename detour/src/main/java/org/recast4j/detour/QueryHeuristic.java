@@ -1,6 +1,5 @@
 /*
-Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
-recast4j copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
+recast4j copyright (c) 2021 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -16,17 +15,11 @@ freely, subject to the following restrictions:
  misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
+
 package org.recast4j.detour;
 
-class QueryData {
-    Status status;
-    Node lastBestNode;
-    float lastBestNodeCost;
-    long startRef, endRef;
-    float[] startPos = new float[3];
-    float[] endPos = new float[3];
-    QueryFilter filter;
-    int options;
-    float raycastLimitSqr;
-    QueryHeuristic heuristic;
+public interface QueryHeuristic {
+
+    float getCost(float[] neighbourPos, float[] endPos);
+
 }

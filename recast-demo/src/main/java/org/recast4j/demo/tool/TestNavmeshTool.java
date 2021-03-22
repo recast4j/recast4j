@@ -1,6 +1,7 @@
 package org.recast4j.demo.tool;
 
 import static org.lwjgl.nuklear.Nuklear.NK_TEXT_ALIGN_LEFT;
+import static org.lwjgl.nuklear.Nuklear.nk_check_label;
 import static org.lwjgl.nuklear.Nuklear.nk_label;
 import static org.lwjgl.nuklear.Nuklear.nk_layout_row_dynamic;
 import static org.lwjgl.nuklear.Nuklear.nk_option_label;
@@ -70,6 +71,7 @@ public class TestNavmeshTool implements Tool {
     private final float[] m_queryPoly = new float[12];
     private List<float[]> m_smoothPath;
     private Status m_pathFindStatus = Status.FAILURE;
+    private boolean enableRaycast = true;
 
     private enum ToolMode {
         PATHFIND_FOLLOW,
@@ -84,7 +86,7 @@ public class TestNavmeshTool implements Tool {
 
     public TestNavmeshTool() {
         m_filter = new DefaultQueryFilter(SampleAreaModifications.SAMPLE_POLYFLAGS_ALL,
-                SampleAreaModifications.SAMPLE_POLYFLAGS_DISABLED, new float[] { 1f, 10f, 1f, 1f, 2f, 1.5f });
+                SampleAreaModifications.SAMPLE_POLYFLAGS_DISABLED, new float[] { 1f, 1f, 1f, 1f, 2f, 1.5f });
     }
 
     @Override
@@ -215,8 +217,13 @@ public class TestNavmeshTool implements Tool {
         }
         m_filter.setExcludeFlags(excludeFlags);
 
+        nk_layout_row_dynamic(ctx, 30, 1);
+        boolean previousEnableRaycast = enableRaycast;
+        enableRaycast = nk_check_label(ctx, "Raycast shortcuts", enableRaycast);
+
         if (previousToolMode != m_toolMode || m_straightPathOptions != previousStraightPathOptions
-                || previousIncludeFlags != includeFlags || previousExcludeFlags != excludeFlags) {
+                || previousIncludeFlags != includeFlags || previousExcludeFlags != excludeFlags
+                || previousEnableRaycast != enableRaycast) {
             recalc();
         }
     }
@@ -244,7 +251,8 @@ public class TestNavmeshTool implements Tool {
         NavMesh m_navMesh = m_sample.getNavMesh();
         if (m_toolMode == ToolMode.PATHFIND_FOLLOW) {
             if (m_sposSet && m_eposSet && m_startRef != 0 && m_endRef != 0) {
-                m_polys = m_navQuery.findPath(m_startRef, m_endRef, m_spos, m_epos, m_filter).result;
+                m_polys = m_navQuery.findPath(m_startRef, m_endRef, m_spos, m_epos, m_filter,
+                        enableRaycast ? NavMeshQuery.DT_FINDPATH_ANY_ANGLE : 0, Float.MAX_VALUE).result;
                 if (!m_polys.isEmpty()) {
                     List<Long> polys = new ArrayList<>(m_polys);
                     // Iterate over the path to find smooth path on the detail mesh surface.
@@ -355,7 +363,8 @@ public class TestNavmeshTool implements Tool {
             }
         } else if (m_toolMode == ToolMode.PATHFIND_STRAIGHT) {
             if (m_sposSet && m_eposSet && m_startRef != 0 && m_endRef != 0) {
-                m_polys = m_navQuery.findPath(m_startRef, m_endRef, m_spos, m_epos, m_filter).result;
+                m_polys = m_navQuery.findPath(m_startRef, m_endRef, m_spos, m_epos, m_filter,
+                        enableRaycast ? NavMeshQuery.DT_FINDPATH_ANY_ANGLE : 0, Float.MAX_VALUE).result;
                 if (!m_polys.isEmpty()) {
                     // In case of partial path, make sure the end point is clamped to the last polygon.
                     float[] epos = new float[] { m_epos[0], m_epos[1], m_epos[2] };
@@ -377,7 +386,7 @@ public class TestNavmeshTool implements Tool {
             m_straightPath = null;
             if (m_sposSet && m_eposSet && m_startRef != 0 && m_endRef != 0) {
                 m_pathFindStatus = m_navQuery.initSlicedFindPath(m_startRef, m_endRef, m_spos, m_epos, m_filter,
-                        NavMeshQuery.DT_FINDPATH_ANY_ANGLE);
+                        enableRaycast ? NavMeshQuery.DT_FINDPATH_ANY_ANGLE : 0, Float.MAX_VALUE);
             }
         } else if (m_toolMode == ToolMode.RAYCAST) {
             m_straightPath = null;
@@ -456,8 +465,7 @@ public class TestNavmeshTool implements Tool {
                 m_queryPoly[10] = m_epos[1] + agentHeight / 2;
                 m_queryPoly[11] = m_epos[2] + nz;
 
-                Result<FindPolysAroundResult> result = m_navQuery.findPolysAroundShape(m_startRef, m_queryPoly, 4,
-                        m_filter);
+                Result<FindPolysAroundResult> result = m_navQuery.findPolysAroundShape(m_startRef, m_queryPoly, m_filter);
                 if (result.succeeded()) {
                     m_polys = result.result.getRefs();
                     m_parent = result.result.getParentRefs();
