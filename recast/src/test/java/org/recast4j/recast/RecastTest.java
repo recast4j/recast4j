@@ -33,7 +33,7 @@ public class RecastTest {
         int unwalkable_tri[] = { 0, 2, 1 };
         int nt = 1;
 
-        Context ctx = new Context();
+        Telemetry ctx = new Telemetry();
         {
             int areas[] = { 42 };
             Recast.clearUnwalkableTriangles(ctx, walkableSlopeAngle, verts, nv, unwalkable_tri, nt, areas);

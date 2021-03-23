@@ -249,7 +249,7 @@ public class RecastRasterization {
      *
      * @see Heightfield
      */
-    public static void rasterizeTriangle(Context ctx, float[] verts, int v0, int v1, int v2, int area,
+    public static void rasterizeTriangle(Telemetry ctx, float[] verts, int v0, int v1, int v2, int area,
             Heightfield solid, int flagMergeThr) {
 
         ctx.startTimer("RASTERIZE_TRIANGLES");
@@ -266,7 +266,7 @@ public class RecastRasterization {
      *
      * @see Heightfield
      */
-    public static void rasterizeTriangles(Context ctx, float[] verts, int[] tris, int[] areas, int nt,
+    public static void rasterizeTriangles(Telemetry ctx, float[] verts, int[] tris, int[] areas, int nt,
             Heightfield solid, int flagMergeThr) {
 
         ctx.startTimer("RASTERIZE_TRIANGLES");
@@ -290,7 +290,7 @@ public class RecastRasterization {
      *
      * @see Heightfield
      */
-    public static void rasterizeTriangles(Context ctx, float[] verts, int[] areas, int nt, Heightfield solid,
+    public static void rasterizeTriangles(Telemetry ctx, float[] verts, int[] areas, int nt, Heightfield solid,
             int flagMergeThr) {
         ctx.startTimer("RASTERIZE_TRIANGLES");
 
