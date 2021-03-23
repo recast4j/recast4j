@@ -18,13 +18,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
-import static org.recast4j.recast.RecastConstants.RC_AREA_BORDER;
-import static org.recast4j.recast.RecastConstants.RC_BORDER_REG;
-import static org.recast4j.recast.RecastConstants.RC_BORDER_VERTEX;
-import static org.recast4j.recast.RecastConstants.RC_CONTOUR_REG_MASK;
-import static org.recast4j.recast.RecastConstants.RC_CONTOUR_TESS_AREA_EDGES;
-import static org.recast4j.recast.RecastConstants.RC_CONTOUR_TESS_WALL_EDGES;
-import static org.recast4j.recast.RecastConstants.RC_NOT_CONNECTED;
+import static org.recast4j.recast.RecastConstants.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -637,7 +631,7 @@ public class RecastContour {
                 index = -1;
                 for (int j = 0; j < ndiags; j++) {
                     int pt = diags[j].vert * 4;
-                    boolean intersect = intersectSegCountour(pt, corner, diags[i].vert, outline.nverts, outline.verts,
+                    boolean intersect = intersectSegCountour(pt, corner, diags[j].vert, outline.nverts, outline.verts,
                             outline.verts, hole.verts);
                     for (int k = i; k < region.nholes && !intersect; k++)
                         intersect |= intersectSegCountour(pt, corner, -1, region.holes[k].contour.nverts,

@@ -18,22 +18,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
-import static org.recast4j.detour.DetourCommon.clamp;
-import static org.recast4j.detour.DetourCommon.closestHeightPointTriangle;
-import static org.recast4j.detour.DetourCommon.distancePtSegSqr2D;
-import static org.recast4j.detour.DetourCommon.nextPow2;
-import static org.recast4j.detour.DetourCommon.oppositeTile;
-import static org.recast4j.detour.DetourCommon.overlapBounds;
-import static org.recast4j.detour.DetourCommon.overlapQuantBounds;
-import static org.recast4j.detour.DetourCommon.pointInPolygon;
-import static org.recast4j.detour.DetourCommon.sqr;
-import static org.recast4j.detour.DetourCommon.vAdd;
-import static org.recast4j.detour.DetourCommon.vCopy;
-import static org.recast4j.detour.DetourCommon.vLenSqr;
-import static org.recast4j.detour.DetourCommon.vLerp;
-import static org.recast4j.detour.DetourCommon.vMax;
-import static org.recast4j.detour.DetourCommon.vMin;
-import static org.recast4j.detour.DetourCommon.vSub;
+import static org.recast4j.detour.DetourCommon.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -708,8 +693,8 @@ public class NavMesh {
                             tmin = tmax;
                             tmax = temp;
                         }
-                        link.bmin = (int) (clamp(tmin, 0.0f, 1.0f) * 255.0f);
-                        link.bmax = (int) (clamp(tmax, 0.0f, 1.0f) * 255.0f);
+                        link.bmin = Math.round(clamp(tmin, 0.0f, 1.0f) * 255.0f);
+                        link.bmax = Math.round(clamp(tmax, 0.0f, 1.0f) * 255.0f);
                     } else if (dir == 2 || dir == 6) {
                         float tmin = (neia[k * 2 + 0] - tile.data.verts[va])
                                 / (tile.data.verts[vb] - tile.data.verts[va]);
@@ -720,8 +705,8 @@ public class NavMesh {
                             tmin = tmax;
                             tmax = temp;
                         }
-                        link.bmin = (int) (clamp(tmin, 0.0f, 1.0f) * 255.0f);
-                        link.bmax = (int) (clamp(tmax, 0.0f, 1.0f) * 255.0f);
+                        link.bmin = Math.round(clamp(tmin, 0.0f, 1.0f) * 255.0f);
+                        link.bmax = Math.round(clamp(tmax, 0.0f, 1.0f) * 255.0f);
                     }
                 }
             }
