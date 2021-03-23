@@ -431,7 +431,6 @@ public class RecastRegion {
         for (int j = 0; j < nbStacks; ++j) {
             stacks.get(j).clear();
         }
-        ;
 
         // put all cells in the level range into the appropriate stacks
         for (int y = 0; y < h; ++y) {
@@ -490,7 +489,7 @@ public class RecastRegion {
             floors = new ArrayList<>();
         }
 
-    };
+    }
 
     private static void removeAdjacentNeighbours(Region reg) {
         // Remove adjacent duplicates.
@@ -972,7 +971,7 @@ public class RecastRegion {
                     Region reg = regions[ri];
 
                     reg.spanCount++;
-
+                    reg.areaType = chf.areas[i];
                     reg.ymin = Math.min(reg.ymin, s.y);
                     reg.ymax = Math.max(reg.ymax, s.y);
                     // Collect all region layers.
@@ -1043,6 +1042,10 @@ public class RecastRegion {
                     Region regn = regions[nei];
                     // Skip already visited.
                     if (regn.id != 0) {
+                        continue;
+                    }
+                    // Skip if different area type, do not connect regions with different area type.
+                    if (reg.areaType != regn.areaType) {
                         continue;
                     }
                     // Skip if the neighbour is overlapping root region.
