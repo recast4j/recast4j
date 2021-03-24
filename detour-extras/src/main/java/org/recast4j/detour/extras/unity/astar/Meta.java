@@ -31,10 +31,10 @@ class Meta {
     String[] typeNames;
 
     boolean isSupportedVersion() {
-        return isSupportedVersion(MIN_SUPPORTED_VERSION);
+        return isVersionAtLeast(MIN_SUPPORTED_VERSION);
     }
 
-    boolean isSupportedVersion(String minVersion) {
+    boolean isVersionAtLeast(String minVersion) {
         int[] actual = parseVersion(version);
         int[] minSupported = parseVersion(minVersion);
         for (int i = 0; i < Math.min(actual.length, minSupported.length); i++) {
