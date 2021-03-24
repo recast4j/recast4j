@@ -693,7 +693,7 @@ public class RecastRegion {
         }
     }
 
-    private static int mergeAndFilterRegions(Context ctx, int minRegionArea, int mergeRegionSize, int maxRegionId,
+    private static int mergeAndFilterRegions(Telemetry ctx, int minRegionArea, int mergeRegionSize, int maxRegionId,
             CompactHeightfield chf, int[] srcReg, List<Integer> overlaps) {
         int w = chf.width;
         int h = chf.height;
@@ -941,7 +941,7 @@ public class RecastRegion {
         }
     }
 
-    private static int mergeAndFilterLayerRegions(Context ctx, int minRegionArea, int maxRegionId,
+    private static int mergeAndFilterLayerRegions(Telemetry ctx, int minRegionArea, int maxRegionId,
             CompactHeightfield chf, int[] srcReg, List<Integer> overlaps) {
         int w = chf.width;
         int h = chf.height;
@@ -1140,9 +1140,9 @@ public class RecastRegion {
     /// and rcCompactHeightfield::dist fields.
     ///
     /// @see rcCompactHeightfield, rcBuildRegions, rcBuildRegionsMonotone
-    public static void buildDistanceField(Context ctx, CompactHeightfield chf) {
+    public static void buildDistanceField(Telemetry ctx, CompactHeightfield chf) {
 
-        ctx.startTimer("BUILD_DISTANCEFIELD");
+        ctx.startTimer("DISTANCEFIELD");
         int[] src = new int[chf.spanCount];
         ctx.startTimer("DISTANCEFIELD_DIST");
 
@@ -1161,7 +1161,7 @@ public class RecastRegion {
 
         ctx.stopTimer("DISTANCEFIELD_BLUR");
 
-        ctx.stopTimer("BUILD_DISTANCEFIELD");
+        ctx.stopTimer("DISTANCEFIELD");
 
     }
 
@@ -1199,9 +1199,9 @@ public class RecastRegion {
     /// @warning The distance field must be created using #rcBuildDistanceField before attempting to build regions.
     ///
     /// @see rcCompactHeightfield, rcCompactSpan, rcBuildDistanceField, rcBuildRegionsMonotone, rcConfig
-    public static void buildRegionsMonotone(Context ctx, CompactHeightfield chf, int borderSize, int minRegionArea,
+    public static void buildRegionsMonotone(Telemetry ctx, CompactHeightfield chf, int borderSize, int minRegionArea,
             int mergeRegionArea) {
-        ctx.startTimer("BUILD_REGIONS");
+        ctx.startTimer("REGIONS");
 
         int w = chf.width;
         int h = chf.height;
@@ -1311,7 +1311,7 @@ public class RecastRegion {
             }
         }
 
-        ctx.startTimer("BUILD_REGIONS_FILTER");
+        ctx.startTimer("REGIONS_FILTER");
 
         // Merge regions and filter out small regions.
         List<Integer> overlaps = new ArrayList<>();
@@ -1319,14 +1319,14 @@ public class RecastRegion {
 
         // Monotone partitioning does not generate overlapping regions.
 
-        ctx.stopTimer("BUILD_REGIONS_FILTER");
+        ctx.stopTimer("REGIONS_FILTER");
 
         // Store the result out.
         for (int i = 0; i < chf.spanCount; ++i) {
             chf.spans[i].reg = srcReg[i];
         }
 
-        ctx.stopTimer("BUILD_REGIONS");
+        ctx.stopTimer("REGIONS");
 
     }
 
@@ -1349,9 +1349,9 @@ public class RecastRegion {
     /// @warning The distance field must be created using #rcBuildDistanceField before attempting to build regions.
     ///
     /// @see rcCompactHeightfield, rcCompactSpan, rcBuildDistanceField, rcBuildRegionsMonotone, rcConfig
-    public static void buildRegions(Context ctx, CompactHeightfield chf, int borderSize, int minRegionArea,
+    public static void buildRegions(Telemetry ctx, CompactHeightfield chf, int borderSize, int minRegionArea,
             int mergeRegionArea) {
-        ctx.startTimer("BUILD_REGIONS");
+        ctx.startTimer("REGIONS");
 
         int w = chf.width;
         int h = chf.height;
@@ -1412,14 +1412,14 @@ public class RecastRegion {
 
             // ctx->stopTimer(RC_TIMER_DIVIDE_TO_LEVELS);
 
-            ctx.startTimer("BUILD_REGIONS_EXPAND");
+            ctx.startTimer("REGIONS_EXPAND");
 
             // Expand current regions until no empty connected cells found.
             expandRegions(expandIters, level, chf, srcReg, srcDist, lvlStacks.get(sId), false);
 
-            ctx.stopTimer("BUILD_REGIONS_EXPAND");
+            ctx.stopTimer("REGIONS_EXPAND");
 
-            ctx.startTimer("BUILD_REGIONS_FLOOD");
+            ctx.startTimer("REGIONS_FLOOD");
 
             // Mark new regions with IDs.
             for (int j = 0; j < lvlStacks.get(sId).size(); j += 3) {
@@ -1433,15 +1433,15 @@ public class RecastRegion {
                 }
             }
 
-            ctx.stopTimer("BUILD_REGIONS_FLOOD");
+            ctx.stopTimer("REGIONS_FLOOD");
         }
 
         // Expand current regions until no empty connected cells found.
         expandRegions(expandIters * 8, 0, chf, srcReg, srcDist, stack, true);
 
-        ctx.stopTimer("BUILD_REGIONS_WATERSHED");
+        ctx.stopTimer("REGIONS_WATERSHED");
 
-        ctx.startTimer("BUILD_REGIONS_FILTER");
+        ctx.startTimer("REGIONS_FILTER");
 
         // Merge regions and filter out smalle regions.
         List<Integer> overlaps = new ArrayList<>();
@@ -1452,20 +1452,20 @@ public class RecastRegion {
             ctx.warn("rcBuildRegions: " + overlaps.size() + " overlapping regions.");
         }
 
-        ctx.stopTimer("BUILD_REGIONS_FILTER");
+        ctx.stopTimer("REGIONS_FILTER");
 
         // Write the result out.
         for (int i = 0; i < chf.spanCount; ++i) {
             chf.spans[i].reg = srcReg[i];
         }
 
-        ctx.stopTimer("BUILD_REGIONS");
+        ctx.stopTimer("REGIONS");
 
     }
 
-    public static void buildLayerRegions(Context ctx, CompactHeightfield chf, int borderSize, int minRegionArea) {
+    public static void buildLayerRegions(Telemetry ctx, CompactHeightfield chf, int borderSize, int minRegionArea) {
 
-        ctx.startTimer("BUILD_REGIONS");
+        ctx.startTimer("REGIONS");
 
         int w = chf.width;
         int h = chf.height;
@@ -1574,20 +1574,20 @@ public class RecastRegion {
             }
         }
 
-        ctx.startTimer("BUILD_REGIONS_FILTER");
+        ctx.startTimer("REGIONS_FILTER");
 
         // Merge monotone regions to layers and remove small regions.
         List<Integer> overlaps = new ArrayList<>();
         chf.maxRegions = mergeAndFilterLayerRegions(ctx, minRegionArea, id, chf, srcReg, overlaps);
 
-        ctx.stopTimer("BUILD_REGIONS_FILTER");
+        ctx.stopTimer("REGIONS_FILTER");
 
         // Store the result out.
         for (int i = 0; i < chf.spanCount; ++i) {
             chf.spans[i].reg = srcReg[i];
         }
 
-        ctx.stopTimer("BUILD_REGIONS");
+        ctx.stopTimer("REGIONS");
 
     }
 }

@@ -92,7 +92,7 @@ public class RecastSoloMeshTest {
         long time = System.nanoTime();
         float[] bmin = geomProvider.getMeshBoundsMin();
         float[] bmax = geomProvider.getMeshBoundsMax();
-        Context m_ctx = new Context();
+        Telemetry m_ctx = new Telemetry();
         //
         // Step 1. Initialize build config.
         //
@@ -248,6 +248,7 @@ public class RecastSoloMeshTest {
         System.out.println("           " + (time3 - time) / 1000000 + " ms");
         saveObj(filename.substring(0, filename.lastIndexOf('.')) + "_" + partitionType + "_detail.obj", m_dmesh);
         saveObj(filename.substring(0, filename.lastIndexOf('.')) + "_" + partitionType + ".obj", m_pmesh);
+        m_ctx.print();
     }
 
     private void saveObj(String filename, PolyMesh mesh) {

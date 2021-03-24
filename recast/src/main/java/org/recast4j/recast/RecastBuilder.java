@@ -51,14 +51,16 @@ public class RecastBuilder {
         private final PolyMesh pmesh;
         private final PolyMeshDetail dmesh;
         private final Heightfield solid;
+        private final Telemetry telemetry;
 
         public RecastBuilderResult(Heightfield solid, CompactHeightfield chf, ContourSet cs, PolyMesh pmesh,
-                PolyMeshDetail dmesh) {
+                PolyMeshDetail dmesh, Telemetry ctx) {
             this.solid = solid;
             this.chf = chf;
             this.cs = cs;
             this.pmesh = pmesh;
             this.dmesh = dmesh;
+            this.telemetry = ctx;
         }
 
         public PolyMesh getMesh() {
@@ -79,6 +81,10 @@ public class RecastBuilder {
 
         public Heightfield getSolidHeightfield() {
             return solid;
+        }
+
+        public Telemetry getTelemetry() {
+            return telemetry;
         }
 
     }
@@ -144,7 +150,7 @@ public class RecastBuilder {
     public RecastBuilderResult build(InputGeomProvider geom, RecastBuilderConfig builderCfg) {
 
         RecastConfig cfg = builderCfg.cfg;
-        Context ctx = new Context();
+        Telemetry ctx = new Telemetry();
         Heightfield solid = buildSolidHeightfield(geom, builderCfg, ctx);
         CompactHeightfield chf = buildCompactHeightfield(geom, cfg, ctx, solid);
 
@@ -222,11 +228,11 @@ public class RecastBuilder {
         PolyMeshDetail dmesh = builderCfg.buildMeshDetail
                 ? RecastMeshDetail.buildPolyMeshDetail(ctx, pmesh, chf, cfg.detailSampleDist, cfg.detailSampleMaxError)
                 : null;
-        return new RecastBuilderResult(solid, chf, cset, pmesh, dmesh);
+        return new RecastBuilderResult(solid, chf, cset, pmesh, dmesh, ctx);
     }
 
     private Heightfield buildSolidHeightfield(InputGeomProvider geomProvider, RecastBuilderConfig builderCfg,
-            Context ctx) {
+            Telemetry ctx) {
         RecastConfig cfg = builderCfg.cfg;
         //
         // Step 2. Rasterize input polygon soup.
@@ -296,7 +302,7 @@ public class RecastBuilder {
         return solid;
     }
 
-    private CompactHeightfield buildCompactHeightfield(InputGeomProvider geomProvider, RecastConfig cfg, Context ctx,
+    private CompactHeightfield buildCompactHeightfield(InputGeomProvider geomProvider, RecastConfig cfg, Telemetry ctx,
             Heightfield solid) {
         //
         // Step 4. Partition walkable surface to simple regions.
@@ -317,7 +323,7 @@ public class RecastBuilder {
     }
 
     public HeightfieldLayerSet buildLayers(InputGeomProvider geom, RecastBuilderConfig builderCfg) {
-        Context ctx = new Context();
+        Telemetry ctx = new Telemetry();
         Heightfield solid = buildSolidHeightfield(geom, builderCfg, ctx);
         CompactHeightfield chf = buildCompactHeightfield(geom, builderCfg.cfg, ctx, solid);
         return RecastLayers.buildHeightfieldLayers(ctx, chf, builderCfg.borderSize, builderCfg.cfg.walkableHeight);

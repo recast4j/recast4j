@@ -31,7 +31,7 @@ public class RecastFilter {
     /// #rcFilterLedgeSpans after calling this filter.
     ///
     /// @see rcHeightfield, rcConfig
-    public static void filterLowHangingWalkableObstacles(Context ctx, int walkableClimb, Heightfield solid) {
+    public static void filterLowHangingWalkableObstacles(Telemetry ctx, int walkableClimb, Heightfield solid) {
 
         ctx.startTimer("FILTER_LOW_OBSTACLES");
 
@@ -73,7 +73,7 @@ public class RecastFilter {
     /// A span is a ledge if: <tt>rcAbs(currentSpan.smax - neighborSpan.smax) > walkableClimb</tt>
     ///
     /// @see rcHeightfield, rcConfig
-    public static void filterLedgeSpans(Context ctx, int walkableHeight, int walkableClimb, Heightfield solid) {
+    public static void filterLedgeSpans(Telemetry ctx, int walkableHeight, int walkableClimb, Heightfield solid) {
         ctx.startTimer("FILTER_BORDER");
 
         int w = solid.width;
@@ -158,7 +158,7 @@ public class RecastFilter {
     /// maximum to the next higher span's minimum. (Same grid column.)
     ///
     /// @see rcHeightfield, rcConfig
-    public static void filterWalkableLowHeightSpans(Context ctx, int walkableHeight, Heightfield solid) {
+    public static void filterWalkableLowHeightSpans(Telemetry ctx, int walkableHeight, Heightfield solid) {
         ctx.startTimer("FILTER_WALKABLE");
 
         int w = solid.width;

@@ -69,7 +69,7 @@ public class RecastLayers {
         return (amin > bmax || amax < bmin) ? false : true;
     }
 
-    public static HeightfieldLayerSet buildHeightfieldLayers(Context ctx, CompactHeightfield chf, int borderSize,
+    public static HeightfieldLayerSet buildHeightfieldLayers(Telemetry ctx, CompactHeightfield chf, int borderSize,
             int walkableHeight) {
 
         ctx.startTimer("RC_TIMER_BUILD_LAYERS");

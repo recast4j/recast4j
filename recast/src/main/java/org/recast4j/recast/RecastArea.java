@@ -33,7 +33,7 @@ public class RecastArea {
     /// This method is usually called immediately after the heightfield has been built.
     ///
     /// @see rcCompactHeightfield, rcBuildCompactHeightfield, rcConfig::walkableRadius
-    public static void erodeWalkableArea(Context ctx, int radius, CompactHeightfield chf) {
+    public static void erodeWalkableArea(Telemetry ctx, int radius, CompactHeightfield chf) {
         int w = chf.width;
         int h = chf.height;
         ctx.startTimer("ERODE_AREA");
@@ -186,7 +186,7 @@ public class RecastArea {
     /// such as #rcMarkBoxArea, #rcMarkConvexPolyArea, and #rcMarkCylinderArea.
     ///
     /// @see rcCompactHeightfield
-    public boolean medianFilterWalkableArea(Context ctx, CompactHeightfield chf) {
+    public boolean medianFilterWalkableArea(Telemetry ctx, CompactHeightfield chf) {
 
         int w = chf.width;
         int h = chf.height;
@@ -245,7 +245,7 @@ public class RecastArea {
     /// The value of spacial parameters are in world units.
     ///
     /// @see rcCompactHeightfield, rcMedianFilterWalkableArea
-    public void markBoxArea(Context ctx, float[] bmin, float[] bmax, AreaModification areaMod, CompactHeightfield chf) {
+    public void markBoxArea(Telemetry ctx, float[] bmin, float[] bmax, AreaModification areaMod, CompactHeightfield chf) {
         ctx.startTimer("MARK_BOX_AREA");
 
         int minx = (int) ((bmin[0] - chf.bmin[0]) / chf.cs);
@@ -312,7 +312,7 @@ public class RecastArea {
     /// projected onto the xz-plane at @p hmin, then extruded to @p hmax.
     ///
     /// @see rcCompactHeightfield, rcMedianFilterWalkableArea
-    public static void markConvexPolyArea(Context ctx, float[] verts, float hmin, float hmax, AreaModification areaMod,
+    public static void markConvexPolyArea(Telemetry ctx, float[] verts, float hmin, float hmax, AreaModification areaMod,
             CompactHeightfield chf) {
         ctx.startTimer("MARK_CONVEXPOLY_AREA");
 
@@ -449,7 +449,7 @@ public class RecastArea {
     /// The value of spacial parameters are in world units.
     ///
     /// @see rcCompactHeightfield, rcMedianFilterWalkableArea
-    public void markCylinderArea(Context ctx, float[] pos, float r, float h, AreaModification areaMod,
+    public void markCylinderArea(Telemetry ctx, float[] pos, float r, float h, AreaModification areaMod,
             CompactHeightfield chf) {
 
         ctx.startTimer("MARK_CYLINDER_AREA");
