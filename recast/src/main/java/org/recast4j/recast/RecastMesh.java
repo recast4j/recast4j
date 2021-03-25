@@ -508,7 +508,7 @@ public class RecastMesh {
         return an;
     }
 
-    private static boolean canRemoveVertex(Context ctx, PolyMesh mesh, int rem) {
+    private static boolean canRemoveVertex(Telemetry ctx, PolyMesh mesh, int rem) {
         int nvp = mesh.nvp;
 
         // Count number of polygons to remove.
@@ -592,7 +592,7 @@ public class RecastMesh {
         return true;
     }
 
-    private static void removeVertex(Context ctx, PolyMesh mesh, int rem, int maxTris) {
+    private static void removeVertex(Telemetry ctx, PolyMesh mesh, int rem, int maxTris) {
         int nvp = mesh.nvp;
 
         // Count number of polygons to remove.
@@ -844,8 +844,8 @@ public class RecastMesh {
     /// limit must be retricted to <= #DT_VERTS_PER_POLYGON.
     ///
     /// @see rcAllocPolyMesh, rcContourSet, rcPolyMesh, rcConfig
-    public static PolyMesh buildPolyMesh(Context ctx, ContourSet cset, int nvp) {
-        ctx.startTimer("BUILD_POLYMESH");
+    public static PolyMesh buildPolyMesh(Telemetry ctx, ContourSet cset, int nvp) {
+        ctx.startTimer("POLYMESH");
         PolyMesh mesh = new PolyMesh();
         RecastVectors.copy(mesh.bmin, cset.bmin, 0);
         RecastVectors.copy(mesh.bmax, cset.bmax, 0);
@@ -1056,13 +1056,13 @@ public class RecastMesh {
                     + " (max " + 0xffff + "). Data can be corrupted.");
         }
 
-        ctx.stopTimer("BUILD_POLYMESH");
+        ctx.stopTimer("POLYMESH");
         return mesh;
 
     }
 
     /// @see rcAllocPolyMesh, rcPolyMesh
-    public static PolyMesh mergePolyMeshes(Context ctx, PolyMesh[] meshes, int nmeshes) {
+    public static PolyMesh mergePolyMeshes(Telemetry ctx, PolyMesh[] meshes, int nmeshes) {
 
         if (nmeshes == 0 || meshes == null)
             return null;
@@ -1182,7 +1182,7 @@ public class RecastMesh {
         return mesh;
     }
 
-    public static PolyMesh copyPolyMesh(Context ctx, PolyMesh src) {
+    public static PolyMesh copyPolyMesh(Telemetry ctx, PolyMesh src) {
         PolyMesh dst = new PolyMesh();
 
         dst.nverts = src.nverts;

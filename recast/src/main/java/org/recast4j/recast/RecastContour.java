@@ -18,13 +18,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
-import static org.recast4j.recast.RecastConstants.RC_AREA_BORDER;
-import static org.recast4j.recast.RecastConstants.RC_BORDER_REG;
-import static org.recast4j.recast.RecastConstants.RC_BORDER_VERTEX;
-import static org.recast4j.recast.RecastConstants.RC_CONTOUR_REG_MASK;
-import static org.recast4j.recast.RecastConstants.RC_CONTOUR_TESS_AREA_EDGES;
-import static org.recast4j.recast.RecastConstants.RC_CONTOUR_TESS_WALL_EDGES;
-import static org.recast4j.recast.RecastConstants.RC_NOT_CONNECTED;
+import static org.recast4j.recast.RecastConstants.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -584,7 +578,7 @@ public class RecastContour {
         }
     }
 
-    private static void mergeRegionHoles(Context ctx, ContourRegion region) {
+    private static void mergeRegionHoles(Telemetry ctx, ContourRegion region) {
         // Sort holes from left to right.
         for (int i = 0; i < region.nholes; i++) {
             int[] minleft = findLeftMostVertex(region.holes[i].contour);
@@ -637,7 +631,7 @@ public class RecastContour {
                 index = -1;
                 for (int j = 0; j < ndiags; j++) {
                     int pt = diags[j].vert * 4;
-                    boolean intersect = intersectSegCountour(pt, corner, diags[i].vert, outline.nverts, outline.verts,
+                    boolean intersect = intersectSegCountour(pt, corner, diags[j].vert, outline.nverts, outline.verts,
                             outline.verts, hole.verts);
                     for (int k = i; k < region.nholes && !intersect; k++)
                         intersect |= intersectSegCountour(pt, corner, -1, region.holes[k].contour.nverts,
@@ -675,7 +669,7 @@ public class RecastContour {
     /// See the #rcConfig documentation for more information on the configuration parameters.
     ///
     /// @see rcAllocContourSet, rcCompactHeightfield, rcContourSet, rcConfig
-    public static ContourSet buildContours(Context ctx, CompactHeightfield chf, float maxError, int maxEdgeLen,
+    public static ContourSet buildContours(Telemetry ctx, CompactHeightfield chf, float maxError, int maxEdgeLen,
             int buildFlags) {
 
         int w = chf.width;
@@ -683,7 +677,7 @@ public class RecastContour {
         int borderSize = chf.borderSize;
         ContourSet cset = new ContourSet();
 
-        ctx.startTimer("BUILD_CONTOURS");
+        ctx.startTimer("CONTOURS");
         RecastVectors.copy(cset.bmin, chf.bmin, 0);
         RecastVectors.copy(cset.bmax, chf.bmax, 0);
         if (borderSize > 0) {
@@ -703,7 +697,7 @@ public class RecastContour {
 
         int[] flags = new int[chf.spanCount];
 
-        ctx.startTimer("BUILD_CONTOURS_TRACE");
+        ctx.startTimer("CONTOURS_TRACE");
 
         // Mark boundaries.
         for (int y = 0; y < h; ++y) {
@@ -732,7 +726,7 @@ public class RecastContour {
             }
         }
 
-        ctx.stopTimer("BUILD_CONTOURS_TRACE");
+        ctx.stopTimer("CONTOURS_TRACE");
 
         List<Integer> verts = new ArrayList<>(256);
         List<Integer> simplified = new ArrayList<>(64);
@@ -753,14 +747,14 @@ public class RecastContour {
                     verts.clear();
                     simplified.clear();
 
-                    ctx.startTimer("BUILD_CONTOURS_TRACE");
+                    ctx.startTimer("CONTOURS_WALK");
                     walkContour(x, y, i, chf, flags, verts);
-                    ctx.stopTimer("BUILD_CONTOURS_TRACE");
+                    ctx.stopTimer("CONTOURS_WALK");
 
-                    ctx.startTimer("BUILD_CONTOURS_SIMPLIFY");
+                    ctx.startTimer("CONTOURS_SIMPLIFY");
                     simplifyContour(verts, simplified, maxError, maxEdgeLen, buildFlags);
                     removeDegenerateSegments(simplified);
-                    ctx.stopTimer("BUILD_CONTOURS_SIMPLIFY");
+                    ctx.stopTimer("CONTOURS_SIMPLIFY");
 
                     // Store region->contour remap info.
                     // Create contour.
@@ -872,7 +866,7 @@ public class RecastContour {
                 }
             }
         }
-        ctx.stopTimer("BUILD_CONTOURS");
+        ctx.stopTimer("CONTOURS");
         return cset;
     }
 }

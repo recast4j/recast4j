@@ -142,25 +142,7 @@ public class RecastDebugDraw extends DebugDraw {
                 }
             }
 
-            PolyDetail pd = tile.data.detailMeshes[i];
-            if (pd != null) {
-                for (int j = 0; j < pd.triCount; ++j) {
-                    int t = (pd.triBase + j) * 4;
-                    for (int k = 0; k < 3; ++k) {
-                        int v = tile.data.detailTris[t + k];
-                        if (v < p.vertCount) {
-                            vertex(tile.data.verts[p.verts[v] * 3], tile.data.verts[p.verts[v] * 3 + 1],
-                                    tile.data.verts[p.verts[v] * 3 + 2], col);
-                        } else {
-                            vertex(tile.data.detailVerts[(pd.vertBase + v - p.vertCount) * 3],
-                                    tile.data.detailVerts[(pd.vertBase + v - p.vertCount) * 3 + 1],
-                                    tile.data.detailVerts[(pd.vertBase + v - p.vertCount) * 3 + 2], col);
-                        }
-                    }
-                }
-            } else {
-                // FIXME: Draw Poly if PolyDetail is unavailable
-            }
+            drawPoly(tile, i, col);
 
         }
         end();
@@ -242,6 +224,38 @@ public class RecastDebugDraw extends DebugDraw {
         depthMask(true);
     }
 
+    private void drawPoly(MeshTile tile, int index, int col) {
+        Poly p = tile.data.polys[index];
+        if (tile.data.detailMeshes != null) {
+            PolyDetail pd = tile.data.detailMeshes[index];
+            if (pd != null) {
+                for (int j = 0; j < pd.triCount; ++j) {
+                    int t = (pd.triBase + j) * 4;
+                    for (int k = 0; k < 3; ++k) {
+                        int v = tile.data.detailTris[t + k];
+                        if (v < p.vertCount) {
+                            vertex(tile.data.verts[p.verts[v] * 3], tile.data.verts[p.verts[v] * 3 + 1],
+                                    tile.data.verts[p.verts[v] * 3 + 2], col);
+                        } else {
+                            vertex(tile.data.detailVerts[(pd.vertBase + v - p.vertCount) * 3],
+                                    tile.data.detailVerts[(pd.vertBase + v - p.vertCount) * 3 + 1],
+                                    tile.data.detailVerts[(pd.vertBase + v - p.vertCount) * 3 + 2], col);
+                        }
+                    }
+                }
+            }
+        } else {
+            for (int j = 1; j < p.vertCount - 1; ++j) {
+                vertex(tile.data.verts[p.verts[0] * 3], tile.data.verts[p.verts[0] * 3 + 1],
+                        tile.data.verts[p.verts[0] * 3 + 2], col);
+                for (int k = 0; k < 2; ++k) {
+                    vertex(tile.data.verts[p.verts[j + k] * 3], tile.data.verts[p.verts[j + k] * 3 + 1],
+                            tile.data.verts[p.verts[j + k] * 3 + 2], col);
+                }
+            }
+        }
+    }
+
     void drawPolyBoundaries(MeshTile tile, int col, float linew, boolean inner) {
         float thr = 0.01f * 0.01f;
 
@@ -253,8 +267,6 @@ public class RecastDebugDraw extends DebugDraw {
             if (p.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
                 continue;
             }
-
-            PolyDetail pd = tile.data.detailMeshes[i];
 
             for (int j = 0, nj = p.vertCount; j < nj; ++j) {
                 int c = col;
@@ -292,32 +304,38 @@ public class RecastDebugDraw extends DebugDraw {
 
                 // Draw detail mesh edges which align with the actual poly edge.
                 // This is really slow.
-                for (int k = 0; k < pd.triCount; ++k) {
-                    int t = (pd.triBase + k) * 4;
-                    float[][] tv = new float[3][];
-                    for (int m = 0; m < 3; ++m) {
-                        int v = tile.data.detailTris[t + m];
-                        if (v < p.vertCount) {
-                            tv[m] = new float[] { tile.data.verts[p.verts[v] * 3], tile.data.verts[p.verts[v] * 3 + 1],
-                                    tile.data.verts[p.verts[v] * 3 + 2] };
-                        } else {
-                            tv[m] = new float[] { tile.data.detailVerts[(pd.vertBase + (v - p.vertCount)) * 3],
-                                    tile.data.detailVerts[(pd.vertBase + (v - p.vertCount)) * 3 + 1],
-                                    tile.data.detailVerts[(pd.vertBase + (v - p.vertCount)) * 3 + 2] };
+                if (tile.data.detailMeshes != null) {
+                    PolyDetail pd = tile.data.detailMeshes[i];
+                    for (int k = 0; k < pd.triCount; ++k) {
+                        int t = (pd.triBase + k) * 4;
+                        float[][] tv = new float[3][];
+                        for (int m = 0; m < 3; ++m) {
+                            int v = tile.data.detailTris[t + m];
+                            if (v < p.vertCount) {
+                                tv[m] = new float[] { tile.data.verts[p.verts[v] * 3], tile.data.verts[p.verts[v] * 3 + 1],
+                                        tile.data.verts[p.verts[v] * 3 + 2] };
+                            } else {
+                                tv[m] = new float[] { tile.data.detailVerts[(pd.vertBase + (v - p.vertCount)) * 3],
+                                        tile.data.detailVerts[(pd.vertBase + (v - p.vertCount)) * 3 + 1],
+                                        tile.data.detailVerts[(pd.vertBase + (v - p.vertCount)) * 3 + 2] };
+                            }
                         }
-                    }
-                    for (int m = 0, n = 2; m < 3; n = m++) {
-                        if ((NavMesh.getDetailTriEdgeFlags(tile.data.detailTris[t + 3], n) & NavMesh.DT_DETAIL_EDGE_BOUNDARY) == 0)
-                            continue;
+                        for (int m = 0, n = 2; m < 3; n = m++) {
+                            if ((NavMesh.getDetailTriEdgeFlags(tile.data.detailTris[t + 3], n) & NavMesh.DT_DETAIL_EDGE_BOUNDARY) == 0)
+                                continue;
 
-                        if (((tile.data.detailTris[t + 3] >> (n * 2)) & 0x3) == 0) {
-                            continue; // Skip inner detail edges.
-                        }
-                        if (distancePtLine2d(tv[n], v0, v1) < thr && distancePtLine2d(tv[m], v0, v1) < thr) {
-                            vertex(tv[n], c);
-                            vertex(tv[m], c);
+                            if (((tile.data.detailTris[t + 3] >> (n * 2)) & 0x3) == 0) {
+                                continue; // Skip inner detail edges.
+                            }
+                            if (distancePtLine2d(tv[n], v0, v1) < thr && distancePtLine2d(tv[m], v0, v1) < thr) {
+                                vertex(tv[n], c);
+                                vertex(tv[m], c);
+                            }
                         }
                     }
+                } else {
+                    vertex(v0, c);
+                    vertex(v1, c);
                 }
             }
         }
@@ -1042,26 +1060,8 @@ public class RecastDebugDraw extends DebugDraw {
 
             end();
         } else {
-            PolyDetail pd = tile.data.detailMeshes[ip];
-
             begin(DebugDrawPrimitives.TRIS);
-            for (int i = 0; i < pd.triCount; ++i) {
-                int t = (pd.triBase + i) * 4;
-                for (int j = 0; j < 3; ++j) {
-                    if (tile.data.detailTris[t + j] < poly.vertCount) {
-                        vertex(tile.data.verts[poly.verts[tile.data.detailTris[t + j]] * 3],
-                                tile.data.verts[poly.verts[tile.data.detailTris[t + j]] * 3 + 1],
-                                tile.data.verts[poly.verts[tile.data.detailTris[t + j]] * 3 + 2], c);
-                    } else {
-                        vertex(tile.data.detailVerts[(pd.vertBase + tile.data.detailTris[t + j] - poly.vertCount) * 3],
-                                tile.data.detailVerts[(pd.vertBase + tile.data.detailTris[t + j] - poly.vertCount) * 3
-                                        + 1],
-                                tile.data.detailVerts[(pd.vertBase + tile.data.detailTris[t + j] - poly.vertCount) * 3
-                                        + 2],
-                                c);
-                    }
-                }
-            }
+            drawPoly(tile, ip, col);
             end();
         }
 
