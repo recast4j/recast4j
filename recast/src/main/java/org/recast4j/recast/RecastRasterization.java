@@ -22,7 +22,7 @@ import static org.recast4j.recast.RecastConstants.RC_SPAN_MAX_HEIGHT;
 
 public class RecastRasterization {
 
-    private static boolean overlapBounds(float[] amin, float[] amax, float[] bmin, float[] bmax) {
+    public static boolean overlapBounds(float[] amin, float[] amax, float[] bmin, float[] bmax) {
         boolean overlap = true;
         overlap = (amin[0] > bmax[0] || amax[0] < bmin[0]) ? false : overlap;
         overlap = (amin[1] > bmax[1] || amax[1] < bmin[1]) ? false : overlap;
@@ -36,7 +36,7 @@ public class RecastRasterization {
      *
      * @see Heightfield, Span.
      */
-    private static void addSpan(Heightfield hf, int x, int y, int smin, int smax, int area, int flagMergeThr) {
+    public static void addSpan(Heightfield hf, int x, int y, int smin, int smax, int area, int flagMergeThr) {
 
         int idx = x + y * hf.width;
 
@@ -249,8 +249,8 @@ public class RecastRasterization {
      *
      * @see Heightfield
      */
-    public static void rasterizeTriangle(Telemetry ctx, float[] verts, int v0, int v1, int v2, int area,
-            Heightfield solid, int flagMergeThr) {
+    public static void rasterizeTriangle(Heightfield solid, float[] verts, int v0, int v1, int v2, int area,
+            int flagMergeThr, Telemetry ctx) {
 
         ctx.startTimer("RASTERIZE_TRIANGLES");
 
@@ -266,8 +266,8 @@ public class RecastRasterization {
      *
      * @see Heightfield
      */
-    public static void rasterizeTriangles(Telemetry ctx, float[] verts, int[] tris, int[] areas, int nt,
-            Heightfield solid, int flagMergeThr) {
+    public static void rasterizeTriangles(Heightfield solid, float[] verts, int[] tris, int[] areas, int nt,
+            int flagMergeThr, Telemetry ctx) {
 
         ctx.startTimer("RASTERIZE_TRIANGLES");
 
@@ -290,8 +290,8 @@ public class RecastRasterization {
      *
      * @see Heightfield
      */
-    public static void rasterizeTriangles(Telemetry ctx, float[] verts, int[] areas, int nt, Heightfield solid,
-            int flagMergeThr) {
+    public static void rasterizeTriangles(Heightfield solid, float[] verts, int[] areas, int nt, int flagMergeThr,
+            Telemetry ctx) {
         ctx.startTimer("RASTERIZE_TRIANGLES");
 
         float ics = 1.0f / solid.cs;
@@ -306,4 +306,5 @@ public class RecastRasterization {
         }
         ctx.stopTimer("RASTERIZE_TRIANGLES");
     }
+
 }

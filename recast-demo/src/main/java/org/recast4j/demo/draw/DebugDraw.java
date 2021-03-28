@@ -22,6 +22,8 @@ public class DebugDraw {
 
     private final GLCheckerTexture g_tex = new GLCheckerTexture();
     private final OpenGLDraw openGlDraw = new ModernOpenGLDraw();
+    private final int[] boxIndices = { 7, 6, 5, 4, 0, 1, 2, 3, 1, 5, 6, 2, 3, 7, 4, 0, 2, 6, 7, 3, 0, 4, 5, 1, };
+
 
     public void begin(DebugDrawPrimitives prim) {
         begin(prim, 1f);
@@ -113,17 +115,16 @@ public class DebugDraw {
     void appendBox(float minx, float miny, float minz, float maxx, float maxy, float maxz, int[] fcol) {
         float[][] verts = { { minx, miny, minz }, { maxx, miny, minz }, { maxx, miny, maxz }, { minx, miny, maxz },
                 { minx, maxy, minz }, { maxx, maxy, minz }, { maxx, maxy, maxz }, { minx, maxy, maxz } };
-        int[] inds = { 7, 6, 5, 4, 0, 1, 2, 3, 1, 5, 6, 2, 3, 7, 4, 0, 2, 6, 7, 3, 0, 4, 5, 1, };
 
         int in = 0;
         for (int i = 0; i < 6; ++i) {
-            vertex(verts[inds[in]], fcol[i]);
+            vertex(verts[boxIndices[in]], fcol[i]);
             in++;
-            vertex(verts[inds[in]], fcol[i]);
+            vertex(verts[boxIndices[in]], fcol[i]);
             in++;
-            vertex(verts[inds[in]], fcol[i]);
+            vertex(verts[boxIndices[in]], fcol[i]);
             in++;
-            vertex(verts[inds[in]], fcol[i]);
+            vertex(verts[boxIndices[in]], fcol[i]);
             in++;
         }
     }
