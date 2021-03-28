@@ -14,11 +14,11 @@ public abstract class AbstractNavMeshBuilder {
             float m_cellHeight, float m_agentHeight, float m_agentRadius, float m_agentMaxClimb,
             RecastBuilderResult rcResult) {
         PolyMesh m_pmesh = rcResult.getMesh();
+        PolyMeshDetail m_dmesh = rcResult.getMeshDetail();
+        NavMeshDataCreateParams params = new NavMeshDataCreateParams();
         for (int i = 0; i < m_pmesh.npolys; ++i) {
             m_pmesh.flags[i] = 1;
         }
-        PolyMeshDetail m_dmesh = rcResult.getMeshDetail();
-        NavMeshDataCreateParams params = new NavMeshDataCreateParams();
         params.verts = m_pmesh.verts;
         params.vertCount = m_pmesh.nverts;
         params.polys = m_pmesh.polys;

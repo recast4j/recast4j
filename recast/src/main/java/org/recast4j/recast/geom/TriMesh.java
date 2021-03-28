@@ -31,7 +31,7 @@ public class TriMesh {
     public TriMesh(float[] vertices, int[] faces) {
         this.vertices = vertices;
         this.faces = faces;
-        chunkyTriMesh = new ChunkyTriMesh(vertices, faces, faces.length / 3, 256);
+        chunkyTriMesh = new ChunkyTriMesh(vertices, faces, faces.length / 3, 32);
     }
 
     public int[] getTris() {

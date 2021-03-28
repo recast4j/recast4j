@@ -405,9 +405,10 @@ public class RecastDemo {
                 }
             } else if (settingsUI.isNavMeshInputTrigerred()) {
                 try (MemoryStack stack = stackPush()) {
-                    PointerBuffer aFilterPatterns = stack.mallocPointer(2);
+                    PointerBuffer aFilterPatterns = stack.mallocPointer(3);
                     aFilterPatterns.put(stack.UTF8("*.bin"));
                     aFilterPatterns.put(stack.UTF8("*.zip"));
+                    aFilterPatterns.put(stack.UTF8("*.bytes"));
                     aFilterPatterns.flip();
                     String filename = TinyFileDialogs.tinyfd_openFileDialog("Open Nav Mesh File", "", aFilterPatterns,
                             "Nav Mesh File", false);
@@ -566,9 +567,9 @@ public class RecastDemo {
 
     private void loadNavMesh(File file, String filename) throws Exception {
         NavMesh mesh = null;
-        if (filename.endsWith(".zip")) {
+        if (filename.endsWith(".zip") || filename.endsWith(".bytes")) {
             UnityAStarPathfindingImporter importer = new UnityAStarPathfindingImporter();
-            mesh = importer.load(file, 6)[0];
+            mesh = importer.load(file)[0];
         } else if (filename.endsWith(".bin")) {
             MeshSetReader reader = new MeshSetReader();
             try (FileInputStream fis = new FileInputStream(file)) {
