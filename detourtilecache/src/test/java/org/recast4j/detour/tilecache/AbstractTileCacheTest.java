@@ -53,7 +53,7 @@ public class AbstractTileCacheTest {
 
     public TileCache getTileCache(InputGeomProvider geom, ByteOrder order, boolean cCompatibility) {
         TileCacheParams params = new TileCacheParams();
-        int[] twh = Recast.calcTileCount(geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), m_cellSize, m_tileSize);
+        int[] twh = Recast.calcTileCount(geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), m_cellSize, m_tileSize, m_tileSize);
         params.ch = m_cellHeight;
         params.cs = m_cellSize;
         vCopy(params.orig, geom.getMeshBoundsMin());

@@ -47,16 +47,15 @@ public class TestTiledNavMeshBuilder {
     private final static int m_tileSize = 32;
 
     public TestTiledNavMeshBuilder() {
-        this(new ObjImporter().load(ObjImporter.class.getResourceAsStream("dungeon.obj")), PartitionType.WATERSHED,
-                m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope,
-                m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist,
-                m_detailSampleMaxError, m_tileSize);
+        this(new ObjImporter().load(ObjImporter.class.getResourceAsStream("dungeon.obj")), PartitionType.WATERSHED, m_cellSize,
+                m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize,
+                m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, m_tileSize);
     }
 
-    public TestTiledNavMeshBuilder(InputGeomProvider m_geom, PartitionType m_partitionType, float m_cellSize,
-            float m_cellHeight, float m_agentHeight, float m_agentRadius, float m_agentMaxClimb, float m_agentMaxSlope,
-            int m_regionMinSize, int m_regionMergeSize, float m_edgeMaxLen, float m_edgeMaxError, int m_vertsPerPoly,
-            float m_detailSampleDist, float m_detailSampleMaxError, int m_tileSize) {
+    public TestTiledNavMeshBuilder(InputGeomProvider m_geom, PartitionType m_partitionType, float m_cellSize, float m_cellHeight,
+            float m_agentHeight, float m_agentRadius, float m_agentMaxClimb, float m_agentMaxSlope, int m_regionMinSize,
+            int m_regionMergeSize, float m_edgeMaxLen, float m_edgeMaxError, int m_vertsPerPoly, float m_detailSampleDist,
+            float m_detailSampleMaxError, int m_tileSize) {
 
         // Create empty nav mesh
         NavMeshParams navMeshParams = new NavMeshParams();
@@ -68,10 +67,10 @@ public class TestTiledNavMeshBuilder {
         navMesh = new NavMesh(navMeshParams, 6);
 
         // Build all tiles
-        RecastConfig cfg = new RecastConfig(m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
-                m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
-                m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, m_tileSize,
-                SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
+        RecastConfig cfg = new RecastConfig(true, m_tileSize, m_tileSize, RecastConfig.calcBorder(m_agentRadius, m_cellSize),
+                m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope,
+                m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist,
+                m_detailSampleMaxError, SampleAreaModifications.SAMPLE_AREAMOD_GROUND, true, true, true, true);
         RecastBuilder rcBuilder = new RecastBuilder();
         RecastBuilderResult[][] rcResult = rcBuilder.buildTiles(m_geom, cfg, 1);
 

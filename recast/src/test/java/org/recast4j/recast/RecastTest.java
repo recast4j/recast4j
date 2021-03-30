@@ -25,7 +25,7 @@ import org.junit.Test;
 public class RecastTest {
 
     @Test
-    public void textClearUnwalkableTriangles() {
+    public void testClearUnwalkableTriangles() {
         float walkableSlopeAngle = 45;
         float verts[] = { 0, 0, 0, 1, 0, 0, 0, 0, -1 };
         int nv = 3;

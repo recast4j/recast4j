@@ -56,13 +56,13 @@ public class TestTileLayerBuilder extends AbstractTileLayersBuilder {
 
     public TestTileLayerBuilder(InputGeomProvider geom) {
         this.geom = geom;
-        rcConfig = new RecastConfig(PartitionType.WATERSHED, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
-                m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
-                m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, m_tileSize,
-                SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
+        rcConfig = new RecastConfig(true, m_tileSize, m_tileSize, RecastConfig.calcBorder(m_agentRadius, m_cellSize),
+                PartitionType.WATERSHED, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope,
+                m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist,
+                m_detailSampleMaxError, SampleAreaModifications.SAMPLE_AREAMOD_GROUND, true, true, true, true);
         float[] bmin = geom.getMeshBoundsMin();
         float[] bmax = geom.getMeshBoundsMax();
-        int[] twh = Recast.calcTileCount(bmin, bmax, m_cellSize, m_tileSize);
+        int[] twh = Recast.calcTileCount(bmin, bmax, m_cellSize, m_tileSize, m_tileSize);
         tw = twh[0];
         th = twh[1];
     }
@@ -109,8 +109,7 @@ public class TestTileLayerBuilder extends AbstractTileLayersBuilder {
                 header.maxy = layer.maxy;
                 header.hmin = layer.hmin;
                 header.hmax = layer.hmax;
-                result.add(builder.compressTileCacheLayer(header, layer.heights, layer.areas, layer.cons, order,
-                        cCompatibility));
+                result.add(builder.compressTileCacheLayer(header, layer.heights, layer.areas, layer.cons, order, cCompatibility));
             }
         }
         return result;
@@ -120,7 +119,7 @@ public class TestTileLayerBuilder extends AbstractTileLayersBuilder {
         RecastBuilder rcBuilder = new RecastBuilder();
         float[] bmin = geom.getMeshBoundsMin();
         float[] bmax = geom.getMeshBoundsMax();
-        RecastBuilderConfig cfg = new RecastBuilderConfig(rcConfig, bmin, bmax, tx, ty, true);
+        RecastBuilderConfig cfg = new RecastBuilderConfig(rcConfig, bmin, bmax, tx, ty);
         HeightfieldLayerSet lset = rcBuilder.buildLayers(geom, cfg);
         return lset;
     }
