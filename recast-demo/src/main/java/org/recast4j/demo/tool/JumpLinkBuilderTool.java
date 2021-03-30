@@ -64,9 +64,6 @@ public class JumpLinkBuilderTool implements Tool {
     public void setSample(Sample sample) {
         this.sample = sample;
         annotationBuilder = null;
-        if (!this.sample.getRecastResults().isEmpty()) {
-            annotationBuilder = new JumpLinkBuilder(sample.getRecastResults());
-        }
     }
 
     @Override
@@ -367,6 +364,11 @@ public class JumpLinkBuilderTool implements Tool {
                 buildOffMeshConnections = true;
             }
             if (build || buildOffMeshConnections) {
+                if (annotationBuilder == null) {
+                    if (sample != null && !sample.getRecastResults().isEmpty()) {
+                        annotationBuilder = new JumpLinkBuilder(sample.getRecastResults());
+                    }
+                }
                 links.clear();
                 if (annotationBuilder != null) {
                     float cellSize = sample.getSettingsUI().getCellSize();

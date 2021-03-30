@@ -79,16 +79,17 @@ public class MeshSetReaderWriterTest {
 
         float[] bmin = geom.getMeshBoundsMin();
         float[] bmax = geom.getMeshBoundsMax();
-        int[] twh = Recast.calcTileCount(bmin, bmax, m_cellSize, m_tileSize);
+        int[] twh = Recast.calcTileCount(bmin, bmax, m_cellSize, m_tileSize, m_tileSize);
         int tw = twh[0];
         int th = twh[1];
         for (int y = 0; y < th; ++y) {
             for (int x = 0; x < tw; ++x) {
-                RecastConfig cfg = new RecastConfig(PartitionType.WATERSHED, m_cellSize, m_cellHeight, m_agentHeight,
-                        m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize,
+                RecastConfig cfg = new RecastConfig(true, m_tileSize, m_tileSize,
+                        RecastConfig.calcBorder(m_agentRadius, m_cellSize), PartitionType.WATERSHED, m_cellSize, m_cellHeight,
+                        m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize,
                         m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError,
-                        m_tileSize, SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
-                RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, bmin, bmax, x, y, true);
+                        SampleAreaModifications.SAMPLE_AREAMOD_GROUND, true, true, true, true);
+                RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, bmin, bmax, x, y);
                 TestDetourBuilder db = new TestDetourBuilder();
                 MeshData data = db.build(geom, bcfg, m_agentHeight, m_agentRadius, m_agentMaxClimb, x, y, true);
                 if (data != null) {

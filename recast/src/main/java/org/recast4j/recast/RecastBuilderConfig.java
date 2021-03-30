@@ -36,36 +36,21 @@ public class RecastBuilderConfig {
     /** The maximum bounds of the field's AABB. [(x, y, z)] [Units: wu] **/
     public final float[] bmax = new float[3];
 
-    /** The size of the non-navigable border around the heightfield. [Limit: >=0] [Units: vx] **/
-    public final int borderSize;
-
-    /** Set to true for tiled build **/
-    public final boolean tiled;
-
-    /** Set to false to disable building detailed mesh **/
-    public final boolean buildMeshDetail;
-
     public RecastBuilderConfig(RecastConfig cfg, float[] bmin, float[] bmax) {
-        this(cfg, bmin, bmax, 0, 0, false);
+        this(cfg, bmin, bmax, 0, 0);
     }
 
-    public RecastBuilderConfig(RecastConfig cfg, float[] bmin, float[] bmax, int tx, int ty, boolean tiled) {
-        this(cfg, bmin, bmax, tx, ty, tiled, true);
-    }
-
-    public RecastBuilderConfig(RecastConfig cfg, float[] bmin, float[] bmax, int tx, int ty, boolean tiled,
-            boolean buildMeshDetail) {
+    public RecastBuilderConfig(RecastConfig cfg, float[] bmin, float[] bmax, int tx, int ty) {
         this.cfg = cfg;
-        this.tiled = tiled;
-        this.buildMeshDetail = buildMeshDetail;
         copy(this.bmin, bmin);
         copy(this.bmax, bmax);
-        if (tiled) {
-            float ts = cfg.tileSize * cfg.cs;
-            this.bmin[0] += tx * ts;
-            this.bmin[2] += ty * ts;
-            this.bmax[0] = this.bmin[0] + ts;
-            this.bmax[2] = this.bmin[2] + ts;
+        if (cfg.useTiles) {
+            float tsx = cfg.tileSizeX * cfg.cs;
+            float tsz = cfg.tileSizeZ * cfg.cs;
+            this.bmin[0] += tx * tsx;
+            this.bmin[2] += ty * tsz;
+            this.bmax[0] = this.bmin[0] + tsx;
+            this.bmax[2] = this.bmin[2] + tsz;
             // Expand the heighfield bounding box by border size to find the extents of geometry we need to build this
             // tile.
             //
@@ -89,18 +74,16 @@ public class RecastBuilderConfig {
             // you will need to pass in data from neighbour terrain tiles too! In a simple case, just pass in all the 8
             // neighbours,
             // or use the bounding box below to only pass in a sliver of each of the 8 neighbours.
-            borderSize = cfg.walkableRadius + 3; // Reserve enough padding.
-            this.bmin[0] -= borderSize * cfg.cs;
-            this.bmin[2] -= borderSize * cfg.cs;
-            this.bmax[0] += borderSize * cfg.cs;
-            this.bmax[2] += borderSize * cfg.cs;
-            width = cfg.tileSize + borderSize * 2;
-            height = cfg.tileSize + borderSize * 2;
+            this.bmin[0] -= cfg.borderSize * cfg.cs;
+            this.bmin[2] -= cfg.borderSize * cfg.cs;
+            this.bmax[0] += cfg.borderSize * cfg.cs;
+            this.bmax[2] += cfg.borderSize * cfg.cs;
+            width = cfg.tileSizeX + cfg.borderSize * 2;
+            height = cfg.tileSizeZ + cfg.borderSize * 2;
         } else {
             int[] wh = Recast.calcGridSize(this.bmin, this.bmax, cfg.cs);
             width = wh[0];
             height = wh[1];
-            borderSize = 0;
         }
     }
 

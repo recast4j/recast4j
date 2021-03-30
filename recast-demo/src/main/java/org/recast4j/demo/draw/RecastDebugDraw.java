@@ -216,8 +216,9 @@ public class RecastDebugDraw extends DebugDraw {
 
         int vcol = duRGBA(0, 0, 0, 196);
         begin(DebugDrawPrimitives.POINTS, 3.0f);
-        for (int i = 0; i < tile.data.header.vertCount; i += 3) {
-            vertex(tile.data.verts[i], tile.data.verts[i + 1], tile.data.verts[i + 2], vcol);
+        for (int i = 0; i < tile.data.header.vertCount; i++) {
+            int v = i * 3;
+            vertex(tile.data.verts[v], tile.data.verts[v + 1], tile.data.verts[v + 2], vcol);
         }
         end();
 

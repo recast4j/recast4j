@@ -51,32 +51,31 @@ public class RecastTileMeshTest {
         ObjImporter importer = new ObjImporter();
         InputGeomProvider geom = importer.load(getClass().getResourceAsStream(filename));
         RecastBuilder builder = new RecastBuilder();
-        RecastConfig cfg = new RecastConfig(m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
-                m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
-                m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, m_tileSize,
-                SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
-        RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 7, 8,
-                true);
+        RecastConfig cfg = new RecastConfig(true, m_tileSize, m_tileSize, RecastConfig.calcBorder(m_agentRadius, m_cellSize),
+                m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope,
+                m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist,
+                m_detailSampleMaxError, SampleAreaModifications.SAMPLE_AREAMOD_GROUND, true, true, true, true);
+        RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 7, 8);
         RecastBuilderResult rcResult = builder.build(geom, bcfg);
         assertEquals(1, rcResult.getMesh().npolys);
         assertEquals(5, rcResult.getMesh().nverts);
-        bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 6, 9, true);
+        bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 6, 9);
         rcResult = builder.build(geom, bcfg);
         assertEquals(2, rcResult.getMesh().npolys);
         assertEquals(7, rcResult.getMesh().nverts);
-        bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 2, 9, true);
+        bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 2, 9);
         rcResult = builder.build(geom, bcfg);
         assertEquals(2, rcResult.getMesh().npolys);
         assertEquals(9, rcResult.getMesh().nverts);
-        bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 4, 3, true);
+        bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 4, 3);
         rcResult = builder.build(geom, bcfg);
         assertEquals(3, rcResult.getMesh().npolys);
         assertEquals(6, rcResult.getMesh().nverts);
-        bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 2, 8, true);
+        bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 2, 8);
         rcResult = builder.build(geom, bcfg);
         assertEquals(5, rcResult.getMesh().npolys);
         assertEquals(17, rcResult.getMesh().nverts);
-        bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 0, 8, true);
+        bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 0, 8);
         rcResult = builder.build(geom, bcfg);
         assertEquals(6, rcResult.getMesh().npolys);
         assertEquals(15, rcResult.getMesh().nverts);
@@ -87,10 +86,10 @@ public class RecastTileMeshTest {
         ObjImporter importer = new ObjImporter();
         InputGeomProvider geom = importer.load(getClass().getResourceAsStream("dungeon.obj"));
         RecastBuilder builder = new RecastBuilder();
-        RecastConfig cfg = new RecastConfig(m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
-                m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
-                m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, m_tileSize,
-                SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
+        RecastConfig cfg = new RecastConfig(true, m_tileSize, m_tileSize, RecastConfig.calcBorder(m_agentRadius, m_cellSize),
+                m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope,
+                m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist,
+                m_detailSampleMaxError, SampleAreaModifications.SAMPLE_AREAMOD_GROUND, true, true, true, true);
         for (int i = 0; i < 10; i++) {
             build(geom, builder, cfg, 1, true);
             build(geom, builder, cfg, 4, true);

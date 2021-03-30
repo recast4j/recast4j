@@ -100,8 +100,7 @@ public class RecastSoloMeshTest {
         // Init build configuration from GUI
         RecastConfig cfg = new RecastConfig(partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
                 m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
-                m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, 0,
-                SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
+                m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
         RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, bmin, bmax);
         //
         // Step 2. Rasterize input polygon soup.
@@ -127,7 +126,7 @@ public class RecastSoloMeshTest {
             // the are type for each of the meshes and rasterize them.
             int[] m_triareas = Recast.markWalkableTriangles(m_ctx, cfg.walkableSlopeAngle, verts, tris, ntris,
                     cfg.walkableAreaMod);
-            RecastRasterization.rasterizeTriangles(m_ctx, verts, tris, m_triareas, ntris, m_solid, cfg.walkableClimb);
+            RecastRasterization.rasterizeTriangles(m_solid, verts, tris, m_triareas, ntris, cfg.walkableClimb, m_ctx);
             //
             // Step 3. Filter walkables surfaces.
             //

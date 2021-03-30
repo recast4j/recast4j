@@ -42,14 +42,13 @@ public class Recast {
         return new int[] { (int) ((bmax[0] - bmin[0]) / cs + 0.5f), (int) ((bmax[2] - bmin[2]) / cs + 0.5f) };
     }
 
-    public static int[] calcTileCount(float[] bmin, float[] bmax, float cs, int tileSize) {
-        int[] gwh = Recast.calcGridSize(bmin, bmax, cs);
-        int gw = gwh[0];
-        int gh = gwh[1];
-        int ts = tileSize;
-        int tw = (gw + ts - 1) / ts;
-        int th = (gh + ts - 1) / ts;
-        return new int[] { tw, th };
+    public static int[] calcTileCount(float[] bmin, float[] bmax, float cs, int tileSizeX, int tileSizeZ) {
+        int[] gwd = Recast.calcGridSize(bmin, bmax, cs);
+        int gw = gwd[0];
+        int gd = gwd[1];
+        int tw = (gw + tileSizeX - 1) / tileSizeX;
+        int td = (gd + tileSizeZ - 1) / tileSizeZ;
+        return new int[] { tw, td };
     }
 
     /// @par
@@ -178,7 +177,7 @@ public class Recast {
                         int bot = s.smax;
                         int top = s.next != null ? (int) s.next.smin : MAX_HEIGHT;
                         chf.spans[idx].y = RecastCommon.clamp(bot, 0, 0xffff);
-                        chf.spans[idx].h = RecastCommon.clamp(top - bot, 0, 0xff);
+                        chf.spans[idx].h = RecastCommon.clamp(top - bot, 0, 0xffff);
                         chf.areas[idx] = s.area;
                         idx++;
                         c.count++;

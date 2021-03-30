@@ -1,5 +1,5 @@
 /*
-recast4j copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
+recast4j copyright (c) 2021 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -15,7 +15,8 @@ freely, subject to the following restrictions:
  misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
-package org.recast4j.detour.extras.unity.astar;
+
+package org.recast4j.detour.extras;
 
 import static org.recast4j.detour.DetourCommon.clamp;
 import static org.recast4j.detour.DetourCommon.vCopy;
@@ -29,15 +30,13 @@ import org.recast4j.detour.NavMeshBuilder.BVItem;
 
 public class BVTreeBuilder {
 
-    void build(GraphMeshData graphData, GraphMeta meta) {
-        for (MeshData d : graphData.tiles) {
-            d.bvTree = new BVNode[d.header.polyCount * 2];
-            d.header.bvNodeCount = d.bvTree.length == 0 ? 0 : createBVTree(d, d.bvTree, meta.cellSize);
-        }
+    public void build(MeshData data) {
+        data.bvTree = new BVNode[data.header.polyCount * 2];
+        data.header.bvNodeCount = data.bvTree.length == 0 ? 0
+                : createBVTree(data, data.bvTree, data.header.bvQuantFactor);
     }
 
-    private static int createBVTree(MeshData data, BVNode[] nodes, float cs) {
-        float quantFactor = 1 / cs;
+    private static int createBVTree(MeshData data, BVNode[] nodes, float quantFactor) {
         BVItem[] items = new BVItem[data.header.polyCount];
         for (int i = 0; i < data.header.polyCount; i++) {
             BVItem it = new BVItem();
