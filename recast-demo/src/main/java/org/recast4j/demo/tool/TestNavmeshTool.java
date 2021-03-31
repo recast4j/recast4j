@@ -234,7 +234,7 @@ public class TestNavmeshTool implements Tool {
     }
 
     private void recalc() {
-        if (m_sample == null || m_sample.getNavMesh() == null) {
+        if (m_sample.getNavMesh() == null) {
             return;
         }
         NavMeshQuery m_navQuery = m_sample.getNavMeshQuery();

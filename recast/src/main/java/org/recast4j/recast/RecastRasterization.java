@@ -22,7 +22,7 @@ import static org.recast4j.recast.RecastConstants.RC_SPAN_MAX_HEIGHT;
 
 public class RecastRasterization {
 
-    public static boolean overlapBounds(float[] amin, float[] amax, float[] bmin, float[] bmax) {
+    private static boolean overlapBounds(float[] amin, float[] amax, float[] bmin, float[] bmax) {
         boolean overlap = true;
         overlap = (amin[0] > bmax[0] || amax[0] < bmin[0]) ? false : overlap;
         overlap = (amin[1] > bmax[1] || amax[1] < bmin[1]) ? false : overlap;

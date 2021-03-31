@@ -73,7 +73,7 @@ public class NavMeshRaycast {
                     }
                 }
             } else {
-                // FIXME: Draw Poly if PolyDetail is unavailable
+                // FIXME: Use Poly if PolyDetail is unavailable
             }
         }
         return Optional.empty();

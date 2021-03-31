@@ -229,8 +229,8 @@ public class NavMeshBuilder {
                         it.bmax[2] = z;
                 }
                 // Remap y
-                it.bmin[1] = (int) Math.floor(it.bmin[1] * params.ch / params.cs);
-                it.bmax[1] = (int) Math.ceil(it.bmax[1] * params.ch / params.cs);
+                it.bmin[1] = (int) Math.floor(it.bmin[1] * params.ch * quantFactor);
+                it.bmax[1] = (int) Math.ceil(it.bmax[1] * params.ch * quantFactor);
             }
         }
 
@@ -426,7 +426,7 @@ public class NavMeshBuilder {
         header.magic = MeshHeader.DT_NAVMESH_MAGIC;
         header.version = MeshHeader.DT_NAVMESH_VERSION;
         header.x = params.tileX;
-        header.y = params.tileY;
+        header.y = params.tileZ;
         header.layer = params.tileLayer;
         header.userId = params.userId;
         header.polyCount = totPolyCount;

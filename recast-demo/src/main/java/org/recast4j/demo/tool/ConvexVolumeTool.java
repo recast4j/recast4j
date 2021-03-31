@@ -62,10 +62,6 @@ public class ConvexVolumeTool implements Tool {
 
     @Override
     public void handleClick(float[] s, float[] p, boolean shift) {
-        // TODO Auto-generated method stub
-        if (sample == null) {
-            return;
-        }
         DemoInputGeomProvider geom = sample.getInputGeom();
         if (geom == null) {
             return;

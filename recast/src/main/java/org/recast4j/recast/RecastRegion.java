@@ -1234,12 +1234,16 @@ public class RecastRegion {
 
         chf.borderSize = borderSize;
 
-        int[] prev = new int[256];
+        int[] prev = new int[1024];
 
         // Sweep one line at a time.
         for (int y = borderSize; y < h - borderSize; ++y) {
             // Collect spans from this row.
-            Arrays.fill(prev, 0, id, 0);
+            if (prev.length < id * 2) {
+                prev = new int[id * 2];
+            } else {
+                Arrays.fill(prev, 0, id, 0);
+            }
             int rid = 1;
 
             for (int x = borderSize; x < w - borderSize; ++x) {
@@ -1279,6 +1283,9 @@ public class RecastRegion {
                             if (sweeps[previd].nei == 0 || sweeps[previd].nei == nr) {
                                 sweeps[previd].nei = nr;
                                 sweeps[previd].ns++;
+                                if (prev.length <= nr) {
+                                    prev = Arrays.copyOf(prev, prev.length * 2);
+                                }
                                 prev[nr]++;
                             } else {
                                 sweeps[previd].nei = RC_NULL_NEI;
@@ -1497,12 +1504,16 @@ public class RecastRegion {
 
         chf.borderSize = borderSize;
 
-        int[] prev = new int[256];
+        int[] prev = new int[1024];
 
         // Sweep one line at a time.
         for (int y = borderSize; y < h - borderSize; ++y) {
             // Collect spans from this row.
-            Arrays.fill(prev, 0, id, 0);
+            if (prev.length <= id * 2) {
+                prev = new int[id * 2];
+            } else {
+                Arrays.fill(prev, 0, id, 0);
+            }
             int rid = 1;
 
             for (int x = borderSize; x < w - borderSize; ++x) {
@@ -1542,6 +1553,9 @@ public class RecastRegion {
                             if (sweeps[previd].nei == 0 || sweeps[previd].nei == nr) {
                                 sweeps[previd].nei = nr;
                                 sweeps[previd].ns++;
+                                if (prev.length <= nr) {
+                                    prev = Arrays.copyOf(prev, prev.length * 2);
+                                }
                                 prev[nr]++;
                             } else {
                                 sweeps[previd].nei = RC_NULL_NEI;

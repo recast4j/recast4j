@@ -56,9 +56,9 @@ public class NavMesh {
     int m_maxTiles; /// < Max number of tiles.
     private final int m_tileLutSize; /// < Tile hash lookup size (must be pot).
     private final int m_tileLutMask; /// < Tile hash lookup mask.
-    private final MeshTile[] m_posLookup; /// < Tile hash lookup.
-    MeshTile m_nextFree; /// < Freelist of tiles.
-    private final MeshTile[] m_tiles; /// < List of tiles.
+    private final MeshTile[] m_posLookup; /// < Tile hash lookup. // FIXME: switch to map
+    MeshTile m_nextFree; /// < Freelist of tiles. // FIXME: remove
+    private final MeshTile[] m_tiles; /// < List of tiles. // FIXME: switch to map
     /** The maximum number of vertices per navigation polygon. */
     private final int m_maxVertPerPoly;
     private int m_tileCount;

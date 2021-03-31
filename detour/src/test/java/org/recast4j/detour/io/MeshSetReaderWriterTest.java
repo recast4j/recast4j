@@ -86,9 +86,9 @@ public class MeshSetReaderWriterTest {
             for (int x = 0; x < tw; ++x) {
                 RecastConfig cfg = new RecastConfig(true, m_tileSize, m_tileSize,
                         RecastConfig.calcBorder(m_agentRadius, m_cellSize), PartitionType.WATERSHED, m_cellSize, m_cellHeight,
-                        m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize,
+                        m_agentMaxSlope, true, true, true, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_regionMinSize, m_regionMergeSize,
                         m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError,
-                        SampleAreaModifications.SAMPLE_AREAMOD_GROUND, true, true, true, true);
+                        SampleAreaModifications.SAMPLE_AREAMOD_GROUND, true);
                 RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, bmin, bmax, x, y);
                 TestDetourBuilder db = new TestDetourBuilder();
                 MeshData data = db.build(geom, bcfg, m_agentHeight, m_agentRadius, m_agentMaxClimb, x, y, true);

@@ -133,9 +133,9 @@ public class RecastLayersTest {
         InputGeomProvider geom = importer.load(getClass().getResourceAsStream(filename));
         RecastBuilder builder = new RecastBuilder();
         RecastConfig cfg = new RecastConfig(true, m_tileSize, m_tileSize, RecastConfig.calcBorder(m_agentRadius, m_cellSize),
-                m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope,
-                m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist,
-                m_detailSampleMaxError, SampleAreaModifications.SAMPLE_AREAMOD_GROUND, true, true, true, true);
+                m_partitionType, m_cellSize, m_cellHeight, m_agentMaxSlope, true, true, true, m_agentHeight, m_agentRadius,
+                m_agentMaxClimb, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly,
+                m_detailSampleDist, m_detailSampleMaxError, SampleAreaModifications.SAMPLE_AREAMOD_GROUND, true);
         RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), x, y);
         HeightfieldLayerSet lset = builder.buildLayers(geom, bcfg);
         return lset;

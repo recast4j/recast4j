@@ -144,8 +144,9 @@ public class CrowdTool implements Tool {
 
     @Override
     public void handleClick(float[] s, float[] p, boolean shift) {
-        if (sample == null || crowd == null)
+        if (crowd == null) {
             return;
+        }
         if (m_mode == ToolMode.CREATE) {
             if (shift) {
                 // Delete

@@ -47,9 +47,6 @@ public class OffMeshConnectionTool implements Tool {
 
     @Override
     public void handleClick(float[] s, float[] p, boolean shift) {
-        if (sample == null) {
-            return;
-        }
         DemoInputGeomProvider geom = sample.getInputGeom();
         if (geom == null) {
             return;

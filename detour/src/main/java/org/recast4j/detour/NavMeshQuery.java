@@ -18,35 +18,12 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
-import static org.recast4j.detour.DetourCommon.clamp;
-import static org.recast4j.detour.DetourCommon.distancePtPolyEdgesSqr;
-import static org.recast4j.detour.DetourCommon.distancePtSegSqr2D;
-import static org.recast4j.detour.DetourCommon.intersectSegSeg2D;
-import static org.recast4j.detour.DetourCommon.intersectSegmentPoly2D;
-import static org.recast4j.detour.DetourCommon.overlapBounds;
-import static org.recast4j.detour.DetourCommon.overlapPolyPoly2D;
-import static org.recast4j.detour.DetourCommon.overlapQuantBounds;
-import static org.recast4j.detour.DetourCommon.pointInPolygon;
-import static org.recast4j.detour.DetourCommon.randomPointInConvexPoly;
-import static org.recast4j.detour.DetourCommon.sqr;
-import static org.recast4j.detour.DetourCommon.triArea2D;
-import static org.recast4j.detour.DetourCommon.vAdd;
-import static org.recast4j.detour.DetourCommon.vCopy;
-import static org.recast4j.detour.DetourCommon.vDist;
-import static org.recast4j.detour.DetourCommon.vDistSqr;
-import static org.recast4j.detour.DetourCommon.vEqual;
-import static org.recast4j.detour.DetourCommon.vIsFinite;
-import static org.recast4j.detour.DetourCommon.vIsFinite2D;
-import static org.recast4j.detour.DetourCommon.vLerp;
-import static org.recast4j.detour.DetourCommon.vMad;
-import static org.recast4j.detour.DetourCommon.vMax;
-import static org.recast4j.detour.DetourCommon.vMin;
-import static org.recast4j.detour.DetourCommon.vNormalize;
-import static org.recast4j.detour.DetourCommon.vSub;
+import static org.recast4j.detour.DetourCommon.*;
 import static org.recast4j.detour.Node.DT_NODE_CLOSED;
 import static org.recast4j.detour.Node.DT_NODE_OPEN;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -613,28 +590,38 @@ public class NavMeshQuery {
     public Status queryPolygons(float[] center, float[] halfExtents, QueryFilter filter, PolyQuery query) {
         if (Objects.isNull(center) || !vIsFinite(center) || Objects.isNull(halfExtents) || !vIsFinite(halfExtents)
                 || Objects.isNull(filter)) {
-            // return DT_FAILURE | DT_INVALID_PARAM;
+            return Status.FAILURE_INVALID_PARAM;
+        }
+        // Find tiles the query touches.
+        float[] bmin = vSub(center, halfExtents);
+        float[] bmax = vAdd(center, halfExtents);
+        queryTiles(center, halfExtents).forEach(t -> queryPolygonsInTile(t, bmin, bmax, filter, query));
+        return Status.SUCCSESS;
+    }
+
+    /**
+     * Finds tiles that overlap the search box.
+     */
+    public List<MeshTile> queryTiles(float[] center, float[] halfExtents) {
+        if (Objects.isNull(center) || !vIsFinite(center) || Objects.isNull(halfExtents) || !vIsFinite(halfExtents)) {
+            return Collections.emptyList();
         }
         float[] bmin = vSub(center, halfExtents);
         float[] bmax = vAdd(center, halfExtents);
-        // Find tiles the query touches.
         int[] minxy = m_nav.calcTileLoc(bmin);
         int minx = minxy[0];
         int miny = minxy[1];
         int[] maxxy = m_nav.calcTileLoc(bmax);
         int maxx = maxxy[0];
         int maxy = maxxy[1];
+        List<MeshTile> tiles = new ArrayList<>();
         for (int y = miny; y <= maxy; ++y) {
             for (int x = minx; x <= maxx; ++x) {
-                List<MeshTile> neis = m_nav.getTilesAt(x, y);
-                for (int j = 0; j < neis.size(); ++j) {
-                    queryPolygonsInTile(neis.get(j), bmin, bmax, filter, query);
-                }
+                tiles.addAll(m_nav.getTilesAt(x, y));
             }
         }
-        return Status.SUCCSESS;
+        return tiles;
     }
-
     /**
      * Finds a path from the start polygon to the end polygon.
      *
