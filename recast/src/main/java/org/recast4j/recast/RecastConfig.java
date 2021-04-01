@@ -100,33 +100,33 @@ public class RecastConfig {
     /**
      * Non-tiled build configuration
      */
-    public RecastConfig(PartitionType partitionType, float cellSize, float cellHeight, float agentHeight,
-            float agentRadius, float agentMaxClimb, float agentMaxSlope, int regionMinSize, int regionMergeSize, float edgeMaxLen,
+    public RecastConfig(PartitionType partitionType, float cellSize, float cellHeight, float agentHeight, float agentRadius,
+            float agentMaxClimb, float agentMaxSlope, int regionMinSize, int regionMergeSize, float edgeMaxLen,
             float edgeMaxError, int vertsPerPoly, float detailSampleDist, float detailSampleMaxError,
             AreaModification walkableAreaMod) {
-        this(partitionType, cellSize, cellHeight, agentHeight, agentRadius, agentMaxClimb, agentMaxSlope, regionMinSize,
-                regionMergeSize, edgeMaxLen, edgeMaxError, vertsPerPoly, detailSampleDist, detailSampleMaxError, walkableAreaMod,
-                true, true, true, true);
+        this(partitionType, cellSize, cellHeight, agentMaxSlope, true, true, true, agentHeight, agentRadius, agentMaxClimb,
+                regionMinSize, regionMergeSize, edgeMaxLen, edgeMaxError, vertsPerPoly, detailSampleDist, detailSampleMaxError,
+                walkableAreaMod, true);
     }
 
     /**
      * Non-tiled build configuration
      */
-    public RecastConfig(PartitionType partitionType, float cellSize, float cellHeight, float agentHeight, float agentRadius,
-            float agentMaxClimb, float agentMaxSlope, int regionMinSize, int regionMergeSize, float edgeMaxLen,
-            float edgeMaxError, int vertsPerPoly, float detailSampleDist, float detailSampleMaxError,
-            AreaModification walkableAreaMod, boolean filterLowHangingObstacles, boolean filterLedgeSpans,
-            boolean filterWalkableLowHeightSpans, boolean buildMeshDetail) {
-        this(false, 0, 0, 0, partitionType, cellSize, cellHeight, agentHeight, agentRadius, agentMaxClimb, agentMaxSlope, regionMinSize,
-                regionMergeSize, edgeMaxLen, edgeMaxError, vertsPerPoly, detailSampleDist, detailSampleMaxError, walkableAreaMod,
-                filterLowHangingObstacles, filterLedgeSpans, filterWalkableLowHeightSpans, buildMeshDetail);
+    public RecastConfig(PartitionType partitionType, float cellSize, float cellHeight, float agentMaxSlope,
+            boolean filterLowHangingObstacles, boolean filterLedgeSpans, boolean filterWalkableLowHeightSpans, float agentHeight,
+            float agentRadius, float agentMaxClimb, int regionMinSize, int regionMergeSize, float edgeMaxLen, float edgeMaxError,
+            int vertsPerPoly, float detailSampleDist, float detailSampleMaxError, AreaModification walkableAreaMod,
+            boolean buildMeshDetail) {
+        this(false, 0, 0, 0, partitionType, cellSize, cellHeight, agentMaxSlope, filterLowHangingObstacles, filterLedgeSpans,
+                filterWalkableLowHeightSpans, agentHeight, agentRadius, agentMaxClimb, regionMinSize, regionMergeSize, edgeMaxLen,
+                edgeMaxError, vertsPerPoly, detailSampleDist, detailSampleMaxError, walkableAreaMod, buildMeshDetail);
     }
 
-    public RecastConfig(boolean useTiles, int tileSizeX, int tileSizeZ, int borderSize, PartitionType partitionType, float cellSize,
-            float cellHeight, float agentHeight, float agentRadius, float agentMaxClimb, float agentMaxSlope, int regionMinSize,
+    public RecastConfig(boolean useTiles, int tileSizeX, int tileSizeZ, int borderSize, PartitionType partitionType,
+            float cellSize, float cellHeight, float agentMaxSlope, boolean filterLowHangingObstacles, boolean filterLedgeSpans,
+            boolean filterWalkableLowHeightSpans, float agentHeight, float agentRadius, float agentMaxClimb, int regionMinSize,
             int regionMergeSize, float edgeMaxLen, float edgeMaxError, int vertsPerPoly, float detailSampleDist,
-            float detailSampleMaxError, AreaModification walkableAreaMod, boolean filterLowHangingObstacles,
-            boolean filterLedgeSpans, boolean filterWalkableLowHeightSpans, boolean buildMeshDetail) {
+            float detailSampleMaxError, AreaModification walkableAreaMod, boolean buildMeshDetail) {
         this.useTiles = useTiles;
         this.tileSizeX = tileSizeX;
         this.tileSizeZ = tileSizeZ;

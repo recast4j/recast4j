@@ -29,11 +29,12 @@ import org.recast4j.recast.RecastBuilder.RecastBuilderResult;
 
 public class Sample {
 
-    private final DemoInputGeomProvider inputGeom;
-    private final NavMesh navMesh;
-    private final NavMeshQuery navMeshQuery;
+    private DemoInputGeomProvider inputGeom;
+    private NavMesh navMesh;
+    private NavMeshQuery navMeshQuery;
     private final SettingsUI settingsUI;
-    private final List<RecastBuilderResult> recastResults;
+    private List<RecastBuilderResult> recastResults;
+    private boolean changed;
 
     public Sample(DemoInputGeomProvider inputGeom, List<RecastBuilderResult> recastResults, NavMesh navMesh,
             SettingsUI settingsUI, RecastDebugDraw debugDraw) {
@@ -41,6 +42,11 @@ public class Sample {
         this.recastResults = recastResults;
         this.navMesh = navMesh;
         this.settingsUI = settingsUI;
+        setQuery(navMesh);
+        changed = true;
+    }
+
+    private void setQuery(NavMesh navMesh) {
         navMeshQuery = navMesh != null ? new NavMeshQuery(navMesh) : null;
     }
 
@@ -64,4 +70,19 @@ public class Sample {
         return navMeshQuery;
     }
 
+    public boolean isChanged() {
+        return changed;
+    }
+
+    public void setChanged(boolean changed) {
+        this.changed = changed;
+    }
+
+    public void update(DemoInputGeomProvider geom, List<RecastBuilderResult> recastResults, NavMesh navMesh) {
+        inputGeom = geom;
+        this.recastResults = recastResults;
+        this.navMesh = navMesh;
+        setQuery(navMesh);
+        changed = true;
+    }
 }

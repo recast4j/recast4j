@@ -24,6 +24,8 @@ public class RecastBuilderConfig {
 
     public final RecastConfig cfg;
 
+    public final int tileX;
+    public final int tileZ;
     /** The width of the field along the x-axis. [Limit: >= 0] [Units: vx] **/
     public final int width;
 
@@ -40,15 +42,17 @@ public class RecastBuilderConfig {
         this(cfg, bmin, bmax, 0, 0);
     }
 
-    public RecastBuilderConfig(RecastConfig cfg, float[] bmin, float[] bmax, int tx, int ty) {
+    public RecastBuilderConfig(RecastConfig cfg, float[] bmin, float[] bmax, int tileX, int tileZ) {
+        this.tileX = tileX;
+        this.tileZ = tileZ;
         this.cfg = cfg;
         copy(this.bmin, bmin);
         copy(this.bmax, bmax);
         if (cfg.useTiles) {
             float tsx = cfg.tileSizeX * cfg.cs;
             float tsz = cfg.tileSizeZ * cfg.cs;
-            this.bmin[0] += tx * tsx;
-            this.bmin[2] += ty * tsz;
+            this.bmin[0] += tileX * tsx;
+            this.bmin[2] += tileZ * tsz;
             this.bmax[0] = this.bmin[0] + tsx;
             this.bmax[2] = this.bmin[2] + tsz;
             // Expand the heighfield bounding box by border size to find the extents of geometry we need to build this

@@ -309,7 +309,7 @@ public class JumpLinkBuilderTool implements Tool {
 
     @Override
     public void layout(NkContext ctx) {
-        if (sample != null && !sample.getRecastResults().isEmpty()) {
+        if (!sample.getRecastResults().isEmpty()) {
 
             nk_layout_row_dynamic(ctx, 18, 1);
             nk_label(ctx, "Options", NK_TEXT_ALIGN_LEFT);

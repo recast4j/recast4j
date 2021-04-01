@@ -18,9 +18,11 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.recast4j.recast.RecastConstants.PartitionType;
@@ -43,6 +45,8 @@ public class RecastBuilder {
     }
 
     public static class RecastBuilderResult {
+        public final int tileX;
+        public final int tileZ;
         private final CompactHeightfield chf;
         private final ContourSet cs;
         private final PolyMesh pmesh;
@@ -50,8 +54,10 @@ public class RecastBuilder {
         private final Heightfield solid;
         private final Telemetry telemetry;
 
-        public RecastBuilderResult(Heightfield solid, CompactHeightfield chf, ContourSet cs, PolyMesh pmesh,
+        public RecastBuilderResult(int tileX, int tileZ, Heightfield solid, CompactHeightfield chf, ContourSet cs, PolyMesh pmesh,
                 PolyMeshDetail dmesh, Telemetry ctx) {
+            this.tileX = tileX;
+            this.tileZ = tileZ;
             this.solid = solid;
             this.chf = chf;
             this.cs = cs;
@@ -86,57 +92,60 @@ public class RecastBuilder {
 
     }
 
-    public RecastBuilderResult[][] buildTiles(InputGeomProvider geom, RecastConfig cfg, int threads) {
+    public List<RecastBuilderResult> buildTiles(InputGeomProvider geom, RecastConfig cfg, Optional<Executor> executor) {
         float[] bmin = geom.getMeshBoundsMin();
         float[] bmax = geom.getMeshBoundsMax();
         int[] twh = Recast.calcTileCount(bmin, bmax, cfg.cs, cfg.tileSizeX, cfg.tileSizeZ);
         int tw = twh[0];
         int th = twh[1];
-        RecastBuilderResult[][] result = null;
-        if (threads == 1) {
-            result = buildSingleThread(geom, cfg, bmin, bmax, tw, th);
+        List<RecastBuilderResult> result = null;
+        if (executor.isPresent()) {
+            result = buildMultiThread(geom, cfg, bmin, bmax, tw, th, executor.get());
         } else {
-            result = buildMultiThread(geom, cfg, bmin, bmax, tw, th, threads);
+            result = buildSingleThread(geom, cfg, bmin, bmax, tw, th);
         }
         return result;
     }
 
-    private RecastBuilderResult[][] buildSingleThread(InputGeomProvider geom, RecastConfig cfg, float[] bmin,
-            float[] bmax, int tw, int th) {
-        RecastBuilderResult[][] result = new RecastBuilderResult[tw][th];
+    private List<RecastBuilderResult> buildSingleThread(InputGeomProvider geom, RecastConfig cfg, float[] bmin, float[] bmax,
+            int tw, int th) {
+        List<RecastBuilderResult> result = new ArrayList<>(tw * th);
         AtomicInteger counter = new AtomicInteger();
-        for (int x = 0; x < tw; ++x) {
-            for (int y = 0; y < th; ++y) {
-                result[x][y] = buildTile(geom, cfg, bmin, bmax, x, y, counter, tw * th);
+        for (int y = 0; y < th; ++y) {
+            for (int x = 0; x < tw; ++x) {
+                result.add(buildTile(geom, cfg, bmin, bmax, x, y, counter, tw * th));
             }
         }
         return result;
     }
 
-    private RecastBuilderResult[][] buildMultiThread(InputGeomProvider geom, RecastConfig cfg, float[] bmin,
-            float[] bmax, int tw, int th, int threads) {
-        ExecutorService ec = Executors.newFixedThreadPool(threads);
-        RecastBuilderResult[][] result = new RecastBuilderResult[tw][th];
+    private List<RecastBuilderResult> buildMultiThread(InputGeomProvider geom, RecastConfig cfg, float[] bmin, float[] bmax,
+            int tw, int th, Executor executor) {
+        List<RecastBuilderResult> result = new ArrayList<>(tw * th);
         AtomicInteger counter = new AtomicInteger();
+        CountDownLatch latch = new CountDownLatch(tw * th);
         for (int x = 0; x < tw; ++x) {
             for (int y = 0; y < th; ++y) {
                 final int tx = x;
                 final int ty = y;
-                ec.submit((Runnable) () -> {
-                    result[tx][ty] = buildTile(geom, cfg, bmin, bmax, tx, ty, counter, tw * th);
+                executor.execute(() -> {
+                    RecastBuilderResult tile = buildTile(geom, cfg, bmin, bmax, tx, ty, counter, tw * th);
+                    synchronized (result) {
+                        result.add(tile);
+                    }
+                    latch.countDown();
                 });
             }
         }
-        ec.shutdown();
         try {
-            ec.awaitTermination(1000, TimeUnit.HOURS);
+            latch.await();
         } catch (InterruptedException e) {
         }
         return result;
     }
 
-    private RecastBuilderResult buildTile(InputGeomProvider geom, RecastConfig cfg, float[] bmin, float[] bmax,
-            final int tx, final int ty, AtomicInteger counter, int total) {
+    private RecastBuilderResult buildTile(InputGeomProvider geom, RecastConfig cfg, float[] bmin, float[] bmax, final int tx,
+            final int ty, AtomicInteger counter, int total) {
         RecastBuilderResult result = build(geom, new RecastBuilderConfig(cfg, bmin, bmax, tx, ty));
         if (progressListener != null) {
             progressListener.onProgress(counter.incrementAndGet(), total);
@@ -152,10 +161,11 @@ public class RecastBuilder {
         // Step 1. Rasterize input polygon soup.
         //
         Heightfield solid = RecastVoxelization.buildSolidHeightfield(geom, builderCfg, ctx);
-        return build(geom, cfg, solid, ctx);
+        return build(builderCfg.tileX, builderCfg.tileZ, geom, cfg, solid, ctx);
     }
 
-    public RecastBuilderResult build(InputGeomProvider geom, RecastConfig cfg, Heightfield solid, Telemetry ctx) {
+    public RecastBuilderResult build(int tileX, int tileZ, InputGeomProvider geom, RecastConfig cfg, Heightfield solid,
+            Telemetry ctx) {
         filterHeightfield(solid, cfg, ctx);
         CompactHeightfield chf = buildCompactHeightfield(geom, cfg, ctx, solid);
 
@@ -233,7 +243,7 @@ public class RecastBuilder {
         PolyMeshDetail dmesh = cfg.buildMeshDetail
                 ? RecastMeshDetail.buildPolyMeshDetail(ctx, pmesh, chf, cfg.detailSampleDist, cfg.detailSampleMaxError)
                 : null;
-        return new RecastBuilderResult(solid, chf, cset, pmesh, dmesh, ctx);
+        return new RecastBuilderResult(tileX, tileZ, solid, chf, cset, pmesh, dmesh, ctx);
     }
 
     /*

@@ -19,6 +19,12 @@ package org.recast4j.recast;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 import org.junit.Test;
 import org.recast4j.recast.RecastBuilder.RecastBuilderResult;
 import org.recast4j.recast.RecastConstants.PartitionType;
@@ -52,9 +58,9 @@ public class RecastTileMeshTest {
         InputGeomProvider geom = importer.load(getClass().getResourceAsStream(filename));
         RecastBuilder builder = new RecastBuilder();
         RecastConfig cfg = new RecastConfig(true, m_tileSize, m_tileSize, RecastConfig.calcBorder(m_agentRadius, m_cellSize),
-                m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope,
-                m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist,
-                m_detailSampleMaxError, SampleAreaModifications.SAMPLE_AREAMOD_GROUND, true, true, true, true);
+                m_partitionType, m_cellSize, m_cellHeight, m_agentMaxSlope, true, true, true, m_agentHeight, m_agentRadius,
+                m_agentMaxClimb, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly,
+                m_detailSampleDist, m_detailSampleMaxError, SampleAreaModifications.SAMPLE_AREAMOD_GROUND, true);
         RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 7, 8);
         RecastBuilderResult rcResult = builder.build(geom, bcfg);
         assertEquals(1, rcResult.getMesh().npolys);
@@ -87,9 +93,9 @@ public class RecastTileMeshTest {
         InputGeomProvider geom = importer.load(getClass().getResourceAsStream("dungeon.obj"));
         RecastBuilder builder = new RecastBuilder();
         RecastConfig cfg = new RecastConfig(true, m_tileSize, m_tileSize, RecastConfig.calcBorder(m_agentRadius, m_cellSize),
-                m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope,
-                m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist,
-                m_detailSampleMaxError, SampleAreaModifications.SAMPLE_AREAMOD_GROUND, true, true, true, true);
+                m_partitionType, m_cellSize, m_cellHeight, m_agentMaxSlope, true, true, true, m_agentHeight, m_agentRadius,
+                m_agentMaxClimb, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly,
+                m_detailSampleDist, m_detailSampleMaxError, SampleAreaModifications.SAMPLE_AREAMOD_GROUND, true);
         for (int i = 0; i < 10; i++) {
             build(geom, builder, cfg, 1, true);
             build(geom, builder, cfg, 4, true);
@@ -108,27 +114,36 @@ public class RecastTileMeshTest {
     }
 
     private void build(InputGeomProvider geom, RecastBuilder builder, RecastConfig cfg, int threads, boolean validate) {
-        RecastBuilderResult[][] tiles = builder.buildTiles(geom, cfg, threads);
+        ExecutorService executor = Executors.newFixedThreadPool(threads);
+        List<RecastBuilderResult> tiles = builder.buildTiles(geom, cfg, Optional.of(executor));
         if (validate) {
-            RecastBuilderResult rcResult = tiles[7][8];
+            RecastBuilderResult rcResult = getTile(tiles, 7, 8);
             assertEquals(1, rcResult.getMesh().npolys);
             assertEquals(5, rcResult.getMesh().nverts);
-            rcResult = tiles[6][9];
+            rcResult = getTile(tiles, 6, 9);
             assertEquals(2, rcResult.getMesh().npolys);
             assertEquals(7, rcResult.getMesh().nverts);
-            rcResult = tiles[2][9];
+            rcResult = getTile(tiles, 2, 9);
             assertEquals(2, rcResult.getMesh().npolys);
             assertEquals(9, rcResult.getMesh().nverts);
-            rcResult = tiles[4][3];
+            rcResult = getTile(tiles, 4, 3);
             assertEquals(3, rcResult.getMesh().npolys);
             assertEquals(6, rcResult.getMesh().nverts);
-            rcResult = tiles[2][8];
+            rcResult = getTile(tiles, 2, 8);
             assertEquals(5, rcResult.getMesh().npolys);
             assertEquals(17, rcResult.getMesh().nverts);
-            rcResult = tiles[0][8];
+            rcResult = getTile(tiles, 0, 8);
             assertEquals(6, rcResult.getMesh().npolys);
             assertEquals(15, rcResult.getMesh().nverts);
         }
+        executor.shutdown();
+        try {
+            executor.awaitTermination(1000, TimeUnit.HOURS);
+        } catch (InterruptedException e) {
+        }
     }
 
+    private RecastBuilderResult getTile(List<RecastBuilderResult> tiles, int x, int z) {
+        return tiles.stream().filter(tile -> tile.tileX == x && tile.tileZ == z).findFirst().orElse(null);
+    }
 }
