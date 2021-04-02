@@ -26,6 +26,7 @@ import java.util.Arrays;
 
 public class RecastMesh {
 
+    private static final int MAX_MESH_VERTS_POLY = 0xffff;
     static int VERTEX_BUCKET_COUNT = (1 << 12);
 
     private static class Edge {
@@ -1047,13 +1048,13 @@ public class RecastMesh {
         // Just allocate the mesh flags array. The user is resposible to fill it.
         mesh.flags = new int[mesh.npolys];
 
-        if (mesh.nverts > 0xffff) {
+        if (mesh.nverts > MAX_MESH_VERTS_POLY) {
             throw new RuntimeException("rcBuildPolyMesh: The resulting mesh has too many vertices " + mesh.nverts
-                    + " (max " + 0xffff + "). Data can be corrupted.");
+                    + " (max " + MAX_MESH_VERTS_POLY + "). Data can be corrupted.");
         }
-        if (mesh.npolys > 0xffff) {
+        if (mesh.npolys > MAX_MESH_VERTS_POLY) {
             throw new RuntimeException("rcBuildPolyMesh: The resulting mesh has too many polygons " + mesh.npolys
-                    + " (max " + 0xffff + "). Data can be corrupted.");
+                    + " (max " + MAX_MESH_VERTS_POLY + "). Data can be corrupted.");
         }
 
         ctx.stopTimer("POLYMESH");
@@ -1168,13 +1169,13 @@ public class RecastMesh {
 
         // Calculate adjacency.
         buildMeshAdjacency(mesh.polys, mesh.npolys, mesh.nverts, mesh.nvp);
-        if (mesh.nverts > 0xffff) {
+        if (mesh.nverts > MAX_MESH_VERTS_POLY) {
             throw new RuntimeException("rcBuildPolyMesh: The resulting mesh has too many vertices " + mesh.nverts
-                    + " (max " + 0xffff + "). Data can be corrupted.");
+                    + " (max " + MAX_MESH_VERTS_POLY + "). Data can be corrupted.");
         }
-        if (mesh.npolys > 0xffff) {
+        if (mesh.npolys > MAX_MESH_VERTS_POLY) {
             throw new RuntimeException("rcBuildPolyMesh: The resulting mesh has too many polygons " + mesh.npolys
-                    + " (max " + 0xffff + "). Data can be corrupted.");
+                    + " (max " + MAX_MESH_VERTS_POLY + "). Data can be corrupted.");
         }
 
         ctx.stopTimer("MERGE_POLYMESH");

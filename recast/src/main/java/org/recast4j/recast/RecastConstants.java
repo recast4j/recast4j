@@ -23,9 +23,9 @@ public class RecastConstants {
     public static final int RC_NULL_AREA = 0;
     public static final int RC_NOT_CONNECTED = 0x3f;
     /// Defines the number of bits allocated to rcSpan::smin and rcSpan::smax.
-    public static int RC_SPAN_HEIGHT_BITS = 13;
+    public static int SPAN_HEIGHT_BITS = 20;
     /// Defines the maximum value for rcSpan::smin and rcSpan::smax.
-    public static int RC_SPAN_MAX_HEIGHT = (1 << RC_SPAN_HEIGHT_BITS) - 1;
+    public static int SPAN_MAX_HEIGHT = (1 << SPAN_HEIGHT_BITS) - 1;
     /// Heighfield border flag.
     /// If a heightfield region ID has this bit set, then the region is a border
     /// region and its spans are considered unwalkable.

@@ -18,7 +18,7 @@ freely, subject to the following restrictions:
 
 package org.recast4j.recast;
 
-import static org.recast4j.recast.RecastConstants.RC_SPAN_MAX_HEIGHT;
+import static org.recast4j.recast.RecastConstants.SPAN_MAX_HEIGHT;
 
 import java.util.function.Function;
 
@@ -49,8 +49,8 @@ public class RecastShapeRasterization {
         ctx.stopTimer("RASTERIZE_CAPSULE");
     }
 
-    public static void rasterizeBox(Heightfield hf, float[] center, float[] extent, float[] up, int area,
-            int flagMergeThr, Telemetry ctx) {
+    public static void rasterizeBox(Heightfield hf, float[] center, float[] extent, float[] up, int area, int flagMergeThr,
+            Telemetry ctx) {
 
         RecastVectors.normalize(up);
         float[][] normals = new float[][] { new float[3], up, new float[3] };
@@ -103,8 +103,7 @@ public class RecastShapeRasterization {
     }
 
     public static void main(String[] args) {
-        rasterizeBox(null, new float[] { 10, 0, -3 }, new float[] { 5, 3, 6 }, new float[] { 0, 1, 0 },
-                0, 0, null);
+        rasterizeBox(null, new float[] { 10, 0, -3 }, new float[] { 5, 3, 6 }, new float[] { 0, 1, 0 }, 0, 0, null);
     }
 
     private static void rasterizationFilledShape(Heightfield hf, float[] bounds, int area, int flagMergeThr,
@@ -115,10 +114,8 @@ public class RecastShapeRasterization {
         }
 
         bounds[3] = Math.min(bounds[3], hf.bmax[0]);
-        bounds[4] = Math.min(bounds[4], hf.bmax[1]);
         bounds[5] = Math.min(bounds[5], hf.bmax[2]);
         bounds[0] = Math.max(bounds[0], hf.bmin[0]);
-        bounds[1] = Math.max(bounds[1], hf.bmin[1]);
         bounds[2] = Math.max(bounds[2], hf.bmin[2]);
 
         if (bounds[3] <= bounds[0] || bounds[4] <= bounds[1] || bounds[5] <= bounds[2]) {
@@ -143,8 +140,8 @@ public class RecastShapeRasterization {
                     int smin = (int) Math.floor((h[0] - hf.bmin[1]) * ich);
                     int smax = (int) Math.ceil((h[1] - hf.bmin[1]) * ich);
                     if (smin != smax) {
-                        int ismin = RecastCommon.clamp(smin, 0, RC_SPAN_MAX_HEIGHT);
-                        int ismax = RecastCommon.clamp(smax, ismin + 1, RC_SPAN_MAX_HEIGHT);
+                        int ismin = RecastCommon.clamp(smin, 0, SPAN_MAX_HEIGHT);
+                        int ismax = RecastCommon.clamp(smax, ismin + 1, SPAN_MAX_HEIGHT);
                         RecastRasterization.addSpan(hf, x, z, ismin, ismax, area, flagMergeThr);
                     }
                 }
@@ -383,7 +380,7 @@ public class RecastShapeRasterization {
     private static boolean overlapBounds(float[] amin, float[] amax, float[] bounds) {
         boolean overlap = true;
         overlap = (amin[0] > bounds[3] || amax[0] < bounds[0]) ? false : overlap;
-        overlap = (amin[1] > bounds[4] || amax[1] < bounds[1]) ? false : overlap;
+        overlap = (amin[1] > bounds[4]) ? false : overlap;
         overlap = (amin[2] > bounds[5] || amax[2] < bounds[2]) ? false : overlap;
         return overlap;
     }

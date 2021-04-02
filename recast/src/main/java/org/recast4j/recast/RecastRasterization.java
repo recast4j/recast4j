@@ -18,7 +18,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
-import static org.recast4j.recast.RecastConstants.RC_SPAN_MAX_HEIGHT;
+import static org.recast4j.recast.RecastConstants.SPAN_MAX_HEIGHT;
 
 public class RecastRasterization {
 
@@ -236,8 +236,8 @@ public class RecastRasterization {
                     smax = by;
 
                 // Snap the span to the heightfield height grid.
-                int ismin = RecastCommon.clamp((int) Math.floor(smin * ich), 0, RC_SPAN_MAX_HEIGHT);
-                int ismax = RecastCommon.clamp((int) Math.ceil(smax * ich), ismin + 1, RC_SPAN_MAX_HEIGHT);
+                int ismin = RecastCommon.clamp((int) Math.floor(smin * ich), 0, SPAN_MAX_HEIGHT);
+                int ismax = RecastCommon.clamp((int) Math.ceil(smax * ich), ismin + 1, SPAN_MAX_HEIGHT);
 
                 addSpan(hf, x, y, ismin, ismax, area, flagMergeThr);
             }

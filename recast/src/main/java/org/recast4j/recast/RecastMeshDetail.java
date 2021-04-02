@@ -37,7 +37,7 @@ public class RecastMeshDetail {
     static int MAX_TRIS = 255; // Max tris for delaunay is 2n-2-k (n=num verts, k=num hull verts).
     static int MAX_VERTS_PER_EDGE = 32;
 
-    static int RC_UNSET_HEIGHT = 0xffff;
+    static int RC_UNSET_HEIGHT = RecastConstants.SPAN_MAX_HEIGHT;
     static int EV_UNDEF = -1;
     static int EV_HULL = -2;
 

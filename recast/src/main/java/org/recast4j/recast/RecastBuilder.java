@@ -129,9 +129,13 @@ public class RecastBuilder {
                 final int tx = x;
                 final int ty = y;
                 executor.execute(() -> {
-                    RecastBuilderResult tile = buildTile(geom, cfg, bmin, bmax, tx, ty, counter, tw * th);
-                    synchronized (result) {
-                        result.add(tile);
+                    try {
+                        RecastBuilderResult tile = buildTile(geom, cfg, bmin, bmax, tx, ty, counter, tw * th);
+                        synchronized (result) {
+                            result.add(tile);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                     latch.countDown();
                 });
@@ -272,7 +276,7 @@ public class RecastBuilder {
         // Compact the heightfield so that it is faster to handle from now on.
         // This will result more cache coherent data as well as the neighbours
         // between walkable cells will be calculated.
-        CompactHeightfield chf = Recast.buildCompactHeightfield(ctx, cfg.walkableHeight, cfg.walkableClimb, solid);
+        CompactHeightfield chf = RecastCompact.buildCompactHeightfield(ctx, cfg.walkableHeight, cfg.walkableClimb, solid);
 
         // Erode the walkable area by agent radius.
         RecastArea.erodeWalkableArea(ctx, cfg.walkableRadius, chf);
