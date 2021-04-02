@@ -21,7 +21,10 @@ package org.recast4j.detour;
 import static org.recast4j.detour.DetourCommon.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class NavMesh {
@@ -54,11 +57,10 @@ public class NavMesh {
     // float m_orig[3]; ///< Origin of the tile (0,0)
     float m_tileWidth, m_tileHeight; /// < Dimensions of each tile.
     int m_maxTiles; /// < Max number of tiles.
-    private final int m_tileLutSize; /// < Tile hash lookup size (must be pot).
     private final int m_tileLutMask; /// < Tile hash lookup mask.
-    private final MeshTile[] m_posLookup; /// < Tile hash lookup. // FIXME: switch to map
-    MeshTile m_nextFree; /// < Freelist of tiles. // FIXME: remove
-    private final MeshTile[] m_tiles; /// < List of tiles. // FIXME: switch to map
+    private final Map<Integer, List<MeshTile>> posLookup = new HashMap<>();
+    private final LinkedList<MeshTile> availableTiles = new LinkedList<>();
+    private final MeshTile[] m_tiles; /// < List of tiles.
     /** The maximum number of vertices per navigation polygon. */
     private final int m_maxVertPerPoly;
     private int m_tileCount;
@@ -258,20 +260,12 @@ public class NavMesh {
         // Init tiles
         m_maxTiles = params.maxTiles;
         m_maxVertPerPoly = maxVertsPerPoly;
-        int lutsize = nextPow2(params.maxTiles / 4);
-        if (lutsize == 0) {
-            lutsize = 1;
-        }
-        m_tileLutSize = lutsize;
-        m_tileLutMask = m_tileLutSize - 1;
+        m_tileLutMask = Math.max(1, nextPow2(params.maxTiles)) - 1;
         m_tiles = new MeshTile[m_maxTiles];
-        m_posLookup = new MeshTile[m_tileLutSize];
-        m_nextFree = null;
-        for (int i = m_maxTiles - 1; i >= 0; --i) {
+        for (int i = 0; i < m_maxTiles; i++) {
             m_tiles[i] = new MeshTile(i);
             m_tiles[i].salt = 1;
-            m_tiles[i].next = m_nextFree;
-            m_nextFree = m_tiles[i];
+            availableTiles.add(m_tiles[i]);
         }
 
     }
@@ -362,6 +356,12 @@ public class NavMesh {
         }
     }
 
+    public long updateTile(MeshData data, int flags) {
+        long ref = getTileRefAt(data.header.x, data.header.y, data.header.layer);
+        ref = removeTile(ref);
+        return addTile(data, flags, ref);
+    }
+
     /// Adds a tile to the navigation mesh.
     /// @param[in] data Data for the new tile mesh. (See: #dtCreateNavMeshData)
     /// @param[in] dataSize Data size of the new tile mesh.
@@ -400,12 +400,12 @@ public class NavMesh {
         // Allocate a tile.
         MeshTile tile = null;
         if (lastRef == 0) {
-            if (m_nextFree != null) {
-                tile = m_nextFree;
-                m_nextFree = tile.next;
-                tile.next = null;
-                m_tileCount++;
+            // Make sure we could allocate a tile.
+            if (availableTiles.isEmpty()) {
+                throw new RuntimeException("Could not allocate a tile");
             }
+            tile = availableTiles.poll();
+            m_tileCount++;
         } else {
             // Try to relocate the tile to specific index with same salt.
             int tileIndex = decodePolyIdTile(lastRef);
@@ -414,30 +414,14 @@ public class NavMesh {
             }
             // Try to find the specific tile id from the free list.
             MeshTile target = m_tiles[tileIndex];
-            MeshTile prev = null;
-            tile = m_nextFree;
-            while (tile != null && tile != target) {
-                prev = tile;
-                tile = tile.next;
-            }
-            // Could not find the correct location.
-            if (tile != target) {
+            // Remove from freelist
+            if (!availableTiles.remove(target)) {
+                // Could not find the correct location.
                 throw new RuntimeException("Could not find tile");
             }
-            // Remove from freelist
-            if (prev == null) {
-                m_nextFree = tile.next;
-            } else {
-                prev.next = tile.next;
-            }
-
+            tile = target;
             // Restore salt.
             tile.salt = decodePolyIdSalt(lastRef);
-        }
-
-        // Make sure we could allocate a tile.
-        if (tile == null) {
-            throw new RuntimeException("Could not allocate a tile");
         }
 
         tile.data = data;
@@ -445,9 +429,7 @@ public class NavMesh {
         tile.links.clear();
 
         // Insert tile into the position lut.
-        int h = computeTileHash(header.x, header.y, m_tileLutMask);
-        tile.next = m_posLookup[h];
-        m_posLookup[h] = tile;
+        getTileListByPos(header.x, header.y).add(tile);
 
         // Patch header pointers.
 
@@ -493,17 +475,14 @@ public class NavMesh {
     /// @param[in] ref The reference of the tile to remove.
     /// @param[out] data Data associated with deleted tile.
     /// @param[out] dataSize Size of the data associated with deleted tile.
-    /// @return The status flags for the operation.
-    // dtStatus removeTile(dtTileRef ref, char** data, int* dataSize);
-    /// @par
     ///
     /// This function returns the data for the tile so that, if desired,
     /// it can be added back to the navigation mesh at a later point.
     ///
     /// @see #addTile
-    public MeshData removeTile(long ref) {
+    public long removeTile(long ref) {
         if (ref == 0) {
-            return null;
+            return 0;
         }
         int tileIndex = decodePolyIdTile(ref);
         int tileSalt = decodePolyIdSalt(ref);
@@ -516,21 +495,7 @@ public class NavMesh {
         }
 
         // Remove tile from hash lookup.
-        int h = computeTileHash(tile.data.header.x, tile.data.header.y, m_tileLutMask);
-        MeshTile prev = null;
-        MeshTile cur = m_posLookup[h];
-        while (cur != null) {
-            if (cur == tile) {
-                if (prev != null) {
-                    prev.next = cur.next;
-                } else {
-                    m_posLookup[h] = cur.next;
-                }
-                break;
-            }
-            prev = cur;
-            cur = cur.next;
-        }
+        getTileListByPos(tile.data.header.x, tile.data.header.y).remove(tile);
 
         // Remove connections to neighbour tiles.
         // Create connections with neighbour tiles.
@@ -551,7 +516,6 @@ public class NavMesh {
                 unconnectLinks(j, tile);
             }
         }
-        MeshData data = tile.data;
         // Reset tile.
         tile.data = null;
 
@@ -566,10 +530,9 @@ public class NavMesh {
         }
 
         // Add to free list.
-        tile.next = m_nextFree;
-        m_nextFree = tile;
+        availableTiles.addFirst(tile);
         m_tileCount--;
-        return data;
+        return getTileRef(tile);
     }
 
     /// Builds internal polygons links for a tile.
@@ -1193,15 +1156,11 @@ public class NavMesh {
     }
 
     MeshTile getTileAt(int x, int y, int layer) {
-        // Find tile based on hash.
-        int h = computeTileHash(x, y, m_tileLutMask);
-        MeshTile tile = m_posLookup[h];
-        while (tile != null) {
+        for (MeshTile tile : getTileListByPos(x, y)) {
             if (tile.data.header != null && tile.data.header.x == x && tile.data.header.y == y
                     && tile.data.header.layer == layer) {
                 return tile;
             }
-            tile = tile.next;
         }
         return null;
     }
@@ -1243,30 +1202,16 @@ public class NavMesh {
 
     public List<MeshTile> getTilesAt(int x, int y) {
         List<MeshTile> tiles = new ArrayList<>();
-        // Find tile based on hash.
-        int h = computeTileHash(x, y, m_tileLutMask);
-        MeshTile tile = m_posLookup[h];
-        while (tile != null) {
+        for (MeshTile tile : getTileListByPos(x, y)) {
             if (tile.data.header != null && tile.data.header.x == x && tile.data.header.y == y) {
                 tiles.add(tile);
             }
-            tile = tile.next;
         }
         return tiles;
     }
 
     public long getTileRefAt(int x, int y, int layer) {
-        // Find tile based on hash.
-        int h = computeTileHash(x, y, m_tileLutMask);
-        MeshTile tile = m_posLookup[h];
-        while (tile != null) {
-            if (tile.data.header != null && tile.data.header.x == x && tile.data.header.y == y
-                    && tile.data.header.layer == layer) {
-                return getTileRef(tile);
-            }
-            tile = tile.next;
-        }
-        return 0;
+        return getTileRef(getTileAt(x, y, layer));
     }
 
     public MeshTile getTileByRef(long ref) {
@@ -1289,8 +1234,7 @@ public class NavMesh {
         if (tile == null) {
             return 0;
         }
-        int it = tile.index;
-        return encodePolyId(tile.salt, it, 0);
+        return encodePolyId(tile.salt, tile.index, 0);
     }
 
     public static int computeTileHash(int x, int y, int mask) {
@@ -1475,4 +1419,7 @@ public class NavMesh {
         return (triFlags >> (edgeIndex * 2)) & 0x3;
     }
 
+    private List<MeshTile> getTileListByPos(int x, int z) {
+        return posLookup.computeIfAbsent(computeTileHash(x, z, m_tileLutMask), __ -> new ArrayList<>());
+    }
 }
