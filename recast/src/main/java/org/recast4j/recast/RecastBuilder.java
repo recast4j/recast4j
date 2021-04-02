@@ -26,6 +26,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.recast4j.recast.RecastConstants.PartitionType;
+import org.recast4j.recast.geom.ConvexVolumeProvider;
 import org.recast4j.recast.geom.InputGeomProvider;
 
 public class RecastBuilder {
@@ -168,7 +169,7 @@ public class RecastBuilder {
         return build(builderCfg.tileX, builderCfg.tileZ, geom, cfg, solid, ctx);
     }
 
-    public RecastBuilderResult build(int tileX, int tileZ, InputGeomProvider geom, RecastConfig cfg, Heightfield solid,
+    public RecastBuilderResult build(int tileX, int tileZ, ConvexVolumeProvider geom, RecastConfig cfg, Heightfield solid,
             Telemetry ctx) {
         filterHeightfield(solid, cfg, ctx);
         CompactHeightfield chf = buildCompactHeightfield(geom, cfg, ctx, solid);
@@ -271,7 +272,7 @@ public class RecastBuilder {
     /*
      * Step 3. Partition walkable surface to simple regions.
      */
-    private CompactHeightfield buildCompactHeightfield(InputGeomProvider geomProvider, RecastConfig cfg, Telemetry ctx,
+    private CompactHeightfield buildCompactHeightfield(ConvexVolumeProvider volumeProvider, RecastConfig cfg, Telemetry ctx,
             Heightfield solid) {
         // Compact the heightfield so that it is faster to handle from now on.
         // This will result more cache coherent data as well as the neighbours
@@ -281,8 +282,8 @@ public class RecastBuilder {
         // Erode the walkable area by agent radius.
         RecastArea.erodeWalkableArea(ctx, cfg.walkableRadius, chf);
         // (Optional) Mark areas.
-        if (geomProvider != null) {
-            for (ConvexVolume vol : geomProvider.convexVolumes()) {
+        if (volumeProvider != null) {
+            for (ConvexVolume vol : volumeProvider.convexVolumes()) {
                 RecastArea.markConvexPolyArea(ctx, vol.verts, vol.hmin, vol.hmax, vol.areaMod, chf);
             }
         }
