@@ -145,7 +145,7 @@ public class RecastSoloMeshTest {
         // Compact the heightfield so that it is faster to handle from now on.
         // This will result more cache coherent data as well as the neighbours
         // between walkable cells will be calculated.
-        CompactHeightfield m_chf = Recast.buildCompactHeightfield(m_ctx, cfg.walkableHeight, cfg.walkableClimb,
+        CompactHeightfield m_chf = RecastCompact.buildCompactHeightfield(m_ctx, cfg.walkableHeight, cfg.walkableClimb,
                 m_solid);
 
         // Erode the walkable area by agent radius.
