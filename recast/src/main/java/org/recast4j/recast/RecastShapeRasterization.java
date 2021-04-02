@@ -49,21 +49,12 @@ public class RecastShapeRasterization {
         ctx.stopTimer("RASTERIZE_CAPSULE");
     }
 
-    public static void rasterizeBox(Heightfield hf, float[] center, float[] extent, float[] up, int area, int flagMergeThr,
-            Telemetry ctx) {
+    public static void rasterizeBox(Heightfield hf, float[] center, float[] extent, float[] forward, float[] up, int area,
+            int flagMergeThr, Telemetry ctx) {
 
         RecastVectors.normalize(up);
         float[][] normals = new float[][] { new float[3], up, new float[3] };
-        if (Math.abs(up[2]) < 0.9f) {
-            normals[0][0] = 0;
-            normals[0][1] = 0;
-            normals[0][2] = -1;
-        } else {
-            normals[0][0] = 0;
-            normals[0][1] = -1;
-            normals[0][2] = 0;
-        }
-        RecastVectors.cross(normals[2], normals[0], up);
+        RecastVectors.cross(normals[2], forward, up);
         RecastVectors.normalize(normals[2]);
         RecastVectors.cross(normals[0], up, normals[2]);
         RecastVectors.normalize(normals[0]);
@@ -78,9 +69,9 @@ public class RecastShapeRasterization {
         for (int i = 0; i < 8; ++i) {
             float[] pt = new float[] { ((i & 1) != 0) ? extent[0] : -extent[0], ((i & 2) != 0) ? extent[1] : -extent[1],
                     ((i & 4) != 0) ? extent[2] : -extent[2] };
-            vertices[i * 3 + 0] = dot(pt, trX) + center[0];
-            vertices[i * 3 + 1] = dot(pt, trY) + center[1];
-            vertices[i * 3 + 2] = dot(pt, trZ) + center[2];
+            vertices[i * 3 + 0] = RecastVectors.dot(pt, trX) + center[0];
+            vertices[i * 3 + 1] = RecastVectors.dot(pt, trY) + center[1];
+            vertices[i * 3 + 2] = RecastVectors.dot(pt, trZ) + center[2];
             bounds[0] = Math.min(bounds[0], vertices[i * 3 + 0]);
             bounds[1] = Math.min(bounds[1], vertices[i * 3 + 1]);
             bounds[2] = Math.min(bounds[2], vertices[i * 3 + 2]);
@@ -100,10 +91,6 @@ public class RecastShapeRasterization {
                     + vertices[vi * 3 + 2] * planes[i][2];
         }
         rasterizationFilledShape(hf, bounds, area, flagMergeThr, rectangle -> intersectBox(rectangle, vertices, planes));
-    }
-
-    public static void main(String[] args) {
-        rasterizeBox(null, new float[] { 10, 0, -3 }, new float[] { 5, 3, 6 }, new float[] { 0, 1, 0 }, 0, 0, null);
     }
 
     private static void rasterizationFilledShape(Heightfield hf, float[] bounds, int area, int flagMergeThr,
@@ -255,7 +242,7 @@ public class RecastShapeRasterization {
         float topY = start[1] + nry;
         float topZ = start[2] + nrz;
         float topPlaneD = normal[0] * topX + normal[1] * topY + normal[2] * topZ;
-        float dotNormalPoint = dot(normal, point);
+        float dotNormalPoint = RecastVectors.dot(normal, point);
         float t = (topPlaneD - dotNormalPoint) / normal[1];
         float upperY = point[1] + t;
         // check if within the top segment
@@ -315,7 +302,7 @@ public class RecastShapeRasterization {
             point[2] = ((i & 2) == 0) ? rectangle[1] : rectangle[3];
             for (int j = 0; j < 6; j++) {
                 if (Math.abs(planes[j][1]) > EPSILON) {
-                    float dotNormalPoint = dot(planes[j], point);
+                    float dotNormalPoint = RecastVectors.dot(planes[j], point);
                     float t = (planes[j][3] - dotNormalPoint) / planes[j][1];
                     float y = point[1] + t;
                     boolean valid = true;
@@ -371,10 +358,6 @@ public class RecastShapeRasterization {
 
     public static float clamp(float v, float min, float max) {
         return Math.max(Math.min(max, v), min);
-    }
-
-    public static float dot(float[] v1, float[] v2) {
-        return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
     }
 
     private static boolean overlapBounds(float[] amin, float[] amax, float[] bounds) {

@@ -32,7 +32,7 @@ public class RecastVoxelization {
 
         // Allocate voxel heightfield where we rasterize our input data to.
         Heightfield solid = new Heightfield(builderCfg.width, builderCfg.height, builderCfg.bmin, builderCfg.bmax, cfg.cs,
-                cfg.ch);
+                cfg.ch, cfg.borderSize);
 
         // Allocate array that can hold triangle area types.
         // If you have multiple meshes you need to process, allocate
@@ -46,8 +46,7 @@ public class RecastVoxelization {
         // the are type for each of the meshes and rasterize them.
         for (TriMesh geom : geomProvider.meshes()) {
             float[] verts = geom.getVerts();
-            boolean tiled = cfg.tileSizeX > 0;
-            if (tiled) {
+            if (cfg.useTiles) {
                 float[] tbmin = new float[2];
                 float[] tbmax = new float[2];
                 tbmin[0] = builderCfg.bmin[0];

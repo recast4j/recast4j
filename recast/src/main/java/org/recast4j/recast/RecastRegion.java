@@ -1199,12 +1199,13 @@ public class RecastRegion {
     /// @warning The distance field must be created using #rcBuildDistanceField before attempting to build regions.
     ///
     /// @see rcCompactHeightfield, rcCompactSpan, rcBuildDistanceField, rcBuildRegionsMonotone, rcConfig
-    public static void buildRegionsMonotone(Telemetry ctx, CompactHeightfield chf, int borderSize, int minRegionArea,
+    public static void buildRegionsMonotone(Telemetry ctx, CompactHeightfield chf, int minRegionArea,
             int mergeRegionArea) {
         ctx.startTimer("REGIONS");
 
         int w = chf.width;
         int h = chf.height;
+        int borderSize = chf.borderSize;
         int id = 1;
 
         int[] srcReg = new int[chf.spanCount];
@@ -1231,8 +1232,6 @@ public class RecastRegion {
             id++;
 
         }
-
-        chf.borderSize = borderSize;
 
         int[] prev = new int[1024];
 
@@ -1356,12 +1355,13 @@ public class RecastRegion {
     /// @warning The distance field must be created using #rcBuildDistanceField before attempting to build regions.
     ///
     /// @see rcCompactHeightfield, rcCompactSpan, rcBuildDistanceField, rcBuildRegionsMonotone, rcConfig
-    public static void buildRegions(Telemetry ctx, CompactHeightfield chf, int borderSize, int minRegionArea,
+    public static void buildRegions(Telemetry ctx, CompactHeightfield chf, int minRegionArea,
             int mergeRegionArea) {
         ctx.startTimer("REGIONS");
 
         int w = chf.width;
         int h = chf.height;
+        int borderSize = chf.borderSize;
 
         ctx.startTimer("REGIONS_WATERSHED");
 
@@ -1470,12 +1470,13 @@ public class RecastRegion {
 
     }
 
-    public static void buildLayerRegions(Telemetry ctx, CompactHeightfield chf, int borderSize, int minRegionArea) {
+    public static void buildLayerRegions(Telemetry ctx, CompactHeightfield chf, int minRegionArea) {
 
         ctx.startTimer("REGIONS");
 
         int w = chf.width;
         int h = chf.height;
+        int borderSize = chf.borderSize;
         int id = 1;
 
         int[] srcReg = new int[chf.spanCount];
@@ -1501,8 +1502,6 @@ public class RecastRegion {
             id++;
 
         }
-
-        chf.borderSize = borderSize;
 
         int[] prev = new int[1024];
 

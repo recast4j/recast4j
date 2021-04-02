@@ -50,6 +50,7 @@ public class RecastCompact {
         // Fill in header.
         chf.width = w;
         chf.height = h;
+        chf.borderSize = hf.borderSize;
         chf.spanCount = spanCount;
         chf.walkableHeight = walkableHeight;
         chf.walkableClimb = walkableClimb;

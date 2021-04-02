@@ -69,9 +69,10 @@ public class TileNavMeshBuilder extends AbstractNavMeshBuilder {
             boolean filterLedgeSpans, boolean filterWalkableLowHeightSpans, int tileSize) {
         RecastConfig cfg = new RecastConfig(true, tileSize, tileSize, RecastConfig.calcBorder(m_agentRadius, m_cellSize),
                 m_partitionType, m_cellSize, m_cellHeight, m_agentMaxSlope, filterLowHangingObstacles, filterLedgeSpans,
-                filterWalkableLowHeightSpans, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_regionMinSize, m_regionMergeSize,
-                m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError,
-                SampleAreaModifications.SAMPLE_AREAMOD_WALKABLE, true);
+                filterWalkableLowHeightSpans, m_agentHeight, m_agentRadius, m_agentMaxClimb,
+                m_regionMinSize * m_regionMinSize * m_cellSize * m_cellSize,
+                m_regionMergeSize * m_regionMergeSize * m_cellSize * m_cellSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly,
+                true, m_detailSampleDist, m_detailSampleMaxError, SampleAreaModifications.SAMPLE_AREAMOD_WALKABLE);
         RecastBuilder rcBuilder = new RecastBuilder();
         return rcBuilder.buildTiles(m_geom, cfg, Optional.of(executor));
     }

@@ -19,14 +19,17 @@ freely, subject to the following restrictions:
 package org.recast4j.demo;
 
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class RecastBuilderThreadFactory implements ThreadFactory {
+
+    private final AtomicLong count = new AtomicLong();
 
     @Override
     public Thread newThread(Runnable r) {
         Thread t = new Thread(r);
         t.setDaemon(true);
-        t.setName("RecastBuilder");
+        t.setName("RecastBuilder - " + count.getAndIncrement());
         return t;
     }
 

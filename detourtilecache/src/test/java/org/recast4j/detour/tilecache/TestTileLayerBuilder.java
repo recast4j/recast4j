@@ -43,6 +43,8 @@ public class TestTileLayerBuilder extends AbstractTileLayersBuilder {
     private final float m_agentMaxSlope = 45.0f;
     private final int m_regionMinSize = 8;
     private final int m_regionMergeSize = 20;
+    private final float m_regionMinArea = m_regionMinSize * m_regionMinSize * m_cellSize * m_cellSize;
+    private final float m_regionMergeArea = m_regionMergeSize * m_regionMergeSize * m_cellSize * m_cellSize;
     private final float m_edgeMaxLen = 12.0f;
     private final float m_edgeMaxError = 1.3f;
     private final int m_vertsPerPoly = 6;
@@ -58,8 +60,8 @@ public class TestTileLayerBuilder extends AbstractTileLayersBuilder {
         this.geom = geom;
         rcConfig = new RecastConfig(true, m_tileSize, m_tileSize, RecastConfig.calcBorder(m_agentRadius, m_cellSize),
                 PartitionType.WATERSHED, m_cellSize, m_cellHeight, m_agentMaxSlope, true, true, true, m_agentHeight,
-                m_agentRadius, m_agentMaxClimb, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly,
-                m_detailSampleDist, m_detailSampleMaxError, SampleAreaModifications.SAMPLE_AREAMOD_GROUND, true);
+                m_agentRadius, m_agentMaxClimb, m_regionMinArea, m_regionMergeArea, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly,
+                true, m_detailSampleDist, m_detailSampleMaxError, SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
         float[] bmin = geom.getMeshBoundsMin();
         float[] bmax = geom.getMeshBoundsMax();
         int[] twh = Recast.calcTileCount(bmin, bmax, m_cellSize, m_tileSize, m_tileSize);

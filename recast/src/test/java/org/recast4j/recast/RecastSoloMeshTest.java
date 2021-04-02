@@ -107,7 +107,7 @@ public class RecastSoloMeshTest {
         //
 
         // Allocate voxel heightfield where we rasterize our input data to.
-        Heightfield m_solid = new Heightfield(bcfg.width, bcfg.height, bcfg.bmin, bcfg.bmax, cfg.cs, cfg.ch);
+        Heightfield m_solid = new Heightfield(bcfg.width, bcfg.height, bcfg.bmin, bcfg.bmax, cfg.cs, cfg.ch, cfg.borderSize);
 
         for (TriMesh geom : geomProvider.meshes()) {
             float[] verts = geom.getVerts();
@@ -202,14 +202,14 @@ public class RecastSoloMeshTest {
             // along the walkable surface.
             RecastRegion.buildDistanceField(m_ctx, m_chf);
             // Partition the walkable surface into simple regions without holes.
-            RecastRegion.buildRegions(m_ctx, m_chf, 0, cfg.minRegionArea, cfg.mergeRegionArea);
+            RecastRegion.buildRegions(m_ctx, m_chf, cfg.minRegionArea, cfg.mergeRegionArea);
         } else if (m_partitionType == PartitionType.MONOTONE) {
             // Partition the walkable surface into simple regions without holes.
             // Monotone partitioning does not need distancefield.
-            RecastRegion.buildRegionsMonotone(m_ctx, m_chf, 0, cfg.minRegionArea, cfg.mergeRegionArea);
+            RecastRegion.buildRegionsMonotone(m_ctx, m_chf, cfg.minRegionArea, cfg.mergeRegionArea);
         } else {
             // Partition the walkable surface into simple regions without holes.
-            RecastRegion.buildLayerRegions(m_ctx, m_chf, 0, cfg.minRegionArea);
+            RecastRegion.buildLayerRegions(m_ctx, m_chf, cfg.minRegionArea);
         }
 
         Assert.assertEquals("maxDistance", expDistance, m_chf.maxDistance);

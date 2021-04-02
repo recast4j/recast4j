@@ -630,6 +630,10 @@ public class RecastDebugDraw extends DebugDraw {
 
     public void debugDrawHeightfieldSolid(Heightfield hf) {
 
+        if (!frustumTest(hf.bmin, hf.bmax)) {
+            return;
+        }
+
         float[] orig = hf.bmin;
         float cs = hf.cs;
         float ch = hf.ch;
