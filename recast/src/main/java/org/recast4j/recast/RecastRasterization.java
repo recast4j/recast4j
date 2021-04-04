@@ -137,8 +137,8 @@ public class RecastRasterization {
         return new int[] { m, n };
     }
 
-    private static void rasterizeTri(float[] verts, int v0, int v1, int v2, int area, Heightfield hf, float[] bmin,
-            float[] bmax, float cs, float ics, float ich, int flagMergeThr) {
+    private static void rasterizeTri(float[] verts, int v0, int v1, int v2, int area, Heightfield hf, float[] bmin, float[] bmax,
+            float cs, float ics, float ich, int flagMergeThr) {
         int w = hf.width;
         int h = hf.height;
         float tmin[] = new float[3], tmax[] = new float[3];
@@ -159,7 +159,8 @@ public class RecastRasterization {
         // Calculate the footprint of the triangle on the grid's y-axis
         int y0 = (int) ((tmin[2] - bmin[2]) * ics);
         int y1 = (int) ((tmax[2] - bmin[2]) * ics);
-        y0 = RecastCommon.clamp(y0, 0, h - 1);
+        // use -1 rather than 0 to cut the polygon properly at the start of the tile
+        y0 = RecastCommon.clamp(y0, -1, h - 1);
         y1 = RecastCommon.clamp(y1, 0, h - 1);
 
         // Clip the triangle into all grid cells it touches.
@@ -188,16 +189,21 @@ public class RecastRasterization {
             if (nvrow < 3)
                 continue;
 
+            if (y < 0) {
+                continue;
+            }
             // find the horizontal bounds in the row
             float minX = buf[inrow], maxX = buf[inrow];
             for (int i = 1; i < nvrow; ++i) {
-                if (minX > buf[inrow + i * 3])
-                    minX = buf[inrow + i * 3];
-                if (maxX < buf[inrow + i * 3])
-                    maxX = buf[inrow + i * 3];
+                float v = buf[inrow + i * 3];
+                minX = Math.min(minX, v);
+                maxX = Math.max(maxX, v);
             }
             int x0 = (int) ((minX - bmin[0]) * ics);
             int x1 = (int) ((maxX - bmin[0]) * ics);
+            if (x1 < 0 || x0 >= w) {
+                continue;
+            }
             x0 = RecastCommon.clamp(x0, 0, w - 1);
             x1 = RecastCommon.clamp(x1, 0, w - 1);
 
@@ -249,8 +255,8 @@ public class RecastRasterization {
      *
      * @see Heightfield
      */
-    public static void rasterizeTriangle(Heightfield solid, float[] verts, int v0, int v1, int v2, int area,
-            int flagMergeThr, Telemetry ctx) {
+    public static void rasterizeTriangle(Heightfield solid, float[] verts, int v0, int v1, int v2, int area, int flagMergeThr,
+            Telemetry ctx) {
 
         ctx.startTimer("RASTERIZE_TRIANGLES");
 
@@ -266,8 +272,8 @@ public class RecastRasterization {
      *
      * @see Heightfield
      */
-    public static void rasterizeTriangles(Heightfield solid, float[] verts, int[] tris, int[] areas, int nt,
-            int flagMergeThr, Telemetry ctx) {
+    public static void rasterizeTriangles(Heightfield solid, float[] verts, int[] tris, int[] areas, int nt, int flagMergeThr,
+            Telemetry ctx) {
 
         ctx.startTimer("RASTERIZE_TRIANGLES");
 
