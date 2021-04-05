@@ -204,7 +204,7 @@ public class RecastRasterization {
             if (x1 < 0 || x0 >= w) {
                 continue;
             }
-            x0 = RecastCommon.clamp(x0, 0, w - 1);
+            x0 = RecastCommon.clamp(x0, -1, w - 1);
             x1 = RecastCommon.clamp(x1, 0, w - 1);
 
             int nv, nv2 = nvrow;
@@ -221,6 +221,9 @@ public class RecastRasterization {
                 }
                 if (nv < 3)
                     continue;
+                if (x < 0) {
+                    continue;
+                }
 
                 // Calculate min and max of the span.
                 float smin = buf[p1 + 1], smax = buf[p1 + 1];
