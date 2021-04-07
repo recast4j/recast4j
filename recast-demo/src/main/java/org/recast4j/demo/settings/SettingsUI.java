@@ -17,26 +17,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.demo.settings;
 
-import static org.lwjgl.nuklear.Nuklear.NK_TEXT_ALIGN_LEFT;
-import static org.lwjgl.nuklear.Nuklear.NK_TEXT_ALIGN_RIGHT;
-import static org.lwjgl.nuklear.Nuklear.NK_WINDOW_BORDER;
-import static org.lwjgl.nuklear.Nuklear.NK_WINDOW_MOVABLE;
-import static org.lwjgl.nuklear.Nuklear.NK_WINDOW_TITLE;
-import static org.lwjgl.nuklear.Nuklear.nk_begin;
-import static org.lwjgl.nuklear.Nuklear.nk_button_text;
-import static org.lwjgl.nuklear.Nuklear.nk_check_text;
-import static org.lwjgl.nuklear.Nuklear.nk_end;
-import static org.lwjgl.nuklear.Nuklear.nk_label;
-import static org.lwjgl.nuklear.Nuklear.nk_layout_row_dynamic;
-import static org.lwjgl.nuklear.Nuklear.nk_option_text;
-import static org.lwjgl.nuklear.Nuklear.nk_property_float;
-import static org.lwjgl.nuklear.Nuklear.nk_property_int;
-import static org.lwjgl.nuklear.Nuklear.nk_rect;
-import static org.lwjgl.nuklear.Nuklear.nk_rgb;
-import static org.lwjgl.nuklear.Nuklear.nk_rgba;
-import static org.lwjgl.nuklear.Nuklear.nk_spacing;
-import static org.lwjgl.nuklear.Nuklear.nk_style_item_color;
-import static org.lwjgl.nuklear.Nuklear.nk_window_get_bounds;
+import static org.lwjgl.nuklear.Nuklear.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
 
 import java.nio.FloatBuffer;
@@ -124,10 +105,6 @@ public class SettingsUI implements NuklearUIModule {
             if (nk_begin(ctx, "Properties", nk_rect(width - 255, 5, 250, height - 10, rect),
                     NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_TITLE)) {
 
-                nk_layout_row_dynamic(ctx, 5, 1);
-                nk_spacing(ctx, 1);
-                nk_layout_row_dynamic(ctx, 18, 1);
-                navMeshInputTrigerred = nk_button_text(ctx, "Load Nav Mesh...");
                 nk_layout_row_dynamic(ctx, 18, 1);
                 nk_label(ctx, "Input Mesh", NK_TEXT_ALIGN_LEFT);
                 nk_layout_row_dynamic(ctx, 20, 1);
@@ -135,8 +112,6 @@ public class SettingsUI implements NuklearUIModule {
                 nk_layout_row_dynamic(ctx, 18, 1);
                 nk_label(ctx, String.format("Verts: %d Tris: %d", 0, 0), NK_TEXT_ALIGN_RIGHT);
 
-                nk_layout_row_dynamic(ctx, 5, 1);
-                nk_spacing(ctx, 1);
                 nk_layout_row_dynamic(ctx, 18, 1);
                 nk_label(ctx, "Rasterization", NK_TEXT_ALIGN_LEFT);
                 nk_layout_row_dynamic(ctx, 20, 1);
@@ -157,7 +132,7 @@ public class SettingsUI implements NuklearUIModule {
                 nk_layout_row_dynamic(ctx, 20, 1);
                 nk_property_float(ctx, "Max Slope", 0f, agentMaxSlope, 90f, 1f, 1f);
 
-                nk_layout_row_dynamic(ctx, 5, 1);
+                nk_layout_row_dynamic(ctx, 3, 1);
                 nk_spacing(ctx, 1);
                 nk_layout_row_dynamic(ctx, 18, 1);
                 nk_label(ctx, "Region", NK_TEXT_ALIGN_LEFT);
@@ -166,14 +141,14 @@ public class SettingsUI implements NuklearUIModule {
                 nk_layout_row_dynamic(ctx, 20, 1);
                 nk_property_int(ctx, "Merged Region Size", 0, mergedRegionSize, 150, 1, 1f);
 
-                nk_layout_row_dynamic(ctx, 5, 1);
+                nk_layout_row_dynamic(ctx, 3, 1);
                 nk_spacing(ctx, 1);
                 nk_layout_row_dynamic(ctx, 18, 1);
                 nk_label(ctx, "Partitioning", NK_TEXT_ALIGN_LEFT);
                 partitioning = NuklearUIHelper.nk_radio(ctx, PartitionType.values(), partitioning,
                         p -> p.name().substring(0, 1) + p.name().substring(1).toLowerCase());
 
-                nk_layout_row_dynamic(ctx, 5, 1);
+                nk_layout_row_dynamic(ctx, 3, 1);
                 nk_spacing(ctx, 1);
                 nk_layout_row_dynamic(ctx, 18, 1);
                 nk_label(ctx, "Filtering", NK_TEXT_ALIGN_LEFT);
@@ -185,27 +160,27 @@ public class SettingsUI implements NuklearUIModule {
                 filterWalkableLowHeightSpans = nk_option_text(ctx, "Walkable Low Height Spans",
                         filterWalkableLowHeightSpans);
 
-                nk_layout_row_dynamic(ctx, 5, 1);
+                nk_layout_row_dynamic(ctx, 3, 1);
                 nk_spacing(ctx, 1);
                 nk_layout_row_dynamic(ctx, 18, 1);
                 nk_label(ctx, "Polygonization", NK_TEXT_ALIGN_LEFT);
                 nk_layout_row_dynamic(ctx, 20, 1);
-                nk_property_float(ctx, "Max Edge Length", 0f, edgeMaxLen, 50f, 1f, 1f);
+                nk_property_float(ctx, "Max Edge Length", 0f, edgeMaxLen, 50f, 0.1f, 0.1f);
                 nk_layout_row_dynamic(ctx, 20, 1);
                 nk_property_float(ctx, "Max Edge Error", 0.1f, edgeMaxError, 3f, 0.1f, 0.1f);
                 nk_layout_row_dynamic(ctx, 20, 1);
                 nk_property_int(ctx, "Vert Per Poly", 3, vertsPerPoly, 12, 1, 1);
 
-                nk_layout_row_dynamic(ctx, 5, 1);
+                nk_layout_row_dynamic(ctx, 3, 1);
                 nk_spacing(ctx, 1);
                 nk_layout_row_dynamic(ctx, 18, 1);
                 nk_label(ctx, "Detail Mesh", NK_TEXT_ALIGN_LEFT);
                 nk_layout_row_dynamic(ctx, 20, 1);
-                nk_property_float(ctx, "Sample Distance", 0f, detailSampleDist, 16f, 1f, 1f);
+                nk_property_float(ctx, "Sample Distance", 0f, detailSampleDist, 16f, 0.1f, 0.1f);
                 nk_layout_row_dynamic(ctx, 20, 1);
-                nk_property_float(ctx, "Max Sample Error", 0f, detailSampleMaxError, 16f, 1f, 1f);
+                nk_property_float(ctx, "Max Sample Error", 0f, detailSampleMaxError, 16f, 0.1f, 0.1f);
 
-                nk_layout_row_dynamic(ctx, 5, 1);
+                nk_layout_row_dynamic(ctx, 3, 1);
                 nk_spacing(ctx, 1);
                 nk_layout_row_dynamic(ctx, 18, 1);
                 nk_label(ctx, "Tiling", NK_TEXT_ALIGN_LEFT);
@@ -226,6 +201,10 @@ public class SettingsUI implements NuklearUIModule {
 
                 nk_layout_row_dynamic(ctx, 20, 1);
                 buildTriggered = nk_button_text(ctx, "Build");
+                nk_layout_row_dynamic(ctx, 3, 1);
+                nk_spacing(ctx, 1);
+                nk_layout_row_dynamic(ctx, 18, 1);
+                navMeshInputTrigerred = nk_button_text(ctx, "Load Nav Mesh...");
 
                 nk_layout_row_dynamic(ctx, 18, 1);
                 nk_label(ctx, "Draw", NK_TEXT_ALIGN_LEFT);

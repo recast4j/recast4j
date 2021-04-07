@@ -35,15 +35,17 @@ public class Heightfield {
     public final float ch;
     /** Heightfield of spans (width*height). */
     public final Span[] spans;
+    /** Border size in cell units */
+    public final int borderSize;
 
-    public Heightfield(int width, int height, float[] bmin, float[] bmax, float cs, float ch) {
+    public Heightfield(int width, int height, float[] bmin, float[] bmax, float cs, float ch, int borderSize) {
         this.width = width;
         this.height = height;
         this.bmin = bmin;
         this.bmax = bmax;
         this.cs = cs;
         this.ch = ch;
+        this.borderSize = borderSize;
         spans = new Span[width * height];
-
     }
 }

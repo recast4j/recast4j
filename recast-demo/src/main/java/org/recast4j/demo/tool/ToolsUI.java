@@ -18,17 +18,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.demo.tool;
 
-import static org.lwjgl.nuklear.Nuklear.NK_WINDOW_BORDER;
-import static org.lwjgl.nuklear.Nuklear.NK_WINDOW_MOVABLE;
-import static org.lwjgl.nuklear.Nuklear.NK_WINDOW_TITLE;
-import static org.lwjgl.nuklear.Nuklear.nk_begin;
-import static org.lwjgl.nuklear.Nuklear.nk_end;
-import static org.lwjgl.nuklear.Nuklear.nk_layout_row_dynamic;
-import static org.lwjgl.nuklear.Nuklear.nk_option_label;
-import static org.lwjgl.nuklear.Nuklear.nk_rect;
-import static org.lwjgl.nuklear.Nuklear.nk_rgb;
-import static org.lwjgl.nuklear.Nuklear.nk_spacing;
-import static org.lwjgl.nuklear.Nuklear.nk_window_get_bounds;
+import static org.lwjgl.nuklear.Nuklear.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
 
 import java.util.Arrays;
@@ -65,7 +55,7 @@ public class ToolsUI implements NuklearUIModule {
                             currentTool = tool;
                         }
                     }
-                    nk_layout_row_dynamic(ctx, 5, 1);
+                    nk_layout_row_dynamic(ctx, 3, 1);
                     nk_spacing(ctx, 1);
                     if (currentTool != null) {
                         currentTool.layout(ctx);

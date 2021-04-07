@@ -133,6 +133,11 @@
             <version>1.2.9-SNAPSHOT</version>
         </dependency>
         <dependency>
+            <groupId>org.recast4j</groupId>
+            <artifactId>detour-dynamic</artifactId>
+            <version>1.2.9-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.13.1</version>

@@ -18,12 +18,14 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.demo.draw;
 
+import org.recast4j.demo.builder.SampleAreaModifications;
+
 public class DebugDraw {
 
     private final GLCheckerTexture g_tex = new GLCheckerTexture();
     private final OpenGLDraw openGlDraw = new ModernOpenGLDraw();
     private final int[] boxIndices = { 7, 6, 5, 4, 0, 1, 2, 3, 1, 5, 6, 2, 3, 7, 4, 0, 2, 6, 7, 3, 0, 4, 5, 1, };
-
+    private final float[][] frustumPlanes = new float[6][4];
 
     public void begin(DebugDrawPrimitives prim) {
         begin(prim, 1f);
@@ -129,8 +131,8 @@ public class DebugDraw {
         }
     }
 
-    public void debugDrawArc(float x0, float y0, float z0, float x1, float y1, float z1, float h, float as0, float as1,
-            int col, float lineWidth) {
+    public void debugDrawArc(float x0, float y0, float z0, float x1, float y1, float z1, float h, float as0, float as1, int col,
+            float lineWidth) {
         begin(DebugDrawPrimitives.LINES, lineWidth);
         appendArc(x0, y0, z0, x1, y1, z1, h, as0, as1, col);
         end();
@@ -169,6 +171,8 @@ public class DebugDraw {
     private boolean circleInit = false;
     private final static int CIRCLE_NUM_SEG = 40;
     private final float[] circeDir = new float[CIRCLE_NUM_SEG * 2];
+    private float[] viewMatrix = new float[16];
+    private final float[] projectionMatrix = new float[16];
 
     public void appendCircle(float x, float y, float z, float r, int col) {
         if (!circleInit) {
@@ -189,8 +193,7 @@ public class DebugDraw {
     private static final float PAD = 0.05f;
     private static final float ARC_PTS_SCALE = (1.0f - PAD * 2) / NUM_ARC_PTS;
 
-    public void appendArc(float x0, float y0, float z0, float x1, float y1, float z1, float h, float as0, float as1,
-            int col) {
+    public void appendArc(float x0, float y0, float z0, float x1, float y1, float z1, float h, float as0, float as1, int col) {
         float dx = x1 - x0;
         float dy = y1 - y0;
         float dz = z1 - z0;
@@ -290,8 +293,8 @@ public class DebugDraw {
         }
     }
 
-    public void debugDrawArrow(float x0, float y0, float z0, float x1, float y1, float z1, float as0, float as1,
-            int col, float lineWidth) {
+    public void debugDrawArrow(float x0, float y0, float z0, float x1, float y1, float z1, float as0, float as1, int col,
+            float lineWidth) {
 
         begin(DebugDrawPrimitives.LINES, lineWidth);
         appendArrow(x0, y0, z0, x1, y1, z1, as0, as1, col);
@@ -326,13 +329,11 @@ public class DebugDraw {
 
         vertex(p, col);
         // vertex(p[0]+az[0]*s+ay[0]*s/2, p[1]+az[1]*s+ay[1]*s/2, p[2]+az[2]*s+ay[2]*s/2, col);
-        vertex(p[0] + az[0] * s + ax[0] * s / 3, p[1] + az[1] * s + ax[1] * s / 3, p[2] + az[2] * s + ax[2] * s / 3,
-                col);
+        vertex(p[0] + az[0] * s + ax[0] * s / 3, p[1] + az[1] * s + ax[1] * s / 3, p[2] + az[2] * s + ax[2] * s / 3, col);
 
         vertex(p, col);
         // vertex(p[0]+az[0]*s-ay[0]*s/2, p[1]+az[1]*s-ay[1]*s/2, p[2]+az[2]*s-ay[2]*s/2, col);
-        vertex(p[0] + az[0] * s - ax[0] * s / 3, p[1] + az[1] * s - ax[1] * s / 3, p[2] + az[2] * s - ax[2] * s / 3,
-                col);
+        vertex(p[0] + az[0] * s - ax[0] * s / 3, p[1] + az[1] * s - ax[1] * s / 3, p[2] + az[2] * s - ax[2] * s / 3, col);
 
     }
 
@@ -362,18 +363,18 @@ public class DebugDraw {
         return x * x + y * y + z * z;
     }
 
-    public static int areaToCol(int area) {
-        if (area == 0) {
-            return duRGBA(0, 192, 255, 255);
-        } else {
-            return duIntToCol(area, 255);
-        }
-    }
+//    public static int areaToCol(int area) {
+//        if (area == 0) {
+//            return duRGBA(0, 192, 255, 255);
+//        } else {
+//            return duIntToCol(area, 255);
+//        }
+//    }
 
-    /*
     public static int areaToCol(int area) {
         switch (area) {
         // Ground (0) : light blue
+        case SampleAreaModifications.SAMPLE_POLYAREA_TYPE_WALKABLE:
         case SampleAreaModifications.SAMPLE_POLYAREA_TYPE_GROUND:
             return duRGBA(0, 192, 255, 255);
         // Water : blue
@@ -396,7 +397,7 @@ public class DebugDraw {
             return duRGBA(255, 0, 0, 255);
         }
     }
-    */
+
     public static int duRGBA(int r, int g, int b, int a) {
         return (r) | (g << 8) | (b << 16) | (a << 24);
     }
@@ -433,8 +434,8 @@ public class DebugDraw {
         colors[0] = duMultCol(colTop, 250);
         colors[1] = duMultCol(colSide, 140);
         colors[2] = duMultCol(colSide, 165);
-        colors[3] = duMultCol(colSide, 217);
-        colors[4] = duMultCol(colSide, 165);
+        colors[3] = duMultCol(colSide, 165);
+        colors[4] = duMultCol(colSide, 217);
         colors[5] = duMultCol(colSide, 217);
     }
 
@@ -479,9 +480,9 @@ public class DebugDraw {
     }
 
     public float[] projectionMatrix(float fovy, float aspect, float near, float far) {
-        float[] projectionMatrix = new float[16];
         GLU.glhPerspectivef2(projectionMatrix, fovy, aspect, near, far);
         getOpenGlDraw().projectionMatrix(projectionMatrix);
+        updateFrustum();
         return projectionMatrix;
     }
 
@@ -494,12 +495,88 @@ public class DebugDraw {
         t[12] = -cameraPos[0];
         t[13] = -cameraPos[1];
         t[14] = -cameraPos[2];
-        float[] viewMatrix = GLU.mul(r, t);
+        viewMatrix = GLU.mul(r, t);
         getOpenGlDraw().viewMatrix(viewMatrix);
+        updateFrustum();
         return viewMatrix;
     }
 
     private OpenGLDraw getOpenGlDraw() {
         return openGlDraw;
     }
+
+    private void updateFrustum() {
+        float[] vpm = GLU.mul(projectionMatrix, viewMatrix);
+        // left
+        frustumPlanes[0] = normalizePlane(vpm[0 + 3] + vpm[0 + 0], vpm[4 + 3] + vpm[4 + 0], vpm[8 + 3] + vpm[8 + 0],
+                vpm[12 + 3] + vpm[12 + 0]);
+        // right
+        frustumPlanes[1] = normalizePlane(vpm[0 + 3] - vpm[0 + 0], vpm[4 + 3] - vpm[4 + 0], vpm[8 + 3] - vpm[8 + 0],
+                vpm[12 + 3] - vpm[12 + 0]);
+        // top
+        frustumPlanes[2] = normalizePlane(vpm[0 + 3] - vpm[0 + 1], vpm[4 + 3] - vpm[4 + 1], vpm[8 + 3] - vpm[8 + 1],
+                vpm[12 + 3] - vpm[12 + 1]);
+        // bottom
+        frustumPlanes[3] = normalizePlane(vpm[0 + 3] + vpm[0 + 1], vpm[4 + 3] + vpm[4 + 1], vpm[8 + 3] + vpm[8 + 1],
+                vpm[12 + 3] + vpm[12 + 1]);
+        // near
+        frustumPlanes[4] = normalizePlane(vpm[0 + 3] + vpm[0 + 2], vpm[4 + 3] + vpm[4 + 2], vpm[8 + 3] + vpm[8 + 2],
+                vpm[12 + 3] + vpm[12 + 2]);
+        // far
+        frustumPlanes[5] = normalizePlane(vpm[0 + 3] - vpm[0 + 2], vpm[4 + 3] - vpm[4 + 2], vpm[8 + 3] - vpm[8 + 2],
+                vpm[12 + 3] - vpm[12 + 2]);
+    }
+
+    private float[] normalizePlane(float px, float py, float pz, float pw) {
+        float length = (float) Math.sqrt(px * px + py * py + pz * pz);
+        if (length != 0) {
+            length = 1f / length;
+            px *= length;
+            py *= length;
+            pz *= length;
+            pw *= length;
+        }
+        return new float[] { px, py, pz, pw };
+    }
+
+    public boolean frustumTest(float[] bmin, float[] bmax) {
+        return frustumTest(new float[] { bmin[0], bmin[1], bmin[2], bmax[0], bmax[1], bmax[2] });
+    }
+
+    public boolean frustumTest(float[] bounds) {
+        for (float[] plane : frustumPlanes) {
+            float p_x;
+            float p_y;
+            float p_z;
+            float n_x;
+            float n_y;
+            float n_z;
+            if (plane[0] >= 0) {
+                p_x = bounds[3];
+                n_x = bounds[0];
+            } else {
+                p_x = bounds[0];
+                n_x = bounds[3];
+            }
+            if (plane[1] >= 0) {
+                p_y = bounds[4];
+                n_y = bounds[1];
+            } else {
+                p_y = bounds[1];
+                n_y = bounds[4];
+            }
+            if (plane[2] >= 0) {
+                p_z = bounds[5];
+                n_z = bounds[2];
+            } else {
+                p_z = bounds[2];
+                n_z = bounds[5];
+            }
+            if (plane[0] * p_x + plane[1] * p_y + plane[2] * p_z + plane[3] < 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 }

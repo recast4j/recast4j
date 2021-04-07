@@ -69,12 +69,12 @@ public class RecastLayers {
         return (amin > bmax || amax < bmin) ? false : true;
     }
 
-    public static HeightfieldLayerSet buildHeightfieldLayers(Telemetry ctx, CompactHeightfield chf, int borderSize,
-            int walkableHeight) {
+    public static HeightfieldLayerSet buildHeightfieldLayers(Telemetry ctx, CompactHeightfield chf, int walkableHeight) {
 
         ctx.startTimer("RC_TIMER_BUILD_LAYERS");
         int w = chf.width;
         int h = chf.height;
+        int borderSize = chf.borderSize;
         int[] srcReg = new int[chf.spanCount];
         Arrays.fill(srcReg, 0xFF);
         int nsweeps = chf.width;// Math.max(chf.width, chf.height);

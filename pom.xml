@@ -19,6 +19,7 @@
         <module>detourcrowd</module>
         <module>detourtilecache</module>
         <module>detour-extras</module>
+        <module>detour-dynamic</module>
     </modules>
 
     <name>Recast and Detour for Java</name>

@@ -29,6 +29,7 @@ import static org.lwjgl.opengl.GL11.glGetString;
 import static org.lwjgl.opengl.GL20.GL_SHADING_LANGUAGE_VERSION;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
+import static org.recast4j.detour.DetourCommon.vNormalize;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -52,12 +53,14 @@ import org.recast4j.demo.draw.RecastDebugDraw;
 import org.recast4j.demo.geom.DemoInputGeomProvider;
 import org.recast4j.demo.geom.NavMeshRaycast;
 import org.recast4j.demo.geom.NavMeshUtils;
+import org.recast4j.demo.geom.PolyMeshRaycast;
 import org.recast4j.demo.io.ObjImporter;
 import org.recast4j.demo.math.DemoMath;
 import org.recast4j.demo.sample.Sample;
 import org.recast4j.demo.settings.SettingsUI;
 import org.recast4j.demo.tool.ConvexVolumeTool;
 import org.recast4j.demo.tool.CrowdTool;
+import org.recast4j.demo.tool.DynamicUpdateTool;
 import org.recast4j.demo.tool.JumpLinkBuilderTool;
 import org.recast4j.demo.tool.OffMeshConnectionTool;
 import org.recast4j.demo.tool.TestNavmeshTool;
@@ -132,7 +135,7 @@ public class RecastDemo {
 
         settingsUI = new SettingsUI();
         toolsUI = new ToolsUI(new TestNavmeshTool(), new OffMeshConnectionTool(), new ConvexVolumeTool(), new CrowdTool(),
-                new JumpLinkBuilderTool());
+                new JumpLinkBuilderTool(), new DynamicUpdateTool());
 
         nuklearUI = new NuklearUI(window, mouse, settingsUI, toolsUI);
 
@@ -151,10 +154,12 @@ public class RecastDemo {
                 float[] bmax = sample.getInputGeom().getMeshBoundsMax();
                 int[] voxels = Recast.calcGridSize(bmin, bmax, settingsUI.getCellSize());
                 settingsUI.setVoxels(voxels);
-                settingsUI.setTiles(tileNavMeshBuilder.getTiles(sample.getInputGeom(), settingsUI.getCellSize(), settingsUI.getTileSize()));
-                settingsUI.setMaxTiles(tileNavMeshBuilder.getMaxTiles(sample.getInputGeom(), settingsUI.getCellSize(), settingsUI.getTileSize()));
-                settingsUI.setMaxPolys(
-                        tileNavMeshBuilder.getMaxPolysPerTile(sample.getInputGeom(), settingsUI.getCellSize(), settingsUI.getTileSize()));
+                settingsUI.setTiles(
+                        tileNavMeshBuilder.getTiles(sample.getInputGeom(), settingsUI.getCellSize(), settingsUI.getTileSize()));
+                settingsUI.setMaxTiles(tileNavMeshBuilder.getMaxTiles(sample.getInputGeom(), settingsUI.getCellSize(),
+                        settingsUI.getTileSize()));
+                settingsUI.setMaxPolys(tileNavMeshBuilder.getMaxPolysPerTile(sample.getInputGeom(), settingsUI.getCellSize(),
+                        settingsUI.getTileSize()));
             }
 
             nuklearUI.inputBegin();
@@ -247,15 +252,15 @@ public class RecastDemo {
 
                     Tupple2<List<RecastBuilderResult>, NavMesh> buildResult;
                     if (settingsUI.isTiled()) {
-                        buildResult = tileNavMeshBuilder.build(sample.getInputGeom(), settingsUI.getPartitioning(), m_cellSize, m_cellHeight,
-                                m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize,
+                        buildResult = tileNavMeshBuilder.build(sample.getInputGeom(), settingsUI.getPartitioning(), m_cellSize,
+                                m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize,
                                 m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist,
                                 m_detailSampleMaxError, settingsUI.isFilterLowHangingObstacles(), settingsUI.isFilterLedgeSpans(),
                                 settingsUI.isFilterWalkableLowHeightSpans(), m_tileSize);
 
                     } else {
-                        buildResult = soloNavMeshBuilder.build(sample.getInputGeom(), settingsUI.getPartitioning(), m_cellSize, m_cellHeight,
-                                m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize,
+                        buildResult = soloNavMeshBuilder.build(sample.getInputGeom(), settingsUI.getPartitioning(), m_cellSize,
+                                m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize,
                                 m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist,
                                 m_detailSampleMaxError, settingsUI.isFilterLowHangingObstacles(), settingsUI.isFilterLedgeSpans(),
                                 settingsUI.isFilterWalkableLowHeightSpans());
@@ -285,6 +290,15 @@ public class RecastDemo {
                     if (hit.isEmpty() && sample.getNavMesh() != null) {
                         hit = NavMeshRaycast.raycast(sample.getNavMesh(), rayStart, rayEnd);
                     }
+                    if (hit.isEmpty() && sample.getRecastResults() != null) {
+                        hit = PolyMeshRaycast.raycast(sample.getRecastResults(), rayStart, rayEnd);
+                    }
+                    float[] rayDir = new float[] {rayEnd[0] - rayStart[0], rayEnd[1] - rayStart[1], rayEnd[2] - rayStart[2]};
+                    Tool tool = toolsUI.getTool();
+                    vNormalize(rayDir);
+                    if (tool != null) {
+                        tool.handleClickRay(rayStart, rayDir, processHitTestShift);
+                    }
                     if (hit.isPresent()) {
                         float hitTime = hit.get();
                         if ((modState & GLFW_MOD_CONTROL) != 0) {
@@ -298,7 +312,6 @@ public class RecastDemo {
                             pos[0] = rayStart[0] + (rayEnd[0] - rayStart[0]) * hitTime;
                             pos[1] = rayStart[1] + (rayEnd[1] - rayStart[1]) * hitTime;
                             pos[2] = rayStart[2] + (rayEnd[2] - rayStart[2]) * hitTime;
-                            Tool tool = toolsUI.getTool();
                             if (tool != null) {
                                 tool.handleClick(rayStart, pos, processHitTestShift);
                             }
@@ -327,8 +340,8 @@ public class RecastDemo {
                     for (RecastBuilderResult result : sample.getRecastResults()) {
                         if (result.getSolidHeightfield() != null) {
                             if (bmin == null) {
-                                bmin = new float[] {Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY};
-                                bmax = new float[] {Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY};
+                                bmin = new float[] { Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY };
+                                bmax = new float[] { Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY };
                             }
                             for (int i = 0; i < 3; i++) {
                                 bmin[i] = Math.min(bmin[i], result.getSolidHeightfield().bmin[i]);
@@ -523,13 +536,14 @@ public class RecastDemo {
         glfwMakeContextCurrent(window);
         glfwSwapInterval(1);
         capabilities = createCapabilities();
-//        if (capabilities.OpenGL43) {
-//            GL43.glDebugMessageControl(GL43.GL_DEBUG_SOURCE_API, GL43.GL_DEBUG_TYPE_OTHER, GL43.GL_DEBUG_SEVERITY_NOTIFICATION,
-//                    (IntBuffer) null, false);
-//        } else if (capabilities.GL_ARB_debug_output) {
-//            ARBDebugOutput.glDebugMessageControlARB(ARBDebugOutput.GL_DEBUG_SOURCE_API_ARB,
-//                    ARBDebugOutput.GL_DEBUG_TYPE_OTHER_ARB, ARBDebugOutput.GL_DEBUG_SEVERITY_LOW_ARB, (IntBuffer) null, false);
-//        }
+        // if (capabilities.OpenGL43) {
+        // GL43.glDebugMessageControl(GL43.GL_DEBUG_SOURCE_API, GL43.GL_DEBUG_TYPE_OTHER,
+        // GL43.GL_DEBUG_SEVERITY_NOTIFICATION,
+        // (IntBuffer) null, false);
+        // } else if (capabilities.GL_ARB_debug_output) {
+        // ARBDebugOutput.glDebugMessageControlARB(ARBDebugOutput.GL_DEBUG_SOURCE_API_ARB,
+        // ARBDebugOutput.GL_DEBUG_TYPE_OTHER_ARB, ARBDebugOutput.GL_DEBUG_SEVERITY_LOW_ARB, (IntBuffer) null, false);
+        // }
         String vendor = glGetString(GL_VENDOR);
         logger.debug(vendor);
         String version = glGetString(GL_VERSION);

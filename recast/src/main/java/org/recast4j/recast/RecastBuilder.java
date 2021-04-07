@@ -217,14 +217,14 @@ public class RecastBuilder {
             // along the walkable surface.
             RecastRegion.buildDistanceField(ctx, chf);
             // Partition the walkable surface into simple regions without holes.
-            RecastRegion.buildRegions(ctx, chf, cfg.borderSize, cfg.minRegionArea, cfg.mergeRegionArea);
+            RecastRegion.buildRegions(ctx, chf, cfg.minRegionArea, cfg.mergeRegionArea);
         } else if (cfg.partitionType == PartitionType.MONOTONE) {
             // Partition the walkable surface into simple regions without holes.
             // Monotone partitioning does not need distancefield.
-            RecastRegion.buildRegionsMonotone(ctx, chf, cfg.borderSize, cfg.minRegionArea, cfg.mergeRegionArea);
+            RecastRegion.buildRegionsMonotone(ctx, chf, cfg.minRegionArea, cfg.mergeRegionArea);
         } else {
             // Partition the walkable surface into simple regions without holes.
-            RecastRegion.buildLayerRegions(ctx, chf, cfg.borderSize, cfg.minRegionArea);
+            RecastRegion.buildLayerRegions(ctx, chf, cfg.minRegionArea);
         }
 
         //
@@ -295,7 +295,7 @@ public class RecastBuilder {
         Heightfield solid = RecastVoxelization.buildSolidHeightfield(geom, builderCfg, ctx);
         filterHeightfield(solid, builderCfg.cfg, ctx);
         CompactHeightfield chf = buildCompactHeightfield(geom, builderCfg.cfg, ctx, solid);
-        return RecastLayers.buildHeightfieldLayers(ctx, chf, builderCfg.cfg.borderSize, builderCfg.cfg.walkableHeight);
+        return RecastLayers.buildHeightfieldLayers(ctx, chf, builderCfg.cfg.walkableHeight);
     }
 
 }

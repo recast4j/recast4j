@@ -19,46 +19,62 @@ package org.recast4j.detour.io;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public abstract class DetourWriter {
 
-	protected void write(OutputStream stream, float value, ByteOrder order) throws IOException {
-		write(stream, Float.floatToIntBits(value), order);
-	}
+    protected void write(OutputStream stream, float value, ByteOrder order) throws IOException {
+        write(stream, Float.floatToIntBits(value), order);
+    }
 
-	protected void write(OutputStream stream, short value, ByteOrder order) throws IOException {
-		if (order == ByteOrder.BIG_ENDIAN) {
-			stream.write((value >> 8) & 0xFF);
-			stream.write(value & 0xFF);
-		} else {
-			stream.write(value & 0xFF);
-			stream.write((value >> 8) & 0xFF);
-		}
-	}
+    protected void write(OutputStream stream, short value, ByteOrder order) throws IOException {
+        if (order == ByteOrder.BIG_ENDIAN) {
+            stream.write((value >> 8) & 0xFF);
+            stream.write(value & 0xFF);
+        } else {
+            stream.write(value & 0xFF);
+            stream.write((value >> 8) & 0xFF);
+        }
+    }
 
-	protected void write(OutputStream stream, long value, ByteOrder order) throws IOException {
-		if (order == ByteOrder.BIG_ENDIAN) {
-			write(stream, (int)(value >>> 32), order);
-			write(stream, (int)(value & 0xFFFFFFFF), order);
-		} else {
-			write(stream, (int)(value & 0xFFFFFFFF), order);
-			write(stream, (int)(value >>> 32), order);
-		}
-	}
+    protected void write(OutputStream stream, long value, ByteOrder order) throws IOException {
+        if (order == ByteOrder.BIG_ENDIAN) {
+            write(stream, (int) (value >>> 32), order);
+            write(stream, (int) (value & 0xFFFFFFFF), order);
+        } else {
+            write(stream, (int) (value & 0xFFFFFFFF), order);
+            write(stream, (int) (value >>> 32), order);
+        }
+    }
 
-	protected void write(OutputStream stream, int value, ByteOrder order) throws IOException {
-		if (order == ByteOrder.BIG_ENDIAN) {
-			stream.write((value >> 24) & 0xFF);
-			stream.write((value >> 16) & 0xFF);
-			stream.write((value >> 8) & 0xFF);
-			stream.write(value & 0xFF);
-		} else {
-			stream.write(value & 0xFF);
-			stream.write((value >> 8) & 0xFF);
-			stream.write((value >> 16) & 0xFF);
-			stream.write((value >> 24) & 0xFF);
-		}
-	}
+    protected void write(OutputStream stream, int value, ByteOrder order) throws IOException {
+        if (order == ByteOrder.BIG_ENDIAN) {
+            stream.write((value >> 24) & 0xFF);
+            stream.write((value >> 16) & 0xFF);
+            stream.write((value >> 8) & 0xFF);
+            stream.write(value & 0xFF);
+        } else {
+            stream.write(value & 0xFF);
+            stream.write((value >> 8) & 0xFF);
+            stream.write((value >> 16) & 0xFF);
+            stream.write((value >> 24) & 0xFF);
+        }
+    }
+
+    protected void write(OutputStream stream, boolean bool) throws IOException {
+        write(stream, (byte) (bool ? 1 : 0));
+    }
+
+    protected void write(OutputStream stream, byte value) throws IOException {
+        stream.write(value);
+    }
+
+    protected void write(OutputStream stream, ByteBuffer data) throws IOException {
+        data.position(0);
+        byte[] buffer = new byte[data.remaining()];
+        data.get(buffer);
+        stream.write(buffer);
+    }
 
 }
