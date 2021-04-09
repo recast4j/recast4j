@@ -192,6 +192,12 @@ public class DetourCommon {
         return dx * dx + dz * dz;
     }
 
+    public static float vDist2DSqr(float[] p, float[] verts, int i) {
+        float dx = verts[i] - p[0];
+        float dz = verts[i + 2] - p[2];
+        return dx * dx + dz * dz;
+    }
+
     /// Normalizes the vector.
     /// @param[in,out] v The vector to normalize. [(x, y, z)]
     public static void vNormalize(float[] v) {

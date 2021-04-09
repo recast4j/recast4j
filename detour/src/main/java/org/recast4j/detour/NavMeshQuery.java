@@ -70,7 +70,16 @@ public class NavMeshQuery {
     }
 
     public static class FRand {
-        Random r = new Random();
+
+        private final Random r;
+
+        public FRand() {
+            r = new Random();
+        }
+
+        public FRand(long seed) {
+            r = new Random(seed);
+        }
 
         public float frand() {
             return r.nextFloat();
@@ -191,6 +200,31 @@ public class NavMeshQuery {
      */
     public Result<FindRandomPointResult> findRandomPointAroundCircle(long startRef, float[] centerPos, float maxRadius,
             QueryFilter filter, FRand frand) {
+        return findRandomPointAroundCircle(startRef, centerPos, maxRadius, filter, frand, PolygonByCircleConstraint.noop());
+    }
+
+    /**
+     * Returns random location on navmesh within the reach of specified location. Polygons are chosen weighted by area.
+     * The search runs in linear related to number of polygon. The location is strictly constrained by the circle.
+     *
+     * @param startRef
+     *            The reference id of the polygon where the search starts.
+     * @param centerPos
+     *            The center of the search circle. [(x, y, z)]
+     * @param maxRadius
+     * @param filter
+     *            The polygon filter to apply to the query.
+     * @param frand
+     *            Function returning a random number [0..1).
+     * @return Random location
+     */
+    public Result<FindRandomPointResult> findRandomPointWithinCircle(long startRef, float[] centerPos, float maxRadius,
+            QueryFilter filter, FRand frand) {
+        return findRandomPointAroundCircle(startRef, centerPos, maxRadius, filter, frand, PolygonByCircleConstraint.strict());
+    }
+
+    public Result<FindRandomPointResult> findRandomPointAroundCircle(long startRef, float[] centerPos, float maxRadius,
+            QueryFilter filter, FRand frand, PolygonByCircleConstraint constraint) {
 
         // Validate input
         if (!m_nav.isValidPolyRef(startRef) || Objects.isNull(centerPos) || !vIsFinite(centerPos) || maxRadius < 0
@@ -220,9 +254,9 @@ public class NavMeshQuery {
         float radiusSqr = maxRadius * maxRadius;
         float areaSum = 0.0f;
 
-        MeshTile randomTile = null;
         Poly randomPoly = null;
         long randomPolyRef = 0;
+        float[] randomPolyVerts = null;
 
         while (!m_openList.isEmpty()) {
             Node bestNode = m_openList.pop();
@@ -239,19 +273,27 @@ public class NavMeshQuery {
             if (bestPoly.getType() == Poly.DT_POLYTYPE_GROUND) {
                 // Calc area of the polygon.
                 float polyArea = 0.0f;
-                for (int j = 2; j < bestPoly.vertCount; ++j) {
-                    int va = bestPoly.verts[0] * 3;
-                    int vb = bestPoly.verts[j - 1] * 3;
-                    int vc = bestPoly.verts[j] * 3;
-                    polyArea += triArea2D(bestTile.data.verts, va, vb, vc);
+                float[] polyVerts = new float[bestPoly.vertCount * 3];
+                for (int j = 0; j < bestPoly.vertCount; ++j) {
+                    System.arraycopy(bestTile.data.verts, bestPoly.verts[j] * 3, polyVerts, j * 3, 3);
                 }
-                // Choose random polygon weighted by area, using reservoi sampling.
-                areaSum += polyArea;
-                float u = frand.frand();
-                if (u * areaSum <= polyArea) {
-                    randomTile = bestTile;
-                    randomPoly = bestPoly;
-                    randomPolyRef = bestRef;
+                float[] constrainedVerts = constraint.aply(polyVerts, centerPos, maxRadius);
+                if (constrainedVerts != null) {
+                    int vertCount = constrainedVerts.length / 3;
+                    for (int j = 2; j < vertCount; ++j) {
+                        int va = 0;
+                        int vb = (j - 1) * 3;
+                        int vc = j * 3;
+                        polyArea += triArea2D(constrainedVerts, va, vb, vc);
+                    }
+                    // Choose random polygon weighted by area, using reservoi sampling.
+                    areaSum += polyArea;
+                    float u = frand.frand();
+                    if (u * areaSum <= polyArea) {
+                        randomPoly = bestPoly;
+                        randomPolyRef = bestRef;
+                        randomPolyVerts = constrainedVerts;
+                    }
                 }
             }
 
@@ -332,17 +374,11 @@ public class NavMeshQuery {
         }
 
         // Randomly pick point on polygon.
-        float[] verts = new float[3 * m_nav.getMaxVertsPerPoly()];
-        float[] areas = new float[m_nav.getMaxVertsPerPoly()];
-        System.arraycopy(randomTile.data.verts, randomPoly.verts[0] * 3, verts, 0, 3);
-        for (int j = 1; j < randomPoly.vertCount; ++j) {
-            System.arraycopy(randomTile.data.verts, randomPoly.verts[j] * 3, verts, j * 3, 3);
-        }
-
         float s = frand.frand();
         float t = frand.frand();
 
-        float[] pt = randomPointInConvexPoly(verts, randomPoly.vertCount, areas, s, t);
+        float[] areas = new float[randomPolyVerts.length / 3];
+        float[] pt = randomPointInConvexPoly(randomPolyVerts, randomPolyVerts.length / 3, areas, s, t);
         FindRandomPointResult result = new FindRandomPointResult(randomPolyRef, pt);
         Result<Float> pheight = getPolyHeight(randomPolyRef, pt);
         if (pheight.failed()) {
@@ -2609,7 +2645,7 @@ public class NavMeshQuery {
             this.tmax = tmax;
         }
 
-    };
+    }
 
     protected void insertInterval(List<SegInterval> ints, int tmin, int tmax, long ref) {
         // Find insertion point.

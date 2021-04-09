@@ -1,19 +1,10 @@
 package org.recast4j.demo.tool;
 
-import static org.lwjgl.nuklear.Nuklear.NK_TEXT_ALIGN_LEFT;
-import static org.lwjgl.nuklear.Nuklear.nk_check_label;
-import static org.lwjgl.nuklear.Nuklear.nk_label;
-import static org.lwjgl.nuklear.Nuklear.nk_layout_row_dynamic;
-import static org.lwjgl.nuklear.Nuklear.nk_option_label;
-import static org.lwjgl.nuklear.Nuklear.nk_spacing;
+import static org.lwjgl.nuklear.Nuklear.*;
 import static org.recast4j.demo.draw.DebugDraw.duRGBA;
 import static org.recast4j.demo.draw.DebugDrawPrimitives.LINES;
 import static org.recast4j.demo.draw.DebugDrawPrimitives.POINTS;
-import static org.recast4j.detour.DetourCommon.vCopy;
-import static org.recast4j.detour.DetourCommon.vLerp;
-import static org.recast4j.detour.DetourCommon.vMad;
-import static org.recast4j.detour.DetourCommon.vNormalize;
-import static org.recast4j.detour.DetourCommon.vSub;
+import static org.recast4j.detour.DetourCommon.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,23 +18,8 @@ import org.recast4j.demo.draw.RecastDebugDraw;
 import org.recast4j.demo.math.DemoMath;
 import org.recast4j.demo.sample.Sample;
 import org.recast4j.demo.tool.PathUtils.SteerTarget;
-import org.recast4j.detour.ClosestPointOnPolyResult;
-import org.recast4j.detour.DefaultQueryFilter;
-import org.recast4j.detour.DetourCommon;
-import org.recast4j.detour.FindDistanceToWallResult;
-import org.recast4j.detour.FindLocalNeighbourhoodResult;
-import org.recast4j.detour.FindPolysAroundResult;
-import org.recast4j.detour.GetPolyWallSegmentsResult;
-import org.recast4j.detour.MeshTile;
-import org.recast4j.detour.MoveAlongSurfaceResult;
-import org.recast4j.detour.NavMesh;
-import org.recast4j.detour.NavMeshQuery;
-import org.recast4j.detour.Poly;
-import org.recast4j.detour.RaycastHit;
-import org.recast4j.detour.Result;
-import org.recast4j.detour.Status;
-import org.recast4j.detour.StraightPathItem;
-import org.recast4j.detour.Tupple2;
+import org.recast4j.detour.*;
+import org.recast4j.detour.NavMeshQuery.FRand;
 
 public class TestNavmeshTool implements Tool {
 
@@ -72,6 +48,8 @@ public class TestNavmeshTool implements Tool {
     private List<float[]> m_smoothPath;
     private Status m_pathFindStatus = Status.FAILURE;
     private boolean enableRaycast = true;
+    private List<float[]> randomPoints = new ArrayList<>();
+    private boolean constrainByCircle;
 
     private enum ToolMode {
         PATHFIND_FOLLOW,
@@ -81,7 +59,8 @@ public class TestNavmeshTool implements Tool {
         RAYCAST,
         FIND_POLYS_IN_CIRCLE,
         FIND_POLYS_IN_SHAPE,
-        FIND_LOCAL_NEIGHBOURHOOD
+        FIND_LOCAL_NEIGHBOURHOOD,
+        RANDOM_POINTS_IN_CIRCLE
     }
 
     public TestNavmeshTool() {
@@ -112,6 +91,7 @@ public class TestNavmeshTool implements Tool {
         int previousStraightPathOptions = m_straightPathOptions;
         int previousIncludeFlags = m_filter.getIncludeFlags();
         int previousExcludeFlags = m_filter.getExcludeFlags();
+        boolean previouscCnstrainByCircle = constrainByCircle;
 
         nk_layout_row_dynamic(ctx, 20, 1);
         if (nk_option_label(ctx, "Pathfind Follow", m_toolMode == ToolMode.PATHFIND_FOLLOW)) {
@@ -168,6 +148,11 @@ public class TestNavmeshTool implements Tool {
         if (nk_option_label(ctx, "Find Local Neighbourhood", m_toolMode == ToolMode.FIND_LOCAL_NEIGHBOURHOOD)) {
             m_toolMode = ToolMode.FIND_LOCAL_NEIGHBOURHOOD;
         }
+        if (nk_option_label(ctx, "Random Points in Circle", m_toolMode == ToolMode.RANDOM_POINTS_IN_CIRCLE)) {
+            m_toolMode = ToolMode.RANDOM_POINTS_IN_CIRCLE;
+            nk_layout_row_dynamic(ctx, 20, 1);
+            constrainByCircle = nk_check_text(ctx, "Constrained", constrainByCircle);
+        }
 
         nk_layout_row_dynamic(ctx, 5, 1);
         nk_spacing(ctx, 1);
@@ -223,7 +208,7 @@ public class TestNavmeshTool implements Tool {
 
         if (previousToolMode != m_toolMode || m_straightPathOptions != previousStraightPathOptions
                 || previousIncludeFlags != includeFlags || previousExcludeFlags != excludeFlags
-                || previousEnableRaycast != enableRaycast) {
+                || previousEnableRaycast != enableRaycast || previouscCnstrainByCircle != constrainByCircle) {
             recalc();
         }
     }
@@ -479,6 +464,22 @@ public class TestNavmeshTool implements Tool {
                 if (result.succeeded()) {
                     m_polys = result.result.getRefs();
                     m_parent = result.result.getParentRefs();
+                }
+            }
+        } else if (m_toolMode == ToolMode.RANDOM_POINTS_IN_CIRCLE) {
+            randomPoints.clear();
+            if (m_sposSet && m_startRef != 0 && m_eposSet) {
+                float dx = m_epos[0] - m_spos[0];
+                float dz = m_epos[2] - m_spos[2];
+                float dist = (float) Math.sqrt(dx * dx + dz * dz);
+                PolygonByCircleConstraint clipper = constrainByCircle ? PolygonByCircleConstraint.strict()
+                        : PolygonByCircleConstraint.noop();
+                for (int i = 0; i < 100; i++) {
+                    Result<FindRandomPointResult> result = m_navQuery.findRandomPointAroundCircle(m_startRef, m_spos, dist,
+                            m_filter, new FRand(), clipper);
+                    if (result.succeeded()) {
+                        randomPoints.add(result.result.getRandomPt());
+                    }
                 }
             }
         }
@@ -788,6 +789,24 @@ public class TestNavmeshTool implements Tool {
                     dd.depthMask(true);
                 }
             }
+        } else if (m_toolMode == ToolMode.RANDOM_POINTS_IN_CIRCLE) {
+            dd.depthMask(false);
+            dd.begin(POINTS, 4.0f);
+            int col = duRGBA(64, 16, 0, 220);
+            for (float[] point : randomPoints) {
+                dd.vertex(point[0], point[1] + 0.1f, point[2], col);
+            }
+            dd.end();
+            if (m_sposSet && m_eposSet) {
+                dd.depthMask(false);
+                float dx = m_epos[0] - m_spos[0];
+                float dz = m_epos[2] - m_spos[2];
+                float dist = (float) Math.sqrt(dx * dx + dz * dz);
+                dd.debugDrawCircle(m_spos[0], m_spos[1] + agentHeight / 2, m_spos[2], dist, duRGBA(64, 16, 0, 220),
+                        2.0f);
+                dd.depthMask(true);
+            }
+            dd.depthMask(true);
         }
     }
 
