@@ -46,7 +46,8 @@ public interface PolygonByCircleConstraint {
      * Use a simple sweep plane algorithm to approximate the intersection of a circle and a polygon
      */
     public static class StrictPolygonByCircleConstrainer implements PolygonByCircleConstraint {
-        private static final float SWEEP_MARGIN = 0.01f;
+        // margin on both sides to avoid the need to handle intersections with vertical segments
+        private static final float SWEEP_MARGIN = 0.005f;
         private static final int APPROXIMATION_SLICES = 6;
         private static final float COLLINEAR_TOLERANCE = 0.01f;
         // private static final float EPSILON = 1e-6f;
