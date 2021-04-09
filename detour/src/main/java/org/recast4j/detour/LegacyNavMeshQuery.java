@@ -18,14 +18,7 @@ freely, subject to the following restrictions:
 
 package org.recast4j.detour;
 
-import static org.recast4j.detour.DetourCommon.distancePtSegSqr2D;
-import static org.recast4j.detour.DetourCommon.sqr;
-import static org.recast4j.detour.DetourCommon.vCopy;
-import static org.recast4j.detour.DetourCommon.vDist;
-import static org.recast4j.detour.DetourCommon.vDistSqr;
-import static org.recast4j.detour.DetourCommon.vIsFinite;
-import static org.recast4j.detour.DetourCommon.vNormalize;
-import static org.recast4j.detour.DetourCommon.vSub;
+import static org.recast4j.detour.DetourCommon.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -109,7 +102,7 @@ public class LegacyNavMeshQuery extends NavMeshQuery {
                 parentPoly = tileAndPoly.second;
             }
 
-            for (int i = bestPoly.firstLink; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
+            for (int i = bestTile.polyLinks[bestPoly.index]; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
                 long neighbourRef = bestTile.links.get(i).ref;
 
                 // Skip invalid ids and do not expand back to where we came from.
@@ -292,7 +285,7 @@ public class LegacyNavMeshQuery extends NavMeshQuery {
                 }
             }
 
-            for (int i = bestPoly.firstLink; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
+            for (int i = bestTile.polyLinks[bestPoly.index]; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
                 long neighbourRef = bestTile.links.get(i).ref;
 
                 // Skip invalid ids and do not expand back to where we came
@@ -612,7 +605,7 @@ public class LegacyNavMeshQuery extends NavMeshQuery {
                 if ((bestPoly.neis[j] & NavMesh.DT_EXT_LINK) != 0) {
                     // Tile border.
                     boolean solid = true;
-                    for (int k = bestPoly.firstLink; k != NavMesh.DT_NULL_LINK; k = bestTile.links.get(k).next) {
+                    for (int k = bestTile.polyLinks[bestPoly.index]; k != NavMesh.DT_NULL_LINK; k = bestTile.links.get(k).next) {
                         Link link = bestTile.links.get(k);
                         if (link.edge == j) {
                             if (link.ref != 0) {
@@ -662,7 +655,7 @@ public class LegacyNavMeshQuery extends NavMeshQuery {
                 bestvi = new VectorPtr(bestTile.data.verts, vi);
             }
 
-            for (int i = bestPoly.firstLink; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
+            for (int i = bestTile.polyLinks[bestPoly.index]; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
                 Link link = bestTile.links.get(i);
                 long neighbourRef = link.ref;
                 // Skip invalid neighbours and do not follow back to parent.

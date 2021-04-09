@@ -21,6 +21,7 @@ package org.recast4j.detour;
 import static org.recast4j.detour.DetourCommon.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -427,6 +428,8 @@ public class NavMesh {
         tile.data = data;
         tile.flags = flags;
         tile.links.clear();
+        tile.polyLinks = new int[data.polys.length];
+        Arrays.fill(tile.polyLinks, NavMesh.DT_NULL_LINK);
 
         // Insert tile into the position lut.
         getTileListByPos(header.x, header.y).add(tile);
@@ -545,7 +548,7 @@ public class NavMesh {
 
         for (int i = 0; i < tile.data.header.polyCount; ++i) {
             Poly poly = tile.data.polys[i];
-            poly.firstLink = DT_NULL_LINK;
+            tile.polyLinks[poly.index] = DT_NULL_LINK;
 
             if (poly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
                 continue;
@@ -566,8 +569,8 @@ public class NavMesh {
                 link.side = 0xff;
                 link.bmin = link.bmax = 0;
                 // Add to linked list.
-                link.next = poly.firstLink;
-                poly.firstLink = idx;
+                link.next = tile.polyLinks[poly.index];
+                tile.polyLinks[poly.index] = idx;
             }
         }
     }
@@ -581,14 +584,14 @@ public class NavMesh {
 
         for (int i = 0; i < tile.data.header.polyCount; ++i) {
             Poly poly = tile.data.polys[i];
-            int j = poly.firstLink;
+            int j = tile.polyLinks[poly.index];
             int pj = DT_NULL_LINK;
             while (j != DT_NULL_LINK) {
                 if (decodePolyIdTile(tile.links.get(j).ref) == targetNum) {
                     // Remove link.
                     int nj = tile.links.get(j).next;
                     if (pj == DT_NULL_LINK) {
-                        poly.firstLink = nj;
+                        tile.polyLinks[poly.index] = nj;
                     } else {
                         tile.links.get(pj).next = nj;
                     }
@@ -642,8 +645,8 @@ public class NavMesh {
                     link.edge = j;
                     link.side = dir;
 
-                    link.next = poly.firstLink;
-                    poly.firstLink = idx;
+                    link.next = tile.polyLinks[poly.index];
+                    tile.polyLinks[poly.index] = idx;
 
                     // Compress portal limits to a byte value.
                     if (dir == 0 || dir == 4) {
@@ -694,7 +697,8 @@ public class NavMesh {
             Poly targetPoly = target.data.polys[targetCon.poly];
             // Skip off-mesh connections which start location could not be
             // connected at all.
-            if (targetPoly.firstLink == DT_NULL_LINK) {
+            if (tile.polyLinks[targetPoly.index] == DT_NULL_LINK) {
+//            if (targetPoly.firstLink == DT_NULL_LINK) {
                 continue;
             }
 
@@ -730,8 +734,8 @@ public class NavMesh {
             link.side = oppositeSide;
             link.bmin = link.bmax = 0;
             // Add to linked list.
-            link.next = targetPoly.firstLink;
-            targetPoly.firstLink = idx;
+            link.next = tile.polyLinks[targetPoly.index];
+            tile.polyLinks[targetPoly.index] = idx;
 
             // Link target poly to off-mesh connection.
             if ((targetCon.flags & DT_OFFMESH_CON_BIDIR) != 0) {
@@ -744,8 +748,8 @@ public class NavMesh {
                 link.side = (side == -1 ? 0xff : side);
                 link.bmin = link.bmax = 0;
                 // Add to linked list.
-                link.next = landPoly.firstLink;
-                landPoly.firstLink = tidx;
+                link.next = tile.polyLinks[landPoly.index];
+                tile.polyLinks[landPoly.index] = tidx;
             }
         }
     }
@@ -923,8 +927,8 @@ public class NavMesh {
             link.side = 0xff;
             link.bmin = link.bmax = 0;
             // Add to linked list.
-            link.next = poly.firstLink;
-            poly.firstLink = idx;
+            link.next = tile.polyLinks[poly.index];
+            tile.polyLinks[poly.index] = idx;
 
             // Start end-point is always connect back to off-mesh connection.
             int tidx = allocLink(tile);
@@ -936,8 +940,8 @@ public class NavMesh {
             link.side = 0xff;
             link.bmin = link.bmax = 0;
             // Add to linked list.
-            link.next = landPoly.firstLink;
-            landPoly.firstLink = tidx;
+            link.next = tile.polyLinks[landPoly.index];
+            tile.polyLinks[landPoly.index] = tidx;
         }
     }
 
@@ -1285,7 +1289,7 @@ public class NavMesh {
         int idx0 = 0, idx1 = 1;
 
         // Find link that points to first vertex.
-        for (int i = poly.firstLink; i != DT_NULL_LINK; i = tile.links.get(i).next) {
+        for (int i = tile.polyLinks[poly.index]; i != DT_NULL_LINK; i = tile.links.get(i).next) {
             if (tile.links.get(i).edge == 0) {
                 if (tile.links.get(i).ref != prevRef) {
                     idx0 = 1;

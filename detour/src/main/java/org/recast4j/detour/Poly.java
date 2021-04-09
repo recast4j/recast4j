@@ -18,7 +18,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
-/** Defines a polyogn within a dtMeshTile object. */
+/** Defines a polygon within a MeshTile object. */
 public class Poly {
 
     public final int index;
@@ -26,8 +26,6 @@ public class Poly {
     public static final int DT_POLYTYPE_GROUND = 0;
     /** The polygon is an off-mesh connection consisting of two vertices. */
     public static final int DT_POLYTYPE_OFFMESH_CONNECTION = 1;
-    /** Index to first link in linked list. (Or #DT_NULL_LINK if there is no link.) */
-    public int firstLink;
     /** The indices of the polygon's vertices. The actual vertices are located in MeshTile::verts. */
     public final int[] verts;
     /** Packed data representing neighbor polygons references and flags for each edge. */
@@ -45,7 +43,6 @@ public class Poly {
 
     public Poly(int index, int maxVertsPerPoly) {
         this.index = index;
-        firstLink = NavMesh.DT_NULL_LINK;
         verts = new int[maxVertsPerPoly];
         neis = new int[maxVertsPerPoly];
     }
@@ -70,4 +67,4 @@ public class Poly {
         return areaAndtype >> 6;
     }
 
-};
+}

@@ -83,7 +83,6 @@ public class MeshDataReaderWriterTest {
             assertEquals(meshData.verts[i], readData.verts[i], 0.0f);
         }
         for (int i = 0; i < meshData.header.polyCount; i++) {
-            assertEquals(meshData.polys[i].firstLink, readData.polys[i].firstLink);
             assertEquals(meshData.polys[i].vertCount, readData.polys[i].vertCount);
             assertEquals(meshData.polys[i].areaAndtype, readData.polys[i].areaAndtype);
             for (int j = 0; j < meshData.polys[i].vertCount; j++) {

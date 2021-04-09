@@ -30,6 +30,7 @@ public class MeshTile {
     int salt;
     /** The tile data. */
     public MeshData data;
+    public int[] polyLinks;
     /** The tile links. */
     public final List<Link> links = new ArrayList<>();
     /** Index to the next free link. */
