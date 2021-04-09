@@ -65,8 +65,9 @@ public class MeshDataReader {
 		}
 		header.version = buf.getInt();
 		if (header.version != MeshHeader.DT_NAVMESH_VERSION) {
-			if (header.version != MeshHeader.DT_NAVMESH_VERSION_RECAST4J) {
-				throw new IOException("Invalid version");
+            if (header.version < MeshHeader.DT_NAVMESH_VERSION_RECAST4J_FIRST
+                    || header.version > MeshHeader.DT_NAVMESH_VERSION_RECAST4J_LAST) {
+				throw new IOException("Invalid version " + header.version);
 			}
 		}
 		boolean cCompatibility = header.version == MeshHeader.DT_NAVMESH_VERSION;
@@ -112,7 +113,7 @@ public class MeshDataReader {
 	static int getSizeofLink(boolean is32Bit) {
 		return is32Bit ? LINK_SIZEOF32BIT : LINK_SIZEOF;
 	}
-	
+
 	private float[] readVerts(ByteBuffer buf, int count) {
 		float[] verts = new float[count * 3];
 		for (int i = 0; i < verts.length; i++) {
@@ -125,7 +126,9 @@ public class MeshDataReader {
 		Poly[] polys = new Poly[header.polyCount];
 		for (int i = 0; i < polys.length; i++) {
 			polys[i] = new Poly(i, maxVertPerPoly);
-			polys[i].firstLink = buf.getInt();
+			if (header.version < MeshHeader.DT_NAVMESH_VERSION_RECAST4J_NO_POLY_FIRSTLINK) {
+			    buf.getInt(); // polys[i].firstLink
+			}
 			for (int j = 0; j < polys[i].verts.length; j++) {
 				polys[i].verts[j] = buf.getShort() & 0xFFFF;
 			}

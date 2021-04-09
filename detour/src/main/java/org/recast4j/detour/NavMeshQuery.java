@@ -261,7 +261,7 @@ public class NavMeshQuery {
                 parentRef = m_nodePool.getNodeAtIdx(bestNode.pidx).id;
             }
 
-            for (int i = bestPoly.firstLink; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
+            for (int i = bestTile.polyLinks[bestPoly.index]; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
                 Link link = bestTile.links.get(i);
                 long neighbourRef = link.ref;
                 // Skip invalid neighbours and do not follow back to parent.
@@ -740,7 +740,7 @@ public class NavMeshQuery {
                 }
             }
 
-            for (int i = bestPoly.firstLink; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
+            for (int i = bestTile.polyLinks[bestPoly.index]; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
                 long neighbourRef = bestTile.links.get(i).ref;
 
                 // Skip invalid ids and do not expand back to where we came from.
@@ -1026,7 +1026,7 @@ public class NavMeshQuery {
                 }
             }
 
-            for (int i = bestPoly.firstLink; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
+            for (int i = bestTile.polyLinks[bestPoly.index]; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
                 long neighbourRef = bestTile.links.get(i).ref;
 
                 // Skip invalid ids and do not expand back to where we came
@@ -1603,7 +1603,7 @@ public class NavMeshQuery {
 
                 if ((curPoly.neis[j] & NavMesh.DT_EXT_LINK) != 0) {
                     // Tile border.
-                    for (int k = curPoly.firstLink; k != NavMesh.DT_NULL_LINK; k = curTile.links.get(k).next) {
+                    for (int k = curTile.polyLinks[curPoly.index]; k != NavMesh.DT_NULL_LINK; k = curTile.links.get(k).next) {
                         Link link = curTile.links.get(k);
                         if (link.edge == j) {
                             if (link.ref != 0) {
@@ -1733,7 +1733,7 @@ public class NavMeshQuery {
         float[] right = new float[3];
         // Find the link that points to the 'to' polygon.
         Link link = null;
-        for (int i = fromPoly.firstLink; i != NavMesh.DT_NULL_LINK; i = fromTile.links.get(i).next) {
+        for (int i = fromTile.polyLinks[fromPoly.index]; i != NavMesh.DT_NULL_LINK; i = fromTile.links.get(i).next) {
             if (fromTile.links.get(i).ref == to) {
                 link = fromTile.links.get(i);
                 break;
@@ -1746,7 +1746,7 @@ public class NavMeshQuery {
         // Handle off-mesh connections.
         if (fromPoly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
             // Find link that points to first vertex.
-            for (int i = fromPoly.firstLink; i != NavMesh.DT_NULL_LINK; i = fromTile.links.get(i).next) {
+            for (int i = fromTile.polyLinks[fromPoly.index]; i != NavMesh.DT_NULL_LINK; i = fromTile.links.get(i).next) {
                 if (fromTile.links.get(i).ref == to) {
                     int v = fromTile.links.get(i).edge;
                     System.arraycopy(fromTile.data.verts, fromPoly.verts[v] * 3, left, 0, 3);
@@ -1758,7 +1758,7 @@ public class NavMeshQuery {
         }
 
         if (toPoly.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
-            for (int i = toPoly.firstLink; i != NavMesh.DT_NULL_LINK; i = toTile.links.get(i).next) {
+            for (int i = toTile.polyLinks[toPoly.index]; i != NavMesh.DT_NULL_LINK; i = toTile.links.get(i).next) {
                 if (toTile.links.get(i).ref == from) {
                     int v = toTile.links.get(i).edge;
                     System.arraycopy(toTile.data.verts, toPoly.verts[v] * 3, left, 0, 3);
@@ -1951,7 +1951,7 @@ public class NavMeshQuery {
             // Follow neighbours.
             long nextRef = 0;
 
-            for (int i = poly.firstLink; i != NavMesh.DT_NULL_LINK; i = tile.links.get(i).next) {
+            for (int i = tile.polyLinks[poly.index]; i != NavMesh.DT_NULL_LINK; i = tile.links.get(i).next) {
                 Link link = tile.links.get(i);
 
                 // Find link which contains this edge.
@@ -2181,7 +2181,7 @@ public class NavMeshQuery {
             resultParent.add(parentRef);
             resultCost.add(bestNode.total);
 
-            for (int i = bestPoly.firstLink; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
+            for (int i = bestTile.polyLinks[bestPoly.index]; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
                 Link link = bestTile.links.get(i);
                 long neighbourRef = link.ref;
                 // Skip invalid neighbours and do not follow back to parent.
@@ -2349,7 +2349,7 @@ public class NavMeshQuery {
             resultParent.add(parentRef);
             resultCost.add(bestNode.total);
 
-            for (int i = bestPoly.firstLink; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
+            for (int i = bestTile.polyLinks[bestPoly.index]; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
                 Link link = bestTile.links.get(i);
                 long neighbourRef = link.ref;
                 // Skip invalid neighbours and do not follow back to parent.
@@ -2496,7 +2496,7 @@ public class NavMeshQuery {
             MeshTile curTile = tileAndPoly.first;
             Poly curPoly = tileAndPoly.second;
 
-            for (int i = curPoly.firstLink; i != NavMesh.DT_NULL_LINK; i = curTile.links.get(i).next) {
+            for (int i = curTile.polyLinks[curPoly.index]; i != NavMesh.DT_NULL_LINK; i = curTile.links.get(i).next) {
                 Link link = curTile.links.get(i);
                 long neighbourRef = link.ref;
                 // Skip invalid neighbours.
@@ -2560,7 +2560,7 @@ public class NavMeshQuery {
 
                     // Connected polys do not overlap.
                     boolean connected = false;
-                    for (int k = curPoly.firstLink; k != NavMesh.DT_NULL_LINK; k = curTile.links.get(k).next) {
+                    for (int k = curTile.polyLinks[curPoly.index]; k != NavMesh.DT_NULL_LINK; k = curTile.links.get(k).next) {
                         if (curTile.links.get(k).ref == pastRef) {
                             connected = true;
                             break;
@@ -2609,7 +2609,7 @@ public class NavMeshQuery {
             this.tmax = tmax;
         }
 
-    };
+    }
 
     protected void insertInterval(List<SegInterval> ints, int tmin, int tmax, long ref) {
         // Find insertion point.
@@ -2664,7 +2664,7 @@ public class NavMeshQuery {
             ints.clear();
             if ((poly.neis[j] & NavMesh.DT_EXT_LINK) != 0) {
                 // Tile border.
-                for (int k = poly.firstLink; k != NavMesh.DT_NULL_LINK; k = tile.links.get(k).next) {
+                for (int k = tile.polyLinks[poly.index]; k != NavMesh.DT_NULL_LINK; k = tile.links.get(k).next) {
                     Link link = tile.links.get(k);
                     if (link.edge == j) {
                         if (link.ref != 0) {
@@ -2808,7 +2808,7 @@ public class NavMeshQuery {
                 if ((bestPoly.neis[j] & NavMesh.DT_EXT_LINK) != 0) {
                     // Tile border.
                     boolean solid = true;
-                    for (int k = bestPoly.firstLink; k != NavMesh.DT_NULL_LINK; k = bestTile.links.get(k).next) {
+                    for (int k = bestTile.polyLinks[bestPoly.index]; k != NavMesh.DT_NULL_LINK; k = bestTile.links.get(k).next) {
                         Link link = bestTile.links.get(k);
                         if (link.edge == j) {
                             if (link.ref != 0) {
@@ -2858,7 +2858,7 @@ public class NavMeshQuery {
                 bestvi = new VectorPtr(bestTile.data.verts, vi);
             }
 
-            for (int i = bestPoly.firstLink; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
+            for (int i = bestTile.polyLinks[bestPoly.index]; i != NavMesh.DT_NULL_LINK; i = bestTile.links.get(i).next) {
                 Link link = bestTile.links.get(i);
                 long neighbourRef = link.ref;
                 // Skip invalid neighbours and do not follow back to parent.

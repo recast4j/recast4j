@@ -23,27 +23,8 @@ import static org.recast4j.recast.RecastConstants.RC_NULL_AREA;
 import java.util.List;
 
 import org.recast4j.demo.builder.SampleAreaModifications;
-import org.recast4j.detour.BVNode;
-import org.recast4j.detour.MeshTile;
-import org.recast4j.detour.NavMesh;
-import org.recast4j.detour.NavMeshQuery;
-import org.recast4j.detour.Node;
-import org.recast4j.detour.NodePool;
-import org.recast4j.detour.OffMeshConnection;
-import org.recast4j.detour.Poly;
-import org.recast4j.detour.PolyDetail;
-import org.recast4j.detour.Result;
-import org.recast4j.detour.Tupple2;
-import org.recast4j.recast.CompactCell;
-import org.recast4j.recast.CompactHeightfield;
-import org.recast4j.recast.CompactSpan;
-import org.recast4j.recast.Contour;
-import org.recast4j.recast.ContourSet;
-import org.recast4j.recast.Heightfield;
-import org.recast4j.recast.PolyMesh;
-import org.recast4j.recast.PolyMeshDetail;
-import org.recast4j.recast.RecastConstants;
-import org.recast4j.recast.Span;
+import org.recast4j.detour.*;
+import org.recast4j.recast.*;
 
 public class RecastDebugDraw extends DebugDraw {
 
@@ -178,7 +159,7 @@ public class RecastDebugDraw extends DebugDraw {
                 // Check to see if start and end end-points have links.
                 boolean startSet = false;
                 boolean endSet = false;
-                for (int k = p.firstLink; k != NavMesh.DT_NULL_LINK; k = tile.links.get(k).next) {
+                for (int k = tile.polyLinks[p.index]; k != NavMesh.DT_NULL_LINK; k = tile.links.get(k).next) {
                     if (tile.links.get(k).edge == 0) {
                         startSet = true;
                     }
@@ -277,7 +258,7 @@ public class RecastDebugDraw extends DebugDraw {
                     }
                     if ((p.neis[j] & NavMesh.DT_EXT_LINK) != 0) {
                         boolean con = false;
-                        for (int k = p.firstLink; k != NavMesh.DT_NULL_LINK; k = tile.links.get(k).next) {
+                        for (int k = tile.polyLinks[p.index]; k != NavMesh.DT_NULL_LINK; k = tile.links.get(k).next) {
                             if (tile.links.get(k).edge == j) {
                                 con = true;
                                 break;

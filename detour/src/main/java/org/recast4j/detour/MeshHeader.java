@@ -24,7 +24,9 @@ public class MeshHeader {
     public static final int DT_NAVMESH_MAGIC = 'D' << 24 | 'N' << 16 | 'A' << 8 | 'V';
     /** A version number used to detect compatibility of navigation tile data. */
     public static final int DT_NAVMESH_VERSION = 7;
-    public static final int DT_NAVMESH_VERSION_RECAST4J = 0x8807;
+    public static final int DT_NAVMESH_VERSION_RECAST4J_FIRST = 0x8807;
+    public static final int DT_NAVMESH_VERSION_RECAST4J_NO_POLY_FIRSTLINK = 0x8808;
+    public static final int DT_NAVMESH_VERSION_RECAST4J_LAST = 0x8808;
     /** A magic number used to detect the compatibility of navigation tile states. */
     public static final int DT_NAVMESH_STATE_MAGIC = 'D' << 24 | 'N' << 16 | 'M' << 8 | 'S';
     /** A version number used to detect compatibility of navigation tile states. */
