@@ -1,5 +1,5 @@
 /*
-recast4j Copyright (c) 2015-2019 Piotr Piastucki piotr@jtilia.org
+recast4j Copyright (c) 2015-2021 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -17,6 +17,9 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
+import static org.junit.Assert.assertTrue;
+import static org.recast4j.detour.DetourCommon.vDist2D;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.recast4j.detour.NavMeshQuery.FRand;
@@ -25,7 +28,7 @@ public class RandomPointTest extends AbstractDetourTest {
 
     @Test
     public void testRandom() {
-        FRand f = new FRand();
+        FRand f = new FRand(1);
         QueryFilter filter = new DefaultQueryFilter();
         for (int i = 0; i < 1000; i++) {
             Result<FindRandomPointResult> point = query.findRandomPoint(filter, f);
@@ -50,8 +53,8 @@ public class RandomPointTest extends AbstractDetourTest {
     }
 
     @Test
-    public void testRandomInCircle() {
-        FRand f = new FRand();
+    public void testRandomAroundCircle() {
+        FRand f = new FRand(1);
         QueryFilter filter = new DefaultQueryFilter();
         FindRandomPointResult point = query.findRandomPoint(filter, f).result;
         for (int i = 0; i < 1000; i++) {
@@ -75,6 +78,22 @@ public class RandomPointTest extends AbstractDetourTest {
             Assert.assertTrue(point.getRandomPt()[0] <= bmax[0]);
             Assert.assertTrue(point.getRandomPt()[2] >= bmin[1]);
             Assert.assertTrue(point.getRandomPt()[2] <= bmax[1]);
+        }
+    }
+
+    @Test
+    public void testRandomWithinCircle() {
+        FRand f = new FRand(1);
+        QueryFilter filter = new DefaultQueryFilter();
+        FindRandomPointResult point = query.findRandomPoint(filter, f).result;
+        float radius = 5f;
+        for (int i = 0; i < 1000; i++) {
+            Result<FindRandomPointResult> result = query.findRandomPointWithinCircle(point.getRandomRef(),
+                    point.getRandomPt(), radius, filter, f);
+            Assert.assertFalse(result.failed());
+            float distance = vDist2D(point.getRandomPt(), result.result.getRandomPt());
+            assertTrue(distance <= radius);
+            point = result.result;
         }
     }
 }
