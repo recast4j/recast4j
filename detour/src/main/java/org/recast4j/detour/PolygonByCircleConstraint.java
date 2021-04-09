@@ -26,14 +26,14 @@ public interface PolygonByCircleConstraint {
     float[] aply(float[] polyVerts, float[] circleCenter, float radius);
 
     public static PolygonByCircleConstraint noop() {
-        return new NoOpPolygonByCircleConstrainer();
+        return new NoOpPolygonByCircleConstraint();
     }
 
     public static PolygonByCircleConstraint strict() {
-        return new StrictPolygonByCircleConstrainer();
+        return new StrictPolygonByCircleConstraint();
     }
 
-    public static class NoOpPolygonByCircleConstrainer implements PolygonByCircleConstraint {
+    public static class NoOpPolygonByCircleConstraint implements PolygonByCircleConstraint {
 
         @Override
         public float[] aply(float[] polyVerts, float[] circleCenter, float radius) {
@@ -45,7 +45,7 @@ public interface PolygonByCircleConstraint {
     /*
      * Use a simple sweep plane algorithm to approximate the intersection of a circle and a polygon
      */
-    public static class StrictPolygonByCircleConstrainer implements PolygonByCircleConstraint {
+    public static class StrictPolygonByCircleConstraint implements PolygonByCircleConstraint {
         // margin on both sides to avoid the need to handle intersections with vertical segments
         private static final float SWEEP_MARGIN = 0.005f;
         private static final int APPROXIMATION_SLICES = 6;
