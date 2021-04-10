@@ -40,10 +40,8 @@ public class RandomPointTest extends AbstractDetourTest {
                 int v = tileAndPoly.second.verts[j] * 3;
                 bmin[0] = j == 0 ? tileAndPoly.first.data.verts[v] : Math.min(bmin[0], tileAndPoly.first.data.verts[v]);
                 bmax[0] = j == 0 ? tileAndPoly.first.data.verts[v] : Math.max(bmax[0], tileAndPoly.first.data.verts[v]);
-                bmin[1] = j == 0 ? tileAndPoly.first.data.verts[v + 2]
-                        : Math.min(bmin[1], tileAndPoly.first.data.verts[v + 2]);
-                bmax[1] = j == 0 ? tileAndPoly.first.data.verts[v + 2]
-                        : Math.max(bmax[1], tileAndPoly.first.data.verts[v + 2]);
+                bmin[1] = j == 0 ? tileAndPoly.first.data.verts[v + 2] : Math.min(bmin[1], tileAndPoly.first.data.verts[v + 2]);
+                bmax[1] = j == 0 ? tileAndPoly.first.data.verts[v + 2] : Math.max(bmax[1], tileAndPoly.first.data.verts[v + 2]);
             }
             Assert.assertTrue(point.result.getRandomPt()[0] >= bmin[0]);
             Assert.assertTrue(point.result.getRandomPt()[0] <= bmax[0]);
@@ -58,8 +56,8 @@ public class RandomPointTest extends AbstractDetourTest {
         QueryFilter filter = new DefaultQueryFilter();
         FindRandomPointResult point = query.findRandomPoint(filter, f).result;
         for (int i = 0; i < 1000; i++) {
-            Result<FindRandomPointResult> result = query.findRandomPointAroundCircle(point.getRandomRef(),
-                    point.getRandomPt(), 5f, filter, f);
+            Result<FindRandomPointResult> result = query.findRandomPointAroundCircle(point.getRandomRef(), point.getRandomPt(),
+                    5f, filter, f);
             Assert.assertFalse(result.failed());
             point = result.result;
             Tupple2<MeshTile, Poly> tileAndPoly = navmesh.getTileAndPolyByRef(point.getRandomRef()).result;
@@ -69,10 +67,8 @@ public class RandomPointTest extends AbstractDetourTest {
                 int v = tileAndPoly.second.verts[j] * 3;
                 bmin[0] = j == 0 ? tileAndPoly.first.data.verts[v] : Math.min(bmin[0], tileAndPoly.first.data.verts[v]);
                 bmax[0] = j == 0 ? tileAndPoly.first.data.verts[v] : Math.max(bmax[0], tileAndPoly.first.data.verts[v]);
-                bmin[1] = j == 0 ? tileAndPoly.first.data.verts[v + 2]
-                        : Math.min(bmin[1], tileAndPoly.first.data.verts[v + 2]);
-                bmax[1] = j == 0 ? tileAndPoly.first.data.verts[v + 2]
-                        : Math.max(bmax[1], tileAndPoly.first.data.verts[v + 2]);
+                bmin[1] = j == 0 ? tileAndPoly.first.data.verts[v + 2] : Math.min(bmin[1], tileAndPoly.first.data.verts[v + 2]);
+                bmax[1] = j == 0 ? tileAndPoly.first.data.verts[v + 2] : Math.max(bmax[1], tileAndPoly.first.data.verts[v + 2]);
             }
             Assert.assertTrue(point.getRandomPt()[0] >= bmin[0]);
             Assert.assertTrue(point.getRandomPt()[0] <= bmax[0]);
@@ -88,12 +84,39 @@ public class RandomPointTest extends AbstractDetourTest {
         FindRandomPointResult point = query.findRandomPoint(filter, f).result;
         float radius = 5f;
         for (int i = 0; i < 1000; i++) {
-            Result<FindRandomPointResult> result = query.findRandomPointWithinCircle(point.getRandomRef(),
-                    point.getRandomPt(), radius, filter, f);
+            Result<FindRandomPointResult> result = query.findRandomPointWithinCircle(point.getRandomRef(), point.getRandomPt(),
+                    radius, filter, f);
             Assert.assertFalse(result.failed());
             float distance = vDist2D(point.getRandomPt(), result.result.getRandomPt());
             assertTrue(distance <= radius);
             point = result.result;
         }
     }
+
+    @Test
+    public void testPerformance() {
+        FRand f = new FRand(1);
+        QueryFilter filter = new DefaultQueryFilter();
+        FindRandomPointResult point = query.findRandomPoint(filter, f).result;
+        float radius = 5f;
+        // jvm warmup
+        for (int i = 0; i < 1000; i++) {
+            query.findRandomPointAroundCircle(point.getRandomRef(), point.getRandomPt(), radius, filter, f);
+        }
+        for (int i = 0; i < 1000; i++) {
+            query.findRandomPointWithinCircle(point.getRandomRef(), point.getRandomPt(), radius, filter, f);
+        }
+        long t1 = System.nanoTime();
+        for (int i = 0; i < 10000; i++) {
+            query.findRandomPointAroundCircle(point.getRandomRef(), point.getRandomPt(), radius, filter, f);
+        }
+        long t2 = System.nanoTime();
+        for (int i = 0; i < 10000; i++) {
+            query.findRandomPointWithinCircle(point.getRandomRef(), point.getRandomPt(), radius, filter, f);
+        }
+        long t3 = System.nanoTime();
+        System.out.println("Random point around circle: " + (t2 - t1) / 1000000 + "ms");
+        System.out.println("Random point within circle: " + (t3 - t2) / 1000000 + "ms");
+    }
+
 }

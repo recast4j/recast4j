@@ -17,9 +17,8 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
+import static org.recast4j.detour.DetourCommon.pointInPolygon;
 import static org.recast4j.detour.DetourCommon.vDist2DSqr;
-
-import java.util.Arrays;
 
 public interface PolygonByCircleConstraint {
 
@@ -42,15 +41,13 @@ public interface PolygonByCircleConstraint {
 
     }
 
-    /*
-     * Use a simple sweep plane algorithm to approximate the intersection of a circle and a polygon
+    /**
+     * Calculate the intersection between a polygon and a circle. A dodecagon is used as an approximation of the circle.
      */
     public static class StrictPolygonByCircleConstraint implements PolygonByCircleConstraint {
-        // margin on both sides to avoid the need to handle intersections with vertical segments
-        private static final float SWEEP_MARGIN = 0.005f;
-        private static final int APPROXIMATION_SLICES = 6;
-        private static final float COLLINEAR_TOLERANCE = 0.01f;
-        // private static final float EPSILON = 1e-6f;
+
+        private static final int CIRCLE_SEGMENTS = 12;
+        private static float[] unitCircle;
 
         @Override
         public float[] aply(float[] verts, float[] center, float radius) {
@@ -66,115 +63,32 @@ public interface PolygonByCircleConstraint {
                 // polygon inside circle
                 return verts;
             }
-//            boolean circleCenterInPolygon = pointInPolygon(center, verts, verts.length / 3);
-//            if (circleCenterInPolygon) {
-//                boolean circleFullyInside = true;
-//                for (int pv = 0; pv < verts.length; pv += 3) {
-//                    Tupple2<Float, Float> distseg = distancePtSegSqr2D(center, verts, pv, (pv + 3) % verts.length);
-//                    float distSqr = distseg.first + EPSILON;
-//                    if (distSqr < radiusSqr) {
-//                        circleFullyInside = false;
-//                        break;
-//                    }
-//                }
-//                if (circleFullyInside) {
-//
-//                }
-//            }
-            float minX = Float.POSITIVE_INFINITY;
-            float maxX = Float.NEGATIVE_INFINITY;
-            float midY = 0;
-            for (int pv = 0; pv < verts.length; pv += 3) {
-                minX = Math.min(minX, verts[pv]);
-                maxX = Math.max(maxX, verts[pv]);
-                midY += verts[pv + 1];
+            float[] circle = circle(center, radius);
+            float[] intersection = ConvexConvexIntersection.intersect(verts, circle);
+            if (intersection == null && pointInPolygon(center, verts, verts.length / 3)) {
+                // circle inside polygon
+                return circle;
             }
-            midY *= 3.0f / verts.length;
-            minX = Math.max(center[0] - radius, minX);
-            maxX = Math.min(center[0] + radius, maxX);
-            if (minX >= maxX) {
-                // disjoint
-                return null;
-            }
-            float step = (maxX - minX) / (APPROXIMATION_SLICES - 1);
-            float x = minX + step * SWEEP_MARGIN;
-            step *= 1.0f - 2 * SWEEP_MARGIN;
-            int count = 0;
-            float[] slices = new float[APPROXIMATION_SLICES * 3];
-            for (int i = 0; i < APPROXIMATION_SLICES; i++) {
-                // Assume ray origin in (x, 0, center[2])
-                float mx = x - center[0];
-                float c = mx * mx - radiusSqr;
-                float discr = -c;
-                double dSqrt = Math.sqrt(discr);
-                float tmin = (float) -dSqrt;
-                float tmax = (float) dSqrt;
-                float smin = Float.POSITIVE_INFINITY;
-                float smax = Float.NEGATIVE_INFINITY;
-                for (int pv = 0; pv < verts.length; pv += 3) {
-                    int pw = (pv + 3) % verts.length;
-                    if ((verts[pv] >= x && verts[pw] <= x) || (verts[pv] <= x && verts[pw] >= x)) {
-//                        optimized version of intersectSegSeg2D
-//                        float[] u = new float[] { 0, 0, 1 };
-//                        float[] v = new float[] { verts[pw] - verts[pv], 0, verts[pw + 2] - verts[pv + 2] };
-//                        float[] w = new float[] { x - verts[pv], 0, center[2] - verts[pv + 2] };
-//                        float d = vperpXZ(u, v);
-//                        float s = vperpXZ(v, w) / d;
-                        float a0 = verts[pw] - verts[pv];
-                        float a2 = verts[pw + 2] - verts[pv + 2];
-                        float b0 = x - verts[pv];
-                        float b2 = center[2] - verts[pv + 2];
-                        float d = -a0;
-                        float s = (a0 * b2 - a2 * b0) / d;
-                        smin = Math.min(smin, s);
-                        smax = Math.max(smax, s);
-                    }
-                }
-                float minZ = Math.max(tmin, smin);
-                float maxZ = Math.min(tmax, smax);
-                if (minZ < maxZ) {
-                    slices[count * 3] = x;
-                    slices[count * 3 + 1] = maxZ;
-                    slices[count * 3 + 2] = minZ;
-                    count++;
-                }
-                x += step;
-            }
-            if (count > 2) {
-                float[] result = new float[6 * count];
-                int is = 0;
-                int ir = 0;
-                for (int i = 0; i < count; i++, is += 3) {
-                    float z = slices[is + 1] + center[2];
-                    ir = addVertex(slices, result, is, ir, i, z, midY);
-                }
-                is = (count - 1) * 3;
-                for (int i = 0; i < count; i++, is -= 3) {
-                    float z = slices[is + 2] + center[2];
-                    ir = addVertex(slices, result, is, ir, i, z, midY);
-                }
-                return Arrays.copyOf(result, ir);
-            }
-            // disjoint
-            return null;
+            return intersection;
         }
 
-        private int addVertex(float[] slices, float[] result, int is, int ir, int i, float z, float midY) {
-            if (i > 2 && collinear(result[ir - 6], result[ir - 6 + 2], result[ir - 3], result[ir - 3 + 2], slices[is],
-                    z)) {
-                ir -= 3;
+        private float[] circle(float[] center, float radius) {
+            if (unitCircle == null) {
+                unitCircle = new float[CIRCLE_SEGMENTS * 3];
+                for (int i = 0; i < CIRCLE_SEGMENTS; i++) {
+                    double a = i * Math.PI * 2 / CIRCLE_SEGMENTS;
+                    unitCircle[3 * i] = (float) Math.cos(a);
+                    unitCircle[3 * i + 1] = 0;
+                    unitCircle[3 * i + 2] = (float) -Math.sin(a);
+                }
             }
-            result[ir] = slices[is];
-            result[ir + 1] = midY;
-            result[ir + 2] = z;
-            ir += 3;
-            return ir;
+            float[] circle = new float[12 * 3];
+            for (int i = 0; i < CIRCLE_SEGMENTS * 3; i += 3) {
+                circle[i] = unitCircle[i] * radius + center[0];
+                circle[i + 1] = center[1];
+                circle[i + 2] = unitCircle[i + 2] * radius + center[2];
+            }
+            return circle;
         }
-
-        private boolean collinear(float x1, float y1, float x2, float y2, float x3, float y3) {
-            return Math.abs((x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1)) < COLLINEAR_TOLERANCE;
-        }
-
     }
-
 }
