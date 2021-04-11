@@ -1,10 +1,20 @@
 package org.recast4j.demo.tool;
 
-import static org.lwjgl.nuklear.Nuklear.*;
+import static org.lwjgl.nuklear.Nuklear.NK_TEXT_ALIGN_LEFT;
+import static org.lwjgl.nuklear.Nuklear.nk_check_label;
+import static org.lwjgl.nuklear.Nuklear.nk_check_text;
+import static org.lwjgl.nuklear.Nuklear.nk_label;
+import static org.lwjgl.nuklear.Nuklear.nk_layout_row_dynamic;
+import static org.lwjgl.nuklear.Nuklear.nk_option_label;
+import static org.lwjgl.nuklear.Nuklear.nk_spacing;
 import static org.recast4j.demo.draw.DebugDraw.duRGBA;
 import static org.recast4j.demo.draw.DebugDrawPrimitives.LINES;
 import static org.recast4j.demo.draw.DebugDrawPrimitives.POINTS;
-import static org.recast4j.detour.DetourCommon.*;
+import static org.recast4j.detour.DetourCommon.vCopy;
+import static org.recast4j.detour.DetourCommon.vLerp;
+import static org.recast4j.detour.DetourCommon.vMad;
+import static org.recast4j.detour.DetourCommon.vNormalize;
+import static org.recast4j.detour.DetourCommon.vSub;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,8 +28,26 @@ import org.recast4j.demo.draw.RecastDebugDraw;
 import org.recast4j.demo.math.DemoMath;
 import org.recast4j.demo.sample.Sample;
 import org.recast4j.demo.tool.PathUtils.SteerTarget;
-import org.recast4j.detour.*;
+import org.recast4j.detour.ClosestPointOnPolyResult;
+import org.recast4j.detour.DefaultQueryFilter;
+import org.recast4j.detour.DetourCommon;
+import org.recast4j.detour.FindDistanceToWallResult;
+import org.recast4j.detour.FindLocalNeighbourhoodResult;
+import org.recast4j.detour.FindPolysAroundResult;
+import org.recast4j.detour.FindRandomPointResult;
+import org.recast4j.detour.GetPolyWallSegmentsResult;
+import org.recast4j.detour.MeshTile;
+import org.recast4j.detour.MoveAlongSurfaceResult;
+import org.recast4j.detour.NavMesh;
+import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.detour.NavMeshQuery.FRand;
+import org.recast4j.detour.Poly;
+import org.recast4j.detour.PolygonByCircleConstraint;
+import org.recast4j.detour.RaycastHit;
+import org.recast4j.detour.Result;
+import org.recast4j.detour.Status;
+import org.recast4j.detour.StraightPathItem;
+import org.recast4j.detour.Tupple2;
 
 public class TestNavmeshTool implements Tool {
 
@@ -48,7 +76,7 @@ public class TestNavmeshTool implements Tool {
     private List<float[]> m_smoothPath;
     private Status m_pathFindStatus = Status.FAILURE;
     private boolean enableRaycast = true;
-    private List<float[]> randomPoints = new ArrayList<>();
+    private final List<float[]> randomPoints = new ArrayList<>();
     private boolean constrainByCircle;
 
     private enum ToolMode {
@@ -91,7 +119,7 @@ public class TestNavmeshTool implements Tool {
         int previousStraightPathOptions = m_straightPathOptions;
         int previousIncludeFlags = m_filter.getIncludeFlags();
         int previousExcludeFlags = m_filter.getExcludeFlags();
-        boolean previouscCnstrainByCircle = constrainByCircle;
+        boolean previousConstrainByCircle = constrainByCircle;
 
         nk_layout_row_dynamic(ctx, 20, 1);
         if (nk_option_label(ctx, "Pathfind Follow", m_toolMode == ToolMode.PATHFIND_FOLLOW)) {
@@ -208,7 +236,7 @@ public class TestNavmeshTool implements Tool {
 
         if (previousToolMode != m_toolMode || m_straightPathOptions != previousStraightPathOptions
                 || previousIncludeFlags != includeFlags || previousExcludeFlags != excludeFlags
-                || previousEnableRaycast != enableRaycast || previouscCnstrainByCircle != constrainByCircle) {
+                || previousEnableRaycast != enableRaycast || previousConstrainByCircle != constrainByCircle) {
             recalc();
         }
     }
@@ -472,11 +500,11 @@ public class TestNavmeshTool implements Tool {
                 float dx = m_epos[0] - m_spos[0];
                 float dz = m_epos[2] - m_spos[2];
                 float dist = (float) Math.sqrt(dx * dx + dz * dz);
-                PolygonByCircleConstraint clipper = constrainByCircle ? PolygonByCircleConstraint.strict()
+                PolygonByCircleConstraint constraint = constrainByCircle ? PolygonByCircleConstraint.strict()
                         : PolygonByCircleConstraint.noop();
-                for (int i = 0; i < 100; i++) {
+                for (int i = 0; i < 200; i++) {
                     Result<FindRandomPointResult> result = m_navQuery.findRandomPointAroundCircle(m_startRef, m_spos, dist,
-                            m_filter, new FRand(), clipper);
+                            m_filter, new FRand(), constraint);
                     if (result.succeeded()) {
                         randomPoints.add(result.result.getRandomPt());
                     }
