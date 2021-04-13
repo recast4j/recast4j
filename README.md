@@ -53,7 +53,7 @@ You can find a lot of examples in tests e.g.
 #### detour-extras
 - simple tool to import navmeshes created with [A* Pathfinding Project](https://arongranberg.com/astar/)
 #### detour-dynamic
-- robust support for dynamic nav meshes combining pre-built voxels with dynamic object which can be freely added and removed
+- robust support for dynamic nav meshes combining pre-built voxels with dynamic objects which can be freely added and removed
 
 ### Maven
 #### Releases
