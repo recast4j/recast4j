@@ -37,7 +37,7 @@ public class RecastMeshDetail {
     static int MAX_TRIS = 255; // Max tris for delaunay is 2n-2-k (n=num verts, k=num hull verts).
     static int MAX_VERTS_PER_EDGE = 32;
 
-    static int RC_UNSET_HEIGHT = 0xffff;
+    static int RC_UNSET_HEIGHT = RecastConstants.SPAN_MAX_HEIGHT;
     static int EV_UNDEF = -1;
     static int EV_HULL = -2;
 
@@ -316,7 +316,7 @@ public class RecastMeshDetail {
         return EV_UNDEF;
     }
 
-    private static void addEdge(Context ctx, List<Integer> edges, int maxEdges, int s, int t, int l, int r) {
+    private static void addEdge(Telemetry ctx, List<Integer> edges, int maxEdges, int s, int t, int l, int r) {
         if (edges.size() / 4 >= maxEdges) {
             throw new RuntimeException("addEdge: Too many edges (" + edges.size() / 4 + "/" + maxEdges + ").");
         }
@@ -367,7 +367,7 @@ public class RecastMeshDetail {
         return false;
     }
 
-    static int completeFacet(Context ctx, float[] pts, int npts, List<Integer> edges, int maxEdges, int nfaces, int e) {
+    static int completeFacet(Telemetry ctx, float[] pts, int npts, List<Integer> edges, int maxEdges, int nfaces, int e) {
         float EPS = 1e-5f;
 
         int edge = e * 4;
@@ -453,7 +453,7 @@ public class RecastMeshDetail {
         return nfaces;
     }
 
-    private static void delaunayHull(Context ctx, int npts, float[] pts, int nhull, int[] hull, List<Integer> tris) {
+    private static void delaunayHull(Telemetry ctx, int npts, float[] pts, int nhull, int[] hull, List<Integer> tris) {
         int nfaces = 0;
         int maxEdges = npts * 10;
         List<Integer> edges = new ArrayList<>(64);
@@ -613,7 +613,7 @@ public class RecastMeshDetail {
         return (((i * 0xd8163841) & 0xffff) / 65535.0f * 2.0f) - 1.0f;
     }
 
-    static int buildPolyDetail(Context ctx, float[] in, int nin, float sampleDist, float sampleMaxError,
+    static int buildPolyDetail(Telemetry ctx, float[] in, int nin, float sampleDist, float sampleMaxError,
             int heightSearchRadius, CompactHeightfield chf, HeightPatch hp, float[] verts, List<Integer> tris) {
 
         List<Integer> samples = new ArrayList<>(512);
@@ -844,7 +844,7 @@ public class RecastMeshDetail {
         return nverts;
     }
 
-    static void seedArrayWithPolyCenter(Context ctx, CompactHeightfield chf, int[] meshpoly, int poly, int npoly,
+    static void seedArrayWithPolyCenter(Telemetry ctx, CompactHeightfield chf, int[] meshpoly, int poly, int npoly,
             int[] verts, int bs, HeightPatch hp, List<Integer> array) {
         // Note: Reads to the compact heightfield are offset by border size (bs)
         // since border size offset is already removed from the polymesh vertices.
@@ -976,7 +976,7 @@ public class RecastMeshDetail {
         queue.add(v3);
     }
 
-    static void getHeightData(Context ctx, CompactHeightfield chf, int[] meshpolys, int poly, int npoly, int[] verts,
+    static void getHeightData(Telemetry ctx, CompactHeightfield chf, int[] meshpolys, int poly, int npoly, int[] verts,
             int bs, HeightPatch hp, int region) {
         // Note: Reads to the compact heightfield are offset by border size (bs)
         // since border size offset is already removed from the polymesh vertices.
@@ -1104,10 +1104,10 @@ public class RecastMeshDetail {
     /// See the #rcConfig documentation for more information on the configuration parameters.
     ///
     /// @see rcAllocPolyMeshDetail, rcPolyMesh, rcCompactHeightfield, rcPolyMeshDetail, rcConfig
-    public static PolyMeshDetail buildPolyMeshDetail(Context ctx, PolyMesh mesh, CompactHeightfield chf,
+    public static PolyMeshDetail buildPolyMeshDetail(Telemetry ctx, PolyMesh mesh, CompactHeightfield chf,
             float sampleDist, float sampleMaxError) {
 
-        ctx.startTimer("BUILD_POLYMESHDETAIL");
+        ctx.startTimer("POLYMESHDETAIL");
         if (mesh.nverts == 0 || mesh.npolys == 0) {
             return null;
         }
@@ -1262,13 +1262,13 @@ public class RecastMeshDetail {
             }
         }
 
-        ctx.stopTimer("BUILD_POLYMESHDETAIL");
+        ctx.stopTimer("POLYMESHDETAIL");
         return dmesh;
 
     }
 
     /// @see rcAllocPolyMeshDetail, rcPolyMeshDetail
-    PolyMeshDetail mergePolyMeshDetails(Context ctx, PolyMeshDetail[] meshes, int nmeshes) {
+    PolyMeshDetail mergePolyMeshDetails(Telemetry ctx, PolyMeshDetail[] meshes, int nmeshes) {
         PolyMeshDetail mesh = new PolyMeshDetail();
 
         ctx.startTimer("MERGE_POLYMESHDETAIL");

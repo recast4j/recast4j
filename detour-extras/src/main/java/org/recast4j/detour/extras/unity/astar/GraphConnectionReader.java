@@ -38,7 +38,7 @@ class GraphConnectionReader extends BinaryReader {
                 nodeConnections[i] = indexToNode[nodeIndex];
                 // XXX: Is there anything we can do with the cost?
                 int cost = buffer.getInt();
-                if (meta.isSupportedVersion(Meta.UPDATED_STRUCT_VERSION)) {
+                if (meta.isVersionAtLeast(Meta.UPDATED_STRUCT_VERSION)) {
                     byte shapeEdge = buffer.get();
                 }
             }

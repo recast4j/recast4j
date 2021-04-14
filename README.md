@@ -40,14 +40,20 @@ You can find a lot of examples in tests e.g.
 - building a nav mesh from obj files: https://github.com/ppiastucki/recast4j/blob/master/detour/src/test/java/org/recast4j/detour/RecastTestMeshBuilder.java
 - finding a path: https://github.com/ppiastucki/recast4j/blob/master/detour/src/test/java/org/recast4j/detour/FindPathTest.java#L94
 - persisting a nav mesh: https://github.com/ppiastucki/recast4j/blob/master/detour/src/test/java/org/recast4j/detour/io/MeshSetReaderWriterTest.java
+- dynamic nav mesh: https://github.com/ppiastucki/recast4j/blob/master/detour-dynamic/src/test/java/org/recast4j/dynamic/DynamicNavMeshTest.java
 ### Recast Demo
 ### Java Version Enhancements
-#### Recast
+#### recast
 - out-of-the-box support for multi-threaded builds
-#### Detour-tile-cache
+- support for rasterizing filled volumes: sphere, capsule and box
+#### detour
+- finding random points constrained by a cricle
+#### detour-tile-cache
 - more compact file format due to reduced data structures and better compression with LZ4
-#### Extras
+#### detour-extras
 - simple tool to import navmeshes created with [A* Pathfinding Project](https://arongranberg.com/astar/)
+#### detour-dynamic
+- robust support for dynamic nav meshes combining pre-built voxels with dynamic objects which can be freely added and removed
 
 ### Maven
 #### Releases
@@ -57,27 +63,32 @@ The project includes 4 artifacts:
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>recast</artifactId>
-	<version>1.2.0</version>
+	<version>1.3.2</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour</artifactId>
-	<version>1.2.0</version>
+	<version>1.3.2</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour-crowd</artifactId>
-	<version>1.2.0</version>
+	<version>1.2.3</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour-tile-cache</artifactId>
-	<version>1.2.0</version>
+	<version>1.3.2</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour-extras</artifactId>
-	<version>1.2.0</version>
+	<version>1.3.2</version>
+</dependency>
+<dependency>
+	<groupId>org.recast4j</groupId>
+	<artifactId>detour-dynamic</artifactId>
+	<version>1.3.2</version>
 </dependency>
 ```
 

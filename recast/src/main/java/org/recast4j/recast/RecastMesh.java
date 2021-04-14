@@ -26,6 +26,7 @@ import java.util.Arrays;
 
 public class RecastMesh {
 
+    private static final int MAX_MESH_VERTS_POLY = 0xffff;
     static int VERTEX_BUCKET_COUNT = (1 << 12);
 
     private static class Edge {
@@ -508,7 +509,7 @@ public class RecastMesh {
         return an;
     }
 
-    private static boolean canRemoveVertex(Context ctx, PolyMesh mesh, int rem) {
+    private static boolean canRemoveVertex(Telemetry ctx, PolyMesh mesh, int rem) {
         int nvp = mesh.nvp;
 
         // Count number of polygons to remove.
@@ -592,7 +593,7 @@ public class RecastMesh {
         return true;
     }
 
-    private static void removeVertex(Context ctx, PolyMesh mesh, int rem, int maxTris) {
+    private static void removeVertex(Telemetry ctx, PolyMesh mesh, int rem, int maxTris) {
         int nvp = mesh.nvp;
 
         // Count number of polygons to remove.
@@ -844,8 +845,8 @@ public class RecastMesh {
     /// limit must be retricted to <= #DT_VERTS_PER_POLYGON.
     ///
     /// @see rcAllocPolyMesh, rcContourSet, rcPolyMesh, rcConfig
-    public static PolyMesh buildPolyMesh(Context ctx, ContourSet cset, int nvp) {
-        ctx.startTimer("BUILD_POLYMESH");
+    public static PolyMesh buildPolyMesh(Telemetry ctx, ContourSet cset, int nvp) {
+        ctx.startTimer("POLYMESH");
         PolyMesh mesh = new PolyMesh();
         RecastVectors.copy(mesh.bmin, cset.bmin, 0);
         RecastVectors.copy(mesh.bmax, cset.bmax, 0);
@@ -1047,22 +1048,22 @@ public class RecastMesh {
         // Just allocate the mesh flags array. The user is resposible to fill it.
         mesh.flags = new int[mesh.npolys];
 
-        if (mesh.nverts > 0xffff) {
+        if (mesh.nverts > MAX_MESH_VERTS_POLY) {
             throw new RuntimeException("rcBuildPolyMesh: The resulting mesh has too many vertices " + mesh.nverts
-                    + " (max " + 0xffff + "). Data can be corrupted.");
+                    + " (max " + MAX_MESH_VERTS_POLY + "). Data can be corrupted.");
         }
-        if (mesh.npolys > 0xffff) {
+        if (mesh.npolys > MAX_MESH_VERTS_POLY) {
             throw new RuntimeException("rcBuildPolyMesh: The resulting mesh has too many polygons " + mesh.npolys
-                    + " (max " + 0xffff + "). Data can be corrupted.");
+                    + " (max " + MAX_MESH_VERTS_POLY + "). Data can be corrupted.");
         }
 
-        ctx.stopTimer("BUILD_POLYMESH");
+        ctx.stopTimer("POLYMESH");
         return mesh;
 
     }
 
     /// @see rcAllocPolyMesh, rcPolyMesh
-    public static PolyMesh mergePolyMeshes(Context ctx, PolyMesh[] meshes, int nmeshes) {
+    public static PolyMesh mergePolyMeshes(Telemetry ctx, PolyMesh[] meshes, int nmeshes) {
 
         if (nmeshes == 0 || meshes == null)
             return null;
@@ -1168,13 +1169,13 @@ public class RecastMesh {
 
         // Calculate adjacency.
         buildMeshAdjacency(mesh.polys, mesh.npolys, mesh.nverts, mesh.nvp);
-        if (mesh.nverts > 0xffff) {
+        if (mesh.nverts > MAX_MESH_VERTS_POLY) {
             throw new RuntimeException("rcBuildPolyMesh: The resulting mesh has too many vertices " + mesh.nverts
-                    + " (max " + 0xffff + "). Data can be corrupted.");
+                    + " (max " + MAX_MESH_VERTS_POLY + "). Data can be corrupted.");
         }
-        if (mesh.npolys > 0xffff) {
+        if (mesh.npolys > MAX_MESH_VERTS_POLY) {
             throw new RuntimeException("rcBuildPolyMesh: The resulting mesh has too many polygons " + mesh.npolys
-                    + " (max " + 0xffff + "). Data can be corrupted.");
+                    + " (max " + MAX_MESH_VERTS_POLY + "). Data can be corrupted.");
         }
 
         ctx.stopTimer("MERGE_POLYMESH");
@@ -1182,7 +1183,7 @@ public class RecastMesh {
         return mesh;
     }
 
-    public static PolyMesh copyPolyMesh(Context ctx, PolyMesh src) {
+    public static PolyMesh copyPolyMesh(Telemetry ctx, PolyMesh src) {
         PolyMesh dst = new PolyMesh();
 
         dst.nverts = src.nverts;

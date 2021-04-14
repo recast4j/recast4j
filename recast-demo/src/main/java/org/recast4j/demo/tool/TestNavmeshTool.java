@@ -1,6 +1,8 @@
 package org.recast4j.demo.tool;
 
 import static org.lwjgl.nuklear.Nuklear.NK_TEXT_ALIGN_LEFT;
+import static org.lwjgl.nuklear.Nuklear.nk_check_label;
+import static org.lwjgl.nuklear.Nuklear.nk_check_text;
 import static org.lwjgl.nuklear.Nuklear.nk_label;
 import static org.lwjgl.nuklear.Nuklear.nk_layout_row_dynamic;
 import static org.lwjgl.nuklear.Nuklear.nk_option_label;
@@ -32,12 +34,15 @@ import org.recast4j.detour.DetourCommon;
 import org.recast4j.detour.FindDistanceToWallResult;
 import org.recast4j.detour.FindLocalNeighbourhoodResult;
 import org.recast4j.detour.FindPolysAroundResult;
+import org.recast4j.detour.FindRandomPointResult;
 import org.recast4j.detour.GetPolyWallSegmentsResult;
 import org.recast4j.detour.MeshTile;
 import org.recast4j.detour.MoveAlongSurfaceResult;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
+import org.recast4j.detour.NavMeshQuery.FRand;
 import org.recast4j.detour.Poly;
+import org.recast4j.detour.PolygonByCircleConstraint;
 import org.recast4j.detour.RaycastHit;
 import org.recast4j.detour.Result;
 import org.recast4j.detour.Status;
@@ -70,6 +75,9 @@ public class TestNavmeshTool implements Tool {
     private final float[] m_queryPoly = new float[12];
     private List<float[]> m_smoothPath;
     private Status m_pathFindStatus = Status.FAILURE;
+    private boolean enableRaycast = true;
+    private final List<float[]> randomPoints = new ArrayList<>();
+    private boolean constrainByCircle;
 
     private enum ToolMode {
         PATHFIND_FOLLOW,
@@ -79,12 +87,13 @@ public class TestNavmeshTool implements Tool {
         RAYCAST,
         FIND_POLYS_IN_CIRCLE,
         FIND_POLYS_IN_SHAPE,
-        FIND_LOCAL_NEIGHBOURHOOD
+        FIND_LOCAL_NEIGHBOURHOOD,
+        RANDOM_POINTS_IN_CIRCLE
     }
 
     public TestNavmeshTool() {
         m_filter = new DefaultQueryFilter(SampleAreaModifications.SAMPLE_POLYFLAGS_ALL,
-                SampleAreaModifications.SAMPLE_POLYFLAGS_DISABLED, new float[] { 1f, 10f, 1f, 1f, 2f, 1.5f });
+                SampleAreaModifications.SAMPLE_POLYFLAGS_DISABLED, new float[] { 1f, 1f, 1f, 1f, 2f, 1.5f });
     }
 
     @Override
@@ -110,6 +119,7 @@ public class TestNavmeshTool implements Tool {
         int previousStraightPathOptions = m_straightPathOptions;
         int previousIncludeFlags = m_filter.getIncludeFlags();
         int previousExcludeFlags = m_filter.getExcludeFlags();
+        boolean previousConstrainByCircle = constrainByCircle;
 
         nk_layout_row_dynamic(ctx, 20, 1);
         if (nk_option_label(ctx, "Pathfind Follow", m_toolMode == ToolMode.PATHFIND_FOLLOW)) {
@@ -166,6 +176,11 @@ public class TestNavmeshTool implements Tool {
         if (nk_option_label(ctx, "Find Local Neighbourhood", m_toolMode == ToolMode.FIND_LOCAL_NEIGHBOURHOOD)) {
             m_toolMode = ToolMode.FIND_LOCAL_NEIGHBOURHOOD;
         }
+        if (nk_option_label(ctx, "Random Points in Circle", m_toolMode == ToolMode.RANDOM_POINTS_IN_CIRCLE)) {
+            m_toolMode = ToolMode.RANDOM_POINTS_IN_CIRCLE;
+            nk_layout_row_dynamic(ctx, 20, 1);
+            constrainByCircle = nk_check_text(ctx, "Constrained", constrainByCircle);
+        }
 
         nk_layout_row_dynamic(ctx, 5, 1);
         nk_spacing(ctx, 1);
@@ -215,8 +230,13 @@ public class TestNavmeshTool implements Tool {
         }
         m_filter.setExcludeFlags(excludeFlags);
 
+        nk_layout_row_dynamic(ctx, 30, 1);
+        boolean previousEnableRaycast = enableRaycast;
+        enableRaycast = nk_check_label(ctx, "Raycast shortcuts", enableRaycast);
+
         if (previousToolMode != m_toolMode || m_straightPathOptions != previousStraightPathOptions
-                || previousIncludeFlags != includeFlags || previousExcludeFlags != excludeFlags) {
+                || previousIncludeFlags != includeFlags || previousExcludeFlags != excludeFlags
+                || previousEnableRaycast != enableRaycast || previousConstrainByCircle != constrainByCircle) {
             recalc();
         }
     }
@@ -227,7 +247,7 @@ public class TestNavmeshTool implements Tool {
     }
 
     private void recalc() {
-        if (m_sample == null || m_sample.getNavMesh() == null) {
+        if (m_sample.getNavMesh() == null) {
             return;
         }
         NavMeshQuery m_navQuery = m_sample.getNavMeshQuery();
@@ -244,7 +264,8 @@ public class TestNavmeshTool implements Tool {
         NavMesh m_navMesh = m_sample.getNavMesh();
         if (m_toolMode == ToolMode.PATHFIND_FOLLOW) {
             if (m_sposSet && m_eposSet && m_startRef != 0 && m_endRef != 0) {
-                m_polys = m_navQuery.findPath(m_startRef, m_endRef, m_spos, m_epos, m_filter).result;
+                m_polys = m_navQuery.findPath(m_startRef, m_endRef, m_spos, m_epos, m_filter,
+                        enableRaycast ? NavMeshQuery.DT_FINDPATH_ANY_ANGLE : 0, Float.MAX_VALUE).result;
                 if (!m_polys.isEmpty()) {
                     List<Long> polys = new ArrayList<>(m_polys);
                     // Iterate over the path to find smooth path on the detail mesh surface.
@@ -355,7 +376,8 @@ public class TestNavmeshTool implements Tool {
             }
         } else if (m_toolMode == ToolMode.PATHFIND_STRAIGHT) {
             if (m_sposSet && m_eposSet && m_startRef != 0 && m_endRef != 0) {
-                m_polys = m_navQuery.findPath(m_startRef, m_endRef, m_spos, m_epos, m_filter).result;
+                m_polys = m_navQuery.findPath(m_startRef, m_endRef, m_spos, m_epos, m_filter,
+                        enableRaycast ? NavMeshQuery.DT_FINDPATH_ANY_ANGLE : 0, Float.MAX_VALUE).result;
                 if (!m_polys.isEmpty()) {
                     // In case of partial path, make sure the end point is clamped to the last polygon.
                     float[] epos = new float[] { m_epos[0], m_epos[1], m_epos[2] };
@@ -377,7 +399,7 @@ public class TestNavmeshTool implements Tool {
             m_straightPath = null;
             if (m_sposSet && m_eposSet && m_startRef != 0 && m_endRef != 0) {
                 m_pathFindStatus = m_navQuery.initSlicedFindPath(m_startRef, m_endRef, m_spos, m_epos, m_filter,
-                        NavMeshQuery.DT_FINDPATH_ANY_ANGLE);
+                        enableRaycast ? NavMeshQuery.DT_FINDPATH_ANY_ANGLE : 0, Float.MAX_VALUE);
             }
         } else if (m_toolMode == ToolMode.RAYCAST) {
             m_straightPath = null;
@@ -456,8 +478,7 @@ public class TestNavmeshTool implements Tool {
                 m_queryPoly[10] = m_epos[1] + agentHeight / 2;
                 m_queryPoly[11] = m_epos[2] + nz;
 
-                Result<FindPolysAroundResult> result = m_navQuery.findPolysAroundShape(m_startRef, m_queryPoly, 4,
-                        m_filter);
+                Result<FindPolysAroundResult> result = m_navQuery.findPolysAroundShape(m_startRef, m_queryPoly, m_filter);
                 if (result.succeeded()) {
                     m_polys = result.result.getRefs();
                     m_parent = result.result.getParentRefs();
@@ -471,6 +492,22 @@ public class TestNavmeshTool implements Tool {
                 if (result.succeeded()) {
                     m_polys = result.result.getRefs();
                     m_parent = result.result.getParentRefs();
+                }
+            }
+        } else if (m_toolMode == ToolMode.RANDOM_POINTS_IN_CIRCLE) {
+            randomPoints.clear();
+            if (m_sposSet && m_startRef != 0 && m_eposSet) {
+                float dx = m_epos[0] - m_spos[0];
+                float dz = m_epos[2] - m_spos[2];
+                float dist = (float) Math.sqrt(dx * dx + dz * dz);
+                PolygonByCircleConstraint constraint = constrainByCircle ? PolygonByCircleConstraint.strict()
+                        : PolygonByCircleConstraint.noop();
+                for (int i = 0; i < 200; i++) {
+                    Result<FindRandomPointResult> result = m_navQuery.findRandomPointAroundCircle(m_startRef, m_spos, dist,
+                            m_filter, new FRand(), constraint);
+                    if (result.succeeded()) {
+                        randomPoints.add(result.result.getRandomPt());
+                    }
                 }
             }
         }
@@ -780,6 +817,24 @@ public class TestNavmeshTool implements Tool {
                     dd.depthMask(true);
                 }
             }
+        } else if (m_toolMode == ToolMode.RANDOM_POINTS_IN_CIRCLE) {
+            dd.depthMask(false);
+            dd.begin(POINTS, 4.0f);
+            int col = duRGBA(64, 16, 0, 220);
+            for (float[] point : randomPoints) {
+                dd.vertex(point[0], point[1] + 0.1f, point[2], col);
+            }
+            dd.end();
+            if (m_sposSet && m_eposSet) {
+                dd.depthMask(false);
+                float dx = m_epos[0] - m_spos[0];
+                float dz = m_epos[2] - m_spos[2];
+                float dist = (float) Math.sqrt(dx * dx + dz * dz);
+                dd.debugDrawCircle(m_spos[0], m_spos[1] + agentHeight / 2, m_spos[2], dist, duRGBA(64, 16, 0, 220),
+                        2.0f);
+                dd.depthMask(true);
+            }
+            dd.depthMask(true);
         }
     }
 

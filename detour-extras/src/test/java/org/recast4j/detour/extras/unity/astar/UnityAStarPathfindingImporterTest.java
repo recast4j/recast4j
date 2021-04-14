@@ -43,12 +43,6 @@ import org.recast4j.detour.io.MeshSetWriter;
 
 public class UnityAStarPathfindingImporterTest {
 
-    /**
-     * 3 is enough for recast4j as all nodes created by A* Star Pathfinding are triangles. However 6 can be used to to
-     * keep the result compatible with RecastDemo.
-     */
-    static final int MAX_VERTS_PER_POLY = 6;
-
     @Test
     public void test_v4_0_6() throws Exception {
         NavMesh mesh = loadNavMesh("graph.zip");
@@ -96,8 +90,7 @@ public class UnityAStarPathfindingImporterTest {
     private NavMesh loadNavMesh(String filename) throws Exception {
         // Import the graphs
         UnityAStarPathfindingImporter importer = new UnityAStarPathfindingImporter();
-        NavMesh[] meshes = importer.load(new File(ClassLoader.getSystemResource(filename).getFile()),
-                MAX_VERTS_PER_POLY);
+        NavMesh[] meshes = importer.load(new File(ClassLoader.getSystemResource(filename).getFile()));
         return meshes[0];
     }
 

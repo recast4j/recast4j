@@ -30,14 +30,13 @@ public class MeshTile {
     int salt;
     /** The tile data. */
     public MeshData data;
+    public int[] polyLinks;
     /** The tile links. */
     public final List<Link> links = new ArrayList<>();
     /** Index to the next free link. */
-    int linksFreeList = NavMesh.DT_NULL_LINK;
+    int linksFreeList = NavMesh.DT_NULL_LINK; // FIXME: Remove
     /** Tile flags. (See: #dtTileFlags) */
     int flags;
-    /** The next free tile, or the next tile in the spatial grid. */
-    MeshTile next;
 
     public MeshTile(int index) {
         this.index = index;

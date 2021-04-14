@@ -92,7 +92,6 @@ class GraphMeshDataReader extends BinaryReader {
                     ymax = Math.max(ymax, verts[nodes[i].verts[0] * 3 + 1]);
                     ymax = Math.max(ymax, verts[nodes[i].verts[1] * 3 + 1]);
                     ymax = Math.max(ymax, verts[nodes[i].verts[2] * 3 + 1]);
-                    // XXX: Detail mesh is not needed by recast4j, but RecastDemo will crash without it
                     detailNodes[i] = new PolyDetail();
                     detailNodes[i].vertBase = 0;
                     detailNodes[i].vertCount = 0;

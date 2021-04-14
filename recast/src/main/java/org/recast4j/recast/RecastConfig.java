@@ -23,8 +23,10 @@ import org.recast4j.recast.RecastConstants.PartitionType;
 public class RecastConfig {
     public final PartitionType partitionType;
 
-    /** The width/height size of tile's on the xz-plane. [Limit: >= 0] [Units: vx] **/
-    public final int tileSize;
+    public final boolean useTiles;
+    /** The width/depth size of tile's on the xz-plane. [Limit: >= 0] [Units: vx] **/
+    public final int tileSizeX;
+    public final int tileSizeZ;
 
     /** The xz-plane cell size to use for fields. [Limit: > 0] [Units: wu] **/
     public final float cs;
@@ -90,40 +92,82 @@ public class RecastConfig {
     public final boolean filterLowHangingObstacles;
     public final boolean filterLedgeSpans;
     public final boolean filterWalkableLowHeightSpans;
+    /** Set to false to disable building detailed mesh **/
+    public final boolean buildMeshDetail;
+    /** The size of the non-navigable border around the heightfield. [Limit: >=0] [Units: vx] **/
+    public final int borderSize;
+    /** Set of original settings passed in world units */
+    public final float minRegionAreaWorld;
+    public final float mergeRegionAreaWorld;
+    public final float walkableHeightWorld;
+    public final float walkableClimbWorld;
+    public final float walkableRadiusWorld;
+    public final float maxEdgeLenWorld;
 
-    public RecastConfig(PartitionType partitionType, float cellSize, float cellHeight, float agentHeight,
-            float agentRadius, float agentMaxClimb, float agentMaxSlope, int regionMinSize, int regionMergeSize,
-            float edgeMaxLen, float edgeMaxError, int vertsPerPoly, float detailSampleDist, float detailSampleMaxError,
-            int tileSize, AreaModification walkableAreaMod) {
-        this(partitionType, cellSize, cellHeight, agentHeight, agentRadius, agentMaxClimb, agentMaxSlope, regionMinSize,
-                regionMergeSize, edgeMaxLen, edgeMaxError, vertsPerPoly, detailSampleDist, detailSampleMaxError,
-                tileSize, walkableAreaMod, true, true, true);
+    /**
+     * Non-tiled build configuration
+     */
+    public RecastConfig(PartitionType partitionType, float cellSize, float cellHeight, float agentHeight, float agentRadius,
+            float agentMaxClimb, float agentMaxSlope, int regionMinSize, int regionMergeSize, float edgeMaxLen,
+            float edgeMaxError, int vertsPerPoly, float detailSampleDist, float detailSampleMaxError,
+            AreaModification walkableAreaMod) {
+        this(partitionType, cellSize, cellHeight, agentMaxSlope, true, true, true, agentHeight, agentRadius, agentMaxClimb,
+                regionMinSize, regionMergeSize, edgeMaxLen, edgeMaxError, vertsPerPoly, detailSampleDist, detailSampleMaxError,
+                walkableAreaMod, true);
     }
 
-    public RecastConfig(PartitionType partitionType, float cellSize, float cellHeight, float agentHeight,
-            float agentRadius, float agentMaxClimb, float agentMaxSlope, int regionMinSize, int regionMergeSize,
-            float edgeMaxLen, float edgeMaxError, int vertsPerPoly, float detailSampleDist, float detailSampleMaxError,
-            int tileSize, AreaModification walkableAreaMod, boolean filterLowHangingObstacles, boolean filterLedgeSpans,
-            boolean filterWalkableLowHeightSpans) {
+    /**
+     * Non-tiled build configuration
+     */
+    public RecastConfig(PartitionType partitionType, float cellSize, float cellHeight, float agentMaxSlope,
+            boolean filterLowHangingObstacles, boolean filterLedgeSpans, boolean filterWalkableLowHeightSpans, float agentHeight,
+            float agentRadius, float agentMaxClimb, int regionMinSize, int regionMergeSize, float edgeMaxLen, float edgeMaxError,
+            int vertsPerPoly, float detailSampleDist, float detailSampleMaxError, AreaModification walkableAreaMod,
+            boolean buildMeshDetail) {
+        // Note: area = size*size in [Units: wu]
+        this(false, 0, 0, 0, partitionType, cellSize, cellHeight, agentMaxSlope, filterLowHangingObstacles, filterLedgeSpans,
+                filterWalkableLowHeightSpans, agentHeight, agentRadius, agentMaxClimb,
+                regionMinSize * regionMinSize * cellSize * cellSize, regionMergeSize * regionMergeSize * cellSize * cellSize,
+                edgeMaxLen, edgeMaxError, vertsPerPoly, buildMeshDetail, detailSampleDist, detailSampleMaxError, walkableAreaMod);
+    }
+
+    public RecastConfig(boolean useTiles, int tileSizeX, int tileSizeZ, int borderSize, PartitionType partitionType,
+            float cellSize, float cellHeight, float agentMaxSlope, boolean filterLowHangingObstacles, boolean filterLedgeSpans,
+            boolean filterWalkableLowHeightSpans, float agentHeight, float agentRadius, float agentMaxClimb, float minRegionArea,
+            float mergeRegionArea, float edgeMaxLen, float edgeMaxError, int vertsPerPoly, boolean buildMeshDetail,
+            float detailSampleDist, float detailSampleMaxError, AreaModification walkableAreaMod) {
+        this.useTiles = useTiles;
+        this.tileSizeX = tileSizeX;
+        this.tileSizeZ = tileSizeZ;
+        this.borderSize = borderSize;
         this.partitionType = partitionType;
         cs = cellSize;
         ch = cellHeight;
         walkableSlopeAngle = agentMaxSlope;
         walkableHeight = (int) Math.ceil(agentHeight / ch);
+        walkableHeightWorld = agentHeight;
         walkableClimb = (int) Math.floor(agentMaxClimb / ch);
+        walkableClimbWorld = agentMaxClimb;
         walkableRadius = (int) Math.ceil(agentRadius / cs);
+        walkableRadiusWorld = agentRadius;
+        this.minRegionArea = Math.round(minRegionArea / (cs * cs));
+        minRegionAreaWorld = minRegionArea;
+        this.mergeRegionArea = Math.round(mergeRegionArea / (cs * cs));
+        mergeRegionAreaWorld = mergeRegionArea;
         maxEdgeLen = (int) (edgeMaxLen / cellSize);
+        maxEdgeLenWorld = edgeMaxLen;
         maxSimplificationError = edgeMaxError;
-        minRegionArea = regionMinSize * regionMinSize; // Note: area = size*size
-        mergeRegionArea = regionMergeSize * regionMergeSize; // Note: area = size*size
         maxVertsPerPoly = vertsPerPoly;
         this.detailSampleDist = detailSampleDist < 0.9f ? 0 : cellSize * detailSampleDist;
         this.detailSampleMaxError = cellHeight * detailSampleMaxError;
-        this.tileSize = tileSize;
         this.walkableAreaMod = walkableAreaMod;
         this.filterLowHangingObstacles = filterLowHangingObstacles;
         this.filterLedgeSpans = filterLedgeSpans;
         this.filterWalkableLowHeightSpans = filterWalkableLowHeightSpans;
+        this.buildMeshDetail = buildMeshDetail;
     }
 
+    public static int calcBorder(float agentRadius, float cs) {
+        return 3 + (int) Math.ceil(agentRadius / cs);
+    }
 }

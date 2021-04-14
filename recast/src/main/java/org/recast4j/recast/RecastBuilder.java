@@ -18,16 +18,16 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.recast4j.recast.RecastConstants.PartitionType;
-import org.recast4j.recast.geom.ChunkyTriMesh.ChunkyTriMeshNode;
+import org.recast4j.recast.geom.ConvexVolumeProvider;
 import org.recast4j.recast.geom.InputGeomProvider;
-import org.recast4j.recast.geom.TriMesh;
 
 public class RecastBuilder {
 
@@ -45,20 +45,26 @@ public class RecastBuilder {
         this.progressListener = progressListener;
     }
 
-    public class RecastBuilderResult {
+    public static class RecastBuilderResult {
+        public final int tileX;
+        public final int tileZ;
         private final CompactHeightfield chf;
         private final ContourSet cs;
         private final PolyMesh pmesh;
         private final PolyMeshDetail dmesh;
         private final Heightfield solid;
+        private final Telemetry telemetry;
 
-        public RecastBuilderResult(Heightfield solid, CompactHeightfield chf, ContourSet cs, PolyMesh pmesh,
-                PolyMeshDetail dmesh) {
+        public RecastBuilderResult(int tileX, int tileZ, Heightfield solid, CompactHeightfield chf, ContourSet cs, PolyMesh pmesh,
+                PolyMeshDetail dmesh, Telemetry ctx) {
+            this.tileX = tileX;
+            this.tileZ = tileZ;
             this.solid = solid;
             this.chf = chf;
             this.cs = cs;
             this.pmesh = pmesh;
             this.dmesh = dmesh;
+            telemetry = ctx;
         }
 
         public PolyMesh getMesh() {
@@ -81,60 +87,71 @@ public class RecastBuilder {
             return solid;
         }
 
+        public Telemetry getTelemetry() {
+            return telemetry;
+        }
+
     }
 
-    public RecastBuilderResult[][] buildTiles(InputGeomProvider geom, RecastConfig cfg, int threads) {
+    public List<RecastBuilderResult> buildTiles(InputGeomProvider geom, RecastConfig cfg, Optional<Executor> executor) {
         float[] bmin = geom.getMeshBoundsMin();
         float[] bmax = geom.getMeshBoundsMax();
-        int[] twh = Recast.calcTileCount(bmin, bmax, cfg.cs, cfg.tileSize);
+        int[] twh = Recast.calcTileCount(bmin, bmax, cfg.cs, cfg.tileSizeX, cfg.tileSizeZ);
         int tw = twh[0];
         int th = twh[1];
-        RecastBuilderResult[][] result = null;
-        if (threads == 1) {
-            result = buildSingleThread(geom, cfg, bmin, bmax, tw, th);
+        List<RecastBuilderResult> result = null;
+        if (executor.isPresent()) {
+            result = buildMultiThread(geom, cfg, bmin, bmax, tw, th, executor.get());
         } else {
-            result = buildMultiThread(geom, cfg, bmin, bmax, tw, th, threads);
+            result = buildSingleThread(geom, cfg, bmin, bmax, tw, th);
         }
         return result;
     }
 
-    private RecastBuilderResult[][] buildSingleThread(InputGeomProvider geom, RecastConfig cfg, float[] bmin,
-            float[] bmax, int tw, int th) {
-        RecastBuilderResult[][] result = new RecastBuilderResult[tw][th];
+    private List<RecastBuilderResult> buildSingleThread(InputGeomProvider geom, RecastConfig cfg, float[] bmin, float[] bmax,
+            int tw, int th) {
+        List<RecastBuilderResult> result = new ArrayList<>(tw * th);
         AtomicInteger counter = new AtomicInteger();
-        for (int x = 0; x < tw; ++x) {
-            for (int y = 0; y < th; ++y) {
-                result[x][y] = buildTile(geom, cfg, bmin, bmax, x, y, counter, tw * th);
+        for (int y = 0; y < th; ++y) {
+            for (int x = 0; x < tw; ++x) {
+                result.add(buildTile(geom, cfg, bmin, bmax, x, y, counter, tw * th));
             }
         }
         return result;
     }
 
-    private RecastBuilderResult[][] buildMultiThread(InputGeomProvider geom, RecastConfig cfg, float[] bmin,
-            float[] bmax, int tw, int th, int threads) {
-        ExecutorService ec = Executors.newFixedThreadPool(threads);
-        RecastBuilderResult[][] result = new RecastBuilderResult[tw][th];
+    private List<RecastBuilderResult> buildMultiThread(InputGeomProvider geom, RecastConfig cfg, float[] bmin, float[] bmax,
+            int tw, int th, Executor executor) {
+        List<RecastBuilderResult> result = new ArrayList<>(tw * th);
         AtomicInteger counter = new AtomicInteger();
+        CountDownLatch latch = new CountDownLatch(tw * th);
         for (int x = 0; x < tw; ++x) {
             for (int y = 0; y < th; ++y) {
                 final int tx = x;
                 final int ty = y;
-                ec.submit((Runnable) () -> {
-                    result[tx][ty] = buildTile(geom, cfg, bmin, bmax, tx, ty, counter, tw * th);
+                executor.execute(() -> {
+                    try {
+                        RecastBuilderResult tile = buildTile(geom, cfg, bmin, bmax, tx, ty, counter, tw * th);
+                        synchronized (result) {
+                            result.add(tile);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    latch.countDown();
                 });
             }
         }
-        ec.shutdown();
         try {
-            ec.awaitTermination(1000, TimeUnit.HOURS);
+            latch.await();
         } catch (InterruptedException e) {
         }
         return result;
     }
 
-    private RecastBuilderResult buildTile(InputGeomProvider geom, RecastConfig cfg, float[] bmin, float[] bmax,
-            final int tx, final int ty, AtomicInteger counter, int total) {
-        RecastBuilderResult result = build(geom, new RecastBuilderConfig(cfg, bmin, bmax, tx, ty, true));
+    private RecastBuilderResult buildTile(InputGeomProvider geom, RecastConfig cfg, float[] bmin, float[] bmax, final int tx,
+            final int ty, AtomicInteger counter, int total) {
+        RecastBuilderResult result = build(geom, new RecastBuilderConfig(cfg, bmin, bmax, tx, ty));
         if (progressListener != null) {
             progressListener.onProgress(counter.incrementAndGet(), total);
         }
@@ -144,8 +161,17 @@ public class RecastBuilder {
     public RecastBuilderResult build(InputGeomProvider geom, RecastBuilderConfig builderCfg) {
 
         RecastConfig cfg = builderCfg.cfg;
-        Context ctx = new Context();
-        Heightfield solid = buildSolidHeightfield(geom, builderCfg, ctx);
+        Telemetry ctx = new Telemetry();
+        //
+        // Step 1. Rasterize input polygon soup.
+        //
+        Heightfield solid = RecastVoxelization.buildSolidHeightfield(geom, builderCfg, ctx);
+        return build(builderCfg.tileX, builderCfg.tileZ, geom, cfg, solid, ctx);
+    }
+
+    public RecastBuilderResult build(int tileX, int tileZ, ConvexVolumeProvider geom, RecastConfig cfg, Heightfield solid,
+            Telemetry ctx) {
+        filterHeightfield(solid, cfg, ctx);
         CompactHeightfield chf = buildCompactHeightfield(geom, cfg, ctx, solid);
 
         // Partition the heightfield so that we can use simple algorithm later
@@ -191,14 +217,14 @@ public class RecastBuilder {
             // along the walkable surface.
             RecastRegion.buildDistanceField(ctx, chf);
             // Partition the walkable surface into simple regions without holes.
-            RecastRegion.buildRegions(ctx, chf, builderCfg.borderSize, cfg.minRegionArea, cfg.mergeRegionArea);
+            RecastRegion.buildRegions(ctx, chf, cfg.minRegionArea, cfg.mergeRegionArea);
         } else if (cfg.partitionType == PartitionType.MONOTONE) {
             // Partition the walkable surface into simple regions without holes.
             // Monotone partitioning does not need distancefield.
-            RecastRegion.buildRegionsMonotone(ctx, chf, builderCfg.borderSize, cfg.minRegionArea, cfg.mergeRegionArea);
+            RecastRegion.buildRegionsMonotone(ctx, chf, cfg.minRegionArea, cfg.mergeRegionArea);
         } else {
             // Partition the walkable surface into simple regions without holes.
-            RecastRegion.buildLayerRegions(ctx, chf, builderCfg.borderSize, cfg.minRegionArea);
+            RecastRegion.buildLayerRegions(ctx, chf, cfg.minRegionArea);
         }
 
         //
@@ -219,67 +245,16 @@ public class RecastBuilder {
         // Step 7. Create detail mesh which allows to access approximate height
         // on each polygon.
         //
-        PolyMeshDetail dmesh = builderCfg.buildMeshDetail
+        PolyMeshDetail dmesh = cfg.buildMeshDetail
                 ? RecastMeshDetail.buildPolyMeshDetail(ctx, pmesh, chf, cfg.detailSampleDist, cfg.detailSampleMaxError)
                 : null;
-        return new RecastBuilderResult(solid, chf, cset, pmesh, dmesh);
+        return new RecastBuilderResult(tileX, tileZ, solid, chf, cset, pmesh, dmesh, ctx);
     }
 
-    private Heightfield buildSolidHeightfield(InputGeomProvider geomProvider, RecastBuilderConfig builderCfg,
-            Context ctx) {
-        RecastConfig cfg = builderCfg.cfg;
-        //
-        // Step 2. Rasterize input polygon soup.
-        //
-
-        // Allocate voxel heightfield where we rasterize our input data to.
-        Heightfield solid = new Heightfield(builderCfg.width, builderCfg.height, builderCfg.bmin, builderCfg.bmax,
-                cfg.cs, cfg.ch);
-
-        // Allocate array that can hold triangle area types.
-        // If you have multiple meshes you need to process, allocate
-        // and array which can hold the max number of triangles you need to
-        // process.
-
-        // Find triangles which are walkable based on their slope and rasterize
-        // them.
-        // If your input data is multiple meshes, you can transform them here,
-        // calculate
-        // the are type for each of the meshes and rasterize them.
-        for (TriMesh geom : geomProvider.meshes()) {
-            float[] verts = geom.getVerts();
-            boolean tiled = cfg.tileSize > 0;
-            int totaltris = 0;
-            if (tiled) {
-                float[] tbmin = new float[2];
-                float[] tbmax = new float[2];
-                tbmin[0] = builderCfg.bmin[0];
-                tbmin[1] = builderCfg.bmin[2];
-                tbmax[0] = builderCfg.bmax[0];
-                tbmax[1] = builderCfg.bmax[2];
-                List<ChunkyTriMeshNode> nodes = geom.getChunksOverlappingRect(tbmin, tbmax);
-                for (ChunkyTriMeshNode node : nodes) {
-                    int[] tris = node.tris;
-                    int ntris = tris.length / 3;
-                    totaltris += ntris;
-                    int[] m_triareas = Recast.markWalkableTriangles(ctx, cfg.walkableSlopeAngle, verts, tris, ntris,
-                            cfg.walkableAreaMod);
-                    RecastRasterization.rasterizeTriangles(ctx, verts, tris, m_triareas, ntris, solid,
-                            cfg.walkableClimb);
-                }
-            } else {
-                int[] tris = geom.getTris();
-                int ntris = tris.length / 3;
-                int[] m_triareas = Recast.markWalkableTriangles(ctx, cfg.walkableSlopeAngle, verts, tris, ntris,
-                        cfg.walkableAreaMod);
-                totaltris = ntris;
-                RecastRasterization.rasterizeTriangles(ctx, verts, tris, m_triareas, ntris, solid, cfg.walkableClimb);
-            }
-        }
-        //
-        // Step 3. Filter walkables surfaces.
-        //
-
+    /*
+     * Step 2. Filter walkable surfaces.
+     */
+    private void filterHeightfield(Heightfield solid, RecastConfig cfg, Telemetry ctx) {
         // Once all geometry is rasterized, we do initial pass of filtering to
         // remove unwanted overhangs caused by the conservative rasterization
         // as well as filter spans where the character cannot possibly stand.
@@ -292,35 +267,35 @@ public class RecastBuilder {
         if (cfg.filterWalkableLowHeightSpans) {
             RecastFilter.filterWalkableLowHeightSpans(ctx, cfg.walkableHeight, solid);
         }
-
-        return solid;
     }
 
-    private CompactHeightfield buildCompactHeightfield(InputGeomProvider geomProvider, RecastConfig cfg, Context ctx,
+    /*
+     * Step 3. Partition walkable surface to simple regions.
+     */
+    private CompactHeightfield buildCompactHeightfield(ConvexVolumeProvider volumeProvider, RecastConfig cfg, Telemetry ctx,
             Heightfield solid) {
-        //
-        // Step 4. Partition walkable surface to simple regions.
-        //
-
         // Compact the heightfield so that it is faster to handle from now on.
         // This will result more cache coherent data as well as the neighbours
         // between walkable cells will be calculated.
-        CompactHeightfield chf = Recast.buildCompactHeightfield(ctx, cfg.walkableHeight, cfg.walkableClimb, solid);
+        CompactHeightfield chf = RecastCompact.buildCompactHeightfield(ctx, cfg.walkableHeight, cfg.walkableClimb, solid);
 
         // Erode the walkable area by agent radius.
         RecastArea.erodeWalkableArea(ctx, cfg.walkableRadius, chf);
         // (Optional) Mark areas.
-        for (ConvexVolume vol : geomProvider.convexVolumes()) {
-            RecastArea.markConvexPolyArea(ctx, vol.verts, vol.hmin, vol.hmax, vol.areaMod, chf);
+        if (volumeProvider != null) {
+            for (ConvexVolume vol : volumeProvider.convexVolumes()) {
+                RecastArea.markConvexPolyArea(ctx, vol.verts, vol.hmin, vol.hmax, vol.areaMod, chf);
+            }
         }
         return chf;
     }
 
     public HeightfieldLayerSet buildLayers(InputGeomProvider geom, RecastBuilderConfig builderCfg) {
-        Context ctx = new Context();
-        Heightfield solid = buildSolidHeightfield(geom, builderCfg, ctx);
+        Telemetry ctx = new Telemetry();
+        Heightfield solid = RecastVoxelization.buildSolidHeightfield(geom, builderCfg, ctx);
+        filterHeightfield(solid, builderCfg.cfg, ctx);
         CompactHeightfield chf = buildCompactHeightfield(geom, builderCfg.cfg, ctx, solid);
-        return RecastLayers.buildHeightfieldLayers(ctx, chf, builderCfg.borderSize, builderCfg.cfg.walkableHeight);
+        return RecastLayers.buildHeightfieldLayers(ctx, chf, builderCfg.cfg.walkableHeight);
     }
 
 }

@@ -532,7 +532,7 @@ public class TileCache {
         params.walkableRadius = m_params.walkableRadius;
         params.walkableClimb = m_params.walkableClimb;
         params.tileX = tile.header.tx;
-        params.tileY = tile.header.ty;
+        params.tileZ = tile.header.ty;
         params.tileLayer = tile.header.tlayer;
         params.cs = m_params.cs;
         params.ch = m_params.ch;

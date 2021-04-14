@@ -18,16 +18,12 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast.geom;
 
-import org.recast4j.recast.ConvexVolume;
-
-public interface InputGeomProvider {
+public interface InputGeomProvider extends ConvexVolumeProvider {
 
     float[] getMeshBoundsMin();
 
     float[] getMeshBoundsMax();
 
     Iterable<TriMesh> meshes();
-
-    Iterable<ConvexVolume> convexVolumes();
 
 }

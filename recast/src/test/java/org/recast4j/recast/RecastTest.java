@@ -25,7 +25,7 @@ import org.junit.Test;
 public class RecastTest {
 
     @Test
-    public void textClearUnwalkableTriangles() {
+    public void testClearUnwalkableTriangles() {
         float walkableSlopeAngle = 45;
         float verts[] = { 0, 0, 0, 1, 0, 0, 0, 0, -1 };
         int nv = 3;
@@ -33,7 +33,7 @@ public class RecastTest {
         int unwalkable_tri[] = { 0, 2, 1 };
         int nt = 1;
 
-        Context ctx = new Context();
+        Telemetry ctx = new Telemetry();
         {
             int areas[] = { 42 };
             Recast.clearUnwalkableTriangles(ctx, walkableSlopeAngle, verts, nv, unwalkable_tri, nt, areas);

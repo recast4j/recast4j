@@ -92,7 +92,7 @@ public class RecastSoloMeshTest {
         long time = System.nanoTime();
         float[] bmin = geomProvider.getMeshBoundsMin();
         float[] bmax = geomProvider.getMeshBoundsMax();
-        Context m_ctx = new Context();
+        Telemetry m_ctx = new Telemetry();
         //
         // Step 1. Initialize build config.
         //
@@ -100,15 +100,14 @@ public class RecastSoloMeshTest {
         // Init build configuration from GUI
         RecastConfig cfg = new RecastConfig(partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
                 m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
-                m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, 0,
-                SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
+                m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
         RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, bmin, bmax);
         //
         // Step 2. Rasterize input polygon soup.
         //
 
         // Allocate voxel heightfield where we rasterize our input data to.
-        Heightfield m_solid = new Heightfield(bcfg.width, bcfg.height, bcfg.bmin, bcfg.bmax, cfg.cs, cfg.ch);
+        Heightfield m_solid = new Heightfield(bcfg.width, bcfg.height, bcfg.bmin, bcfg.bmax, cfg.cs, cfg.ch, cfg.borderSize);
 
         for (TriMesh geom : geomProvider.meshes()) {
             float[] verts = geom.getVerts();
@@ -127,7 +126,7 @@ public class RecastSoloMeshTest {
             // the are type for each of the meshes and rasterize them.
             int[] m_triareas = Recast.markWalkableTriangles(m_ctx, cfg.walkableSlopeAngle, verts, tris, ntris,
                     cfg.walkableAreaMod);
-            RecastRasterization.rasterizeTriangles(m_ctx, verts, tris, m_triareas, ntris, m_solid, cfg.walkableClimb);
+            RecastRasterization.rasterizeTriangles(m_solid, verts, tris, m_triareas, ntris, cfg.walkableClimb, m_ctx);
             //
             // Step 3. Filter walkables surfaces.
             //
@@ -146,7 +145,7 @@ public class RecastSoloMeshTest {
         // Compact the heightfield so that it is faster to handle from now on.
         // This will result more cache coherent data as well as the neighbours
         // between walkable cells will be calculated.
-        CompactHeightfield m_chf = Recast.buildCompactHeightfield(m_ctx, cfg.walkableHeight, cfg.walkableClimb,
+        CompactHeightfield m_chf = RecastCompact.buildCompactHeightfield(m_ctx, cfg.walkableHeight, cfg.walkableClimb,
                 m_solid);
 
         // Erode the walkable area by agent radius.
@@ -196,20 +195,21 @@ public class RecastSoloMeshTest {
         // you use tiles)
         // * good choice to use for tiled navmesh with medium and small sized
         // tiles
+        long time3 = System.nanoTime();
 
         if (m_partitionType == PartitionType.WATERSHED) {
             // Prepare for region partitioning, by calculating distance field
             // along the walkable surface.
             RecastRegion.buildDistanceField(m_ctx, m_chf);
             // Partition the walkable surface into simple regions without holes.
-            RecastRegion.buildRegions(m_ctx, m_chf, 0, cfg.minRegionArea, cfg.mergeRegionArea);
+            RecastRegion.buildRegions(m_ctx, m_chf, cfg.minRegionArea, cfg.mergeRegionArea);
         } else if (m_partitionType == PartitionType.MONOTONE) {
             // Partition the walkable surface into simple regions without holes.
             // Monotone partitioning does not need distancefield.
-            RecastRegion.buildRegionsMonotone(m_ctx, m_chf, 0, cfg.minRegionArea, cfg.mergeRegionArea);
+            RecastRegion.buildRegionsMonotone(m_ctx, m_chf, cfg.minRegionArea, cfg.mergeRegionArea);
         } else {
             // Partition the walkable surface into simple regions without holes.
-            RecastRegion.buildLayerRegions(m_ctx, m_chf, 0, cfg.minRegionArea);
+            RecastRegion.buildLayerRegions(m_ctx, m_chf, cfg.minRegionArea);
         }
 
         Assert.assertEquals("maxDistance", expDistance, m_chf.maxDistance);
@@ -244,8 +244,10 @@ public class RecastSoloMeshTest {
         Assert.assertEquals("Mesh Detail Tris", expDetTRis, m_dmesh.ntris);
         long time2 = System.nanoTime();
         System.out.println(filename + " : " + partitionType + "  " + (time2 - time) / 1000000 + " ms");
+        System.out.println("           " + (time3 - time) / 1000000 + " ms");
         saveObj(filename.substring(0, filename.lastIndexOf('.')) + "_" + partitionType + "_detail.obj", m_dmesh);
         saveObj(filename.substring(0, filename.lastIndexOf('.')) + "_" + partitionType + ".obj", m_pmesh);
+        m_ctx.print();
     }
 
     private void saveObj(String filename, PolyMesh mesh) {

@@ -161,7 +161,7 @@ public class PathUtils {
         MeshTile tile = tileAndPoly.result.first;
         Poly poly = tileAndPoly.result.second;
 
-        for (int k = poly.firstLink; k != NavMesh.DT_NULL_LINK; k = tile.links.get(k).next) {
+        for (int k = tile.polyLinks[poly.index]; k != NavMesh.DT_NULL_LINK; k = tile.links.get(k).next) {
             Link link = tile.links.get(k);
             if (link.ref != 0) {
                 neis.add(link.ref);

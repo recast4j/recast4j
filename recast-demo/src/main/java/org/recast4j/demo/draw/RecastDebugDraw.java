@@ -23,27 +23,8 @@ import static org.recast4j.recast.RecastConstants.RC_NULL_AREA;
 import java.util.List;
 
 import org.recast4j.demo.builder.SampleAreaModifications;
-import org.recast4j.detour.BVNode;
-import org.recast4j.detour.MeshTile;
-import org.recast4j.detour.NavMesh;
-import org.recast4j.detour.NavMeshQuery;
-import org.recast4j.detour.Node;
-import org.recast4j.detour.NodePool;
-import org.recast4j.detour.OffMeshConnection;
-import org.recast4j.detour.Poly;
-import org.recast4j.detour.PolyDetail;
-import org.recast4j.detour.Result;
-import org.recast4j.detour.Tupple2;
-import org.recast4j.recast.CompactCell;
-import org.recast4j.recast.CompactHeightfield;
-import org.recast4j.recast.CompactSpan;
-import org.recast4j.recast.Contour;
-import org.recast4j.recast.ContourSet;
-import org.recast4j.recast.Heightfield;
-import org.recast4j.recast.PolyMesh;
-import org.recast4j.recast.PolyMeshDetail;
-import org.recast4j.recast.RecastConstants;
-import org.recast4j.recast.Span;
+import org.recast4j.detour.*;
+import org.recast4j.recast.*;
 
 public class RecastDebugDraw extends DebugDraw {
 
@@ -127,9 +108,6 @@ public class RecastDebugDraw extends DebugDraw {
             if (p.getType() == Poly.DT_POLYTYPE_OFFMESH_CONNECTION) {
                 continue;
             }
-
-            PolyDetail pd = tile.data.detailMeshes[i];
-
             int col;
             if (query != null && query.isInClosedList(base | i)) {
                 col = duRGBA(255, 196, 0, 64);
@@ -137,24 +115,15 @@ public class RecastDebugDraw extends DebugDraw {
                 if ((flags & DRAWNAVMESH_COLOR_TILES) != 0) {
                     col = tileColor;
                 } else {
-                    col = duTransCol(areaToCol(p.getArea()), 64);
-                }
-            }
-
-            for (int j = 0; j < pd.triCount; ++j) {
-                int t = (pd.triBase + j) * 4;
-                for (int k = 0; k < 3; ++k) {
-                    int v = tile.data.detailTris[t + k];
-                    if (v < p.vertCount) {
-                        vertex(tile.data.verts[p.verts[v] * 3], tile.data.verts[p.verts[v] * 3 + 1],
-                                tile.data.verts[p.verts[v] * 3 + 2], col);
+                    if ((p.flags & SampleAreaModifications.SAMPLE_POLYFLAGS_DISABLED) != 0) {
+                        col = duRGBA(64, 64, 64, 64);
                     } else {
-                        vertex(tile.data.detailVerts[(pd.vertBase + v - p.vertCount) * 3],
-                                tile.data.detailVerts[(pd.vertBase + v - p.vertCount) * 3 + 1],
-                                tile.data.detailVerts[(pd.vertBase + v - p.vertCount) * 3 + 2], col);
+                        col = duTransCol(areaToCol(p.getArea()), 64);
                     }
                 }
             }
+
+            drawPoly(tile, i, col);
 
         }
         end();
@@ -190,7 +159,7 @@ public class RecastDebugDraw extends DebugDraw {
                 // Check to see if start and end end-points have links.
                 boolean startSet = false;
                 boolean endSet = false;
-                for (int k = p.firstLink; k != NavMesh.DT_NULL_LINK; k = tile.links.get(k).next) {
+                for (int k = tile.polyLinks[p.index]; k != NavMesh.DT_NULL_LINK; k = tile.links.get(k).next) {
                     if (tile.links.get(k).edge == 0) {
                         startSet = true;
                     }
@@ -228,12 +197,45 @@ public class RecastDebugDraw extends DebugDraw {
 
         int vcol = duRGBA(0, 0, 0, 196);
         begin(DebugDrawPrimitives.POINTS, 3.0f);
-        for (int i = 0; i < tile.data.header.vertCount; i += 3) {
-            vertex(tile.data.verts[i], tile.data.verts[i + 1], tile.data.verts[i + 2], vcol);
+        for (int i = 0; i < tile.data.header.vertCount; i++) {
+            int v = i * 3;
+            vertex(tile.data.verts[v], tile.data.verts[v + 1], tile.data.verts[v + 2], vcol);
         }
         end();
 
         depthMask(true);
+    }
+
+    private void drawPoly(MeshTile tile, int index, int col) {
+        Poly p = tile.data.polys[index];
+        if (tile.data.detailMeshes != null) {
+            PolyDetail pd = tile.data.detailMeshes[index];
+            if (pd != null) {
+                for (int j = 0; j < pd.triCount; ++j) {
+                    int t = (pd.triBase + j) * 4;
+                    for (int k = 0; k < 3; ++k) {
+                        int v = tile.data.detailTris[t + k];
+                        if (v < p.vertCount) {
+                            vertex(tile.data.verts[p.verts[v] * 3], tile.data.verts[p.verts[v] * 3 + 1],
+                                    tile.data.verts[p.verts[v] * 3 + 2], col);
+                        } else {
+                            vertex(tile.data.detailVerts[(pd.vertBase + v - p.vertCount) * 3],
+                                    tile.data.detailVerts[(pd.vertBase + v - p.vertCount) * 3 + 1],
+                                    tile.data.detailVerts[(pd.vertBase + v - p.vertCount) * 3 + 2], col);
+                        }
+                    }
+                }
+            }
+        } else {
+            for (int j = 1; j < p.vertCount - 1; ++j) {
+                vertex(tile.data.verts[p.verts[0] * 3], tile.data.verts[p.verts[0] * 3 + 1],
+                        tile.data.verts[p.verts[0] * 3 + 2], col);
+                for (int k = 0; k < 2; ++k) {
+                    vertex(tile.data.verts[p.verts[j + k] * 3], tile.data.verts[p.verts[j + k] * 3 + 1],
+                            tile.data.verts[p.verts[j + k] * 3 + 2], col);
+                }
+            }
+        }
     }
 
     void drawPolyBoundaries(MeshTile tile, int col, float linew, boolean inner) {
@@ -248,8 +250,6 @@ public class RecastDebugDraw extends DebugDraw {
                 continue;
             }
 
-            PolyDetail pd = tile.data.detailMeshes[i];
-
             for (int j = 0, nj = p.vertCount; j < nj; ++j) {
                 int c = col;
                 if (inner) {
@@ -258,7 +258,7 @@ public class RecastDebugDraw extends DebugDraw {
                     }
                     if ((p.neis[j] & NavMesh.DT_EXT_LINK) != 0) {
                         boolean con = false;
-                        for (int k = p.firstLink; k != NavMesh.DT_NULL_LINK; k = tile.links.get(k).next) {
+                        for (int k = tile.polyLinks[p.index]; k != NavMesh.DT_NULL_LINK; k = tile.links.get(k).next) {
                             if (tile.links.get(k).edge == j) {
                                 con = true;
                                 break;
@@ -286,32 +286,38 @@ public class RecastDebugDraw extends DebugDraw {
 
                 // Draw detail mesh edges which align with the actual poly edge.
                 // This is really slow.
-                for (int k = 0; k < pd.triCount; ++k) {
-                    int t = (pd.triBase + k) * 4;
-                    float[][] tv = new float[3][];
-                    for (int m = 0; m < 3; ++m) {
-                        int v = tile.data.detailTris[t + m];
-                        if (v < p.vertCount) {
-                            tv[m] = new float[] { tile.data.verts[p.verts[v] * 3], tile.data.verts[p.verts[v] * 3 + 1],
-                                    tile.data.verts[p.verts[v] * 3 + 2] };
-                        } else {
-                            tv[m] = new float[] { tile.data.detailVerts[(pd.vertBase + (v - p.vertCount)) * 3],
-                                    tile.data.detailVerts[(pd.vertBase + (v - p.vertCount)) * 3 + 1],
-                                    tile.data.detailVerts[(pd.vertBase + (v - p.vertCount)) * 3 + 2] };
+                if (tile.data.detailMeshes != null) {
+                    PolyDetail pd = tile.data.detailMeshes[i];
+                    for (int k = 0; k < pd.triCount; ++k) {
+                        int t = (pd.triBase + k) * 4;
+                        float[][] tv = new float[3][];
+                        for (int m = 0; m < 3; ++m) {
+                            int v = tile.data.detailTris[t + m];
+                            if (v < p.vertCount) {
+                                tv[m] = new float[] { tile.data.verts[p.verts[v] * 3], tile.data.verts[p.verts[v] * 3 + 1],
+                                        tile.data.verts[p.verts[v] * 3 + 2] };
+                            } else {
+                                tv[m] = new float[] { tile.data.detailVerts[(pd.vertBase + (v - p.vertCount)) * 3],
+                                        tile.data.detailVerts[(pd.vertBase + (v - p.vertCount)) * 3 + 1],
+                                        tile.data.detailVerts[(pd.vertBase + (v - p.vertCount)) * 3 + 2] };
+                            }
                         }
-                    }
-                    for (int m = 0, n = 2; m < 3; n = m++) {
-                        if ((NavMesh.getDetailTriEdgeFlags(tile.data.detailTris[t + 3], n) & NavMesh.DT_DETAIL_EDGE_BOUNDARY) == 0)
-                            continue;
+                        for (int m = 0, n = 2; m < 3; n = m++) {
+                            if ((NavMesh.getDetailTriEdgeFlags(tile.data.detailTris[t + 3], n) & NavMesh.DT_DETAIL_EDGE_BOUNDARY) == 0)
+                                continue;
 
-                        if (((tile.data.detailTris[t + 3] >> (n * 2)) & 0x3) == 0) {
-                            continue; // Skip inner detail edges.
-                        }
-                        if (distancePtLine2d(tv[n], v0, v1) < thr && distancePtLine2d(tv[m], v0, v1) < thr) {
-                            vertex(tv[n], c);
-                            vertex(tv[m], c);
+                            if (((tile.data.detailTris[t + 3] >> (n * 2)) & 0x3) == 0) {
+                                continue; // Skip inner detail edges.
+                            }
+                            if (distancePtLine2d(tv[n], v0, v1) < thr && distancePtLine2d(tv[m], v0, v1) < thr) {
+                                vertex(tv[n], c);
+                                vertex(tv[m], c);
+                            }
                         }
                     }
+                } else {
+                    vertex(v0, c);
+                    vertex(v1, c);
                 }
             }
         }
@@ -604,6 +610,10 @@ public class RecastDebugDraw extends DebugDraw {
     }
 
     public void debugDrawHeightfieldSolid(Heightfield hf) {
+
+        if (!frustumTest(hf.bmin, hf.bmax)) {
+            return;
+        }
 
         float[] orig = hf.bmin;
         float cs = hf.cs;
@@ -1036,26 +1046,8 @@ public class RecastDebugDraw extends DebugDraw {
 
             end();
         } else {
-            PolyDetail pd = tile.data.detailMeshes[ip];
-
             begin(DebugDrawPrimitives.TRIS);
-            for (int i = 0; i < pd.triCount; ++i) {
-                int t = (pd.triBase + i) * 4;
-                for (int j = 0; j < 3; ++j) {
-                    if (tile.data.detailTris[t + j] < poly.vertCount) {
-                        vertex(tile.data.verts[poly.verts[tile.data.detailTris[t + j]] * 3],
-                                tile.data.verts[poly.verts[tile.data.detailTris[t + j]] * 3 + 1],
-                                tile.data.verts[poly.verts[tile.data.detailTris[t + j]] * 3 + 2], c);
-                    } else {
-                        vertex(tile.data.detailVerts[(pd.vertBase + tile.data.detailTris[t + j] - poly.vertCount) * 3],
-                                tile.data.detailVerts[(pd.vertBase + tile.data.detailTris[t + j] - poly.vertCount) * 3
-                                        + 1],
-                                tile.data.detailVerts[(pd.vertBase + tile.data.detailTris[t + j] - poly.vertCount) * 3
-                                        + 2],
-                                c);
-                    }
-                }
-            }
+            drawPoly(tile, ip, col);
             end();
         }
 

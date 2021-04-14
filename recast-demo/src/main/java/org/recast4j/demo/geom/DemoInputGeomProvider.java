@@ -19,9 +19,6 @@ freely, subject to the following restrictions:
 package org.recast4j.demo.geom;
 
 import static java.util.stream.Collectors.toList;
-import static org.recast4j.demo.math.DemoMath.vCross;
-import static org.recast4j.demo.math.DemoMath.vDot;
-import static org.recast4j.detour.DetourCommon.vSub;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -142,7 +139,7 @@ public class DemoInputGeomProvider implements InputGeomProvider {
     public Optional<Float> raycastMesh(float[] src, float[] dst) {
 
         // Prune hit ray.
-        Optional<float[]> btminmax = isectSegAABB(src, dst, bmin, bmax);
+        Optional<float[]> btminmax = Intersections.intersectSegmentAABB(src, dst, bmin, bmax);
         if (!btminmax.isPresent()) {
             return Optional.empty();
         }
@@ -170,7 +167,7 @@ public class DemoInputGeomProvider implements InputGeomProvider {
                         vertices[tris[j + 1] * 3 + 2] };
                 float[] v3 = new float[] { vertices[tris[j + 2] * 3], vertices[tris[j + 2] * 3 + 1],
                         vertices[tris[j + 2] * 3 + 2] };
-                Optional<Float> t = intersectSegmentTriangle(src, dst, v1, v2, v3);
+                Optional<Float> t = Intersections.intersectSegmentTriangle(src, dst, v1, v2, v3);
                 if (t.isPresent()) {
                     if (t.get() < tmin) {
                         tmin = t.get();
@@ -182,91 +179,6 @@ public class DemoInputGeomProvider implements InputGeomProvider {
         return hit ? Optional.of(tmin) : Optional.empty();
     }
 
-    private Optional<float[]> isectSegAABB(float[] sp, float[] sq, float[] amin, float[] amax) {
-
-        float EPS = 1e-6f;
-
-        float[] d = new float[3];
-        d[0] = sq[0] - sp[0];
-        d[1] = sq[1] - sp[1];
-        d[2] = sq[2] - sp[2];
-        float tmin = 0.0f;
-        float tmax = 1.0f;
-
-        for (int i = 0; i < 3; i++) {
-            if (Math.abs(d[i]) < EPS) {
-                if (sp[i] < amin[i] || sp[i] > amax[i]) {
-                    return Optional.empty();
-                }
-            } else {
-                float ood = 1.0f / d[i];
-                float t1 = (amin[i] - sp[i]) * ood;
-                float t2 = (amax[i] - sp[i]) * ood;
-                if (t1 > t2) {
-                    float tmp = t1;
-                    t1 = t2;
-                    t2 = tmp;
-                }
-                if (t1 > tmin) {
-                    tmin = t1;
-                }
-                if (t2 < tmax) {
-                    tmax = t2;
-                }
-                if (tmin > tmax) {
-                    return Optional.empty();
-                }
-            }
-        }
-
-        return Optional.of(new float[] { tmin, tmax });
-    }
-
-    Optional<Float> intersectSegmentTriangle(float[] sp, float[] sq, float[] a, float[] b, float[] c) {
-        float v, w;
-        float[] ab = vSub(b, a);
-        float[] ac = vSub(c, a);
-        float[] qp = vSub(sp, sq);
-
-        // Compute triangle normal. Can be precalculated or cached if
-        // intersecting multiple segments against the same triangle
-        float[] norm = vCross(ab, ac);
-
-        // Compute denominator d. If d <= 0, segment is parallel to or points
-        // away from triangle, so exit early
-        float d = vDot(qp, norm);
-        if (d <= 0.0f) {
-            return Optional.empty();
-        }
-
-        // Compute intersection t value of pq with plane of triangle. A ray
-        // intersects iff 0 <= t. Segment intersects iff 0 <= t <= 1. Delay
-        // dividing by d until intersection has been found to pierce triangle
-        float[] ap = vSub(sp, a);
-        float t = vDot(ap, norm);
-        if (t < 0.0f) {
-            return Optional.empty();
-        }
-        if (t > d) {
-            return Optional.empty(); // For segment; exclude this code line for a ray test
-        }
-
-        // Compute barycentric coordinate components and test if within bounds
-        float[] e = vCross(qp, ap);
-        v = vDot(ac, e);
-        if (v < 0.0f || v > d) {
-            return Optional.empty();
-        }
-        w = -vDot(ab, e);
-        if (w < 0.0f || v + w > d) {
-            return Optional.empty();
-        }
-
-        // Segment/ray intersects triangle. Perform delayed division
-        t /= d;
-
-        return Optional.of(t);
-    }
 
     public void addConvexVolume(float[] verts, float minh, float maxh, AreaModification areaMod) {
         ConvexVolume volume = new ConvexVolume();
@@ -275,6 +187,10 @@ public class DemoInputGeomProvider implements InputGeomProvider {
         volume.hmax = maxh;
         volume.areaMod = areaMod;
         convexVolumes.add(volume);
+    }
+
+    public void clearConvexVolumes() {
+        convexVolumes.clear();
     }
 
 }

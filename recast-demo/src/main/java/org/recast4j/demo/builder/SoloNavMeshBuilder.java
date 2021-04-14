@@ -34,44 +34,44 @@ import org.recast4j.recast.RecastConstants.PartitionType;
 
 public class SoloNavMeshBuilder extends AbstractNavMeshBuilder {
 
-    public Tupple2<List<RecastBuilderResult>, NavMesh> build(DemoInputGeomProvider m_geom,
-            PartitionType m_partitionType, float m_cellSize, float m_cellHeight, float m_agentHeight,
-            float m_agentRadius, float m_agentMaxClimb, float m_agentMaxSlope, int m_regionMinSize,
-            int m_regionMergeSize, float m_edgeMaxLen, float m_edgeMaxError, int m_vertsPerPoly,
-            float m_detailSampleDist, float m_detailSampleMaxError, boolean filterLowHangingObstacles,
+    public Tupple2<List<RecastBuilderResult>, NavMesh> build(DemoInputGeomProvider m_geom, PartitionType m_partitionType,
+            float m_cellSize, float m_cellHeight, float m_agentHeight, float m_agentRadius, float m_agentMaxClimb,
+            float m_agentMaxSlope, int m_regionMinSize, int m_regionMergeSize, float m_edgeMaxLen, float m_edgeMaxError,
+            int m_vertsPerPoly, float m_detailSampleDist, float m_detailSampleMaxError, boolean filterLowHangingObstacles,
             boolean filterLedgeSpans, boolean filterWalkableLowHeightSpans) {
 
-        RecastBuilderResult rcResult = buildRecastResult(m_geom, m_partitionType, m_cellSize, m_cellHeight,
-                m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize,
-                m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError,
-                filterLowHangingObstacles, filterLedgeSpans, filterWalkableLowHeightSpans);
-        return new Tupple2<>(Collections.singletonList(rcResult), buildNavMesh(buildMeshData(m_geom, m_cellSize,
-                m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, rcResult), m_vertsPerPoly));
+        RecastBuilderResult rcResult = buildRecastResult(m_geom, m_partitionType, m_cellSize, m_cellHeight, m_agentHeight,
+                m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
+                m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, filterLowHangingObstacles, filterLedgeSpans,
+                filterWalkableLowHeightSpans);
+        return new Tupple2<>(Collections.singletonList(rcResult),
+                buildNavMesh(
+                        buildMeshData(m_geom, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, rcResult),
+                        m_vertsPerPoly));
     }
 
     private NavMesh buildNavMesh(MeshData meshData, int m_vertsPerPoly) {
         return new NavMesh(meshData, m_vertsPerPoly, 0);
     }
 
-    private RecastBuilderResult buildRecastResult(DemoInputGeomProvider m_geom, PartitionType m_partitionType,
-            float m_cellSize, float m_cellHeight, float m_agentHeight, float m_agentRadius, float m_agentMaxClimb,
-            float m_agentMaxSlope, int m_regionMinSize, int m_regionMergeSize, float m_edgeMaxLen, float m_edgeMaxError,
-            int m_vertsPerPoly, float m_detailSampleDist, float m_detailSampleMaxError,
-            boolean filterLowHangingObstacles, boolean filterLedgeSpans, boolean filterWalkableLowHeightSpans) {
-        RecastConfig cfg = new RecastConfig(m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
-                m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
-                m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, 0,
-                SampleAreaModifications.SAMPLE_AREAMOD_WALKABLE, filterLowHangingObstacles, filterLedgeSpans,
-                filterWalkableLowHeightSpans);
+    private RecastBuilderResult buildRecastResult(DemoInputGeomProvider m_geom, PartitionType m_partitionType, float m_cellSize,
+            float m_cellHeight, float m_agentHeight, float m_agentRadius, float m_agentMaxClimb, float m_agentMaxSlope,
+            int m_regionMinSize, int m_regionMergeSize, float m_edgeMaxLen, float m_edgeMaxError, int m_vertsPerPoly,
+            float m_detailSampleDist, float m_detailSampleMaxError, boolean filterLowHangingObstacles, boolean filterLedgeSpans,
+            boolean filterWalkableLowHeightSpans) {
+        RecastConfig cfg = new RecastConfig(m_partitionType, m_cellSize, m_cellHeight, m_agentMaxSlope, filterLowHangingObstacles,
+                filterLedgeSpans, filterWalkableLowHeightSpans, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_regionMinSize,
+                m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError,
+                SampleAreaModifications.SAMPLE_AREAMOD_WALKABLE, true);
         RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, m_geom.getMeshBoundsMin(), m_geom.getMeshBoundsMax());
         RecastBuilder rcBuilder = new RecastBuilder();
         return rcBuilder.build(m_geom, bcfg);
     }
 
-    private MeshData buildMeshData(DemoInputGeomProvider m_geom, float m_cellSize, float m_cellHeight,
-            float m_agentHeight, float m_agentRadius, float m_agentMaxClimb, RecastBuilderResult rcResult) {
-        NavMeshDataCreateParams params = getNavMeshCreateParams(m_geom, m_cellSize, m_cellHeight, m_agentHeight,
-                m_agentRadius, m_agentMaxClimb, rcResult);
+    private MeshData buildMeshData(DemoInputGeomProvider m_geom, float m_cellSize, float m_cellHeight, float m_agentHeight,
+            float m_agentRadius, float m_agentMaxClimb, RecastBuilderResult rcResult) {
+        NavMeshDataCreateParams params = getNavMeshCreateParams(m_geom, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
+                m_agentMaxClimb, rcResult);
         return updateAreaAndFlags(NavMeshBuilder.createNavMeshData(params));
     }
 

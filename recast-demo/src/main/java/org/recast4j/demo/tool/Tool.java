@@ -35,4 +35,7 @@ public interface Tool {
     void layout(NkContext ctx);
 
     String getName();
+
+    default void handleClickRay(float[] start, float[] direction, boolean shift) {
+    }
 }

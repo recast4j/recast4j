@@ -29,7 +29,7 @@ public class MeshDataWriter extends DetourWriter {
 	public void write(OutputStream stream, MeshData data, ByteOrder order, boolean cCompatibility) throws IOException {
 		MeshHeader header = data.header;
 		write(stream, header.magic, order);
-		write(stream, cCompatibility ? MeshHeader.DT_NAVMESH_VERSION : MeshHeader.DT_NAVMESH_VERSION_RECAST4J, order);
+		write(stream, cCompatibility ? MeshHeader.DT_NAVMESH_VERSION : MeshHeader.DT_NAVMESH_VERSION_RECAST4J_LAST, order);
 		write(stream, header.x, order);
 		write(stream, header.y, order);
 		write(stream, header.layer, order);
@@ -54,7 +54,7 @@ public class MeshDataWriter extends DetourWriter {
 		write(stream, header.bmax[2], order);
 		write(stream, header.bvQuantFactor, order);
 		writeVerts(stream, data.verts, header.vertCount, order);
-		writePolys(stream, data, order);
+		writePolys(stream, data, order, cCompatibility);
 		if (cCompatibility) {
 			byte[] linkPlaceholder = new byte[header.maxLinkCount * MeshDataReader.getSizeofLink(false)];
 			stream.write(linkPlaceholder);
@@ -72,9 +72,11 @@ public class MeshDataWriter extends DetourWriter {
 		}
 	}
 
-	private void writePolys(OutputStream stream, MeshData data, ByteOrder order) throws IOException {
+	private void writePolys(OutputStream stream, MeshData data, ByteOrder order, boolean cCompatibility) throws IOException {
 		for (int i = 0; i < data.header.polyCount; i++) {
-			write(stream, data.polys[i].firstLink, order);
+		    if (cCompatibility) {
+		        write(stream, 0xFFFF, order);
+		    }
 			for (int j = 0; j < data.polys[i].verts.length; j++) {
 				write(stream, (short) data.polys[i].verts[j], order);
 			}

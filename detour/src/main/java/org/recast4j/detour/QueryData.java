@@ -28,4 +28,5 @@ class QueryData {
     QueryFilter filter;
     int options;
     float raycastLimitSqr;
+    QueryHeuristic heuristic;
 }

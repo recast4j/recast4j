@@ -1,3 +1,21 @@
+/*
+Copyright (c) 2009-2010 Mikko Mononen memon@inside.org
+recast4j copyright (c) 2021 Piotr Piastucki piotr@jtilia.org
+
+This software is provided 'as-is', without any express or implied
+warranty.  In no event will the authors be held liable for any damages
+arising from the use of this software.
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
+1. The origin of this software must not be misrepresented; you must not
+ claim that you wrote the original software. If you use this software
+ in a product, an acknowledgment in the product documentation would be
+ appreciated but is not required.
+2. Altered source versions must be plainly marked as such, and must not be
+ misrepresented as being the original software.
+3. This notice may not be removed or altered from any source distribution.
+*/
 package org.recast4j.demo.tool;
 
 import static org.lwjgl.nuklear.Nuklear.nk_layout_row_dynamic;
@@ -21,7 +39,7 @@ import org.lwjgl.nuklear.NkContext;
 import org.recast4j.demo.builder.SampleAreaModifications;
 import org.recast4j.demo.draw.NavMeshRenderer;
 import org.recast4j.demo.draw.RecastDebugDraw;
-import org.recast4j.demo.geom.DemoInputGeomProvider;
+import org.recast4j.demo.geom.Intersections;
 import org.recast4j.demo.sample.Sample;
 import org.recast4j.detour.DefaultQueryFilter;
 import org.recast4j.detour.DetourCommon;
@@ -30,7 +48,6 @@ import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.detour.QueryFilter;
 import org.recast4j.detour.Result;
-import org.recast4j.detour.Tupple2;
 import org.recast4j.detour.crowd.Crowd;
 import org.recast4j.detour.crowd.CrowdAgent;
 import org.recast4j.detour.crowd.CrowdAgent.MoveRequestState;
@@ -76,7 +93,6 @@ public class CrowdTool implements Tool {
 
     @Override
     public void setSample(Sample psample) {
-        // TODO Auto-generated method stub
         if (sample != psample) {
             sample = psample;
         }
@@ -128,12 +144,9 @@ public class CrowdTool implements Tool {
 
     @Override
     public void handleClick(float[] s, float[] p, boolean shift) {
-        if (sample == null || crowd == null)
+        if (crowd == null) {
             return;
-        DemoInputGeomProvider geom = sample.getInputGeom();
-        if (geom == null)
-            return;
-
+        }
         if (m_mode == ToolMode.CREATE) {
             if (shift) {
                 // Delete
@@ -219,10 +232,9 @@ public class CrowdTool implements Tool {
                 continue;
             float[] bmin = new float[3], bmax = new float[3];
             getAgentBounds(ag, bmin, bmax);
-            Optional<Tupple2<Float, Float>> isect = isectSegAABB(s, p, bmin, bmax);
+            Optional<float[]> isect = Intersections.intersectSegmentAABB(s, p, bmin, bmax);
             if (isect.isPresent()) {
-                float tmin = isect.get().first;
-                float tmax = isect.get().second;
+                float tmin = isect.get()[0];
                 if (tmin > 0 && tmin < tsel) {
                     isel = i;
                     tsel = tmin;
@@ -243,46 +255,6 @@ public class CrowdTool implements Tool {
         bmax[0] = p[0] + r;
         bmax[1] = p[1] + h;
         bmax[2] = p[2] + r;
-    }
-
-    static Optional<Tupple2<Float, Float>> isectSegAABB(float[] sp, float[] sq, float[] amin, float[] amax) {
-        float EPS = 1e-6f;
-
-        float tmin;
-        float tmax;
-        float[] d = DetourCommon.vSub(sq, sp);
-        tmin = 0; // set to -FLT_MAX to get first hit on line
-        tmax = Float.MAX_VALUE; // set to max distance ray can travel (for segment)
-
-        // For all three slabs
-        for (int i = 0; i < 3; i++) {
-            if (Math.abs(d[i]) < EPS) {
-                // Ray is parallel to slab. No hit if origin not within slab
-                if (sp[i] < amin[i] || sp[i] > amax[i])
-                    return Optional.empty();
-            } else {
-                // Compute intersection t value of ray with near and far plane of slab
-                float ood = 1.0f / d[i];
-                float t1 = (amin[i] - sp[i]) * ood;
-                float t2 = (amax[i] - sp[i]) * ood;
-                // Make t1 be intersection with near plane, t2 with far plane
-                if (t1 > t2) {
-                    float tt = t1;
-                    t1 = t2;
-                    t2 = tt;
-                }
-                // Compute the intersection of slab intersections intervals
-                if (t1 > tmin)
-                    tmin = t1;
-                if (t2 < tmax)
-                    tmax = t2;
-                // Exit with no collision as soon as slab intersection becomes empty
-                if (tmin > tmax)
-                    return Optional.empty();
-            }
-        }
-
-        return Optional.of(new Tupple2<>(tmin, tmax));
     }
 
     void setMoveTarget(float[] p, boolean adjust) {

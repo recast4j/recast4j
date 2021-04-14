@@ -32,6 +32,8 @@ public class RecastLayersTest {
     private final float m_agentMaxSlope = 45.0f;
     private final int m_regionMinSize = 8;
     private final int m_regionMergeSize = 20;
+    private final float m_regionMinArea = m_regionMinSize * m_regionMinSize * m_cellSize * m_cellSize;
+    private final float m_regionMergeArea = m_regionMergeSize * m_regionMergeSize * m_cellSize * m_cellSize;
     private final float m_edgeMaxLen = 12.0f;
     private final float m_edgeMaxError = 1.3f;
     private final int m_vertsPerPoly = 6;
@@ -132,12 +134,11 @@ public class RecastLayersTest {
         ObjImporter importer = new ObjImporter();
         InputGeomProvider geom = importer.load(getClass().getResourceAsStream(filename));
         RecastBuilder builder = new RecastBuilder();
-        RecastConfig cfg = new RecastConfig(m_partitionType, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius,
-                m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError,
-                m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, m_tileSize,
-                SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
-        RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), x, y,
-                true);
+        RecastConfig cfg = new RecastConfig(true, m_tileSize, m_tileSize, RecastConfig.calcBorder(m_agentRadius, m_cellSize),
+                m_partitionType, m_cellSize, m_cellHeight, m_agentMaxSlope, true, true, true, m_agentHeight, m_agentRadius,
+                m_agentMaxClimb, m_regionMinArea, m_regionMergeArea, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, true,
+                m_detailSampleDist, m_detailSampleMaxError, SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
+        RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), x, y);
         HeightfieldLayerSet lset = builder.buildLayers(geom, bcfg);
         return lset;
     }
