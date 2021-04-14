@@ -60,6 +60,7 @@ import org.recast4j.dynamic.io.VoxelFile;
 import org.recast4j.dynamic.io.VoxelFileReader;
 import org.recast4j.dynamic.io.VoxelFileWriter;
 import org.recast4j.recast.RecastConstants.PartitionType;
+import org.recast4j.recast.RecastVectors;
 
 public class DynamicUpdateTool implements Tool {
 
@@ -154,10 +155,25 @@ public class DynamicUpdateTool implements Tool {
     private Collider boxCollider(float[] p) {
         float[] extent = new float[] { 0.5f + random.nextFloat() * 6f, 0.5f + random.nextFloat() * 6f,
                 0.5f + random.nextFloat() * 6f };
-        float[] up = new float[] { (1f - 2 * random.nextFloat()), 0.01f + random.nextFloat(), (1f - 2 * random.nextFloat()) };
-        float[] forward = new float[] { (1f - 2 * random.nextFloat()), 0, (1f - 2 * random.nextFloat()) };
-        return new BoxCollider(p, extent, forward, up, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_WATER,
-                dynaMesh.config.walkableClimb);
+        float[][] halfEdges = new float[3][];
+        halfEdges[0] = new float[] { (1f - 2 * random.nextFloat()), 0, (1f - 2 * random.nextFloat()) };
+        halfEdges[1] = new float[] { (1f - 2 * random.nextFloat()), 0.01f + random.nextFloat(), (1f - 2 * random.nextFloat()) };
+        halfEdges[2] = new float[3];
+        RecastVectors.normalize(halfEdges[1]);
+        RecastVectors.cross(halfEdges[2], halfEdges[0], halfEdges[1]);
+        RecastVectors.normalize(halfEdges[2]);
+        RecastVectors.cross(halfEdges[0], halfEdges[1], halfEdges[2]);
+        RecastVectors.normalize(halfEdges[0]);
+        halfEdges[0][0] *= extent[0];
+        halfEdges[0][1] *= extent[0];
+        halfEdges[0][2] *= extent[0];
+        halfEdges[1][0] *= extent[1];
+        halfEdges[1][1] *= extent[1];
+        halfEdges[1][2] *= extent[1];
+        halfEdges[2][0] *= extent[2];
+        halfEdges[2][1] *= extent[2];
+        halfEdges[2][2] *= extent[2];
+        return new BoxCollider(p, halfEdges, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_WATER, dynaMesh.config.walkableClimb);
     }
 
     private Collider compositeCollider(float[] p) {

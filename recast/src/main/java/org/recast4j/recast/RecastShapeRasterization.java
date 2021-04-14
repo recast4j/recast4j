@@ -49,29 +49,26 @@ public class RecastShapeRasterization {
         ctx.stopTimer("RASTERIZE_CAPSULE");
     }
 
-    public static void rasterizeBox(Heightfield hf, float[] center, float[] extent, float[] forward, float[] up, int area,
-            int flagMergeThr, Telemetry ctx) {
+    public static void rasterizeBox(Heightfield hf, float[] center, float[][] halfEdges, int area, int flagMergeThr,
+            Telemetry ctx) {
 
-        RecastVectors.normalize(up);
-        float[][] normals = new float[][] { new float[3], up, new float[3] };
-        RecastVectors.cross(normals[2], forward, up);
-        RecastVectors.normalize(normals[2]);
-        RecastVectors.cross(normals[0], up, normals[2]);
+        float[][] normals = new float[][] { new float[] { halfEdges[0][0], halfEdges[0][1], halfEdges[0][2] },
+                new float[] { halfEdges[1][0], halfEdges[1][1], halfEdges[1][2] },
+                new float[] { halfEdges[2][0], halfEdges[2][1], halfEdges[2][2] } };
         RecastVectors.normalize(normals[0]);
-
-        float[] trX = new float[] { normals[2][0], up[0], normals[0][0] };
-        float[] trY = new float[] { normals[2][1], up[1], normals[0][1] };
-        float[] trZ = new float[] { normals[2][2], up[2], normals[0][2] };
+        RecastVectors.normalize(normals[1]);
+        RecastVectors.normalize(normals[2]);
 
         float[] vertices = new float[8 * 3];
         float[] bounds = new float[] { Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY,
                 Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY };
         for (int i = 0; i < 8; ++i) {
-            float[] pt = new float[] { ((i & 1) != 0) ? extent[0] : -extent[0], ((i & 2) != 0) ? extent[1] : -extent[1],
-                    ((i & 4) != 0) ? extent[2] : -extent[2] };
-            vertices[i * 3 + 0] = RecastVectors.dot(pt, trX) + center[0];
-            vertices[i * 3 + 1] = RecastVectors.dot(pt, trY) + center[1];
-            vertices[i * 3 + 2] = RecastVectors.dot(pt, trZ) + center[2];
+            float s0 = (i & 1) != 0 ? 1f : -1f;
+            float s1 = (i & 2) != 0 ? 1f : -1f;
+            float s2 = (i & 4) != 0 ? 1f : -1f;
+            vertices[i * 3 + 0] = center[0] + s0 * halfEdges[0][0] + s1 * halfEdges[1][0] + s2 * halfEdges[2][0];
+            vertices[i * 3 + 1] = center[1] + s0 * halfEdges[0][1] + s1 * halfEdges[1][1] + s2 * halfEdges[2][1];
+            vertices[i * 3 + 2] = center[2] + s0 * halfEdges[0][2] + s1 * halfEdges[1][2] + s2 * halfEdges[2][2];
             bounds[0] = Math.min(bounds[0], vertices[i * 3 + 0]);
             bounds[1] = Math.min(bounds[1], vertices[i * 3 + 1]);
             bounds[2] = Math.min(bounds[2], vertices[i * 3 + 2]);

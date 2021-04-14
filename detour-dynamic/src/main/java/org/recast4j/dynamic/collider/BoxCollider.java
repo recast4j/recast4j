@@ -26,38 +26,28 @@ import org.recast4j.recast.Telemetry;
 public class BoxCollider extends AbstractCollider {
 
     private final float[] center;
-    private final float[] extent;
-    private final float[] forward;
-    private final float[] up;
+    private final float[][] halfEdges;
 
     public BoxCollider(float[] center, float[] extent, float[] forward, float[] up, int area, float flagMergeThreshold) {
-        super(area, flagMergeThreshold, bounds(center, extent, forward, up));
-        this.center = center;
-        this.extent = extent;
-        this.forward = forward;
-        this.up = up;
+        this(center, getHalfEdges(up, forward, extent), area, flagMergeThreshold);
     }
 
-    private static float[] bounds(float[] center, float[] extent, float[] forward, float[] up) {
-        RecastVectors.normalize(up);
-        float[][] normals = new float[][] { new float[3], up, new float[3] };
-        RecastVectors.cross(normals[2], forward, up);
-        RecastVectors.normalize(normals[2]);
-        RecastVectors.cross(normals[0], up, normals[2]);
-        RecastVectors.normalize(normals[0]);
+    public BoxCollider(float[] center, float[][] halfEdges, int area, float flagMergeThreshold) {
+        super(area, flagMergeThreshold, bounds(center, halfEdges));
+        this.center = center;
+        this.halfEdges = halfEdges;
+    }
 
-        float[] trX = new float[] { normals[2][0], up[0], normals[0][0] };
-        float[] trY = new float[] { normals[2][1], up[1], normals[0][1] };
-        float[] trZ = new float[] { normals[2][2], up[2], normals[0][2] };
-
+    private static float[] bounds(float[] center, float[][] halfEdges) {
         float[] bounds = new float[] { Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY,
                 Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY };
         for (int i = 0; i < 8; ++i) {
-            float[] pt = new float[] { ((i & 1) != 0) ? extent[0] : -extent[0], ((i & 2) != 0) ? extent[1] : -extent[1],
-                    ((i & 4) != 0) ? extent[2] : -extent[2] };
-            float vx = RecastVectors.dot(pt, trX) + center[0];
-            float vy = RecastVectors.dot(pt, trY) + center[1];
-            float vz = RecastVectors.dot(pt, trZ) + center[2];
+            float s0 = (i & 1) != 0 ? 1f : -1f;
+            float s1 = (i & 2) != 0 ? 1f : -1f;
+            float s2 = (i & 4) != 0 ? 1f : -1f;
+            float vx = center[0] + s0 * halfEdges[0][0] + s1 * halfEdges[1][0] + s2 * halfEdges[2][0];
+            float vy = center[1] + s0 * halfEdges[0][1] + s1 * halfEdges[1][1] + s2 * halfEdges[2][1];
+            float vz = center[2] + s0 * halfEdges[0][2] + s1 * halfEdges[1][2] + s2 * halfEdges[2][2];
             bounds[0] = Math.min(bounds[0], vx);
             bounds[1] = Math.min(bounds[1], vy);
             bounds[2] = Math.min(bounds[2], vz);
@@ -70,8 +60,27 @@ public class BoxCollider extends AbstractCollider {
 
     @Override
     public void rasterize(Heightfield hf, Telemetry telemetry) {
-        RecastShapeRasterization.rasterizeBox(hf, center, extent, forward, up, area, (int) Math.floor(flagMergeThreshold / hf.ch),
+        RecastShapeRasterization.rasterizeBox(hf, center, halfEdges, area, (int) Math.floor(flagMergeThreshold / hf.ch),
                 telemetry);
-
     }
+
+    private static float[][] getHalfEdges(float[] up, float[] forward, float[] extent) {
+        float[][] halfEdges = new float[][] { new float[3], new float[] { up[0], up[1], up[2] }, new float[3] };
+        RecastVectors.normalize(halfEdges[1]);
+        RecastVectors.cross(halfEdges[0], forward, up);
+        RecastVectors.normalize(halfEdges[0]);
+        RecastVectors.cross(halfEdges[2], up, halfEdges[0]);
+        RecastVectors.normalize(halfEdges[2]);
+        halfEdges[0][0] *= extent[0];
+        halfEdges[0][1] *= extent[0];
+        halfEdges[0][2] *= extent[0];
+        halfEdges[1][0] *= extent[1];
+        halfEdges[1][1] *= extent[1];
+        halfEdges[1][2] *= extent[1];
+        halfEdges[2][0] *= extent[2];
+        halfEdges[2][1] *= extent[2];
+        halfEdges[2][2] *= extent[2];
+        return halfEdges;
+    }
+
 }
