@@ -26,7 +26,6 @@ import static org.recast4j.detour.DetourCommon.vMad;
 import static org.recast4j.detour.DetourCommon.vSub;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.recast4j.detour.MoveAlongSurfaceResult;
@@ -226,14 +225,24 @@ public class PathCorridor {
         if (result.succeeded()) {
             path = result.result;
             // Prune points in the beginning of the path which are too close.
-            for (Iterator<StraightPathItem> iter = path.iterator(); iter.hasNext();) {
-                StraightPathItem spi = iter.next();
+            int start = 0;
+            for (StraightPathItem spi : path) {
                 if ((spi.getFlags() & NavMeshQuery.DT_STRAIGHTPATH_OFFMESH_CONNECTION) != 0
                         || vDist2DSqr(spi.getPos(), m_pos) > MIN_TARGET_DIST) {
                     break;
                 }
-                iter.remove();
+                start++;
             }
+            int end = path.size();
+            // Prune points after an off-mesh connection.
+            for (int i = start; i < path.size(); i++) {
+                StraightPathItem spi = path.get(i);
+                if ((spi.getFlags() & NavMeshQuery.DT_STRAIGHTPATH_OFFMESH_CONNECTION) != 0) {
+                    end = i + 1;
+                    break;
+                }
+            }
+            path = path.subList(start, end);
         }
         return path;
     }
