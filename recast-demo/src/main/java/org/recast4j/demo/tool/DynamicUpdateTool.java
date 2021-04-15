@@ -49,6 +49,7 @@ import org.recast4j.demo.geom.DemoInputGeomProvider;
 import org.recast4j.demo.io.ObjImporter;
 import org.recast4j.demo.sample.Sample;
 import org.recast4j.demo.ui.NuklearUIHelper;
+import org.recast4j.detour.Tupple2;
 import org.recast4j.dynamic.DynamicNavMesh;
 import org.recast4j.dynamic.collider.BoxCollider;
 import org.recast4j.dynamic.collider.CapsuleCollider;
@@ -60,7 +61,6 @@ import org.recast4j.dynamic.io.VoxelFile;
 import org.recast4j.dynamic.io.VoxelFileReader;
 import org.recast4j.dynamic.io.VoxelFileWriter;
 import org.recast4j.recast.RecastConstants.PartitionType;
-import org.recast4j.recast.RecastVectors;
 
 public class DynamicUpdateTool implements Tool {
 
@@ -86,18 +86,21 @@ public class DynamicUpdateTool implements Tool {
     private boolean buildDetailMesh = true;
     private final FloatBuffer detailSampleDist = BufferUtils.createFloatBuffer(1).put(0, 6f);
     private final FloatBuffer detailSampleMaxError = BufferUtils.createFloatBuffer(1).put(0, 1f);
+    private boolean showColliders = false;
     private long buildTime;
     private ColliderShape colliderShape = ColliderShape.SPHERE;
 
     private DynamicNavMesh dynaMesh;
     private final ExecutorService executor;
     private final Map<Long, Collider> colliders = new HashMap<>();
+    private final Map<Long, ColliderGizmo> colliderGizmos = new HashMap<>();
     private final Random random = new Random();
     private final DemoInputGeomProvider bridgeGeom;
     private final DemoInputGeomProvider houseGeom;
 
     public DynamicUpdateTool() {
-        executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() / 2, new RecastBuilderThreadFactory());
+        executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() / 2,
+                new RecastBuilderThreadFactory());
         bridgeGeom = new ObjImporter().load(getClass().getClassLoader().getResourceAsStream("bridge.obj"));
         houseGeom = new ObjImporter().load(getClass().getClassLoader().getResourceAsStream("house.obj"));
     }
@@ -110,37 +113,40 @@ public class DynamicUpdateTool implements Tool {
     @Override
     public void handleClick(float[] s, float[] p, boolean shift) {
         if (!shift) {
-            Collider collider = null;
+            Tupple2<Collider, ColliderGizmo> colliderWithGizmo = null;
             if (dynaMesh != null) {
                 if (colliderShape == ColliderShape.SPHERE) {
-                    collider = sphereCollider(p);
+                    colliderWithGizmo = sphereCollider(p);
                 } else if (colliderShape == ColliderShape.CAPSULE) {
-                    collider = capsuleCollider(p);
+                    colliderWithGizmo = capsuleCollider(p);
                 } else if (colliderShape == ColliderShape.BOX) {
-                    collider = boxCollider(p);
+                    colliderWithGizmo = boxCollider(p);
                 } else if (colliderShape == ColliderShape.COMPOSITE) {
-                    collider = compositeCollider(p);
+                    colliderWithGizmo = compositeCollider(p);
                 } else if (colliderShape == ColliderShape.TRIMESH_BRIDGE) {
-                    collider = trimeshBridge(p);
+                    colliderWithGizmo = trimeshBridge(p);
                 } else if (colliderShape == ColliderShape.TRIMESH_HOUSE) {
-                    collider = trimeshHouse(p);
+                    colliderWithGizmo = trimeshHouse(p);
                 }
             }
-            if (collider != null) {
-                long id = dynaMesh.addCollider(collider);
-                colliders.put(id, collider);
+            if (colliderWithGizmo != null) {
+                long id = dynaMesh.addCollider(colliderWithGizmo.first);
+                colliders.put(id, colliderWithGizmo.first);
+                colliderGizmos.put(id, colliderWithGizmo.second);
             }
         }
     }
 
-    private Collider sphereCollider(float[] p) {
+    private Tupple2<Collider, ColliderGizmo> sphereCollider(float[] p) {
         float radius = 1 + random.nextFloat() * 10;
-        return new SphereCollider(p, radius, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_WATER, dynaMesh.config.walkableClimb);
+        return new Tupple2<>(new SphereCollider(p, radius, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_WATER,
+                dynaMesh.config.walkableClimb), ColliderGizmo.sphere(p, radius));
     }
 
-    private Collider capsuleCollider(float[] p) {
+    private Tupple2<Collider, ColliderGizmo> capsuleCollider(float[] p) {
         float radius = 0.4f + random.nextFloat() * 4f;
-        float[] a = new float[] { (1f - 2 * random.nextFloat()), 0.01f + random.nextFloat(), (1f - 2 * random.nextFloat()) };
+        float[] a = new float[] { (1f - 2 * random.nextFloat()), 0.01f + random.nextFloat(),
+                (1f - 2 * random.nextFloat()) };
         vNormalize(a);
         float len = 1f + random.nextFloat() * 20f;
         a[0] *= len;
@@ -148,35 +154,22 @@ public class DynamicUpdateTool implements Tool {
         a[2] *= len;
         float[] start = new float[] { p[0], p[1], p[2] };
         float[] end = new float[] { p[0] + a[0], p[1] + a[1], p[2] + a[2] };
-        return new CapsuleCollider(start, end, radius, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_WATER,
-                dynaMesh.config.walkableClimb);
+        return new Tupple2<>(new CapsuleCollider(start, end, radius, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_WATER,
+                dynaMesh.config.walkableClimb), ColliderGizmo.capsule(start, end, radius));
     }
 
-    private Collider boxCollider(float[] p) {
+    private Tupple2<Collider, ColliderGizmo> boxCollider(float[] p) {
         float[] extent = new float[] { 0.5f + random.nextFloat() * 6f, 0.5f + random.nextFloat() * 6f,
                 0.5f + random.nextFloat() * 6f };
-        float[][] halfEdges = new float[3][];
-        halfEdges[0] = new float[] { (1f - 2 * random.nextFloat()), 0, (1f - 2 * random.nextFloat()) };
-        halfEdges[1] = new float[] { (1f - 2 * random.nextFloat()), 0.01f + random.nextFloat(), (1f - 2 * random.nextFloat()) };
-        halfEdges[2] = new float[3];
-        RecastVectors.normalize(halfEdges[1]);
-        RecastVectors.cross(halfEdges[2], halfEdges[0], halfEdges[1]);
-        RecastVectors.normalize(halfEdges[2]);
-        RecastVectors.cross(halfEdges[0], halfEdges[1], halfEdges[2]);
-        RecastVectors.normalize(halfEdges[0]);
-        halfEdges[0][0] *= extent[0];
-        halfEdges[0][1] *= extent[0];
-        halfEdges[0][2] *= extent[0];
-        halfEdges[1][0] *= extent[1];
-        halfEdges[1][1] *= extent[1];
-        halfEdges[1][2] *= extent[1];
-        halfEdges[2][0] *= extent[2];
-        halfEdges[2][1] *= extent[2];
-        halfEdges[2][2] *= extent[2];
-        return new BoxCollider(p, halfEdges, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_WATER, dynaMesh.config.walkableClimb);
+        float[] forward = new float[] { (1f - 2 * random.nextFloat()), 0, (1f - 2 * random.nextFloat()) };
+        float[] up = new float[] { (1f - 2 * random.nextFloat()), 0.01f + random.nextFloat(),
+                (1f - 2 * random.nextFloat()) };
+        float[][] halfEdges = BoxCollider.getHalfEdges(up, forward, extent);
+        return new Tupple2<>(new BoxCollider(p, halfEdges, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_WATER,
+                dynaMesh.config.walkableClimb), ColliderGizmo.box(p, halfEdges));
     }
 
-    private Collider compositeCollider(float[] p) {
+    private Tupple2<Collider, ColliderGizmo> compositeCollider(float[] p) {
         float[] baseExtent = new float[] { 5, 3, 8 };
         float[] baseCenter = new float[] { p[0], p[1] + 3, p[2] };
         float[] baseUp = new float[] { 0, 1, 0 };
@@ -193,24 +186,31 @@ public class DynamicUpdateTool implements Tool {
                 SampleAreaModifications.SAMPLE_POLYAREA_TYPE_ROAD, dynaMesh.config.walkableClimb);
         float[] trunkStart = new float[] { baseCenter[0] - forward[0] * 15 + side[0] * 6, p[1],
                 baseCenter[2] - forward[2] * 15 + side[2] * 6 };
-        CapsuleCollider trunk = new CapsuleCollider(trunkStart, new float[] { trunkStart[0], trunkStart[1] + 10, trunkStart[2] },
-                0.5f, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_ROAD, dynaMesh.config.walkableClimb);
+        float[] trunkEnd = new float[] { trunkStart[0], trunkStart[1] + 10, trunkStart[2] };
+        CapsuleCollider trunk = new CapsuleCollider(trunkStart, trunkEnd, 0.5f,
+                SampleAreaModifications.SAMPLE_POLYAREA_TYPE_ROAD, dynaMesh.config.walkableClimb);
         float[] crownCenter = new float[] { baseCenter[0] - forward[0] * 15 + side[0] * 6, p[1] + 10,
                 baseCenter[2] - forward[2] * 15 + side[2] * 6 };
         SphereCollider crown = new SphereCollider(crownCenter, 4f, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_GRASS,
                 dynaMesh.config.walkableClimb);
-        return new CompositeCollider(base, roof, trunk, crown);
+        CompositeCollider collider = new CompositeCollider(base, roof, trunk, crown);
+        ColliderGizmo baseGizmo = ColliderGizmo.box(baseCenter, BoxCollider.getHalfEdges(baseUp, forward, baseExtent));
+        ColliderGizmo roofGizmo = ColliderGizmo.box(roofCenter, BoxCollider.getHalfEdges(roofUp, forward, roofExtent));
+        ColliderGizmo trunkGizmo = ColliderGizmo.capsule(trunkStart, trunkEnd, 0.5f);
+        ColliderGizmo crownGizmo = ColliderGizmo.sphere(crownCenter, 4f);
+        ColliderGizmo gizmo = ColliderGizmo.composite(baseGizmo, roofGizmo, trunkGizmo, crownGizmo);
+        return new Tupple2<>(collider, gizmo);
     }
 
-    private Collider trimeshBridge(float[] p) {
+    private Tupple2<Collider, ColliderGizmo> trimeshBridge(float[] p) {
         return trimeshCollider(p, bridgeGeom);
     }
 
-    private Collider trimeshHouse(float[] p) {
+    private Tupple2<Collider, ColliderGizmo> trimeshHouse(float[] p) {
         return trimeshCollider(p, houseGeom);
     }
 
-    private Collider trimeshCollider(float[] p, DemoInputGeomProvider geom) {
+    private Tupple2<Collider, ColliderGizmo> trimeshCollider(float[] p, DemoInputGeomProvider geom) {
         float[] ry = GLU.build_4x4_rotation_matrix(random.nextFloat() * 360, 0, 1, 0);
         float[] verts = new float[geom.vertices.length];
         float[] v = new float[3];
@@ -235,8 +235,9 @@ public class DynamicUpdateTool implements Tool {
             bounds[4] = Math.max(bounds[4], vr[1]);
             bounds[5] = Math.max(bounds[5], vr[2]);
         }
-        return new TrimeshCollider(verts, geom.faces, bounds, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_ROAD,
-                dynaMesh.config.walkableClimb * 10);
+        TrimeshCollider collider = new TrimeshCollider(verts, geom.faces, bounds,
+                SampleAreaModifications.SAMPLE_POLYAREA_TYPE_ROAD, dynaMesh.config.walkableClimb * 10);
+        return new Tupple2<>(collider, ColliderGizmo.trimesh(verts, geom.faces));
     }
 
     private float[] mulMatrixVector(float[] resultvector, float[] matrix, float[] pvector) {
@@ -284,6 +285,9 @@ public class DynamicUpdateTool implements Tool {
 
     @Override
     public void handleRender(NavMeshRenderer renderer) {
+        if (showColliders) {
+            colliderGizmos.values().forEach(g -> g.render(renderer.getDebugDraw()));
+        }
     }
 
     @Override
@@ -404,6 +408,8 @@ public class DynamicUpdateTool implements Tool {
         nk_layout_row_dynamic(ctx, 18, 1);
         nk_label(ctx, "Colliders", NK_TEXT_ALIGN_LEFT);
         nk_layout_row_dynamic(ctx, 20, 1);
+        showColliders = nk_check_text(ctx, "Show", showColliders);
+        nk_layout_row_dynamic(ctx, 20, 1);
         if (nk_option_label(ctx, "Sphere", colliderShape == ColliderShape.SPHERE)) {
             colliderShape = ColliderShape.SPHERE;
         }
@@ -435,7 +441,8 @@ public class DynamicUpdateTool implements Tool {
             PointerBuffer aFilterPatterns = stack.mallocPointer(1);
             aFilterPatterns.put(stack.UTF8("*.voxels"));
             aFilterPatterns.flip();
-            String filename = TinyFileDialogs.tinyfd_openFileDialog("Open Voxel File", "", aFilterPatterns, "Voxel File", false);
+            String filename = TinyFileDialogs.tinyfd_openFileDialog("Open Voxel File", "", aFilterPatterns,
+                    "Voxel File", false);
             if (filename != null) {
                 load(filename);
             }
@@ -466,7 +473,8 @@ public class DynamicUpdateTool implements Tool {
             PointerBuffer aFilterPatterns = stack.mallocPointer(1);
             aFilterPatterns.put(stack.UTF8("*.voxels"));
             aFilterPatterns.flip();
-            String filename = TinyFileDialogs.tinyfd_saveFileDialog("Save Voxel File", "", aFilterPatterns, "Voxel File");
+            String filename = TinyFileDialogs.tinyfd_saveFileDialog("Save Voxel File", "", aFilterPatterns,
+                    "Voxel File");
             if (filename != null) {
                 save(filename);
             }
