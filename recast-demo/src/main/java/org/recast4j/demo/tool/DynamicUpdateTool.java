@@ -99,8 +99,7 @@ public class DynamicUpdateTool implements Tool {
     private final DemoInputGeomProvider houseGeom;
 
     public DynamicUpdateTool() {
-        executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() / 2,
-                new RecastBuilderThreadFactory());
+        executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() / 2, new RecastBuilderThreadFactory());
         bridgeGeom = new ObjImporter().load(getClass().getClassLoader().getResourceAsStream("bridge.obj"));
         houseGeom = new ObjImporter().load(getClass().getClassLoader().getResourceAsStream("house.obj"));
     }
@@ -139,14 +138,14 @@ public class DynamicUpdateTool implements Tool {
 
     private Tupple2<Collider, ColliderGizmo> sphereCollider(float[] p) {
         float radius = 1 + random.nextFloat() * 10;
-        return new Tupple2<>(new SphereCollider(p, radius, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_WATER,
-                dynaMesh.config.walkableClimb), ColliderGizmo.sphere(p, radius));
+        return new Tupple2<>(
+                new SphereCollider(p, radius, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_WATER, dynaMesh.config.walkableClimb),
+                ColliderGizmo.sphere(p, radius));
     }
 
     private Tupple2<Collider, ColliderGizmo> capsuleCollider(float[] p) {
         float radius = 0.4f + random.nextFloat() * 4f;
-        float[] a = new float[] { (1f - 2 * random.nextFloat()), 0.01f + random.nextFloat(),
-                (1f - 2 * random.nextFloat()) };
+        float[] a = new float[] { (1f - 2 * random.nextFloat()), 0.01f + random.nextFloat(), (1f - 2 * random.nextFloat()) };
         vNormalize(a);
         float len = 1f + random.nextFloat() * 20f;
         a[0] *= len;
@@ -162,11 +161,11 @@ public class DynamicUpdateTool implements Tool {
         float[] extent = new float[] { 0.5f + random.nextFloat() * 6f, 0.5f + random.nextFloat() * 6f,
                 0.5f + random.nextFloat() * 6f };
         float[] forward = new float[] { (1f - 2 * random.nextFloat()), 0, (1f - 2 * random.nextFloat()) };
-        float[] up = new float[] { (1f - 2 * random.nextFloat()), 0.01f + random.nextFloat(),
-                (1f - 2 * random.nextFloat()) };
+        float[] up = new float[] { (1f - 2 * random.nextFloat()), 0.01f + random.nextFloat(), (1f - 2 * random.nextFloat()) };
         float[][] halfEdges = BoxCollider.getHalfEdges(up, forward, extent);
-        return new Tupple2<>(new BoxCollider(p, halfEdges, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_WATER,
-                dynaMesh.config.walkableClimb), ColliderGizmo.box(p, halfEdges));
+        return new Tupple2<>(
+                new BoxCollider(p, halfEdges, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_WATER, dynaMesh.config.walkableClimb),
+                ColliderGizmo.box(p, halfEdges));
     }
 
     private Tupple2<Collider, ColliderGizmo> compositeCollider(float[] p) {
@@ -176,19 +175,19 @@ public class DynamicUpdateTool implements Tool {
         float[] forward = new float[] { (1f - 2 * random.nextFloat()), 0, (1f - 2 * random.nextFloat()) };
         vNormalize(forward);
         float[] side = vCross(forward, baseUp);
-        BoxCollider base = new BoxCollider(baseCenter, baseExtent, forward, baseUp,
+        BoxCollider base = new BoxCollider(baseCenter, BoxCollider.getHalfEdges(baseUp, forward, baseExtent),
                 SampleAreaModifications.SAMPLE_POLYAREA_TYPE_ROAD, dynaMesh.config.walkableClimb);
         float[] roofExtent = new float[] { 4.5f, 4.5f, 8f };
         float[] rx = GLU.build_4x4_rotation_matrix(45, forward[0], forward[1], forward[2]);
         float[] roofUp = mulMatrixVector(new float[3], rx, baseUp);
         float[] roofCenter = new float[] { p[0], p[1] + 6, p[2] };
-        BoxCollider roof = new BoxCollider(roofCenter, roofExtent, forward, roofUp,
+        BoxCollider roof = new BoxCollider(roofCenter, BoxCollider.getHalfEdges(roofUp, forward, roofExtent),
                 SampleAreaModifications.SAMPLE_POLYAREA_TYPE_ROAD, dynaMesh.config.walkableClimb);
         float[] trunkStart = new float[] { baseCenter[0] - forward[0] * 15 + side[0] * 6, p[1],
                 baseCenter[2] - forward[2] * 15 + side[2] * 6 };
         float[] trunkEnd = new float[] { trunkStart[0], trunkStart[1] + 10, trunkStart[2] };
-        CapsuleCollider trunk = new CapsuleCollider(trunkStart, trunkEnd, 0.5f,
-                SampleAreaModifications.SAMPLE_POLYAREA_TYPE_ROAD, dynaMesh.config.walkableClimb);
+        CapsuleCollider trunk = new CapsuleCollider(trunkStart, trunkEnd, 0.5f, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_ROAD,
+                dynaMesh.config.walkableClimb);
         float[] crownCenter = new float[] { baseCenter[0] - forward[0] * 15 + side[0] * 6, p[1] + 10,
                 baseCenter[2] - forward[2] * 15 + side[2] * 6 };
         SphereCollider crown = new SphereCollider(crownCenter, 4f, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_GRASS,
@@ -441,8 +440,7 @@ public class DynamicUpdateTool implements Tool {
             PointerBuffer aFilterPatterns = stack.mallocPointer(1);
             aFilterPatterns.put(stack.UTF8("*.voxels"));
             aFilterPatterns.flip();
-            String filename = TinyFileDialogs.tinyfd_openFileDialog("Open Voxel File", "", aFilterPatterns,
-                    "Voxel File", false);
+            String filename = TinyFileDialogs.tinyfd_openFileDialog("Open Voxel File", "", aFilterPatterns, "Voxel File", false);
             if (filename != null) {
                 load(filename);
             }
@@ -473,8 +471,7 @@ public class DynamicUpdateTool implements Tool {
             PointerBuffer aFilterPatterns = stack.mallocPointer(1);
             aFilterPatterns.put(stack.UTF8("*.voxels"));
             aFilterPatterns.flip();
-            String filename = TinyFileDialogs.tinyfd_saveFileDialog("Save Voxel File", "", aFilterPatterns,
-                    "Voxel File");
+            String filename = TinyFileDialogs.tinyfd_saveFileDialog("Save Voxel File", "", aFilterPatterns, "Voxel File");
             if (filename != null) {
                 save(filename);
             }

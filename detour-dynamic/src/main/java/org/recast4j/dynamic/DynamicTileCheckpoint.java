@@ -18,18 +18,46 @@ freely, subject to the following restrictions:
 
 package org.recast4j.dynamic;
 
+import static org.recast4j.detour.DetourCommon.vCopy;
+
 import java.util.Set;
 
-import org.recast4j.dynamic.io.VoxelTile;
+import org.recast4j.recast.Heightfield;
+import org.recast4j.recast.Span;
 
 public class DynamicTileCheckpoint {
 
-    final VoxelTile voxelTile;
+    final Heightfield heightfield;
     final Set<Long> colliders;
 
-    public DynamicTileCheckpoint(VoxelTile voxelTile, Set<Long> colliders) {
-        this.voxelTile = voxelTile;
+    public DynamicTileCheckpoint(Heightfield heightfield, Set<Long> colliders) {
         this.colliders = colliders;
+        this.heightfield = clone(heightfield);
+    }
+
+    private Heightfield clone(Heightfield source) {
+        Heightfield clone = new Heightfield(source.width, source.height, vCopy(source.bmin), vCopy(source.bmax), source.cs,
+                source.ch, source.borderSize);
+        for (int z = 0, pz = 0; z < source.height; z++, pz += source.width) {
+            for (int x = 0; x < source.width; x++) {
+                Span span = source.spans[pz + x];
+                Span prevCopy = null;
+                while (span != null) {
+                    Span copy = new Span();
+                    copy.smin = span.smin;
+                    copy.smax = span.smax;
+                    copy.area = span.area;
+                    if (prevCopy == null) {
+                        clone.spans[pz + x] = copy;
+                    } else {
+                        prevCopy.next = copy;
+                    }
+                    prevCopy = copy;
+                    span = span.next;
+                }
+            }
+        }
+        return clone;
     }
 
 }
