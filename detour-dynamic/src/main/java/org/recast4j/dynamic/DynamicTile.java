@@ -52,28 +52,26 @@ class DynamicTile {
 
     boolean build(RecastBuilder builder, DynamicNavMeshConfig config, Telemetry telemetry) {
         if (dirty) {
-            VoxelTile vt = checkpoint != null ? checkpoint.voxelTile : voxelTile;
-            Collection<Long> cpColliders = checkpoint != null ? checkpoint.colliders : Collections.emptySet();
-            Heightfield heightfield = buildHeightfield(config, vt, cpColliders, telemetry);
-            RecastBuilderResult r = buildRecast(builder, config, vt, heightfield, telemetry);
-            NavMeshDataCreateParams params = navMeshCreateParams(vt.tileX, vt.tileZ, vt.cellSize, vt.cellHeight, config, r);
+            Heightfield heightfield = buildHeightfield(config, telemetry);
+            RecastBuilderResult r = buildRecast(builder, config, voxelTile, heightfield, telemetry);
+            NavMeshDataCreateParams params = navMeshCreateParams(voxelTile.tileX, voxelTile.tileZ, voxelTile.cellSize,
+                    voxelTile.cellHeight, config, r);
             meshData = NavMeshBuilder.createNavMeshData(params);
             return true;
         }
         return false;
     }
 
-    private Heightfield buildHeightfield(DynamicNavMeshConfig config, VoxelTile vt, Collection<Long> rasterizedColliders,
-            Telemetry telemetry) {
-        Heightfield heightfield = vt.heightfield();
+    private Heightfield buildHeightfield(DynamicNavMeshConfig config, Telemetry telemetry) {
+        Collection<Long> rasterizedColliders = checkpoint != null ? checkpoint.colliders : Collections.emptySet();
+        Heightfield heightfield = checkpoint != null ? checkpoint.heightfield : voxelTile.heightfield();
         colliders.forEach((id, c) -> {
             if (!rasterizedColliders.contains(id)) {
                 c.rasterize(heightfield, telemetry);
             }
         });
-        if (config.enableCheckpoints && !colliders.isEmpty()) {
-            checkpoint = new DynamicTileCheckpoint(new VoxelTile(vt.tileX, vt.tileZ, heightfield),
-                    new HashSet<>(colliders.keySet()));
+        if (config.enableCheckpoints) {
+            checkpoint = new DynamicTileCheckpoint(heightfield, new HashSet<>(colliders.keySet()));
         }
         return heightfield;
     }

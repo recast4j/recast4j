@@ -28,10 +28,6 @@ public class BoxCollider extends AbstractCollider {
     private final float[] center;
     private final float[][] halfEdges;
 
-    public BoxCollider(float[] center, float[] extent, float[] forward, float[] up, int area, float flagMergeThreshold) {
-        this(center, getHalfEdges(up, forward, extent), area, flagMergeThreshold);
-    }
-
     public BoxCollider(float[] center, float[][] halfEdges, int area, float flagMergeThreshold) {
         super(area, flagMergeThreshold, bounds(center, halfEdges));
         this.center = center;
