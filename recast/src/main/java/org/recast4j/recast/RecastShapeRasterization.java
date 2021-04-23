@@ -199,7 +199,7 @@ public class RecastShapeRasterization {
                 float planeDotAxis = ((i & 1) == 0) ? axis[0] : axis[2];
                 float planeDotA = ((i & 1) == 0) ? start[0] : start[2];
                 float t = (planeD - planeDotA) / planeDotAxis;
-                float[] intersection = new float[] { start[0] + t * axis[0], rectangle[1], start[2] + t * axis[2] };
+                float[] intersection = new float[] { start[0] + t * axis[0], rectangle[4], start[2] + t * axis[2] };
                 if (((i == 0 || i == 2) && intersection[2] >= rectangle[1] && intersection[2] <= rectangle[3])
                         || ((i == 1 || i == 3) && intersection[0] >= rectangle[0] && intersection[0] <= rectangle[2])) {
                     s = mergeIntersections(s, intersectCylinder(intersection, start, axis, normal, radius, axisLenSqr));
@@ -220,7 +220,7 @@ public class RecastShapeRasterization {
                     float rSqr = radiusSqr - dSqr;
                     if (rSqr >= 0.0f) {
                         float r = (float) Math.sqrt(rSqr);
-                        float[] point = new float[] { x, rectangle[1], z };
+                        float[] point = new float[] { x, rectangle[4], z };
                         s = mergeIntersections(s, intersectCylinder(point, start, axis, normal, r, axisLenSqr));
                     }
                 }
