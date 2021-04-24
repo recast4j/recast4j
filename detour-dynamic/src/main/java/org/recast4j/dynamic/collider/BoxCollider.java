@@ -19,7 +19,7 @@ freely, subject to the following restrictions:
 package org.recast4j.dynamic.collider;
 
 import org.recast4j.recast.Heightfield;
-import org.recast4j.recast.RecastShapeRasterization;
+import org.recast4j.recast.RecastFilledVolumeRasterization;
 import org.recast4j.recast.RecastVectors;
 import org.recast4j.recast.Telemetry;
 
@@ -56,7 +56,7 @@ public class BoxCollider extends AbstractCollider {
 
     @Override
     public void rasterize(Heightfield hf, Telemetry telemetry) {
-        RecastShapeRasterization.rasterizeBox(hf, center, halfEdges, area, (int) Math.floor(flagMergeThreshold / hf.ch),
+        RecastFilledVolumeRasterization.rasterizeBox(hf, center, halfEdges, area, (int) Math.floor(flagMergeThreshold / hf.ch),
                 telemetry);
     }
 

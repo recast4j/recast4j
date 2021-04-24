@@ -55,6 +55,7 @@ import org.recast4j.dynamic.collider.BoxCollider;
 import org.recast4j.dynamic.collider.CapsuleCollider;
 import org.recast4j.dynamic.collider.Collider;
 import org.recast4j.dynamic.collider.CompositeCollider;
+import org.recast4j.dynamic.collider.CylinderCollider;
 import org.recast4j.dynamic.collider.SphereCollider;
 import org.recast4j.dynamic.collider.TrimeshCollider;
 import org.recast4j.dynamic.io.VoxelFile;
@@ -65,7 +66,7 @@ import org.recast4j.recast.RecastConstants.PartitionType;
 public class DynamicUpdateTool implements Tool {
 
     private enum ColliderShape {
-        SPHERE, CAPSULE, BOX, COMPOSITE, TRIMESH_BRIDGE, TRIMESH_HOUSE
+        SPHERE, CAPSULE, BOX, CYLINDER, COMPOSITE, CONVEX, TRIMESH_BRIDGE, TRIMESH_HOUSE
     }
 
     private Sample sample;
@@ -97,11 +98,13 @@ public class DynamicUpdateTool implements Tool {
     private final Random random = new Random();
     private final DemoInputGeomProvider bridgeGeom;
     private final DemoInputGeomProvider houseGeom;
+    private final DemoInputGeomProvider convexGeom;
 
     public DynamicUpdateTool() {
         executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() / 2, new RecastBuilderThreadFactory());
         bridgeGeom = new ObjImporter().load(getClass().getClassLoader().getResourceAsStream("bridge.obj"));
         houseGeom = new ObjImporter().load(getClass().getClassLoader().getResourceAsStream("house.obj"));
+        convexGeom = new ObjImporter().load(getClass().getClassLoader().getResourceAsStream("convex.obj"));
     }
 
     @Override
@@ -120,12 +123,16 @@ public class DynamicUpdateTool implements Tool {
                     colliderWithGizmo = capsuleCollider(p);
                 } else if (colliderShape == ColliderShape.BOX) {
                     colliderWithGizmo = boxCollider(p);
+                } else if (colliderShape == ColliderShape.CYLINDER) {
+                    colliderWithGizmo = cylinderCollider(p);
                 } else if (colliderShape == ColliderShape.COMPOSITE) {
                     colliderWithGizmo = compositeCollider(p);
                 } else if (colliderShape == ColliderShape.TRIMESH_BRIDGE) {
                     colliderWithGizmo = trimeshBridge(p);
                 } else if (colliderShape == ColliderShape.TRIMESH_HOUSE) {
                     colliderWithGizmo = trimeshHouse(p);
+                } else if (colliderShape == ColliderShape.CONVEX) {
+                    colliderWithGizmo = convexTrimesh(p);
                 }
             }
             if (colliderWithGizmo != null) {
@@ -168,6 +175,20 @@ public class DynamicUpdateTool implements Tool {
                 ColliderGizmo.box(p, halfEdges));
     }
 
+    private Tupple2<Collider, ColliderGizmo> cylinderCollider(float[] p) {
+        float radius = 0.7f + random.nextFloat() * 4f;
+        float[] a = new float[] { (1f - 2 * random.nextFloat()), 0.01f + random.nextFloat(), (1f - 2 * random.nextFloat()) };
+        vNormalize(a);
+        float len = 2f + random.nextFloat() * 20f;
+        a[0] *= len;
+        a[1] *= len;
+        a[2] *= len;
+        float[] start = new float[] { p[0], p[1], p[2] };
+        float[] end = new float[] { p[0] + a[0], p[1] + a[1], p[2] + a[2] };
+        return new Tupple2<>(new CylinderCollider(start, end, radius, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_WATER,
+                dynaMesh.config.walkableClimb), ColliderGizmo.cylinder(start, end, radius));
+    }
+
     private Tupple2<Collider, ColliderGizmo> compositeCollider(float[] p) {
         float[] baseExtent = new float[] { 5, 3, 8 };
         float[] baseCenter = new float[] { p[0], p[1] + 3, p[2] };
@@ -202,15 +223,21 @@ public class DynamicUpdateTool implements Tool {
     }
 
     private Tupple2<Collider, ColliderGizmo> trimeshBridge(float[] p) {
-        return trimeshCollider(p, bridgeGeom);
+        return trimeshCollider(p, bridgeGeom, 0);
     }
 
     private Tupple2<Collider, ColliderGizmo> trimeshHouse(float[] p) {
-        return trimeshCollider(p, houseGeom);
+        return trimeshCollider(p, houseGeom, 0);
     }
 
-    private Tupple2<Collider, ColliderGizmo> trimeshCollider(float[] p, DemoInputGeomProvider geom) {
+    private Tupple2<Collider, ColliderGizmo> convexTrimesh(float[] p) {
+        return trimeshCollider(p, convexGeom, 360);
+    }
+
+    private Tupple2<Collider, ColliderGizmo> trimeshCollider(float[] p, DemoInputGeomProvider geom, float ax) {
+        float[] rx = GLU.build_4x4_rotation_matrix(random.nextFloat() * ax, 1, 0, 0);
         float[] ry = GLU.build_4x4_rotation_matrix(random.nextFloat() * 360, 0, 1, 0);
+        float[] m = GLU.mul(rx, ry);
         float[] verts = new float[geom.vertices.length];
         float[] v = new float[3];
         float[] vr = new float[3];
@@ -220,7 +247,7 @@ public class DynamicUpdateTool implements Tool {
             v[0] = geom.vertices[i];
             v[1] = geom.vertices[i + 1];
             v[2] = geom.vertices[i + 2];
-            mulMatrixVector(vr, ry, v);
+            mulMatrixVector(vr, m, v);
             vr[0] += p[0];
             vr[1] += p[1] - 0.1f;
             vr[2] += p[2];
@@ -253,6 +280,7 @@ public class DynamicUpdateTool implements Tool {
                 if (hit(start, dir, e.getValue().bounds())) {
                     dynaMesh.removeCollider(e.getKey());
                     colliders.remove(e.getKey());
+                    colliderGizmos.remove(e.getKey());
                     break;
                 }
             }
@@ -421,8 +449,16 @@ public class DynamicUpdateTool implements Tool {
             colliderShape = ColliderShape.BOX;
         }
         nk_layout_row_dynamic(ctx, 18, 1);
+        if (nk_option_label(ctx, "Cylinder", colliderShape == ColliderShape.CYLINDER)) {
+            colliderShape = ColliderShape.CYLINDER;
+        }
+        nk_layout_row_dynamic(ctx, 18, 1);
         if (nk_option_label(ctx, "Composite", colliderShape == ColliderShape.COMPOSITE)) {
             colliderShape = ColliderShape.COMPOSITE;
+        }
+        nk_layout_row_dynamic(ctx, 18, 1);
+        if (nk_option_label(ctx, "Convex Trimesh", colliderShape == ColliderShape.CONVEX)) {
+            colliderShape = ColliderShape.CONVEX;
         }
         nk_layout_row_dynamic(ctx, 18, 1);
         if (nk_option_label(ctx, "Trimesh Bridge", colliderShape == ColliderShape.TRIMESH_BRIDGE)) {

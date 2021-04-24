@@ -1,5 +1,7 @@
 package org.recast4j.demo.tool;
 
+import static org.recast4j.demo.tool.GizmoHelper.generateCylindricalTriangles;
+import static org.recast4j.demo.tool.GizmoHelper.generateCylindricalVertices;
 import static org.recast4j.demo.tool.GizmoHelper.generateSphericalTriangles;
 import static org.recast4j.demo.tool.GizmoHelper.generateSphericalVertices;
 import static org.recast4j.detour.DetourCommon.clamp;
@@ -29,6 +31,10 @@ public interface ColliderGizmo {
 
     public static ColliderGizmo capsule(float[] start, float[] end, float radius) {
         return new CapsuleGizmo(start, end, radius);
+    }
+
+    public static ColliderGizmo cylinder(float[] start, float[] end, float radius) {
+        return new CylinderGizmo(start, end, radius);
     }
 
     public static ColliderGizmo trimesh(float[] verts, int[] faces) {
@@ -95,10 +101,10 @@ public interface ColliderGizmo {
     }
 
     public static class SphereGizmo implements ColliderGizmo {
-        private float[] vertices;
-        private int[] triangles;
-        private float radius;
-        private float[] center;
+        private final float[] vertices;
+        private final int[] triangles;
+        private final float radius;
+        private final float[] center;
 
         public SphereGizmo(float[] center, float radius) {
             this.center = center;
@@ -126,13 +132,13 @@ public interface ColliderGizmo {
     }
 
     public static class CapsuleGizmo implements ColliderGizmo {
-        private float[] vertices;
-        private int[] triangles;
+        private final float[] vertices;
+        private final int[] triangles;
         private final float[] center;
         private final float[] gradient;
 
         public CapsuleGizmo(float[] start, float[] end, float radius) {
-            this.center = new float[] { 0.5f * (start[0] + end[0]), 0.5f * (start[1] + end[1]),
+            center = new float[] { 0.5f * (start[0] + end[0]), 0.5f * (start[1] + end[1]),
                     0.5f * (start[2] + end[2]) };
             float[] axis = new float[] { end[0] - start[0], end[1] - start[1], end[2] - start[2] };
             float[][] normals = new float[3][];
@@ -198,6 +204,81 @@ public interface ColliderGizmo {
 
     }
 
+    public static class CylinderGizmo implements ColliderGizmo {
+        private final float[] vertices;
+        private final int[] triangles;
+        private final float[] center;
+        private final float[] gradient;
+
+        public CylinderGizmo(float[] start, float[] end, float radius) {
+            center = new float[] { 0.5f * (start[0] + end[0]), 0.5f * (start[1] + end[1]),
+                    0.5f * (start[2] + end[2]) };
+            float[] axis = new float[] { end[0] - start[0], end[1] - start[1], end[2] - start[2] };
+            float[][] normals = new float[3][];
+            normals[1] = new float[] { end[0] - start[0], end[1] - start[1], end[2] - start[2] };
+            normalize(normals[1]);
+            normals[0] = getSideVector(axis);
+            normals[2] = new float[3];
+            cross(normals[2], normals[0], normals[1]);
+            normalize(normals[2]);
+            triangles = generateCylindricalTriangles();
+            float[] trX = new float[] { normals[0][0], normals[1][0], normals[2][0] };
+            float[] trY = new float[] { normals[0][1], normals[1][1], normals[2][1] };
+            float[] trZ = new float[] { normals[0][2], normals[1][2], normals[2][2] };
+            vertices = generateCylindricalVertices();
+            float halfLength = 0.5f * vLen(axis);
+            gradient = new float[vertices.length / 3];
+            float[] v = new float[3];
+            for (int i = 0; i < vertices.length; i += 3) {
+                float offset = (i >= vertices.length / 2) ? -halfLength : halfLength;
+                float x = radius * vertices[i];
+                float y = vertices[i + 1] + offset;
+                float z = radius * vertices[i + 2];
+                vertices[i] = x * trX[0] + y * trX[1] + z * trX[2] + center[0];
+                vertices[i + 1] = x * trY[0] + y * trY[1] + z * trY[2] + center[1];
+                vertices[i + 2] = x * trZ[0] + y * trZ[1] + z * trZ[2] + center[2];
+                if (i < vertices.length / 4 || i >= 3 * vertices.length / 4) {
+                    gradient[i / 3] = 1;
+                } else {
+                    v[0] = vertices[i] - center[0];
+                    v[1] = vertices[i + 1] - center[1];
+                    v[2] = vertices[i + 2] - center[2];
+                    normalize(v);
+                    gradient[i / 3] = clamp(0.57735026f * (v[0] + v[1] + v[2]), -1, 1);
+                }
+            }
+        }
+
+        private float[] getSideVector(float[] axis) {
+            float[] side = { 1, 0, 0 };
+            if (axis[0] > 0.8) {
+                side = new float[] { 0, 0, 1 };
+            }
+            float[] forward = new float[3];
+            cross(forward, side, axis);
+            cross(side, axis, forward);
+            normalize(side);
+            return side;
+        }
+
+        @Override
+        public void render(RecastDebugDraw debugDraw) {
+
+            debugDraw.begin(DebugDrawPrimitives.TRIS);
+            for (int i = 0; i < triangles.length; i += 3) {
+                for (int j = 0; j < 3; j++) {
+                    int v = triangles[i + j] * 3;
+                    float c = gradient[triangles[i + j]];
+                    int col = DebugDraw.duLerpCol(DebugDraw.duRGBA(32, 32, 0, 160), DebugDraw.duRGBA(220, 220, 0, 160),
+                            (int) (127 * (1 + c)));
+                    debugDraw.vertex(vertices[v], vertices[v + 1], vertices[v + 2], col);
+                }
+            }
+            debugDraw.end();
+        }
+
+    }
+
     public static class TrimeshGizmo implements ColliderGizmo {
         private final float[] vertices;
         private final int[] triangles;
@@ -226,7 +307,7 @@ public interface ColliderGizmo {
 
     public static class CompositeGizmo implements ColliderGizmo {
 
-        private ColliderGizmo[] gizmos;
+        private final ColliderGizmo[] gizmos;
 
         public CompositeGizmo(ColliderGizmo... gizmos) {
             this.gizmos = gizmos;

@@ -22,26 +22,29 @@ import org.recast4j.recast.Heightfield;
 import org.recast4j.recast.RecastFilledVolumeRasterization;
 import org.recast4j.recast.Telemetry;
 
-public class SphereCollider extends AbstractCollider {
+public class CylinderCollider extends AbstractCollider {
 
-    private final float[] center;
+    private final float[] start;
+    private final float[] end;
     private final float radius;
 
-    public SphereCollider(float[] center, float radius, int area, float flagMergeThreshold) {
-        super(area, flagMergeThreshold, bounds(center, radius));
-        this.center = center;
+    public CylinderCollider(float[] start, float[] end, float radius, int area, float flagMergeThreshold) {
+        super(area, flagMergeThreshold, bounds(start, end, radius));
+        this.start = start;
+        this.end = end;
         this.radius = radius;
     }
 
     @Override
     public void rasterize(Heightfield hf, Telemetry telemetry) {
-        RecastFilledVolumeRasterization.rasterizeSphere(hf, center, radius, area, (int) Math.floor(flagMergeThreshold / hf.ch),
+        RecastFilledVolumeRasterization.rasterizeCylinder(hf, start, end, radius, area, (int) Math.floor(flagMergeThreshold / hf.ch),
                 telemetry);
     }
 
-    private static float[] bounds(float[] center, float radius) {
-        return new float[] { center[0] - radius, center[1] - radius, center[2] - radius, center[0] + radius, center[1] + radius,
-                center[2] + radius };
+    private static float[] bounds(float[] start, float[] end, float radius) {
+        return new float[] { Math.min(start[0], end[0]) - radius, Math.min(start[1], end[1]) - radius,
+                Math.min(start[2], end[2]) - radius, Math.max(start[0], end[0]) + radius, Math.max(start[1], end[1]) + radius,
+                Math.max(start[2], end[2]) + radius };
     }
 
 }
