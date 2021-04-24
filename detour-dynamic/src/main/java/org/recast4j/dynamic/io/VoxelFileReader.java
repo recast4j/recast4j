@@ -49,7 +49,7 @@ public class VoxelFileReader {
         file.maxEdgeLen = buf.getFloat();
         file.minRegionArea = (int) buf.getFloat();
         if (!isExportedFromAstar) {
-            file.regionMergeArea = buf.getInt();
+            file.regionMergeArea = buf.getFloat();
             file.vertsPerPoly = buf.getInt();
             file.buildMeshDetail = buf.get() != 0;
             file.detailSampleDistance = buf.getFloat();
