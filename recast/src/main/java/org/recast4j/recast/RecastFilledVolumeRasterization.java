@@ -1,5 +1,5 @@
 /*
-recast4j copyright (c) 2021 Piotr Piastucki piotr@jtilia.org
++recast4j copyright (c) 2021 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -30,8 +30,8 @@ public class RecastFilledVolumeRasterization {
 
     public static void rasterizeSphere(Heightfield hf, float[] center, float radius, int area, int flagMergeThr, Telemetry ctx) {
         ctx.startTimer("RASTERIZE_SPHERE");
-        float[] bounds = new float[] { center[0] - radius, center[1] - radius, center[2] - radius, center[0] + radius,
-                center[1] + radius, center[2] + radius };
+        float[] bounds = { center[0] - radius, center[1] - radius, center[2] - radius, center[0] + radius, center[1] + radius,
+                center[2] + radius };
         rasterizationFilledShape(hf, bounds, area, flagMergeThr,
                 rectangle -> intersectSphere(rectangle, center, radius * radius));
         ctx.stopTimer("RASTERIZE_SPHERE");
@@ -40,10 +40,10 @@ public class RecastFilledVolumeRasterization {
     public static void rasterizeCapsule(Heightfield hf, float[] start, float[] end, float radius, int area, int flagMergeThr,
             Telemetry ctx) {
         ctx.startTimer("RASTERIZE_CAPSULE");
-        float[] bounds = new float[] { Math.min(start[0], end[0]) - radius, Math.min(start[1], end[1]) - radius,
+        float[] bounds = { Math.min(start[0], end[0]) - radius, Math.min(start[1], end[1]) - radius,
                 Math.min(start[2], end[2]) - radius, Math.max(start[0], end[0]) + radius, Math.max(start[1], end[1]) + radius,
                 Math.max(start[2], end[2]) + radius };
-        float[] axis = new float[] { end[0] - start[0], end[1] - start[1], end[2] - start[2] };
+        float[] axis = { end[0] - start[0], end[1] - start[1], end[2] - start[2] };
         rasterizationFilledShape(hf, bounds, area, flagMergeThr,
                 rectangle -> intersectCapsule(rectangle, start, end, axis, radius * radius));
         ctx.stopTimer("RASTERIZE_CAPSULE");
@@ -52,10 +52,10 @@ public class RecastFilledVolumeRasterization {
     public static void rasterizeCylinder(Heightfield hf, float[] start, float[] end, float radius, int area, int flagMergeThr,
             Telemetry ctx) {
         ctx.startTimer("RASTERIZE_CYLINDER");
-        float[] bounds = new float[] { Math.min(start[0], end[0]) - radius, Math.min(start[1], end[1]) - radius,
+        float[] bounds = { Math.min(start[0], end[0]) - radius, Math.min(start[1], end[1]) - radius,
                 Math.min(start[2], end[2]) - radius, Math.max(start[0], end[0]) + radius, Math.max(start[1], end[1]) + radius,
                 Math.max(start[2], end[2]) + radius };
-        float[] axis = new float[] { end[0] - start[0], end[1] - start[1], end[2] - start[2] };
+        float[] axis = { end[0] - start[0], end[1] - start[1], end[2] - start[2] };
         rasterizationFilledShape(hf, bounds, area, flagMergeThr,
                 rectangle -> intersectCylinder(rectangle, start, end, axis, radius * radius));
         ctx.stopTimer("RASTERIZE_CYLINDER");
@@ -64,9 +64,9 @@ public class RecastFilledVolumeRasterization {
     public static void rasterizeBox(Heightfield hf, float[] center, float[][] halfEdges, int area, int flagMergeThr,
             Telemetry ctx) {
 
-        float[][] normals = new float[][] { new float[] { halfEdges[0][0], halfEdges[0][1], halfEdges[0][2] },
-                new float[] { halfEdges[1][0], halfEdges[1][1], halfEdges[1][2] },
-                new float[] { halfEdges[2][0], halfEdges[2][1], halfEdges[2][2] } };
+        ctx.startTimer("RASTERIZE_BOX");
+        float[][] normals = { { halfEdges[0][0], halfEdges[0][1], halfEdges[0][2] },
+                { halfEdges[1][0], halfEdges[1][1], halfEdges[1][2] }, { halfEdges[2][0], halfEdges[2][1], halfEdges[2][2] } };
         normalize(normals[0]);
         normalize(normals[1]);
         normalize(normals[2]);
@@ -88,9 +88,8 @@ public class RecastFilledVolumeRasterization {
             bounds[4] = Math.max(bounds[4], vertices[i * 3 + 1]);
             bounds[5] = Math.max(bounds[5], vertices[i * 3 + 2]);
         }
-        float[][] planes = new float[6][];
+        float[][] planes = new float[6][4];
         for (int i = 0; i < 6; i++) {
-            planes[i] = new float[4];
             float m = i < 3 ? -1 : 1;
             int vi = i < 3 ? 0 : 7;
             planes[i][0] = m * normals[i % 3][0];
@@ -100,6 +99,64 @@ public class RecastFilledVolumeRasterization {
                     + vertices[vi * 3 + 2] * planes[i][2];
         }
         rasterizationFilledShape(hf, bounds, area, flagMergeThr, rectangle -> intersectBox(rectangle, vertices, planes));
+        ctx.stopTimer("RASTERIZE_BOX");
+    }
+
+    public static void rasterizeConvex(Heightfield hf, float[] vertices, int[] triangles, int area, int flagMergeThr,
+            Telemetry ctx) {
+
+        ctx.startTimer("RASTERIZE_CONVEX");
+        float[] bounds = new float[] { vertices[0], vertices[1], vertices[2], vertices[0], vertices[1], vertices[2] };
+        for (int i = 0; i < vertices.length; i += 3) {
+            bounds[0] = Math.min(bounds[0], vertices[i + 0]);
+            bounds[1] = Math.min(bounds[1], vertices[i + 1]);
+            bounds[2] = Math.min(bounds[2], vertices[i + 2]);
+            bounds[3] = Math.max(bounds[3], vertices[i + 0]);
+            bounds[4] = Math.max(bounds[4], vertices[i + 1]);
+            bounds[5] = Math.max(bounds[5], vertices[i + 2]);
+        }
+        float[][] planes = new float[triangles.length][4];
+        float[][] triBounds = new float[triangles.length / 3][4];
+        for (int i = 0, j = 0; i < triangles.length; i += 3, j++) {
+            int a = triangles[i] * 3;
+            int b = triangles[i + 1] * 3;
+            int c = triangles[i + 2] * 3;
+            float[] ab = { vertices[b] - vertices[a], vertices[b + 1] - vertices[a + 1], vertices[b + 2] - vertices[a + 2] };
+            float[] ac = { vertices[c] - vertices[a], vertices[c + 1] - vertices[a + 1], vertices[c + 2] - vertices[a + 2] };
+            float[] bc = { vertices[c] - vertices[b], vertices[c + 1] - vertices[b + 1], vertices[c + 2] - vertices[b + 2] };
+            float[] ca = { vertices[a] - vertices[c], vertices[a + 1] - vertices[c + 1], vertices[a + 2] - vertices[c + 2] };
+            plane(planes, i, ab, ac, vertices, a);
+            plane(planes, i + 1, planes[i], bc, vertices, b);
+            plane(planes, i + 2, planes[i], ca, vertices, c);
+
+            float s = 1.0f / (vertices[a] * planes[i + 1][0] + vertices[a + 1] * planes[i + 1][1]
+                    + vertices[a + 2] * planes[i + 1][2] - planes[i + 1][3]);
+            planes[i + 1][0] *= s;
+            planes[i + 1][1] *= s;
+            planes[i + 1][2] *= s;
+            planes[i + 1][3] *= s;
+
+            s = 1.0f / (vertices[b] * planes[i + 2][0] + vertices[b + 1] * planes[i + 2][1] + vertices[b + 2] * planes[i + 2][2]
+                    - planes[i + 2][3]);
+            planes[i + 2][0] *= s;
+            planes[i + 2][1] *= s;
+            planes[i + 2][2] *= s;
+            planes[i + 2][3] *= s;
+
+            triBounds[j][0] = Math.min(Math.min(vertices[a], vertices[b]), vertices[c]);
+            triBounds[j][1] = Math.min(Math.min(vertices[a + 2], vertices[b + 2]), vertices[c + 2]);
+            triBounds[j][2] = Math.max(Math.max(vertices[a], vertices[b]), vertices[c]);
+            triBounds[j][3] = Math.max(Math.max(vertices[a + 2], vertices[b + 2]), vertices[c + 2]);
+
+        }
+        rasterizationFilledShape(hf, bounds, area, flagMergeThr,
+                rectangle -> intersectConvex(rectangle, triangles, vertices, planes, triBounds));
+        ctx.stopTimer("RASTERIZE_CONVEX");
+    }
+
+    private static void plane(float[][] planes, int p, float[] v1, float[] v2, float[] vertices, int vert) {
+        RecastVectors.cross(planes[p], v1, v2);
+        planes[p][3] = planes[p][0] * vertices[vert] + planes[p][1] * vertices[vert + 1] + planes[p][2] * vertices[vert + 2];
     }
 
     private static void rasterizationFilledShape(Heightfield hf, float[] bounds, int area, int flagMergeThr,
@@ -177,7 +234,7 @@ public class RecastFilledVolumeRasterization {
         float[] s = mergeIntersections(intersectSphere(rectangle, start, radiusSqr), intersectSphere(rectangle, end, radiusSqr));
         float axisLen2dSqr = axis[0] * axis[0] + axis[2] * axis[2];
         if (axisLen2dSqr > EPSILON) {
-            s = slabsCylinderIntersections(rectangle, start, end, axis, radiusSqr, s);
+            s = slabsCylinderIntersection(rectangle, start, end, axis, radiusSqr, s);
         }
         return s;
     }
@@ -189,7 +246,7 @@ public class RecastFilledVolumeRasterization {
                 clamp(end[2], rectangle[1], rectangle[3]) }, start, axis, radiusSqr);
         float axisLen2dSqr = axis[0] * axis[0] + axis[2] * axis[2];
         if (axisLen2dSqr > EPSILON) {
-            s = slabsCylinderIntersections(rectangle, start, end, axis, radiusSqr, s);
+            s = slabsCylinderIntersection(rectangle, start, end, axis, radiusSqr, s);
         }
         if (axis[1] * axis[1] > EPSILON) {
             float[][] rectangleOnStartPlane = new float[4][3];
@@ -205,67 +262,47 @@ public class RecastFilledVolumeRasterization {
                 rectangleOnStartPlane[i][0] = x;
                 rectangleOnStartPlane[i][1] = rectangle[4] + t;
                 rectangleOnStartPlane[i][2] = z;
-                t = (de - dotAxisA)  / axis[1];
+                t = (de - dotAxisA) / axis[1];
                 rectangleOnEndPlane[i][0] = x;
                 rectangleOnEndPlane[i][1] = rectangle[4] + t;
                 rectangleOnEndPlane[i][2] = z;
             }
             for (int i = 0; i < 4; i++) {
-                int j = (i + 1) % 4;
-                float[] m = { rectangleOnStartPlane[i][0] - start[0], rectangleOnStartPlane[i][1] - start[1],
-                        rectangleOnStartPlane[i][2] - start[2] };
-                float[] d = { rectangleOnStartPlane[j][0] - rectangleOnStartPlane[i][0],
-                        rectangleOnStartPlane[j][1] - rectangleOnStartPlane[i][1],
-                        rectangleOnStartPlane[j][2] - rectangleOnStartPlane[i][2] };
-                float dl = dot(d, d);
-                float b = dot(m, d) / dl;
-                float c = (dot(m, m) - radiusSqr) / dl;
-                float discr = b * b - c;
-                if (discr > EPSILON) {
-                    float discrSqrt = (float) Math.sqrt(discr);
-                    float t1 = -b - discrSqrt;
-                    float t2 = -b + discrSqrt;
-                    if (t1 <= 1 && t2 >= 0) {
-                        t1 = Math.max(0, t1);
-                        t2 = Math.min(1, t2);
-                        float y1 = rectangleOnStartPlane[i][1] + t1 * d[1];
-                        float y2 = rectangleOnStartPlane[i][1] + t2 * d[1];
-                        float[] y = { Math.min(y1, y2), Math.max(y1, y2) };
-                        s = mergeIntersections(s, y);
-                    }
-                }
-            }
-            for (int i = 0; i < 4; i++) {
-                int j = (i + 1) % 4;
-                float[] m = { rectangleOnEndPlane[i][0] - end[0], rectangleOnEndPlane[i][1] - end[1],
-                        rectangleOnEndPlane[i][2] - end[2] };
-                float[] d = { rectangleOnEndPlane[j][0] - rectangleOnEndPlane[i][0],
-                        rectangleOnEndPlane[j][1] - rectangleOnEndPlane[i][1],
-                        rectangleOnEndPlane[j][2] - rectangleOnEndPlane[i][2] };
-                float dl = dot(d, d);
-                float b = dot(m, d) / dl;
-                float c = (dot(m, m) - radiusSqr) /dl;
-                float discr = b * b - c;
-                if (discr > EPSILON) {
-                    float discrSqrt = (float) Math.sqrt(discr);
-                    float t1 = -b - discrSqrt;
-                    float t2 = -b + discrSqrt;
-                    if (t1 <= 1 && t2 >= 0) {
-                        t1 = Math.max(0, t1);
-                        t2 = Math.min(1, t2);
-                        float y1 = rectangleOnEndPlane[i][1] + t1 * d[1];
-                        float y2 = rectangleOnEndPlane[i][1] + t2 * d[1];
-                        float[] y = { Math.min(y1, y2), Math.max(y1, y2) };
-                        s = mergeIntersections(s, y);
-                    }
-                }
+                s = cylinderCapIntersection(start, radiusSqr, s, i, rectangleOnStartPlane);
+                s = cylinderCapIntersection(end, radiusSqr, s, i, rectangleOnEndPlane);
             }
         }
         return s;
     }
 
-    private static float[] slabsCylinderIntersections(float[] rectangle, float[] start, float[] end, float[] axis,
-            float radiusSqr, float[] s) {
+    private static float[] cylinderCapIntersection(float[] start, float radiusSqr, float[] s, int i, float[][] rectangleOnPlane) {
+        int j = (i + 1) % 4;
+        // Ray against sphere intersection
+        float[] m = { rectangleOnPlane[i][0] - start[0], rectangleOnPlane[i][1] - start[1], rectangleOnPlane[i][2] - start[2] };
+        float[] d = { rectangleOnPlane[j][0] - rectangleOnPlane[i][0], rectangleOnPlane[j][1] - rectangleOnPlane[i][1],
+                rectangleOnPlane[j][2] - rectangleOnPlane[i][2] };
+        float dl = dot(d, d);
+        float b = dot(m, d) / dl;
+        float c = (dot(m, m) - radiusSqr) / dl;
+        float discr = b * b - c;
+        if (discr > EPSILON) {
+            float discrSqrt = (float) Math.sqrt(discr);
+            float t1 = -b - discrSqrt;
+            float t2 = -b + discrSqrt;
+            if (t1 <= 1 && t2 >= 0) {
+                t1 = Math.max(0, t1);
+                t2 = Math.min(1, t2);
+                float y1 = rectangleOnPlane[i][1] + t1 * d[1];
+                float y2 = rectangleOnPlane[i][1] + t2 * d[1];
+                float[] y = { Math.min(y1, y2), Math.max(y1, y2) };
+                s = mergeIntersections(s, y);
+            }
+        }
+        return s;
+    }
+
+    private static float[] slabsCylinderIntersection(float[] rectangle, float[] start, float[] end, float[] axis, float radiusSqr,
+            float[] s) {
         if (Math.min(start[0], end[0]) < rectangle[0]) {
             s = mergeIntersections(s, xSlabCylinderIntersection(rectangle, start, axis, radiusSqr, rectangle[0]));
         }
@@ -285,9 +322,10 @@ public class RecastFilledVolumeRasterization {
         return rayCylinderIntersection(xSlabRayIntersection(rectangle, start, axis, x), start, axis, radiusSqr);
     }
 
-    private static float[] xSlabRayIntersection(float[] rectangle, float[] start, float[] axis, float x) {
-        float t = (x - start[0]) / axis[0];
-        float z = clamp(start[2] + t * axis[2], rectangle[1], rectangle[3]);
+    private static float[] xSlabRayIntersection(float[] rectangle, float[] start, float[] direction, float x) {
+        // 2d intersection of plane and segment
+        float t = (x - start[0]) / direction[0];
+        float z = clamp(start[2] + t * direction[2], rectangle[1], rectangle[3]);
         return new float[] { x, rectangle[4], z };
     }
 
@@ -295,12 +333,14 @@ public class RecastFilledVolumeRasterization {
         return rayCylinderIntersection(zSlabRayIntersection(rectangle, start, axis, z), start, axis, radiusSqr);
     }
 
-    private static float[] zSlabRayIntersection(float[] rectangle, float[] start, float[] axis, float z) {
-        float t = (z - start[2]) / axis[2];
-        float x = clamp(start[0] + t * axis[0], rectangle[0], rectangle[2]);
+    private static float[] zSlabRayIntersection(float[] rectangle, float[] start, float[] direction, float z) {
+        // 2d intersection of plane and segment
+        float t = (z - start[2]) / direction[2];
+        float x = clamp(start[0] + t * direction[0], rectangle[0], rectangle[2]);
         return new float[] { x, rectangle[4], z };
     }
 
+    // Based on Christer Ericsons's "Real-Time Collision Detection"
     private static float[] rayCylinderIntersection(float[] point, float[] start, float[] axis, float radiusSqr) {
         float[] d = axis;
         float[] m = { point[0] - start[0], point[1] - start[1], point[2] - start[2] };
@@ -409,6 +449,120 @@ public class RecastFilledVolumeRasterization {
             return new float[] { yMin, yMax };
         }
         return null;
+    }
+
+    private static float[] intersectConvex(float[] rectangle, int[] triangles, float[] verts, float[][] planes,
+            float[][] triBounds) {
+        float imin = Float.POSITIVE_INFINITY;
+        float imax = Float.NEGATIVE_INFINITY;
+        for (int tr = 0, tri = 0; tri < triangles.length; tr++, tri += 3) {
+            if (triBounds[tr][0] > rectangle[2] || triBounds[tr][2] < rectangle[0] || triBounds[tr][1] > rectangle[3]
+                    || triBounds[tr][3] < rectangle[1]) {
+                continue;
+            }
+            if (Math.abs(planes[tri][1]) < EPSILON) {
+                continue;
+            }
+            for (int i = 0; i < 3; i++) {
+                int vi = triangles[tri + i] * 3;
+                int vj = triangles[tri + (i + 1) % 3] * 3;
+                float x = verts[vi];
+                float z = verts[vi + 2];
+                // triangle vertex
+                if (x >= rectangle[0] && x <= rectangle[2] && z >= rectangle[1] && z <= rectangle[3]) {
+                    imin = Math.min(imin, verts[vi + 1]);
+                    imax = Math.max(imax, verts[vi + 1]);
+                }
+                // triangle slab intersection
+                float y = verts[vi + 1];
+                float dx = verts[vj] - x;
+                float dy = verts[vj + 1] - y;
+                float dz = verts[vj + 2] - z;
+                if (Math.abs(dx) > EPSILON) {
+                    Float iy = xSlabTriangleIntersection(rectangle, x, y, z, dx, dy, dz, rectangle[0]);
+                    if (iy != null) {
+                        imin = Math.min(imin, iy);
+                        imax = Math.max(imax, iy);
+                    }
+                    iy = xSlabTriangleIntersection(rectangle, x, y, z, dx, dy, dz, rectangle[2]);
+                    if (iy != null) {
+                        imin = Math.min(imin, iy);
+                        imax = Math.max(imax, iy);
+                    }
+                }
+                if (Math.abs(dz) > EPSILON) {
+                    Float iy = zSlabTriangleIntersection(rectangle, x, y, z, dx, dy, dz, rectangle[1]);
+                    if (iy != null) {
+                        imin = Math.min(imin, iy);
+                        imax = Math.max(imax, iy);
+                    }
+                    iy = zSlabTriangleIntersection(rectangle, x, y, z, dx, dy, dz, rectangle[3]);
+                    if (iy != null) {
+                        imin = Math.min(imin, iy);
+                        imax = Math.max(imax, iy);
+                    }
+                }
+            }
+            // rectangle vertex
+            float[] point = new float[] { 0, rectangle[1], 0 };
+            for (int i = 0; i < 4; i++) {
+                point[0] = ((i & 1) == 0) ? rectangle[0] : rectangle[2];
+                point[2] = ((i & 2) == 0) ? rectangle[1] : rectangle[3];
+                Float y = rayTriangleIntersection(point, tri, planes);
+                if (y != null) {
+                    imin = Math.min(imin, y);
+                    imax = Math.max(imax, y);
+                }
+            }
+        }
+        if (imin < imax) {
+            return new float[] { imin, imax };
+        }
+        return null;
+    }
+
+    private static Float xSlabTriangleIntersection(float[] rectangle, float x, float y, float z, float dx, float dy, float dz,
+            float slabX) {
+        float x2 = x + dx;
+        if ((x < slabX && x2 > slabX) || (x > slabX && x2 < slabX)) {
+            float t = (slabX - x) / dx;
+            float iz = z + dz * t;
+            if (iz >= rectangle[1] && iz <= rectangle[3]) {
+                return y + dy * t;
+            }
+        }
+        return null;
+    }
+
+    private static Float zSlabTriangleIntersection(float[] rectangle, float x, float y, float z, float dx, float dy, float dz,
+            float slabZ) {
+        float z2 = z + dz;
+        if ((z < slabZ && z2 > slabZ) || (z > slabZ && z2 < slabZ)) {
+            float t = (slabZ - z) / dz;
+            float ix = x + dx * t;
+            if (ix >= rectangle[0] && ix <= rectangle[2]) {
+                return y + dy * t;
+            }
+        }
+        return null;
+    }
+
+    private static Float rayTriangleIntersection(float[] point, int plane, float[][] planes) {
+        float t = (planes[plane][3] - dot(planes[plane], point)) / planes[plane][1];
+        float[] s = { point[0], point[1] + t, point[2] };
+        float u = dot(s, planes[plane + 1]) - planes[plane + 1][3];
+        if (u < 0.0f || u > 1.0f) {
+            return null;
+        }
+        float v = dot(s, planes[plane + 2]) - planes[plane + 2][3];
+        if (v < 0.0f) {
+            return null;
+        }
+        float w = 1f - u - v;
+        if (w < 0.0f) {
+            return null;
+        }
+        return s[1];
     }
 
     private static float[] mergeIntersections(float[] s1, float[] s2) {

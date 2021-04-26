@@ -55,6 +55,7 @@ import org.recast4j.dynamic.collider.BoxCollider;
 import org.recast4j.dynamic.collider.CapsuleCollider;
 import org.recast4j.dynamic.collider.Collider;
 import org.recast4j.dynamic.collider.CompositeCollider;
+import org.recast4j.dynamic.collider.ConvexTrimeshCollider;
 import org.recast4j.dynamic.collider.CylinderCollider;
 import org.recast4j.dynamic.collider.SphereCollider;
 import org.recast4j.dynamic.collider.TrimeshCollider;
@@ -223,26 +224,34 @@ public class DynamicUpdateTool implements Tool {
     }
 
     private Tupple2<Collider, ColliderGizmo> trimeshBridge(float[] p) {
-        return trimeshCollider(p, bridgeGeom, 0);
+        return trimeshCollider(p, bridgeGeom);
     }
 
     private Tupple2<Collider, ColliderGizmo> trimeshHouse(float[] p) {
-        return trimeshCollider(p, houseGeom, 0);
+        return trimeshCollider(p, houseGeom);
     }
 
     private Tupple2<Collider, ColliderGizmo> convexTrimesh(float[] p) {
-        return trimeshCollider(p, convexGeom, 360);
+        float[] verts = transformVertices(p, convexGeom, 360);
+        ConvexTrimeshCollider collider = new ConvexTrimeshCollider(verts, convexGeom.faces, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_ROAD,
+                dynaMesh.config.walkableClimb * 10);
+        return new Tupple2<>(collider, ColliderGizmo.trimesh(verts, convexGeom.faces));
     }
 
-    private Tupple2<Collider, ColliderGizmo> trimeshCollider(float[] p, DemoInputGeomProvider geom, float ax) {
+    private Tupple2<Collider, ColliderGizmo> trimeshCollider(float[] p, DemoInputGeomProvider geom) {
+        float[] verts = transformVertices(p, geom, 0);
+        TrimeshCollider collider = new TrimeshCollider(verts, geom.faces, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_ROAD,
+                dynaMesh.config.walkableClimb * 10);
+        return new Tupple2<>(collider, ColliderGizmo.trimesh(verts, geom.faces));
+    }
+
+    private float[] transformVertices(float[] p, DemoInputGeomProvider geom, float ax) {
         float[] rx = GLU.build_4x4_rotation_matrix(random.nextFloat() * ax, 1, 0, 0);
         float[] ry = GLU.build_4x4_rotation_matrix(random.nextFloat() * 360, 0, 1, 0);
         float[] m = GLU.mul(rx, ry);
         float[] verts = new float[geom.vertices.length];
         float[] v = new float[3];
         float[] vr = new float[3];
-        float[] bounds = new float[] { Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY,
-                Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY };
         for (int i = 0; i < geom.vertices.length; i += 3) {
             v[0] = geom.vertices[i];
             v[1] = geom.vertices[i + 1];
@@ -254,16 +263,8 @@ public class DynamicUpdateTool implements Tool {
             verts[i] = vr[0];
             verts[i + 1] = vr[1];
             verts[i + 2] = vr[2];
-            bounds[0] = Math.min(bounds[0], vr[0]);
-            bounds[1] = Math.min(bounds[1], vr[1]);
-            bounds[2] = Math.min(bounds[2], vr[2]);
-            bounds[3] = Math.max(bounds[3], vr[0]);
-            bounds[4] = Math.max(bounds[4], vr[1]);
-            bounds[5] = Math.max(bounds[5], vr[2]);
         }
-        TrimeshCollider collider = new TrimeshCollider(verts, geom.faces, bounds,
-                SampleAreaModifications.SAMPLE_POLYAREA_TYPE_ROAD, dynaMesh.config.walkableClimb * 10);
-        return new Tupple2<>(collider, ColliderGizmo.trimesh(verts, geom.faces));
+        return verts;
     }
 
     private float[] mulMatrixVector(float[] resultvector, float[] matrix, float[] pvector) {
