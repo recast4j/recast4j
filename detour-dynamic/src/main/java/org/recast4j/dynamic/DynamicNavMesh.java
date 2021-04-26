@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -37,6 +38,7 @@ import org.recast4j.detour.NavMeshDataCreateParams;
 import org.recast4j.detour.NavMeshParams;
 import org.recast4j.dynamic.collider.Collider;
 import org.recast4j.dynamic.io.VoxelFile;
+import org.recast4j.recast.Heightfield;
 import org.recast4j.recast.RecastBuilder;
 import org.recast4j.recast.RecastBuilder.RecastBuilderResult;
 import org.recast4j.recast.Telemetry;
@@ -85,6 +87,17 @@ public class DynamicNavMesh {
 
     public NavMesh navMesh() {
         return navMesh;
+    }
+
+    /**
+     * Voxel queries require checkpoints to be enabled in {@link DynamicNavMeshConfig}
+     */
+    public VoxelQuery voxelQuery() {
+        return new VoxelQuery(navMeshParams.orig, navMeshParams.tileWidth, navMeshParams.tileHeight, this::lookupHeightfield);
+    }
+
+    private Optional<Heightfield> lookupHeightfield(int x, int z) {
+        return Optional.ofNullable(getTileAt(x, z)).map(t -> t.checkpoint).map(c -> c.heightfield);
     }
 
     public List<RecastBuilderResult> recastResults() {

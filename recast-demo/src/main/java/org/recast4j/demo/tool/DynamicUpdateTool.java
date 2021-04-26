@@ -20,6 +20,8 @@ package org.recast4j.demo.tool;
 
 import static org.lwjgl.nuklear.Nuklear.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
+import static org.recast4j.demo.draw.DebugDraw.duRGBA;
+import static org.recast4j.demo.draw.DebugDrawPrimitives.LINES;
 import static org.recast4j.demo.math.DemoMath.vCross;
 import static org.recast4j.detour.DetourCommon.vNormalize;
 
@@ -28,9 +30,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -45,6 +49,7 @@ import org.recast4j.demo.RecastBuilderThreadFactory;
 import org.recast4j.demo.builder.SampleAreaModifications;
 import org.recast4j.demo.draw.GLU;
 import org.recast4j.demo.draw.NavMeshRenderer;
+import org.recast4j.demo.draw.RecastDebugDraw;
 import org.recast4j.demo.geom.DemoInputGeomProvider;
 import org.recast4j.demo.io.ObjImporter;
 import org.recast4j.demo.sample.Sample;
@@ -66,11 +71,16 @@ import org.recast4j.recast.RecastConstants.PartitionType;
 
 public class DynamicUpdateTool implements Tool {
 
+    private enum ToolMode {
+        BUILD, COLLIDERS, RAYCAST
+    }
+
     private enum ColliderShape {
         SPHERE, CAPSULE, BOX, CYLINDER, COMPOSITE, CONVEX, TRIMESH_BRIDGE, TRIMESH_HOUSE
     }
 
     private Sample sample;
+    private ToolMode mode = ToolMode.BUILD;
     private final FloatBuffer cellSize = BufferUtils.createFloatBuffer(1).put(0, 0.3f);
     private PartitionType partitioning = PartitionType.WATERSHED;
     private boolean filterLowHangingObstacles = true;
@@ -90,6 +100,7 @@ public class DynamicUpdateTool implements Tool {
     private final FloatBuffer detailSampleMaxError = BufferUtils.createFloatBuffer(1).put(0, 1f);
     private boolean showColliders = false;
     private long buildTime;
+    private long raycastTime;
     private ColliderShape colliderShape = ColliderShape.SPHERE;
 
     private DynamicNavMesh dynaMesh;
@@ -100,6 +111,12 @@ public class DynamicUpdateTool implements Tool {
     private final DemoInputGeomProvider bridgeGeom;
     private final DemoInputGeomProvider houseGeom;
     private final DemoInputGeomProvider convexGeom;
+    private boolean sposSet;
+    private boolean eposSet;
+    private float[] spos;
+    private float[] epos;
+    private boolean raycastHit;
+    private float[] raycastHitPos;
 
     public DynamicUpdateTool() {
         executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() / 2, new RecastBuilderThreadFactory());
@@ -115,31 +132,53 @@ public class DynamicUpdateTool implements Tool {
 
     @Override
     public void handleClick(float[] s, float[] p, boolean shift) {
-        if (!shift) {
-            Tupple2<Collider, ColliderGizmo> colliderWithGizmo = null;
-            if (dynaMesh != null) {
-                if (colliderShape == ColliderShape.SPHERE) {
-                    colliderWithGizmo = sphereCollider(p);
-                } else if (colliderShape == ColliderShape.CAPSULE) {
-                    colliderWithGizmo = capsuleCollider(p);
-                } else if (colliderShape == ColliderShape.BOX) {
-                    colliderWithGizmo = boxCollider(p);
-                } else if (colliderShape == ColliderShape.CYLINDER) {
-                    colliderWithGizmo = cylinderCollider(p);
-                } else if (colliderShape == ColliderShape.COMPOSITE) {
-                    colliderWithGizmo = compositeCollider(p);
-                } else if (colliderShape == ColliderShape.TRIMESH_BRIDGE) {
-                    colliderWithGizmo = trimeshBridge(p);
-                } else if (colliderShape == ColliderShape.TRIMESH_HOUSE) {
-                    colliderWithGizmo = trimeshHouse(p);
-                } else if (colliderShape == ColliderShape.CONVEX) {
-                    colliderWithGizmo = convexTrimesh(p);
+        if (mode == ToolMode.COLLIDERS) {
+            if (!shift) {
+                Tupple2<Collider, ColliderGizmo> colliderWithGizmo = null;
+                if (dynaMesh != null) {
+                    if (colliderShape == ColliderShape.SPHERE) {
+                        colliderWithGizmo = sphereCollider(p);
+                    } else if (colliderShape == ColliderShape.CAPSULE) {
+                        colliderWithGizmo = capsuleCollider(p);
+                    } else if (colliderShape == ColliderShape.BOX) {
+                        colliderWithGizmo = boxCollider(p);
+                    } else if (colliderShape == ColliderShape.CYLINDER) {
+                        colliderWithGizmo = cylinderCollider(p);
+                    } else if (colliderShape == ColliderShape.COMPOSITE) {
+                        colliderWithGizmo = compositeCollider(p);
+                    } else if (colliderShape == ColliderShape.TRIMESH_BRIDGE) {
+                        colliderWithGizmo = trimeshBridge(p);
+                    } else if (colliderShape == ColliderShape.TRIMESH_HOUSE) {
+                        colliderWithGizmo = trimeshHouse(p);
+                    } else if (colliderShape == ColliderShape.CONVEX) {
+                        colliderWithGizmo = convexTrimesh(p);
+                    }
+                }
+                if (colliderWithGizmo != null) {
+                    long id = dynaMesh.addCollider(colliderWithGizmo.first);
+                    colliders.put(id, colliderWithGizmo.first);
+                    colliderGizmos.put(id, colliderWithGizmo.second);
                 }
             }
-            if (colliderWithGizmo != null) {
-                long id = dynaMesh.addCollider(colliderWithGizmo.first);
-                colliders.put(id, colliderWithGizmo.first);
-                colliderGizmos.put(id, colliderWithGizmo.second);
+        }
+        if (mode == ToolMode.RAYCAST) {
+            if (shift) {
+                sposSet = true;
+                spos = Arrays.copyOf(p, p.length);
+            } else {
+                eposSet = true;
+                epos = Arrays.copyOf(p, p.length);
+            }
+            if (sposSet && eposSet && dynaMesh != null) {
+                float[] sp = { spos[0], spos[1] + 1.3f, spos[2] };
+                float[] ep = { epos[0], epos[1] + 1.3f, epos[2] };
+                long t1 = System.nanoTime();
+                Optional<Float> hitPos = dynaMesh.voxelQuery().raycast(sp, ep);
+                long t2 = System.nanoTime();
+                raycastTime = (t2 - t1) / 1_000_000L;
+                raycastHit = hitPos.isPresent();
+                raycastHitPos = hitPos.map(t -> new float[] { sp[0] + t * (ep[0] - sp[0]), sp[1] + t * (ep[1] - sp[1]),
+                        sp[2] + t * (ep[2] - sp[2]) }).orElse(ep);
             }
         }
     }
@@ -233,8 +272,8 @@ public class DynamicUpdateTool implements Tool {
 
     private Tupple2<Collider, ColliderGizmo> convexTrimesh(float[] p) {
         float[] verts = transformVertices(p, convexGeom, 360);
-        ConvexTrimeshCollider collider = new ConvexTrimeshCollider(verts, convexGeom.faces, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_ROAD,
-                dynaMesh.config.walkableClimb * 10);
+        ConvexTrimeshCollider collider = new ConvexTrimeshCollider(verts, convexGeom.faces,
+                SampleAreaModifications.SAMPLE_POLYAREA_TYPE_ROAD, dynaMesh.config.walkableClimb * 10);
         return new Tupple2<>(collider, ColliderGizmo.trimesh(verts, convexGeom.faces));
     }
 
@@ -276,13 +315,15 @@ public class DynamicUpdateTool implements Tool {
 
     @Override
     public void handleClickRay(float[] start, float[] dir, boolean shift) {
-        if (shift) {
-            for (Entry<Long, Collider> e : colliders.entrySet()) {
-                if (hit(start, dir, e.getValue().bounds())) {
-                    dynaMesh.removeCollider(e.getKey());
-                    colliders.remove(e.getKey());
-                    colliderGizmos.remove(e.getKey());
-                    break;
+        if (mode == ToolMode.COLLIDERS) {
+            if (shift) {
+                for (Entry<Long, Collider> e : colliders.entrySet()) {
+                    if (hit(start, dir, e.getValue().bounds())) {
+                        dynaMesh.removeCollider(e.getKey());
+                        colliders.remove(e.getKey());
+                        colliderGizmos.remove(e.getKey());
+                        break;
+                    }
                 }
             }
         }
@@ -313,9 +354,51 @@ public class DynamicUpdateTool implements Tool {
 
     @Override
     public void handleRender(NavMeshRenderer renderer) {
-        if (showColliders) {
-            colliderGizmos.values().forEach(g -> g.render(renderer.getDebugDraw()));
+        if (mode == ToolMode.COLLIDERS) {
+            if (showColliders) {
+                colliderGizmos.values().forEach(g -> g.render(renderer.getDebugDraw()));
+            }
         }
+        if (mode == ToolMode.RAYCAST) {
+            RecastDebugDraw dd = renderer.getDebugDraw();
+            int startCol = duRGBA(128, 25, 0, 192);
+            int endCol = duRGBA(51, 102, 0, 129);
+            if (sposSet) {
+                drawAgent(dd, spos, startCol);
+            }
+            if (eposSet) {
+                drawAgent(dd, epos, endCol);
+            }
+            dd.depthMask(false);
+            if (raycastHitPos != null) {
+                int spathCol = raycastHit ? duRGBA(128, 32, 16, 220) : duRGBA(64, 128, 240, 220);
+                dd.begin(LINES, 2.0f);
+                dd.vertex(spos[0], spos[1] + 1.3f, spos[2], spathCol);
+                dd.vertex(raycastHitPos[0], raycastHitPos[1], raycastHitPos[2], spathCol);
+                dd.end();
+            }
+            dd.depthMask(true);
+        }
+    }
+
+    private void drawAgent(RecastDebugDraw dd, float[] pos, int col) {
+        float r = sample.getSettingsUI().getAgentRadius();
+        float h = sample.getSettingsUI().getAgentHeight();
+        float c = sample.getSettingsUI().getAgentMaxClimb();
+        dd.depthMask(false);
+        // Agent dimensions.
+        dd.debugDrawCylinderWire(pos[0] - r, pos[1] + 0.02f, pos[2] - r, pos[0] + r, pos[1] + h, pos[2] + r, col, 2.0f);
+        dd.debugDrawCircle(pos[0], pos[1] + c, pos[2], r, duRGBA(0, 0, 0, 64), 1.0f);
+        int colb = duRGBA(0, 0, 0, 196);
+        dd.begin(LINES);
+        dd.vertex(pos[0], pos[1] - c, pos[2], colb);
+        dd.vertex(pos[0], pos[1] + c, pos[2], colb);
+        dd.vertex(pos[0] - r / 2, pos[1] + 0.02f, pos[2], colb);
+        dd.vertex(pos[0] + r / 2, pos[1] + 0.02f, pos[2], colb);
+        dd.vertex(pos[0], pos[1] + 0.02f, pos[2] - r / 2, colb);
+        dd.vertex(pos[0], pos[1] + 0.02f, pos[2] + r / 2, colb);
+        dd.end();
+        dd.depthMask(true);
     }
 
     @Override
@@ -343,131 +426,169 @@ public class DynamicUpdateTool implements Tool {
     public void layout(NkContext ctx) {
 
         nk_layout_row_dynamic(ctx, 18, 1);
-        if (nk_button_text(ctx, "Load Voxels...")) {
-            load();
+        if (nk_option_label(ctx, "Build", mode == ToolMode.BUILD)) {
+            mode = ToolMode.BUILD;
         }
-        if (dynaMesh != null) {
-            if (nk_button_text(ctx, "Save Voxels...")) {
-                save();
+        nk_layout_row_dynamic(ctx, 18, 1);
+        if (nk_option_label(ctx, "Colliders", mode == ToolMode.COLLIDERS)) {
+            mode = ToolMode.COLLIDERS;
+        }
+        nk_layout_row_dynamic(ctx, 18, 1);
+        if (nk_option_label(ctx, "Raycast", mode == ToolMode.RAYCAST)) {
+            mode = ToolMode.RAYCAST;
+        }
+
+        nk_layout_row_dynamic(ctx, 1, 1);
+        nk_spacing(ctx, 1);
+        if (mode == ToolMode.BUILD) {
+            nk_layout_row_dynamic(ctx, 18, 1);
+            if (nk_button_text(ctx, "Load Voxels...")) {
+                load();
             }
-        }
-        nk_layout_row_dynamic(ctx, 1, 1);
-        nk_spacing(ctx, 1);
-        nk_layout_row_dynamic(ctx, 18, 1);
-        nk_label(ctx, "Rasterization", NK_TEXT_ALIGN_LEFT);
-        nk_layout_row_dynamic(ctx, 18, 2);
-        nk_label(ctx, "Cell Size", NK_TEXT_ALIGN_LEFT);
-        nk_label(ctx, String.format("%.2f", cellSize.get(0)), NK_TEXT_ALIGN_RIGHT);
-        nk_layout_row_dynamic(ctx, 1, 1);
-        nk_spacing(ctx, 1);
-        nk_layout_row_dynamic(ctx, 18, 1);
-        nk_label(ctx, "Agent", NK_TEXT_ALIGN_LEFT);
-        nk_layout_row_dynamic(ctx, 20, 1);
-        nk_property_float(ctx, "Height", 0f, walkableHeight, 5f, 0.01f, 0.01f);
-        nk_layout_row_dynamic(ctx, 20, 1);
-        nk_property_float(ctx, "Radius", 0f, walkableRadius, 10f, 0.01f, 0.01f);
-        nk_layout_row_dynamic(ctx, 20, 1);
-        nk_property_float(ctx, "Max Climb", 0f, walkableClimb, 10f, 0.01f, 0.01f);
-        nk_layout_row_dynamic(ctx, 18, 2);
-        nk_label(ctx, "Max Slope", NK_TEXT_ALIGN_LEFT);
-        nk_label(ctx, String.format("%.0f", walkableSlopeAngle.get(0)), NK_TEXT_ALIGN_RIGHT);
-
-        nk_layout_row_dynamic(ctx, 1, 1);
-        nk_spacing(ctx, 1);
-        nk_layout_row_dynamic(ctx, 18, 1);
-        nk_label(ctx, "Partitioning", NK_TEXT_ALIGN_LEFT);
-        partitioning = NuklearUIHelper.nk_radio(ctx, PartitionType.values(), partitioning,
-                p -> p.name().substring(0, 1) + p.name().substring(1).toLowerCase());
-
-        nk_layout_row_dynamic(ctx, 1, 1);
-        nk_spacing(ctx, 1);
-        nk_layout_row_dynamic(ctx, 18, 1);
-        nk_label(ctx, "Filtering", NK_TEXT_ALIGN_LEFT);
-        nk_layout_row_dynamic(ctx, 18, 1);
-        filterLowHangingObstacles = nk_option_text(ctx, "Low Hanging Obstacles", filterLowHangingObstacles);
-        nk_layout_row_dynamic(ctx, 18, 1);
-        filterLedgeSpans = nk_option_text(ctx, "Ledge Spans", filterLedgeSpans);
-        nk_layout_row_dynamic(ctx, 18, 1);
-        filterWalkableLowHeightSpans = nk_option_text(ctx, "Walkable Low Height Spans", filterWalkableLowHeightSpans);
-
-        nk_layout_row_dynamic(ctx, 1, 1);
-        nk_spacing(ctx, 1);
-        nk_layout_row_dynamic(ctx, 18, 1);
-        nk_label(ctx, "Region", NK_TEXT_ALIGN_LEFT);
-        nk_layout_row_dynamic(ctx, 20, 1);
-        nk_property_float(ctx, "Min Region Size", 0, minRegionArea, 150, 0.1f, 0.1f);
-        nk_layout_row_dynamic(ctx, 20, 1);
-        nk_property_float(ctx, "Merged Region Size", 0, regionMergeSize, 400, 0.1f, 0.1f);
-
-        nk_layout_row_dynamic(ctx, 1, 1);
-        nk_spacing(ctx, 1);
-        nk_layout_row_dynamic(ctx, 18, 1);
-        nk_label(ctx, "Polygonization", NK_TEXT_ALIGN_LEFT);
-        nk_layout_row_dynamic(ctx, 20, 1);
-        nk_property_float(ctx, "Max Edge Length", 0f, maxEdgeLen, 50f, 0.1f, 0.1f);
-        nk_layout_row_dynamic(ctx, 20, 1);
-        nk_property_float(ctx, "Max Edge Error", 0.1f, maxSimplificationError, 10f, 0.1f, 0.1f);
-        nk_layout_row_dynamic(ctx, 20, 1);
-        nk_property_int(ctx, "Verts Per Poly", 3, vertsPerPoly, 12, 1, 1);
-
-        nk_layout_row_dynamic(ctx, 1, 1);
-        nk_spacing(ctx, 1);
-        nk_layout_row_dynamic(ctx, 18, 1);
-        nk_label(ctx, "Detail Mesh", NK_TEXT_ALIGN_LEFT);
-        nk_layout_row_dynamic(ctx, 20, 1);
-        buildDetailMesh = nk_check_text(ctx, "Enable", buildDetailMesh);
-        nk_layout_row_dynamic(ctx, 20, 1);
-        nk_property_float(ctx, "Sample Distance", 0f, detailSampleDist, 16f, 0.1f, 0.1f);
-        nk_layout_row_dynamic(ctx, 20, 1);
-        nk_property_float(ctx, "Max Sample Error", 0f, detailSampleMaxError, 16f, 0.1f, 0.1f);
-
-        nk_layout_row_dynamic(ctx, 18, 1);
-        nk_label(ctx, String.format("Build Time: %d ms", buildTime), NK_TEXT_ALIGN_LEFT);
-        nk_layout_row_dynamic(ctx, 20, 1);
-        if (nk_button_text(ctx, "Build")) {
             if (dynaMesh != null) {
-                buildDynaMesh();
-                sample.setChanged(false);
+                if (nk_button_text(ctx, "Save Voxels...")) {
+                    save();
+                }
+            }
+            nk_layout_row_dynamic(ctx, 1, 1);
+            nk_spacing(ctx, 1);
+            nk_layout_row_dynamic(ctx, 18, 1);
+            nk_label(ctx, "Rasterization", NK_TEXT_ALIGN_LEFT);
+            nk_layout_row_dynamic(ctx, 18, 2);
+            nk_label(ctx, "Cell Size", NK_TEXT_ALIGN_LEFT);
+            nk_label(ctx, String.format("%.2f", cellSize.get(0)), NK_TEXT_ALIGN_RIGHT);
+            nk_layout_row_dynamic(ctx, 1, 1);
+            nk_spacing(ctx, 1);
+            nk_layout_row_dynamic(ctx, 18, 1);
+            nk_label(ctx, "Agent", NK_TEXT_ALIGN_LEFT);
+            nk_layout_row_dynamic(ctx, 20, 1);
+            nk_property_float(ctx, "Height", 0f, walkableHeight, 5f, 0.01f, 0.01f);
+            nk_layout_row_dynamic(ctx, 20, 1);
+            nk_property_float(ctx, "Radius", 0f, walkableRadius, 10f, 0.01f, 0.01f);
+            nk_layout_row_dynamic(ctx, 20, 1);
+            nk_property_float(ctx, "Max Climb", 0f, walkableClimb, 10f, 0.01f, 0.01f);
+            nk_layout_row_dynamic(ctx, 18, 2);
+            nk_label(ctx, "Max Slope", NK_TEXT_ALIGN_LEFT);
+            nk_label(ctx, String.format("%.0f", walkableSlopeAngle.get(0)), NK_TEXT_ALIGN_RIGHT);
+
+            nk_layout_row_dynamic(ctx, 1, 1);
+            nk_spacing(ctx, 1);
+            nk_layout_row_dynamic(ctx, 18, 1);
+            nk_label(ctx, "Partitioning", NK_TEXT_ALIGN_LEFT);
+            partitioning = NuklearUIHelper.nk_radio(ctx, PartitionType.values(), partitioning,
+                    p -> p.name().substring(0, 1) + p.name().substring(1).toLowerCase());
+
+            nk_layout_row_dynamic(ctx, 1, 1);
+            nk_spacing(ctx, 1);
+            nk_layout_row_dynamic(ctx, 18, 1);
+            nk_label(ctx, "Filtering", NK_TEXT_ALIGN_LEFT);
+            nk_layout_row_dynamic(ctx, 18, 1);
+            filterLowHangingObstacles = nk_option_text(ctx, "Low Hanging Obstacles", filterLowHangingObstacles);
+            nk_layout_row_dynamic(ctx, 18, 1);
+            filterLedgeSpans = nk_option_text(ctx, "Ledge Spans", filterLedgeSpans);
+            nk_layout_row_dynamic(ctx, 18, 1);
+            filterWalkableLowHeightSpans = nk_option_text(ctx, "Walkable Low Height Spans", filterWalkableLowHeightSpans);
+
+            nk_layout_row_dynamic(ctx, 1, 1);
+            nk_spacing(ctx, 1);
+            nk_layout_row_dynamic(ctx, 18, 1);
+            nk_label(ctx, "Region", NK_TEXT_ALIGN_LEFT);
+            nk_layout_row_dynamic(ctx, 20, 1);
+            nk_property_float(ctx, "Min Region Size", 0, minRegionArea, 150, 0.1f, 0.1f);
+            nk_layout_row_dynamic(ctx, 20, 1);
+            nk_property_float(ctx, "Merged Region Size", 0, regionMergeSize, 400, 0.1f, 0.1f);
+
+            nk_layout_row_dynamic(ctx, 1, 1);
+            nk_spacing(ctx, 1);
+            nk_layout_row_dynamic(ctx, 18, 1);
+            nk_label(ctx, "Polygonization", NK_TEXT_ALIGN_LEFT);
+            nk_layout_row_dynamic(ctx, 20, 1);
+            nk_property_float(ctx, "Max Edge Length", 0f, maxEdgeLen, 50f, 0.1f, 0.1f);
+            nk_layout_row_dynamic(ctx, 20, 1);
+            nk_property_float(ctx, "Max Edge Error", 0.1f, maxSimplificationError, 10f, 0.1f, 0.1f);
+            nk_layout_row_dynamic(ctx, 20, 1);
+            nk_property_int(ctx, "Verts Per Poly", 3, vertsPerPoly, 12, 1, 1);
+
+            nk_layout_row_dynamic(ctx, 1, 1);
+            nk_spacing(ctx, 1);
+            nk_layout_row_dynamic(ctx, 18, 1);
+            nk_label(ctx, "Detail Mesh", NK_TEXT_ALIGN_LEFT);
+            nk_layout_row_dynamic(ctx, 20, 1);
+            buildDetailMesh = nk_check_text(ctx, "Enable", buildDetailMesh);
+            nk_layout_row_dynamic(ctx, 20, 1);
+            nk_property_float(ctx, "Sample Distance", 0f, detailSampleDist, 16f, 0.1f, 0.1f);
+            nk_layout_row_dynamic(ctx, 20, 1);
+            nk_property_float(ctx, "Max Sample Error", 0f, detailSampleMaxError, 16f, 0.1f, 0.1f);
+            nk_layout_row_dynamic(ctx, 1, 1);
+            nk_spacing(ctx, 1);
+            nk_layout_row_dynamic(ctx, 20, 1);
+            if (nk_button_text(ctx, "Build")) {
+                if (dynaMesh != null) {
+                    buildDynaMesh();
+                    sample.setChanged(false);
+                }
             }
         }
-
-        nk_layout_row_dynamic(ctx, 1, 1);
+        if (mode == ToolMode.COLLIDERS) {
+            nk_layout_row_dynamic(ctx, 1, 1);
+            nk_spacing(ctx, 1);
+            nk_layout_row_dynamic(ctx, 18, 1);
+            nk_label(ctx, "Colliders", NK_TEXT_ALIGN_LEFT);
+            nk_layout_row_dynamic(ctx, 20, 1);
+            showColliders = nk_check_text(ctx, "Show", showColliders);
+            nk_layout_row_dynamic(ctx, 20, 1);
+            if (nk_option_label(ctx, "Sphere", colliderShape == ColliderShape.SPHERE)) {
+                colliderShape = ColliderShape.SPHERE;
+            }
+            nk_layout_row_dynamic(ctx, 18, 1);
+            if (nk_option_label(ctx, "Capsule", colliderShape == ColliderShape.CAPSULE)) {
+                colliderShape = ColliderShape.CAPSULE;
+            }
+            nk_layout_row_dynamic(ctx, 18, 1);
+            if (nk_option_label(ctx, "Box", colliderShape == ColliderShape.BOX)) {
+                colliderShape = ColliderShape.BOX;
+            }
+            nk_layout_row_dynamic(ctx, 18, 1);
+            if (nk_option_label(ctx, "Cylinder", colliderShape == ColliderShape.CYLINDER)) {
+                colliderShape = ColliderShape.CYLINDER;
+            }
+            nk_layout_row_dynamic(ctx, 18, 1);
+            if (nk_option_label(ctx, "Composite", colliderShape == ColliderShape.COMPOSITE)) {
+                colliderShape = ColliderShape.COMPOSITE;
+            }
+            nk_layout_row_dynamic(ctx, 18, 1);
+            if (nk_option_label(ctx, "Convex Trimesh", colliderShape == ColliderShape.CONVEX)) {
+                colliderShape = ColliderShape.CONVEX;
+            }
+            nk_layout_row_dynamic(ctx, 18, 1);
+            if (nk_option_label(ctx, "Trimesh Bridge", colliderShape == ColliderShape.TRIMESH_BRIDGE)) {
+                colliderShape = ColliderShape.TRIMESH_BRIDGE;
+            }
+            nk_layout_row_dynamic(ctx, 18, 1);
+            if (nk_option_label(ctx, "Trimesh House", colliderShape == ColliderShape.TRIMESH_HOUSE)) {
+                colliderShape = ColliderShape.TRIMESH_HOUSE;
+            }
+        }
+        nk_layout_row_dynamic(ctx, 2, 1);
         nk_spacing(ctx, 1);
         nk_layout_row_dynamic(ctx, 18, 1);
-        nk_label(ctx, "Colliders", NK_TEXT_ALIGN_LEFT);
-        nk_layout_row_dynamic(ctx, 20, 1);
-        showColliders = nk_check_text(ctx, "Show", showColliders);
-        nk_layout_row_dynamic(ctx, 20, 1);
-        if (nk_option_label(ctx, "Sphere", colliderShape == ColliderShape.SPHERE)) {
-            colliderShape = ColliderShape.SPHERE;
-        }
-        nk_layout_row_dynamic(ctx, 18, 1);
-        if (nk_option_label(ctx, "Capsule", colliderShape == ColliderShape.CAPSULE)) {
-            colliderShape = ColliderShape.CAPSULE;
-        }
-        nk_layout_row_dynamic(ctx, 18, 1);
-        if (nk_option_label(ctx, "Box", colliderShape == ColliderShape.BOX)) {
-            colliderShape = ColliderShape.BOX;
-        }
-        nk_layout_row_dynamic(ctx, 18, 1);
-        if (nk_option_label(ctx, "Cylinder", colliderShape == ColliderShape.CYLINDER)) {
-            colliderShape = ColliderShape.CYLINDER;
-        }
-        nk_layout_row_dynamic(ctx, 18, 1);
-        if (nk_option_label(ctx, "Composite", colliderShape == ColliderShape.COMPOSITE)) {
-            colliderShape = ColliderShape.COMPOSITE;
-        }
-        nk_layout_row_dynamic(ctx, 18, 1);
-        if (nk_option_label(ctx, "Convex Trimesh", colliderShape == ColliderShape.CONVEX)) {
-            colliderShape = ColliderShape.CONVEX;
-        }
-        nk_layout_row_dynamic(ctx, 18, 1);
-        if (nk_option_label(ctx, "Trimesh Bridge", colliderShape == ColliderShape.TRIMESH_BRIDGE)) {
-            colliderShape = ColliderShape.TRIMESH_BRIDGE;
-        }
-        nk_layout_row_dynamic(ctx, 18, 1);
-        if (nk_option_label(ctx, "Trimesh House", colliderShape == ColliderShape.TRIMESH_HOUSE)) {
-            colliderShape = ColliderShape.TRIMESH_HOUSE;
+        if (mode == ToolMode.RAYCAST) {
+            nk_label(ctx, String.format("Raycast Time: %d ms", raycastTime), NK_TEXT_ALIGN_LEFT);
+            if (sposSet) {
+                nk_layout_row_dynamic(ctx, 18, 1);
+                nk_label(ctx, String.format("Start: %.3f, %.3f, %.3f", spos[0], spos[1] + 1.3f, spos[2]), NK_TEXT_ALIGN_LEFT);
+            }
+            if (eposSet) {
+                nk_layout_row_dynamic(ctx, 18, 1);
+                nk_label(ctx, String.format("End: %.3f, %.3f, %.3f", epos[0], epos[1] + 1.3f, epos[2]), NK_TEXT_ALIGN_LEFT);
+            }
+            if (raycastHit) {
+                nk_layout_row_dynamic(ctx, 18, 1);
+                nk_label(ctx, String.format("Hit: %.3f, %.3f, %.3f", raycastHitPos[0], raycastHitPos[1], raycastHitPos[2]),
+                        NK_TEXT_ALIGN_LEFT);
+            }
+        } else {
+            nk_label(ctx, String.format("Build Time: %d ms", buildTime), NK_TEXT_ALIGN_LEFT);
         }
 
     }
