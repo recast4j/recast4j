@@ -141,7 +141,6 @@ public class RecastDemo {
 
         DemoInputGeomProvider geom = loadInputMesh(getClass().getClassLoader().getResourceAsStream("nav_test.obj"));
         sample = new Sample(geom, Collections.emptyList(), null, settingsUI, dd);
-        toolsUI.setSample(sample);
         float timeAcc = 0;
         while (!glfwWindowShouldClose(window)) {
 
@@ -363,6 +362,7 @@ public class RecastDemo {
                     cameraEulers[1] = -45;
                 }
                 sample.setChanged(false);
+                toolsUI.setSample(sample);
             }
             dd.fog(camr * 0.1f, camr * 1.25f);
             renderer.render(sample);
@@ -559,7 +559,6 @@ public class RecastDemo {
     private DemoInputGeomProvider loadInputMesh(InputStream stream) {
         DemoInputGeomProvider geom = new ObjImporter().load(stream);
         sample = new Sample(geom, Collections.emptyList(), null, settingsUI, dd);
-        toolsUI.setSample(sample);
         toolsUI.setEnabled(true);
         return geom;
     }
@@ -577,7 +576,6 @@ public class RecastDemo {
         }
         if (mesh != null) {
             sample = new Sample(null, Collections.emptyList(), mesh, settingsUI, dd);
-            toolsUI.setSample(sample);
             toolsUI.setEnabled(true);
         }
     }
