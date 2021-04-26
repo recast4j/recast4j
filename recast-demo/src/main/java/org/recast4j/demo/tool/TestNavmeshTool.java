@@ -528,10 +528,10 @@ public class TestNavmeshTool implements Tool {
         float agentClimb = m_sample.getSettingsUI().getAgentMaxClimb();
 
         if (m_sposSet) {
-            drawAgent(dd, m_spos, agentRadius, agentHeight, agentClimb, startCol);
+            drawAgent(dd, m_spos, startCol);
         }
         if (m_eposSet) {
-            drawAgent(dd, m_epos, agentRadius, agentHeight, agentClimb, endCol);
+            drawAgent(dd, m_epos, endCol);
         }
         dd.depthMask(true);
 
@@ -838,7 +838,10 @@ public class TestNavmeshTool implements Tool {
         }
     }
 
-    private void drawAgent(RecastDebugDraw dd, float[] pos, float r, float h, float c, int col) {
+    private void drawAgent(RecastDebugDraw dd, float[] pos, int col) {
+        float r = m_sample.getSettingsUI().getAgentRadius();
+        float h = m_sample.getSettingsUI().getAgentHeight();
+        float c = m_sample.getSettingsUI().getAgentMaxClimb();
         dd.depthMask(false);
         // Agent dimensions.
         dd.debugDrawCylinderWire(pos[0] - r, pos[1] + 0.02f, pos[2] - r, pos[0] + r, pos[1] + h, pos[2] + r, col, 2.0f);
