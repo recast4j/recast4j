@@ -18,46 +18,33 @@ freely, subject to the following restrictions:
 
 package org.recast4j.dynamic.collider;
 
+import static org.recast4j.dynamic.collider.TrimeshCollider.computeBounds;
+
 import org.recast4j.recast.Heightfield;
-import org.recast4j.recast.RecastRasterization;
+import org.recast4j.recast.RecastFilledVolumeRasterization;
 import org.recast4j.recast.Telemetry;
 
-public class TrimeshCollider extends AbstractCollider {
+public class ConvexTrimeshCollider extends AbstractCollider {
 
     private final float[] vertices;
     private final int[] triangles;
 
-    public TrimeshCollider(float[] vertices, int[] triangles, int area, float flagMergeThreshold) {
+    public ConvexTrimeshCollider(float[] vertices, int[] triangles, int area, float flagMergeThreshold) {
         super(area, flagMergeThreshold, computeBounds(vertices));
         this.vertices = vertices;
         this.triangles = triangles;
     }
 
-    public TrimeshCollider(float[] vertices, int[] triangles, float[] bounds, int area, float flagMergeThreshold) {
+    public ConvexTrimeshCollider(float[] vertices, int[] triangles, float[] bounds, int area, float flagMergeThreshold) {
         super(area, flagMergeThreshold, bounds);
         this.vertices = vertices;
         this.triangles = triangles;
     }
 
-    static float[] computeBounds(float[] vertices) {
-        float[] bounds = new float[] { vertices[0], vertices[1], vertices[2], vertices[0], vertices[1], vertices[2] };
-        for (int i = 3; i < vertices.length; i += 3) {
-            bounds[0] = Math.min(bounds[0], vertices[i]);
-            bounds[1] = Math.min(bounds[1], vertices[i + 1]);
-            bounds[2] = Math.min(bounds[2], vertices[i + 2]);
-            bounds[3] = Math.max(bounds[3], vertices[i]);
-            bounds[4] = Math.max(bounds[4], vertices[i + 1]);
-            bounds[5] = Math.max(bounds[5], vertices[i + 2]);
-        }
-        return bounds;
-    }
-
     @Override
     public void rasterize(Heightfield hf, Telemetry telemetry) {
-        for (int i = 0; i < triangles.length; i += 3) {
-            RecastRasterization.rasterizeTriangle(hf, vertices, triangles[i], triangles[i + 1], triangles[i + 2], area,
-                    (int) Math.floor(flagMergeThreshold / hf.ch), telemetry);
-        }
+        RecastFilledVolumeRasterization.rasterizeConvex(hf, vertices, triangles, area,
+                (int) Math.floor(flagMergeThreshold / hf.ch), telemetry);
     }
 
 }
