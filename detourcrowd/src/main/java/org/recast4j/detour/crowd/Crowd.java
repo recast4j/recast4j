@@ -18,20 +18,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour.crowd;
 
-import static org.recast4j.detour.DetourCommon.clamp;
-import static org.recast4j.detour.DetourCommon.sqr;
-import static org.recast4j.detour.DetourCommon.triArea2D;
-import static org.recast4j.detour.DetourCommon.vAdd;
-import static org.recast4j.detour.DetourCommon.vCopy;
-import static org.recast4j.detour.DetourCommon.vDist2D;
-import static org.recast4j.detour.DetourCommon.vDist2DSqr;
-import static org.recast4j.detour.DetourCommon.vLen;
-import static org.recast4j.detour.DetourCommon.vLenSqr;
-import static org.recast4j.detour.DetourCommon.vLerp;
-import static org.recast4j.detour.DetourCommon.vMad;
-import static org.recast4j.detour.DetourCommon.vScale;
-import static org.recast4j.detour.DetourCommon.vSet;
-import static org.recast4j.detour.DetourCommon.vSub;
+import static org.recast4j.detour.DetourCommon.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -182,11 +169,11 @@ public class Crowd {
     /// @ingroup crowd
     /// @see dtCrowdAgent::neis, dtCrowd
     public class CrowdNeighbour {
-        public final int idx; /// < The index of the neighbor in the crowd.
+        public final CrowdAgent agent; /// < The index of the neighbor in the crowd.
         final float dist; /// < The distance between the current agent and the neighbor.
 
-        public CrowdNeighbour(int idx, float dist) {
-            this.idx = idx;
+        public CrowdNeighbour(CrowdAgent agent, float dist) {
+            this.agent = agent;
             this.dist = dist;
         }
     };
@@ -239,17 +226,11 @@ public class Crowd {
                 continue;
             }
 
-            addNeighbour(id, distSqr, result);
+            result.add(new CrowdNeighbour(ag, distSqr));
         }
+        Collections.sort(result, (o1, o2) -> Float.compare(o1.dist, o2.dist));
         return result;
 
-    }
-
-    void addNeighbour(int idx, float dist, List<CrowdNeighbour> neis) {
-        // Insert neighbour based on the distance.
-        CrowdNeighbour nei = new CrowdNeighbour(idx, dist);
-        neis.add(nei);
-        Collections.sort(neis, (o1, o2) -> Float.compare(o1.dist, o2.dist));
     }
 
     public void addToOptQueue(CrowdAgent newag, PriorityQueue<CrowdAgent> agents) {
@@ -336,15 +317,6 @@ public class Crowd {
     /// @return The requested agent.
     /// Agents in the pool may not be in use. Check #dtCrowdAgent.active before using the returned object.
     public CrowdAgent getAgent(int idx) {
-        return idx < 0 || idx >= m_agents.length ? null : m_agents[idx];
-    }
-
-    ///
-    /// Gets the specified agent from the pool.
-    /// @param[in] idx The agent index. [Limits: 0 <= value < #getAgentCount()]
-    /// @return The requested agent.
-    /// Agents in the pool may not be in use. Check #dtCrowdAgent.active before using the returned object.
-    public CrowdAgent getEditableAgent(int idx) {
         return idx < 0 || idx >= m_agents.length ? null : m_agents[idx];
     }
 
@@ -1021,7 +993,7 @@ public class Crowd {
                 float[] disp = new float[3];
 
                 for (int j = 0; j < ag.neis.size(); ++j) {
-                    CrowdAgent nei = agents.get(ag.neis.get(j).idx);
+                    CrowdAgent nei = ag.neis.get(j).agent;
 
                     float[] diff = vSub(ag.npos, nei.npos);
                     diff[1] = 0;
@@ -1069,7 +1041,7 @@ public class Crowd {
 
                 // Add neighbours as obstacles.
                 for (int j = 0; j < ag.neis.size(); ++j) {
-                    CrowdAgent nei = agents.get(ag.neis.get(j).idx);
+                    CrowdAgent nei = ag.neis.get(j).agent;
                     m_obstacleQuery.addCircle(nei.npos, nei.params.radius, nei.vel, nei.dvel);
                 }
 
@@ -1136,7 +1108,7 @@ public class Crowd {
                 float w = 0;
 
                 for (int j = 0; j < ag.neis.size(); ++j) {
-                    CrowdAgent nei = agents.get(ag.neis.get(j).idx);
+                    CrowdAgent nei = ag.neis.get(j).agent;
                     int idx1 = nei.getAgentIndex();
                     float[] diff = vSub(ag.npos, nei.npos);
                     diff[1] = 0;

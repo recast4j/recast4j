@@ -18,14 +18,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.demo.tool;
 
-import static org.lwjgl.nuklear.Nuklear.nk_layout_row_dynamic;
-import static org.lwjgl.nuklear.Nuklear.nk_option_label;
-import static org.lwjgl.nuklear.Nuklear.nk_option_text;
-import static org.lwjgl.nuklear.Nuklear.nk_property_float;
-import static org.lwjgl.nuklear.Nuklear.nk_property_int;
-import static org.lwjgl.nuklear.Nuklear.nk_spacing;
-import static org.lwjgl.nuklear.Nuklear.nk_tree_state_pop;
-import static org.lwjgl.nuklear.Nuklear.nk_tree_state_push;
+import static org.lwjgl.nuklear.Nuklear.*;
 import static org.recast4j.demo.draw.DebugDraw.duDarkenCol;
 import static org.recast4j.demo.draw.DebugDraw.duLerpCol;
 import static org.recast4j.demo.draw.DebugDraw.duRGBA;
@@ -70,7 +63,7 @@ public class CrowdTool implements Tool {
     private final CrowdAgentDebugInfo m_agentDebug = new CrowdAgentDebugInfo();
 
     private static final int AGENT_MAX_TRAIL = 64;
-    private static final int MAX_AGENTS = 128;
+    private static final int MAX_AGENTS = 8192;
 
     private class AgentTrail {
         float[] trail = new float[AGENT_MAX_TRAIL * 3];
@@ -82,6 +75,7 @@ public class CrowdTool implements Tool {
     private long m_targetRef;
     private ToolMode m_mode = ToolMode.CREATE;
     private final boolean m_run = true;
+    private long crowdUpdateTime;
 
     public CrowdTool() {
         for (int i = 0; i < m_trails.length; i++) {
@@ -485,9 +479,7 @@ public class CrowdTool implements Tool {
 
                 dd.begin(LINES, 2.0f);
                 for (int j = 0; j < ag.neis.size(); ++j) {
-                    // Get 'n'th active agent.
-                    // TODO: fix this properly.
-                    CrowdAgent nei = crowd.getAgent(ag.neis.get(j).idx);
+                    CrowdAgent nei = ag.neis.get(j).agent;
                     if (nei != null) {
                         dd.vertex(pos[0], pos[1] + radius, pos[2], duRGBA(0, 192, 128, 128));
                         dd.vertex(nei.npos[0], nei.npos[1] + radius, nei.npos[2], duRGBA(0, 192, 128, 128));
@@ -631,11 +623,11 @@ public class CrowdTool implements Tool {
         if (nav == null)
             return;
 
-        // TimeVal startTime = getPerfTime();
+        long startTime = System.nanoTime();
 
         crowd.update(dt, m_agentDebug);
 
-        // TimeVal endTime = getPerfTime();
+        long endTime = System.nanoTime();
 
         // Update agent trails
         for (int i = 0; i < crowd.getAgentCount(); ++i) {
@@ -654,7 +646,7 @@ public class CrowdTool implements Tool {
         m_agentDebug.vod.normalizeSamples();
 
         // m_crowdSampleCount.addSample((float) crowd.getVelocitySampleCount());
-        // m_crowdTotalTime.addSample(getPerfTimeUsec(endTime - startTime) / 1000.0f);
+        crowdUpdateTime = (endTime - startTime) / 1_000_000;
     }
 
     private void hilightAgent(int idx) {
@@ -737,8 +729,10 @@ public class CrowdTool implements Tool {
         if (nk_tree_state_push(ctx, 0, "Debug Draw", toolParams.m_expandDebugDraw)) {
             nk_tree_state_pop(ctx);
         }
-        nk_layout_row_dynamic(ctx, 5, 1);
+        nk_layout_row_dynamic(ctx, 2, 1);
         nk_spacing(ctx, 1);
+        nk_layout_row_dynamic(ctx, 18, 1);
+        nk_label(ctx, String.format("Update Time: %d ms", crowdUpdateTime), NK_TEXT_ALIGN_LEFT);
     }
 
     private void updateAgentParams() {
