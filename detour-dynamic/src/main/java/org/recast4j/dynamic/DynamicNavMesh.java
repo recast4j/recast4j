@@ -209,7 +209,7 @@ public class DynamicNavMesh {
     private boolean updateNavMesh() {
         if (dirty) {
             NavMesh navMesh = new NavMesh(navMeshParams, MAX_VERTS_PER_POLY);
-            tiles.values().forEach(t -> navMesh.addTile(t.meshData, 0, 0));
+            tiles.values().forEach(t -> t.addTo(navMesh));
             this.navMesh = navMesh;
             dirty = false;
             return true;

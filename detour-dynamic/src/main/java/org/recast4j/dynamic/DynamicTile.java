@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.recast4j.detour.MeshData;
+import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshBuilder;
 import org.recast4j.detour.NavMeshDataCreateParams;
 import org.recast4j.dynamic.collider.Collider;
@@ -45,6 +46,7 @@ class DynamicTile {
     MeshData meshData;
     private final Map<Long, Collider> colliders = new ConcurrentHashMap<>();
     private boolean dirty = true;
+    private long id;
 
     DynamicTile(VoxelTile voxelTile) {
         this.voxelTile = voxelTile;
@@ -150,4 +152,12 @@ class DynamicTile {
         return params;
     }
 
+    void addTo(NavMesh navMesh) {
+        if (meshData != null) {
+            id = navMesh.addTile(meshData, 0, 0);
+        } else {
+            navMesh.removeTile(id);
+            id = 0;
+        }
+    }
 }
