@@ -111,8 +111,7 @@ public class AbstractCrowdTest {
                 pos[0] = startPos[0] + i * distance;
                 pos[1] = startPos[1];
                 pos[2] = startPos[2] + j * distance;
-                int id = crowd.addAgent(pos, ap);
-                agents.add(crowd.getAgent(id));
+                agents.add(crowd.addAgent(pos, ap));
             }
         }
     }
@@ -123,12 +122,12 @@ public class AbstractCrowdTest {
         if (adjust) {
             for (CrowdAgent ag : crowd.getActiveAgents()) {
                 float[] vel = calcVel(ag.npos, pos, ag.params.maxSpeed);
-                crowd.requestMoveVelocity(ag.idx, vel);
+                crowd.requestMoveVelocity(ag, vel);
             }
         } else {
             Result<FindNearestPolyResult> nearest = query.findNearestPoly(pos, ext, filter);
             for (CrowdAgent ag : crowd.getActiveAgents()) {
-                crowd.requestMoveTarget(ag.idx, nearest.result.getNearestRef(), nearest.result.getNearestPos());
+                crowd.requestMoveTarget(ag, nearest.result.getNearestRef(), nearest.result.getNearestPos());
             }
         }
     }

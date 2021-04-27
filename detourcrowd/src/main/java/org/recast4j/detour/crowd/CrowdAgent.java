@@ -49,7 +49,7 @@ public class CrowdAgent {
         DT_CROWDAGENT_TARGET_VELOCITY,
     };
 
-    public final int idx;
+    public final long idx;
     /// The type of mesh polygon the agent is traversing. (See: #CrowdAgentState)
     public CrowdAgentState state;
     /// True if the agent has valid path (targetState == DT_CROWDAGENT_TARGET_VALID) and the path does not lead to the
@@ -189,10 +189,6 @@ public class CrowdAgent {
             targetState = MoveRequestState.DT_CROWDAGENT_TARGET_REQUESTING;
         else
             targetState = MoveRequestState.DT_CROWDAGENT_TARGET_FAILED;
-    }
-
-    int getAgentIndex() {
-        return idx;
     }
 
 }

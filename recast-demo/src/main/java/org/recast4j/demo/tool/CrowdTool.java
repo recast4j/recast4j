@@ -25,7 +25,9 @@ import static org.recast4j.demo.draw.DebugDraw.duRGBA;
 import static org.recast4j.demo.draw.DebugDrawPrimitives.LINES;
 import static org.recast4j.demo.draw.DebugDrawPrimitives.QUADS;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.lwjgl.nuklear.NkContext;
@@ -63,14 +65,13 @@ public class CrowdTool implements Tool {
     private final CrowdAgentDebugInfo m_agentDebug = new CrowdAgentDebugInfo();
 
     private static final int AGENT_MAX_TRAIL = 64;
-    private static final int MAX_AGENTS = 8192;
 
     private class AgentTrail {
         float[] trail = new float[AGENT_MAX_TRAIL * 3];
         int htrail;
     };
 
-    private final AgentTrail[] m_trails = new AgentTrail[MAX_AGENTS];
+    private final Map<Long, AgentTrail> m_trails = new HashMap<>();
     private float[] m_targetPos;
     private long m_targetRef;
     private ToolMode m_mode = ToolMode.CREATE;
@@ -78,11 +79,7 @@ public class CrowdTool implements Tool {
     private long crowdUpdateTime;
 
     public CrowdTool() {
-        for (int i = 0; i < m_trails.length; i++) {
-            m_trails[i] = new AgentTrail();
-        }
         m_agentDebug.vod = new ObstacleAvoidanceDebugData(2048);
-        m_agentDebug.idx = -1;
     }
 
     @Override
@@ -144,8 +141,8 @@ public class CrowdTool implements Tool {
         if (m_mode == ToolMode.CREATE) {
             if (shift) {
                 // Delete
-                int ahit = hitTestAgents(s, p);
-                if (ahit != -1) {
+                CrowdAgent ahit = hitTestAgents(s, p);
+                if (ahit != null) {
                     removeAgent(ahit);
                 }
             } else {
@@ -156,7 +153,7 @@ public class CrowdTool implements Tool {
             setMoveTarget(p, shift);
         } else if (m_mode == ToolMode.SELECT) {
             // Highlight
-            int ahit = hitTestAgents(s, p);
+            CrowdAgent ahit = hitTestAgents(s, p);
             hilightAgent(ahit);
         } else if (m_mode == ToolMode.TOGGLE_POLYS) {
             NavMesh nav = sample.getNavMesh();
@@ -176,10 +173,10 @@ public class CrowdTool implements Tool {
         }
     }
 
-    private void removeAgent(int idx) {
-        crowd.removeAgent(idx);
-        if (idx == m_agentDebug.idx) {
-            m_agentDebug.idx = -1;
+    private void removeAgent(CrowdAgent agent) {
+        crowd.removeAgent(agent);
+        if (agent == m_agentDebug.agent) {
+            m_agentDebug.agent = null;
         }
     }
 
@@ -196,13 +193,13 @@ public class CrowdTool implements Tool {
         ap.obstacleAvoidanceType = toolParams.m_obstacleAvoidanceType.get(0);
         ap.separationWeight = toolParams.m_separationWeight.get(0);
 
-        int idx = crowd.addAgent(p, ap);
-        if (idx != -1) {
+        CrowdAgent ag = crowd.addAgent(p, ap);
+        if (ag != null) {
             if (m_targetRef != 0)
-                crowd.requestMoveTarget(idx, m_targetRef, m_targetPos);
+                crowd.requestMoveTarget(ag, m_targetRef, m_targetPos);
 
             // Init trail
-            AgentTrail trail = m_trails[idx];
+            AgentTrail trail = m_trails.computeIfAbsent(ag.idx, __ -> new AgentTrail());
             for (int i = 0; i < AGENT_MAX_TRAIL; ++i) {
                 trail.trail[i * 3] = p[0];
                 trail.trail[i * 3 + 1] = p[1];
@@ -213,11 +210,9 @@ public class CrowdTool implements Tool {
 
     }
 
-    private int hitTestAgents(float[] s, float[] p) {
-        if (sample == null)
-            return -1;
+    private CrowdAgent hitTestAgents(float[] s, float[] p) {
 
-        int isel = -1;
+        CrowdAgent isel = null;
         float tsel = Float.MAX_VALUE;
 
         for (CrowdAgent ag : crowd.getActiveAgents()) {
@@ -227,7 +222,7 @@ public class CrowdTool implements Tool {
             if (isect.isPresent()) {
                 float tmin = isect.get()[0];
                 if (tmin > 0 && tmin < tsel) {
-                    isel = ag.idx;
+                    isel = ag;
                     tsel = tmin;
                 }
             }
@@ -259,30 +254,24 @@ public class CrowdTool implements Tool {
 
         if (adjust) {
             // Request velocity
-            if (m_agentDebug.idx != -1) {
-                CrowdAgent ag = crowd.getAgent(m_agentDebug.idx);
-                if (ag != null) {
-                    float[] vel = calcVel(ag.npos, p, ag.params.maxSpeed);
-                    crowd.requestMoveVelocity(m_agentDebug.idx, vel);
-                }
+            if (m_agentDebug.agent != null) {
+                float[] vel = calcVel(m_agentDebug.agent.npos, p, m_agentDebug.agent.params.maxSpeed);
+                crowd.requestMoveVelocity(m_agentDebug.agent, vel);
             } else {
                 for (CrowdAgent ag : crowd.getActiveAgents()) {
                     float[] vel = calcVel(ag.npos, p, ag.params.maxSpeed);
-                    crowd.requestMoveVelocity(ag.idx, vel);
+                    crowd.requestMoveVelocity(ag, vel);
                 }
             }
         } else {
             Result<FindNearestPolyResult> result = navquery.findNearestPoly(p, halfExtents, filter);
             m_targetRef = result.result.getNearestRef();
             m_targetPos = result.result.getNearestPos();
-            if (m_agentDebug.idx != -1) {
-                CrowdAgent ag = crowd.getAgent(m_agentDebug.idx);
-                if (ag != null) {
-                    crowd.requestMoveTarget(m_agentDebug.idx, m_targetRef, m_targetPos);
-                }
+            if (m_agentDebug.agent != null) {
+                crowd.requestMoveTarget(m_agentDebug.agent, m_targetRef, m_targetPos);
             } else {
                 for (CrowdAgent ag : crowd.getActiveAgents()) {
-                    crowd.requestMoveTarget(ag.idx, m_targetRef, m_targetPos);
+                    crowd.requestMoveTarget(ag, m_targetRef, m_targetPos);
                 }
             }
         }
@@ -314,7 +303,7 @@ public class CrowdTool implements Tool {
         // Draw paths
         if (toolParams.m_showPath) {
             for (CrowdAgent ag : crowd.getActiveAgents()) {
-                if (!toolParams.m_showDetailAll && ag.idx != m_agentDebug.idx)
+                if (!toolParams.m_showDetailAll && ag != m_agentDebug.agent)
                     continue;
                 List<Long> path = ag.corridor.getPath();
                 int npath = ag.corridor.getPathCount();
@@ -359,7 +348,7 @@ public class CrowdTool implements Tool {
         // Trail
         for (CrowdAgent ag : crowd.getActiveAgents()) {
 
-            AgentTrail trail = m_trails[ag.idx];
+            AgentTrail trail = m_trails.get(ag.idx);
             float[] pos = ag.npos;
 
             dd.begin(LINES, 3.0f);
@@ -382,7 +371,7 @@ public class CrowdTool implements Tool {
 
         // Corners & co
         for (CrowdAgent ag : crowd.getActiveAgents()) {
-            if (toolParams.m_showDetailAll == false && ag.idx != m_agentDebug.idx)
+            if (toolParams.m_showDetailAll == false && ag != m_agentDebug.agent)
                 continue;
 
             float radius = ag.params.radius;
@@ -483,7 +472,7 @@ public class CrowdTool implements Tool {
             float[] pos = ag.npos;
 
             int col = duRGBA(0, 0, 0, 32);
-            if (m_agentDebug.idx == ag.idx)
+            if (m_agentDebug.agent == ag)
                 col = duRGBA(255, 0, 0, 128);
 
             dd.debugDrawCircle(pos[0], pos[1], pos[2], radius, col, 2.0f);
@@ -512,7 +501,7 @@ public class CrowdTool implements Tool {
 
         if (toolParams.m_showVO) {
             for (CrowdAgent ag : crowd.getActiveAgents()) {
-                if (toolParams.m_showDetailAll == false && ag.idx != m_agentDebug.idx)
+                if (toolParams.m_showDetailAll == false && ag != m_agentDebug.agent)
                     continue;
 
                 // Draw detail about agent sela
@@ -566,7 +555,7 @@ public class CrowdTool implements Tool {
 
             dd.debugDrawArrow(pos[0], pos[1] + height, pos[2], pos[0] + dvel[0], pos[1] + height + dvel[1],
                     pos[2] + dvel[2], 0.0f, 0.4f, duRGBA(0, 192, 255, 192),
-                    (m_agentDebug.idx == ag.idx) ? 2.0f : 1.0f);
+                    m_agentDebug.agent == ag ? 2.0f : 1.0f);
 
             dd.debugDrawArrow(pos[0], pos[1] + height, pos[2], pos[0] + vel[0], pos[1] + height + vel[1],
                     pos[2] + vel[2], 0.0f, 0.4f, duRGBA(0, 0, 0, 160), 2.0f);
@@ -597,7 +586,7 @@ public class CrowdTool implements Tool {
 
         // Update agent trails
         for (CrowdAgent ag : crowd.getActiveAgents()) {
-            AgentTrail trail = m_trails[ag.idx];
+            AgentTrail trail = m_trails.get(ag.idx);
             // Update agent movement trail.
             trail.htrail = (trail.htrail + 1) % AGENT_MAX_TRAIL;
             trail.trail[trail.htrail * 3] = ag.npos[0];
@@ -611,8 +600,8 @@ public class CrowdTool implements Tool {
         crowdUpdateTime = (endTime - startTime) / 1_000_000;
     }
 
-    private void hilightAgent(int idx) {
-        m_agentDebug.idx = idx;
+    private void hilightAgent(CrowdAgent agent) {
+        m_agentDebug.agent = agent;
     }
 
     @Override
@@ -717,7 +706,7 @@ public class CrowdTool implements Tool {
             params.updateFlags = updateFlags;
             params.obstacleAvoidanceType = toolParams.m_obstacleAvoidanceType.get(0);
             params.separationWeight = toolParams.m_separationWeight.get(0);
-            crowd.updateAgentParameters(ag.idx, params);
+            crowd.updateAgentParameters(ag, params);
         }
     }
 

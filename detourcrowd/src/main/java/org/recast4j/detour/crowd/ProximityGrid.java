@@ -65,7 +65,7 @@ public class ProximityGrid {
 
     private final float m_cellSize;
     private final float m_invCellSize;
-    private final Map<ItemKey, List<Integer>> items;
+    private final Map<ItemKey, List<CrowdAgent>> items;
     int[] m_bounds = new int[4];
 
     public ProximityGrid(float m_cellSize) {
@@ -82,7 +82,7 @@ public class ProximityGrid {
         m_bounds[3] = -0xffff;
     }
 
-    void addItem(int id, float minx, float miny, float maxx, float maxy) {
+    void addItem(CrowdAgent agent, float minx, float miny, float maxx, float maxy) {
         int iminx = (int) Math.floor(minx * m_invCellSize);
         int iminy = (int) Math.floor(miny * m_invCellSize);
         int imaxx = (int) Math.floor(maxx * m_invCellSize);
@@ -96,27 +96,27 @@ public class ProximityGrid {
         for (int y = iminy; y <= imaxy; ++y) {
             for (int x = iminx; x <= imaxx; ++x) {
                 ItemKey key = new ItemKey(x, y);
-                List<Integer> ids = items.get(key);
+                List<CrowdAgent> ids = items.get(key);
                 if (ids == null) {
                     ids = new ArrayList<>();
                     items.put(key, ids);
                 }
-                ids.add(id);
+                ids.add(agent);
             }
         }
     }
 
-    Set<Integer> queryItems(float minx, float miny, float maxx, float maxy) {
+    Set<CrowdAgent> queryItems(float minx, float miny, float maxx, float maxy) {
         int iminx = (int) Math.floor(minx * m_invCellSize);
         int iminy = (int) Math.floor(miny * m_invCellSize);
         int imaxx = (int) Math.floor(maxx * m_invCellSize);
         int imaxy = (int) Math.floor(maxy * m_invCellSize);
 
-        Set<Integer> result = new HashSet<>();
+        Set<CrowdAgent> result = new HashSet<>();
         for (int y = iminy; y <= imaxy; ++y) {
             for (int x = iminx; x <= imaxx; ++x) {
                 ItemKey key = new ItemKey(x, y);
-                List<Integer> ids = items.get(key);
+                List<CrowdAgent> ids = items.get(key);
                 if (ids != null) {
                     result.addAll(ids);
                 }
@@ -128,7 +128,7 @@ public class ProximityGrid {
 
     public int getItemCountAt(int x, int y) {
         ItemKey key = new ItemKey(x, y);
-        List<Integer> ids = items.get(key);
+        List<CrowdAgent> ids = items.get(key);
         return ids != null ? ids.size() : 0;
     }
 
