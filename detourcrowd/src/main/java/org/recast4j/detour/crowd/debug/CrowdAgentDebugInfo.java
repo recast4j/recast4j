@@ -18,9 +18,11 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour.crowd.debug;
 
+import org.recast4j.detour.crowd.CrowdAgent;
+
 public class CrowdAgentDebugInfo {
 
-    public int idx;
+    public CrowdAgent agent;
     public float[] optStart = new float[3];
     public float[] optEnd = new float[3];
     public ObstacleAvoidanceDebugData vod;
