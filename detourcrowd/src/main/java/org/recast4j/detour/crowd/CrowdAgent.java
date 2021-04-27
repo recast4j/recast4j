@@ -18,16 +18,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour.crowd;
 
-import static org.recast4j.detour.DetourCommon.vAdd;
-import static org.recast4j.detour.DetourCommon.vCopy;
-import static org.recast4j.detour.DetourCommon.vDist2D;
-import static org.recast4j.detour.DetourCommon.vDist2DSqr;
-import static org.recast4j.detour.DetourCommon.vLen;
-import static org.recast4j.detour.DetourCommon.vMad;
-import static org.recast4j.detour.DetourCommon.vNormalize;
-import static org.recast4j.detour.DetourCommon.vScale;
-import static org.recast4j.detour.DetourCommon.vSet;
-import static org.recast4j.detour.DetourCommon.vSub;
+import static org.recast4j.detour.DetourCommon.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,29 +50,19 @@ public class CrowdAgent {
     };
 
     public final int idx;
-
-    /// True if the agent is active, false if the agent is in an unused slot in the agent pool.
-    public boolean active;
-
     /// The type of mesh polygon the agent is traversing. (See: #CrowdAgentState)
     public CrowdAgentState state;
-
     /// True if the agent has valid path (targetState == DT_CROWDAGENT_TARGET_VALID) and the path does not lead to the
     /// requested position, else false.
     boolean partial;
-
     /// The path corridor the agent is using.
     public PathCorridor corridor;
-
     /// The local boundary data for the agent.
     public LocalBoundary boundary;
-
     /// Time since the agent's path corridor was optimized.
     float topologyOptTime;
-
     /// The known neighbors of the agent.
     public List<CrowdNeighbour> neis = new ArrayList<>();
-
     /// The desired speed.
     float desiredSpeed;
 
@@ -214,7 +195,4 @@ public class CrowdAgent {
         return idx;
     }
 
-    public boolean isActive() {
-        return active;
-    }
 }

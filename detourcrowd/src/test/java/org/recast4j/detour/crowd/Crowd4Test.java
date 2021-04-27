@@ -303,7 +303,7 @@ public class Crowd4Test extends AbstractCrowdTest {
         setMoveTarget(endPoss[0], false);
         for (int i = 0; i < EXPECTED_A1Q2TVTA.length; i++) {
             crowd.update(1 / 5f, null);
-            CrowdAgent ag = crowd.getAgent(2);
+            CrowdAgent ag = agents.get(2);
             Assert.assertEquals(EXPECTED_A1Q2TVTA[i][0], ag.npos[0], 0.001f);
             Assert.assertEquals(EXPECTED_A1Q2TVTA[i][1], ag.npos[1], 0.001f);
             Assert.assertEquals(EXPECTED_A1Q2TVTA[i][2], ag.npos[2], 0.001f);
@@ -323,7 +323,7 @@ public class Crowd4Test extends AbstractCrowdTest {
         setMoveTarget(endPoss[0], false);
         for (int i = 0; i < EXPECTED_A1Q2TVTAS.length; i++) {
             crowd.update(1 / 5f, null);
-            CrowdAgent ag = crowd.getAgent(2);
+            CrowdAgent ag = agents.get(2);
             Assert.assertEquals(EXPECTED_A1Q2TVTAS[i][0], ag.npos[0], 0.001f);
             Assert.assertEquals(EXPECTED_A1Q2TVTAS[i][1], ag.npos[1], 0.001f);
             Assert.assertEquals(EXPECTED_A1Q2TVTAS[i][2], ag.npos[2], 0.001f);
@@ -341,7 +341,7 @@ public class Crowd4Test extends AbstractCrowdTest {
         setMoveTarget(endPoss[0], false);
         for (int i = 0; i < EXPECTED_A1Q2T.length; i++) {
             crowd.update(1 / 5f, null);
-            CrowdAgent ag = crowd.getAgent(2);
+            CrowdAgent ag = agents.get(2);
             Assert.assertEquals(EXPECTED_A1Q2T[i][0], ag.npos[0], 0.001f);
             Assert.assertEquals(EXPECTED_A1Q2T[i][1], ag.npos[1], 0.001f);
             Assert.assertEquals(EXPECTED_A1Q2T[i][2], ag.npos[2], 0.001f);
