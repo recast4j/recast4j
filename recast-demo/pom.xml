@@ -115,17 +115,17 @@
         <dependency>
             <groupId>org.recast4j</groupId>
             <artifactId>detour-crowd</artifactId>
-            <version>1.4.0</version>
+            <version>1.4.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.recast4j</groupId>
             <artifactId>detour-extras</artifactId>
-            <version>1.4.0</version>
+            <version>1.4.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.recast4j</groupId>
             <artifactId>detour-dynamic</artifactId>
-            <version>1.4.0</version>
+            <version>1.4.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

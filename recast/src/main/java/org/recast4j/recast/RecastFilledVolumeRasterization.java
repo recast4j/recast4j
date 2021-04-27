@@ -27,6 +27,7 @@ import java.util.function.Function;
 public class RecastFilledVolumeRasterization {
 
     private static final float EPSILON = 0.00001f;
+    private static final int[] BOX_EDGES = { 0, 1, 0, 2, 0, 4, 1, 3, 1, 5, 2, 3, 2, 6, 3, 7, 4, 5, 4, 6, 5, 7, 6, 7 };
 
     public static void rasterizeSphere(Heightfield hf, float[] center, float radius, int area, int flagMergeThr, Telemetry ctx) {
         ctx.startTimer("RASTERIZE_SPHERE");
@@ -419,7 +420,7 @@ public class RecastFilledVolumeRasterization {
             }
         }
 
-        // check intersection with rays starting in rectangle vertices first
+        // check intersection with rays starting in rectangle vertices
         float[] point = new float[] { 0, rectangle[1], 0 };
         for (int i = 0; i < 4; i++) {
             point[0] = ((i & 1) == 0) ? rectangle[0] : rectangle[2];
@@ -445,6 +446,44 @@ public class RecastFilledVolumeRasterization {
                 }
             }
         }
+
+        // check intersection with box edges
+        for (int i = 0; i < BOX_EDGES.length; i+= 2) {
+            int vi = BOX_EDGES[i] * 3;
+            int vj = BOX_EDGES[i + 1] * 3;
+            float x = vertices[vi];
+            float z = vertices[vi + 2];
+            // edge slab intersection
+            float y = vertices[vi + 1];
+            float dx = vertices[vj] - x;
+            float dy = vertices[vj + 1] - y;
+            float dz = vertices[vj + 2] - z;
+            if (Math.abs(dx) > EPSILON) {
+                Float iy = xSlabSegmentIntersection(rectangle, x, y, z, dx, dy, dz, rectangle[0]);
+                if (iy != null) {
+                    yMin = Math.min(yMin, iy);
+                    yMax = Math.max(yMax, iy);
+                }
+                iy = xSlabSegmentIntersection(rectangle, x, y, z, dx, dy, dz, rectangle[2]);
+                if (iy != null) {
+                    yMin = Math.min(yMin, iy);
+                    yMax = Math.max(yMax, iy);
+                }
+            }
+            if (Math.abs(dz) > EPSILON) {
+                Float iy = zSlabSegmentIntersection(rectangle, x, y, z, dx, dy, dz, rectangle[1]);
+                if (iy != null) {
+                    yMin = Math.min(yMin, iy);
+                    yMax = Math.max(yMax, iy);
+                }
+                iy = zSlabSegmentIntersection(rectangle, x, y, z, dx, dy, dz, rectangle[3]);
+                if (iy != null) {
+                    yMin = Math.min(yMin, iy);
+                    yMax = Math.max(yMax, iy);
+                }
+            }
+        }
+
         if (yMin <= yMax) {
             return new float[] { yMin, yMax };
         }
@@ -479,24 +518,24 @@ public class RecastFilledVolumeRasterization {
                 float dy = verts[vj + 1] - y;
                 float dz = verts[vj + 2] - z;
                 if (Math.abs(dx) > EPSILON) {
-                    Float iy = xSlabTriangleIntersection(rectangle, x, y, z, dx, dy, dz, rectangle[0]);
+                    Float iy = xSlabSegmentIntersection(rectangle, x, y, z, dx, dy, dz, rectangle[0]);
                     if (iy != null) {
                         imin = Math.min(imin, iy);
                         imax = Math.max(imax, iy);
                     }
-                    iy = xSlabTriangleIntersection(rectangle, x, y, z, dx, dy, dz, rectangle[2]);
+                    iy = xSlabSegmentIntersection(rectangle, x, y, z, dx, dy, dz, rectangle[2]);
                     if (iy != null) {
                         imin = Math.min(imin, iy);
                         imax = Math.max(imax, iy);
                     }
                 }
                 if (Math.abs(dz) > EPSILON) {
-                    Float iy = zSlabTriangleIntersection(rectangle, x, y, z, dx, dy, dz, rectangle[1]);
+                    Float iy = zSlabSegmentIntersection(rectangle, x, y, z, dx, dy, dz, rectangle[1]);
                     if (iy != null) {
                         imin = Math.min(imin, iy);
                         imax = Math.max(imax, iy);
                     }
-                    iy = zSlabTriangleIntersection(rectangle, x, y, z, dx, dy, dz, rectangle[3]);
+                    iy = zSlabSegmentIntersection(rectangle, x, y, z, dx, dy, dz, rectangle[3]);
                     if (iy != null) {
                         imin = Math.min(imin, iy);
                         imax = Math.max(imax, iy);
@@ -521,7 +560,7 @@ public class RecastFilledVolumeRasterization {
         return null;
     }
 
-    private static Float xSlabTriangleIntersection(float[] rectangle, float x, float y, float z, float dx, float dy, float dz,
+    private static Float xSlabSegmentIntersection(float[] rectangle, float x, float y, float z, float dx, float dy, float dz,
             float slabX) {
         float x2 = x + dx;
         if ((x < slabX && x2 > slabX) || (x > slabX && x2 < slabX)) {
@@ -534,7 +573,7 @@ public class RecastFilledVolumeRasterization {
         return null;
     }
 
-    private static Float zSlabTriangleIntersection(float[] rectangle, float x, float y, float z, float dx, float dy, float dz,
+    private static Float zSlabSegmentIntersection(float[] rectangle, float x, float y, float z, float dx, float dy, float dz,
             float slabZ) {
         float z2 = z + dz;
         if ((z < slabZ && z2 > slabZ) || (z > slabZ && z2 < slabZ)) {
