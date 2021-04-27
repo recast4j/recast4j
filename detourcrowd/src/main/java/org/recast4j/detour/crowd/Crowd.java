@@ -23,9 +23,12 @@ import static org.recast4j.detour.DetourCommon.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.IntFunction;
 
 import org.recast4j.detour.ClosestPointOnPolyResult;
@@ -178,24 +181,16 @@ public class Crowd {
         }
     };
 
-    int m_maxAgents;
-    CrowdAgent[] m_agents;
-    List<CrowdAgent> m_activeAgents;
+    AtomicInteger agentId = new AtomicInteger();
+    Map<Integer, CrowdAgent> m_agents;
     PathQueue m_pathq;
-
     ObstacleAvoidanceParams[] m_obstacleQueryParams = new ObstacleAvoidanceParams[DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS];
     ObstacleAvoidanceQuery m_obstacleQuery;
-
     ProximityGrid m_grid;
-
     float[] m_ext = new float[3];
-
     QueryFilter[] m_filters = new QueryFilter[DT_CROWD_MAX_QUERY_FILTER_TYPE];
-
     float m_maxAgentRadius;
-
     int m_velocitySampleCount;
-
     NavMeshQuery m_navquery;
 
     float tween(float t, float t0, float t1) {
@@ -250,13 +245,12 @@ public class Crowd {
     /// @param[in] maxAgentRadius The maximum radius of any agent that will be added to the crowd. [Limit: > 0]
     /// @param[in] nav The navigation mesh to use for planning.
     /// @return True if the initialization succeeded.
-    public Crowd(int maxAgents, float maxAgentRadius, NavMesh nav) {
-        this(maxAgents, maxAgentRadius, nav, i -> new DefaultQueryFilter());
+    public Crowd(float maxAgentRadius, NavMesh nav) {
+        this(maxAgentRadius, nav, i -> new DefaultQueryFilter());
     }
 
-    public Crowd(int maxAgents, float maxAgentRadius, NavMesh nav, IntFunction<QueryFilter> queryFilterFactory) {
+    public Crowd(float maxAgentRadius, NavMesh nav, IntFunction<QueryFilter> queryFilterFactory) {
 
-        m_maxAgents = maxAgents;
         m_maxAgentRadius = maxAgentRadius;
         vSet(m_ext, m_maxAgentRadius * 2.0f, m_maxAgentRadius * 1.5f, m_maxAgentRadius * 2.0f);
 
@@ -273,12 +267,7 @@ public class Crowd {
 
         // Allocate temp buffer for merging paths.
         m_pathq = new PathQueue(MAX_PATHQUEUE_NODES, nav);
-        m_agents = new CrowdAgent[m_maxAgents];
-        m_activeAgents = new ArrayList<>();
-        for (int i = 0; i < m_maxAgents; ++i) {
-            m_agents[i] = new CrowdAgent(i);
-            m_agents[i].active = false;
-        }
+        m_agents = new HashMap<>();
 
         // The navquery is mostly used for local searches, no need for large
         // node pool.
@@ -306,28 +295,22 @@ public class Crowd {
         return null;
     }
 
-    /// The maximum number of agents that can be managed by the object.
-    /// @return The maximum number of agents.
-    public int getAgentCount() {
-        return m_maxAgents;
-    }
-
     /// Gets the specified agent from the pool.
     /// @param[in] idx The agent index. [Limits: 0 <= value < #getAgentCount()]
     /// @return The requested agent.
     /// Agents in the pool may not be in use. Check #dtCrowdAgent.active before using the returned object.
     public CrowdAgent getAgent(int idx) {
-        return idx < 0 || idx >= m_agents.length ? null : m_agents[idx];
+        return m_agents.get(idx);
     }
 
     /// Updates the specified agent's configuration.
     /// @param[in] idx The agent index. [Limits: 0 <= value < #getAgentCount()]
     /// @param[in] params The new agent configuration.
     public void updateAgentParameters(int idx, CrowdAgentParams params) {
-        if (idx < 0 || idx >= m_maxAgents) {
-            return;
+        CrowdAgent ag = m_agents.get(idx);
+        if (ag != null) {
+            ag.params = params;
         }
-        m_agents[idx].params = params;
     }
 
     /// Adds a new agent to the crowd.
@@ -336,25 +319,12 @@ public class Crowd {
     /// @return The index of the agent in the agent pool. Or -1 if the agent
     /// could not be added.
     public int addAgent(float[] pos, CrowdAgentParams params) {
-        // Find empty slot.
-        int idx = -1;
-        for (int i = 0; i < m_maxAgents; ++i) {
-            if (!m_agents[i].active) {
-                idx = i;
-                break;
-            }
-        }
-        if (idx == -1) {
-            return -1;
-        }
-
-        CrowdAgent ag = m_agents[idx];
-
-        updateAgentParameters(idx, params);
+        CrowdAgent ag = new CrowdAgent(agentId.getAndIncrement());
+        m_agents.put(ag.idx, ag);
+        updateAgentParameters(ag.idx, params);
 
         // Find nearest position on navmesh and place the agent there.
-        Result<FindNearestPolyResult> nearestPoly = m_navquery.findNearestPoly(pos, m_ext,
-                m_filters[ag.params.queryFilterType]);
+        Result<FindNearestPolyResult> nearestPoly = m_navquery.findNearestPoly(pos, m_ext, m_filters[ag.params.queryFilterType]);
 
         float[] nearest = nearestPoly.succeeded() ? nearestPoly.result.getNearestPos() : pos;
         long ref = nearestPoly.succeeded() ? nearestPoly.result.getNearestRef() : 0L;
@@ -380,9 +350,7 @@ public class Crowd {
 
         ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_NONE;
 
-        ag.active = true;
-
-        return idx;
+        return ag.idx;
     }
 
     /// Removes the agent from the crowd.
@@ -395,9 +363,7 @@ public class Crowd {
     /// Removes the agent from the crowd.
     /// @param[in] idx The agent index. [Limits: 0 <= value < #getAgentCount()]
     public void removeAgent(int idx) {
-        if (idx >= 0 && idx < m_maxAgents) {
-            m_agents[idx].active = false;
-        }
+        m_agents.remove(idx);
     }
 
     boolean requestMoveTargetReplan(CrowdAgent ag, long ref, float[] pos) {
@@ -418,19 +384,17 @@ public class Crowd {
     ///
     /// The request will be processed during the next #update().
     public boolean requestMoveTarget(int idx, long ref, float[] pos) {
-        if (idx < 0 || idx >= m_maxAgents) {
+        CrowdAgent ag = m_agents.get(idx);
+        if (ag == null) {
             return false;
         }
         if (ref == 0) {
             return false;
         }
 
-        CrowdAgent ag = m_agents[idx];
-
         // Initialize request.
         ag.setTarget(ref, pos);
         ag.targetReplan = false;
-
         return true;
     }
 
@@ -439,11 +403,10 @@ public class Crowd {
     /// @param[in] vel The movement velocity. [(x, y, z)]
     /// @return True if the request was successfully submitted.
     public boolean requestMoveVelocity(int idx, float[] vel) {
-        if (idx < 0 || idx >= m_maxAgents) {
+        CrowdAgent ag = m_agents.get(idx);
+        if (ag == null) {
             return false;
         }
-
-        CrowdAgent ag = m_agents[idx];
 
         // Initialize request.
         ag.targetRef = 0;
@@ -459,11 +422,10 @@ public class Crowd {
     /// @param[in] idx The agent index. [Limits: 0 <= value < #getAgentCount()]
     /// @return True if the request was successfully reseted.
     public boolean resetMoveTarget(int idx) {
-        if (idx < 0 || idx >= m_maxAgents) {
+        CrowdAgent ag = m_agents.get(idx);
+        if (ag == null) {
             return false;
         }
-
-        CrowdAgent ag = m_agents[idx];
 
         // Initialize request.
         ag.targetRef = 0;
@@ -475,18 +437,12 @@ public class Crowd {
         return true;
     }
 
-    /// Gets the active agents int the agent pool.
-    /// @param[out] agents An array of agent pointers. [(#dtCrowdAgent *) * maxAgents]
-    /// @param[in] maxAgents The size of the crowd agent array.
-    /// @return The number of agents returned in @p agents.
+    /**
+     *  Gets the active agents int the agent pool.
+     *  @return List of active agents
+     */
     public List<CrowdAgent> getActiveAgents() {
-        List<CrowdAgent> agents = new ArrayList<>(m_maxAgents);
-        for (int i = 0; i < m_maxAgents; ++i) {
-            if (m_agents[i].active) {
-                agents.add(m_agents[i]);
-            }
-        }
-        return agents;
+        return new ArrayList<>(m_agents.values());
     }
 
     static final int MAX_ITER = 20;
@@ -496,11 +452,7 @@ public class Crowd {
                 (a1, a2) -> Float.compare(a2.targetReplanTime, a1.targetReplanTime));
 
         // Fire off new requests.
-        for (int i = 0; i < m_maxAgents; ++i) {
-            CrowdAgent ag = m_agents[i];
-            if (!ag.active) {
-                continue;
-            }
+        for (CrowdAgent ag : m_agents.values()) {
             if (ag.state == CrowdAgentState.DT_CROWDAGENT_STATE_INVALID) {
                 continue;
             }
@@ -535,8 +487,8 @@ public class Crowd {
                     if (reqPath.get(reqPath.size() - 1) != ag.targetRef) {
                         // Partial path, constrain target position inside the
                         // last polygon.
-                        Result<ClosestPointOnPolyResult> cr = m_navquery
-                                .closestPointOnPoly(reqPath.get(reqPath.size() - 1), ag.targetPos);
+                        Result<ClosestPointOnPolyResult> cr = m_navquery.closestPointOnPoly(reqPath.get(reqPath.size() - 1),
+                                ag.targetPos);
                         if (cr.succeeded()) {
                             reqPos = cr.result.getClosest();
                         } else {
@@ -573,8 +525,8 @@ public class Crowd {
 
         while (!queue.isEmpty()) {
             CrowdAgent ag = queue.poll();
-            ag.targetPathqRef = m_pathq.request(ag.corridor.getLastPoly(), ag.targetRef, ag.corridor.getTarget(),
-                    ag.targetPos, m_filters[ag.params.queryFilterType]);
+            ag.targetPathqRef = m_pathq.request(ag.corridor.getLastPoly(), ag.targetRef, ag.corridor.getTarget(), ag.targetPos,
+                    m_filters[ag.params.queryFilterType]);
             if (ag.targetPathqRef != PathQueue.DT_PATHQ_INVALID) {
                 ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_PATH;
             }
@@ -584,11 +536,7 @@ public class Crowd {
         m_pathq.update(MAX_ITERS_PER_UPDATE);
 
         // Process path results.
-        for (int i = 0; i < m_maxAgents; ++i) {
-            CrowdAgent ag = m_agents[i];
-            if (!ag.active) {
-                continue;
-            }
+        for (CrowdAgent ag : m_agents.values()) {
             if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_NONE
                     || ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY) {
                 continue;
@@ -699,8 +647,7 @@ public class Crowd {
             return;
         }
 
-        PriorityQueue<CrowdAgent> queue = new PriorityQueue<>(
-                (a1, a2) -> Float.compare(a2.topologyOptTime, a1.topologyOptTime));
+        PriorityQueue<CrowdAgent> queue = new PriorityQueue<>((a1, a2) -> Float.compare(a2.topologyOptTime, a1.topologyOptTime));
 
         for (int i = 0; i < agents.size(); ++i) {
             CrowdAgent ag = agents.get(i);
@@ -892,8 +839,7 @@ public class Crowd {
             }
 
             // Find corners for steering
-            ag.corners = ag.corridor.findCorners(DT_CROWDAGENT_MAX_CORNERS, m_navquery,
-                    m_filters[ag.params.queryFilterType]);
+            ag.corners = ag.corridor.findCorners(DT_CROWDAGENT_MAX_CORNERS, m_navquery, m_filters[ag.params.queryFilterType]);
 
             // Check to see if the corner after the next corner is directly visible,
             // and short cut to there.
@@ -935,8 +881,8 @@ public class Crowd {
 
                 // Adjust the path over the off-mesh connection.
                 long[] refs = new long[2];
-                if (ag.corridor.moveOverOffmeshConnection(ag.corners.get(ag.corners.size() - 1).getRef(), refs,
-                        anim.startPos, anim.endPos, m_navquery)) {
+                if (ag.corridor.moveOverOffmeshConnection(ag.corners.get(ag.corners.size() - 1).getRef(), refs, anim.startPos,
+                        anim.endPos, m_navquery)) {
                     vCopy(anim.initPos, ag.npos);
                     anim.polyRef = refs[1];
                     anim.active = true;

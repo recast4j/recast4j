@@ -105,7 +105,7 @@ public class Crowd4VelocityTest extends AbstractCrowdTest {
             if (i == 20) {
                 setMoveTarget(startPoss[2], true);
             }
-            CrowdAgent ag = crowd.getAgent(1);
+            CrowdAgent ag = agents.get(1);
             Assert.assertEquals(EXPECTED_A1Q3TVTA[i][0], ag.npos[0], 0.001f);
             Assert.assertEquals(EXPECTED_A1Q3TVTA[i][1], ag.npos[1], 0.001f);
             Assert.assertEquals(EXPECTED_A1Q3TVTA[i][2], ag.npos[2], 0.001f);

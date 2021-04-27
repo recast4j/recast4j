@@ -22,6 +22,9 @@ import static org.recast4j.detour.DetourCommon.vNormalize;
 import static org.recast4j.detour.DetourCommon.vScale;
 import static org.recast4j.detour.DetourCommon.vSub;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Before;
 import org.recast4j.detour.FindNearestPolyResult;
 import org.recast4j.detour.MeshData;
@@ -37,28 +40,28 @@ public class AbstractCrowdTest {
     protected final long[] startRefs = { 281474976710696L, 281474976710773L, 281474976710680L, 281474976710753L,
             281474976710733L };
 
-    protected final long[] endRefs = { 281474976710721L, 281474976710767L, 281474976710758L, 281474976710731L,
-            281474976710772L };
+    protected final long[] endRefs = { 281474976710721L, 281474976710767L, 281474976710758L, 281474976710731L, 281474976710772L };
 
-    protected final float[][] startPoss = { { 22.60652f, 10.197294f, -45.918674f },
-            { 22.331268f, 10.197294f, -1.0401875f }, { 18.694363f, 15.803535f, -73.090416f },
-            { 0.7453353f, 10.197294f, -5.94005f }, { -20.651257f, 5.904126f, -13.712508f } };
+    protected final float[][] startPoss = { { 22.60652f, 10.197294f, -45.918674f }, { 22.331268f, 10.197294f, -1.0401875f },
+            { 18.694363f, 15.803535f, -73.090416f }, { 0.7453353f, 10.197294f, -5.94005f },
+            { -20.651257f, 5.904126f, -13.712508f } };
 
-    protected final float[][] endPoss = { { 6.4576626f, 10.197294f, -18.33406f },
-            { -5.8023443f, 0.19729415f, 3.008419f }, { 38.423977f, 10.197294f, -0.116066754f },
-            { 0.8635526f, 10.197294f, -10.31032f }, { 18.784092f, 10.197294f, 3.0543678f } };
+    protected final float[][] endPoss = { { 6.4576626f, 10.197294f, -18.33406f }, { -5.8023443f, 0.19729415f, 3.008419f },
+            { 38.423977f, 10.197294f, -0.116066754f }, { 0.8635526f, 10.197294f, -10.31032f },
+            { 18.784092f, 10.197294f, 3.0543678f } };
 
     protected MeshData nmd;
     protected NavMeshQuery query;
     protected NavMesh navmesh;
     protected Crowd crowd;
+    protected List<CrowdAgent> agents;
 
     @Before
     public void setUp() {
         nmd = new RecastTestMeshBuilder().getMeshData();
         navmesh = new NavMesh(nmd, 6, 0);
         query = new NavMeshQuery(navmesh);
-        crowd = new Crowd(50, 0.6f, navmesh);
+        crowd = new Crowd(0.6f, navmesh);
         ObstacleAvoidanceParams params = new ObstacleAvoidanceParams();
         params.velBias = 0.5f;
         params.adaptiveDivs = 5;
@@ -83,6 +86,7 @@ public class AbstractCrowdTest {
         params.adaptiveRings = 3;
         params.adaptiveDepth = 3;
         crowd.setObstacleAvoidanceParams(3, params);
+        agents = new ArrayList<>();
     }
 
     protected CrowdAgentParams getAgentParams(int updateFlags, int obstacleAvoidanceType) {
@@ -99,8 +103,7 @@ public class AbstractCrowdTest {
         return ap;
     }
 
-    protected void addAgentGrid(int size, float distance, int updateFlags, int obstacleAvoidanceType,
-            float[] startPos) {
+    protected void addAgentGrid(int size, float distance, int updateFlags, int obstacleAvoidanceType, float[] startPos) {
         CrowdAgentParams ap = getAgentParams(updateFlags, obstacleAvoidanceType);
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
@@ -108,7 +111,8 @@ public class AbstractCrowdTest {
                 pos[0] = startPos[0] + i * distance;
                 pos[1] = startPos[1];
                 pos[2] = startPos[2] + j * distance;
-                crowd.addAgent(pos, ap);
+                int id = crowd.addAgent(pos, ap);
+                agents.add(crowd.getAgent(id));
             }
         }
     }
@@ -117,22 +121,14 @@ public class AbstractCrowdTest {
         float[] ext = crowd.getQueryExtents();
         QueryFilter filter = crowd.getFilter(0);
         if (adjust) {
-            for (int i = 0; i < crowd.getAgentCount(); i++) {
-                CrowdAgent ag = crowd.getAgent(i);
-                if (!ag.isActive()) {
-                    continue;
-                }
+            for (CrowdAgent ag : crowd.getActiveAgents()) {
                 float[] vel = calcVel(ag.npos, pos, ag.params.maxSpeed);
-                crowd.requestMoveVelocity(i, vel);
+                crowd.requestMoveVelocity(ag.idx, vel);
             }
         } else {
             Result<FindNearestPolyResult> nearest = query.findNearestPoly(pos, ext, filter);
-            for (int i = 0; i < crowd.getAgentCount(); i++) {
-                CrowdAgent ag = crowd.getAgent(i);
-                if (!ag.isActive()) {
-                    continue;
-                }
-                crowd.requestMoveTarget(i, nearest.result.getNearestRef(), nearest.result.getNearestPos());
+            for (CrowdAgent ag : crowd.getActiveAgents()) {
+                crowd.requestMoveTarget(ag.idx, nearest.result.getNearestRef(), nearest.result.getNearestPos());
             }
         }
     }
