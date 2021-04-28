@@ -342,13 +342,12 @@ public class CrowdTool implements Tool {
 
             dd.begin(QUADS);
             ProximityGrid grid = crowd.getGrid();
-            int[] bounds = grid.getBounds();
             float cs = grid.getCellSize();
-            for (int y = bounds[1]; y <= bounds[3]; ++y) {
-                for (int x = bounds[0]; x <= bounds[2]; ++x) {
-                    int count = grid.getItemCountAt(x, y);
-                    if (count == 0)
-                        continue;
+            for (int[] ic : grid.getItemCounts()) {
+                int x = ic[0];
+                int y = ic[1];
+                int count = ic[2];
+                if (count != 0) {
                     int col = duRGBA(128, 0, 0, Math.min(count * 40, 255));
                     dd.vertex(x * cs, gridy, y * cs, col);
                     dd.vertex(x * cs, gridy, y * cs + cs, col);
@@ -579,6 +578,10 @@ public class CrowdTool implements Tool {
     }
 
     private void updateTick(float dt) {
+        if (m_mode == ToolMode.DEMO) {
+            crowdUpdateTime = demoTool.update(dt) / 1_000_000;
+            return;
+        }
         if (crowd == null)
             return;
         NavMesh nav = sample.getNavMesh();
@@ -586,12 +589,7 @@ public class CrowdTool implements Tool {
             return;
 
         long startTime = System.nanoTime();
-
-        if (m_mode == ToolMode.DEMO) {
-            demoTool.update(dt);
-        }
         crowd.update(dt, m_agentDebug);
-
         long endTime = System.nanoTime();
 
         // Update agent trails
@@ -637,6 +635,9 @@ public class CrowdTool implements Tool {
         if (nk_option_label(ctx, "Demo", m_mode == ToolMode.DEMO)) {
             m_mode = ToolMode.DEMO;
         }
+        if (m_mode == ToolMode.DEMO) {
+            demoTool.layout(ctx);
+        }
         nk_layout_row_dynamic(ctx, 20, 1);
         if (nk_tree_state_push(ctx, 0, "Options", toolParams.m_expandOptions)) {
             boolean m_optimizeVis = toolParams.m_optimizeVis;
@@ -669,7 +670,7 @@ public class CrowdTool implements Tool {
             }
             nk_tree_state_pop(ctx);
         }
-        nk_layout_row_dynamic(ctx, 5, 1);
+        nk_layout_row_dynamic(ctx, 2, 1);
         nk_spacing(ctx, 1);
         if (nk_tree_state_push(ctx, 0, "Selected Debug Draw", toolParams.m_expandSelectedDebugDraw)) {
             nk_layout_row_dynamic(ctx, 20, 1);
@@ -686,13 +687,14 @@ public class CrowdTool implements Tool {
             toolParams.m_showNeis = nk_option_text(ctx, "Show Neighbours", toolParams.m_showNeis);
             nk_tree_state_pop(ctx);
         }
-        // nk_layout_row_dynamic(ctx, 5, 1);
-        // nk_spacing(ctx, 1);
-        // if (nk_tree_state_push(ctx, 0, "Debug Draw", toolParams.m_expandDebugDraw)) {
-        // nk_tree_state_pop(ctx);
-        // }
-        if (m_mode == ToolMode.DEMO) {
-            demoTool.layout(ctx);
+        nk_layout_row_dynamic(ctx, 1, 1);
+        nk_spacing(ctx, 1);
+        if (nk_tree_state_push(ctx, 0, "Debug Draw", toolParams.m_expandDebugDraw)) {
+            nk_layout_row_dynamic(ctx, 20, 1);
+            toolParams.m_showGrid = nk_option_text(ctx, "Show Prox Grid", toolParams.m_showGrid);
+            nk_layout_row_dynamic(ctx, 20, 1);
+            toolParams.m_showNodes = nk_option_text(ctx, "Show Nodes", toolParams.m_showNodes);
+            nk_tree_state_pop(ctx);
         }
         nk_layout_row_dynamic(ctx, 2, 1);
         nk_spacing(ctx, 1);
