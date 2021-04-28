@@ -134,9 +134,7 @@ public class CrowdAgent {
         if (corners.isEmpty())
             return range;
 
-        boolean endOfPath = ((corners.get(corners.size() - 1).getFlags() & NavMeshQuery.DT_STRAIGHTPATH_END) != 0)
-                ? true
-                : false;
+        boolean endOfPath = ((corners.get(corners.size() - 1).getFlags() & NavMeshQuery.DT_STRAIGHTPATH_END) != 0) ? true : false;
         if (endOfPath)
             return Math.min(vDist2D(npos, corners.get(corners.size() - 1).getPos()), range);
 
@@ -185,10 +183,11 @@ public class CrowdAgent {
         targetRef = ref;
         vCopy(targetPos, pos);
         targetPathqRef = PathQueue.DT_PATHQ_INVALID;
-        if (targetRef != 0)
+        if (targetRef != 0) {
             targetState = MoveRequestState.DT_CROWDAGENT_TARGET_REQUESTING;
-        else
+        } else {
             targetState = MoveRequestState.DT_CROWDAGENT_TARGET_FAILED;
+        }
     }
 
 }

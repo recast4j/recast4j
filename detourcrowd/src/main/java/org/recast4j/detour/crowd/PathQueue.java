@@ -22,6 +22,7 @@ import static org.recast4j.detour.DetourCommon.vCopy;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
@@ -31,23 +32,24 @@ import org.recast4j.detour.Status;
 
 public class PathQueue {
 
-    private static final int MAX_QUEUE = 8;
     static final int DT_PATHQ_INVALID = 0;
-    private static final int MAX_KEEP_ALIVE = 2; // in update ticks.
 
-    private final PathQuery[] m_queue = new PathQuery[MAX_QUEUE];
-    private long m_nextHandle = 1;
-    private int m_queueHead;
-    private final NavMeshQuery m_navquery;
+    private final PathQuery[] queue;
+    private int queueHead;
+    private final AtomicLong handleId = new AtomicLong(1);
+    private final int maxKeepAlive;
+    private NavMeshQuery navQuery;
 
-    protected PathQueue(int maxSearchNodeCount, NavMesh nav) {
-        m_navquery = new NavMeshQuery(nav);
-        for (int i = 0; i < MAX_QUEUE; ++i) {
-            m_queue[i] = new PathQuery();
-            m_queue[i].ref = DT_PATHQ_INVALID;
-            m_queue[i].path = new ArrayList<>(256);
+    protected PathQueue(NavMesh nav, int queueSize, int maxKeepAlive) {
+        queue = new PathQuery[queueSize];
+        navQuery = new NavMeshQuery(nav);
+        this.maxKeepAlive = maxKeepAlive;
+        for (int i = 0; i < queue.length; ++i) {
+            queue[i] = new PathQuery();
+            queue[i].ref = DT_PATHQ_INVALID;
+            queue[i].path = new ArrayList<>();
         }
-        m_queueHead = 0;
+        queueHead = 0;
     }
 
     protected void update(int maxIters) {
@@ -55,12 +57,12 @@ public class PathQueue {
         // or upto maxIters pathfinder iterations has been consumed.
         int iterCount = maxIters;
 
-        for (int i = 0; i < MAX_QUEUE; ++i) {
-            PathQuery q = m_queue[m_queueHead % MAX_QUEUE];
+        for (int i = 0; i < queue.length; ++i) {
+            PathQuery q = queue[queueHead % queue.length];
 
             // Skip inactive requests.
             if (q.ref == DT_PATHQ_INVALID) {
-                m_queueHead++;
+                queueHead++;
                 continue;
             }
 
@@ -68,29 +70,27 @@ public class PathQueue {
             if (q.status != null && (q.status.isSuccess() || q.status.isFailed())) {
                 // If the path result has not been read in few frames, free the slot.
                 q.keepAlive++;
-                if (q.keepAlive > MAX_KEEP_ALIVE) {
+                if (q.keepAlive > maxKeepAlive) {
                     q.ref = DT_PATHQ_INVALID;
                     q.status = null;
                 }
 
-                m_queueHead++;
+                queueHead++;
                 continue;
             }
 
             // Handle query start.
             if (q.status == null) {
-                q.status = m_navquery.initSlicedFindPath(q.startRef, q.endRef, q.startPos, q.endPos, q.filter, 0);
+                q.status = navQuery.initSlicedFindPath(q.startRef, q.endRef, q.startPos, q.endPos, q.filter, 0);
             }
             // Handle query in progress.
             if (q.status.isInProgress()) {
-                int iters = 0;
-                Result<Integer> res = m_navquery.updateSlicedFindPath(iterCount);
-                iters = res.result;
+                Result<Integer> res = navQuery.updateSlicedFindPath(iterCount);
                 q.status = res.status;
-                iterCount -= iters;
+                iterCount -= res.result;
             }
             if (q.status.isSuccess()) {
-                Result<List<Long>> path = m_navquery.finalizeSlicedFindPath();
+                Result<List<Long>> path = navQuery.finalizeSlicedFindPath();
                 q.status = path.status;
                 q.path = path.result;
             }
@@ -98,29 +98,30 @@ public class PathQueue {
             if (iterCount <= 0)
                 break;
 
-            m_queueHead++;
+            queueHead++;
         }
 
     }
 
     protected long request(long startRef, long endRef, float[] startPos, float[] endPos, QueryFilter filter) {
         // Find empty slot
-        int slot = -1;
-        for (int i = 0; i < MAX_QUEUE; ++i) {
-            if (m_queue[i].ref == DT_PATHQ_INVALID) {
-                slot = i;
+        PathQuery q = null;
+        for (PathQuery qi : queue) {
+            if (qi.ref == DT_PATHQ_INVALID) {
+                q = qi;
                 break;
             }
         }
         // Could not find slot.
-        if (slot == -1)
+        if (q == null) {
             return DT_PATHQ_INVALID;
+        }
 
-        long ref = m_nextHandle++;
-        if (m_nextHandle == DT_PATHQ_INVALID)
-            m_nextHandle++;
+        long ref = handleId.getAndIncrement();
+        if (ref == DT_PATHQ_INVALID) {
+            ref = handleId.getAndIncrement();
+        }
 
-        PathQuery q = m_queue[slot];
         q.ref = ref;
         vCopy(q.startPos, startPos);
         q.startRef = startRef;
@@ -134,18 +135,18 @@ public class PathQueue {
     }
 
     Status getRequestStatus(long ref) {
-        for (int i = 0; i < MAX_QUEUE; ++i) {
-            if (m_queue[i].ref == ref)
-                return m_queue[i].status;
+        for (PathQuery q : queue) {
+            if (q.ref == ref) {
+                return q.status;
+            }
         }
         return Status.FAILURE;
 
     }
 
     Result<List<Long>> getPathResult(long ref) {
-        for (int i = 0; i < MAX_QUEUE; ++i) {
-            if (m_queue[i].ref == ref) {
-                PathQuery q = m_queue[i];
+        for (PathQuery q : queue) {
+            if (q.ref == ref) {
                 // Free request for reuse.
                 q.ref = DT_PATHQ_INVALID;
                 q.status = null;
@@ -156,6 +157,11 @@ public class PathQueue {
     }
 
     public NavMeshQuery getNavQuery() {
-        return m_navquery;
+        return navQuery;
     }
+
+    public void setNavMesh(NavMesh nav) {
+        navQuery = new NavMeshQuery(nav);
+    }
+
 }
