@@ -47,9 +47,7 @@ public class PathCorridorTest {
 
     @Before
     public void setUp() {
-        corridor.m_pos[0] = 10;
-        corridor.m_pos[1] = 20;
-        corridor.m_pos[2] = 30;
+        corridor.reset(0, new float[] {10,20,30});
     }
 
     @Test

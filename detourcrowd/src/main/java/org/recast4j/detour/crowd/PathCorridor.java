@@ -76,9 +76,9 @@ import org.recast4j.detour.Tupple2;
  */
 public class PathCorridor {
 
-    final float[] m_pos = new float[3];
-    final float[] m_target = new float[3];
-    List<Long> m_path;
+    private final float[] m_pos = new float[3];
+    private final float[] m_target = new float[3];
+    private List<Long> m_path;
 
     protected List<Long> mergeCorridorStartMoved(List<Long> path, List<Long> visited) {
         int furthestPath = -1;
@@ -201,6 +201,8 @@ public class PathCorridor {
         vCopy(m_target, pos);
     }
 
+    private static final float MIN_TARGET_DIST = sqr(0.01f);
+
     /**
      * Finds the corners in the corridor from the position toward the target. (The straightened path.)
      *
@@ -219,7 +221,6 @@ public class PathCorridor {
      * @return Corners
      */
     public List<StraightPathItem> findCorners(int maxCorners, NavMeshQuery navquery, QueryFilter filter) {
-        final float MIN_TARGET_DIST = sqr(0.01f);
         List<StraightPathItem> path = new ArrayList<>();
         Result<List<StraightPathItem>> result = navquery.findStraightPath(m_pos, m_target, m_path, maxCorners, 0);
         if (result.succeeded()) {
