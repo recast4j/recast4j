@@ -29,6 +29,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import org.recast4j.recast.Heightfield;
+import org.recast4j.recast.RecastConstants;
 import org.recast4j.recast.Span;
 
 public class VoxelTile {
@@ -54,7 +55,8 @@ public class VoxelTile {
         this.depth = depth;
         this.boundsMin = boundsMin;
         this.boundsMax = boundsMax;
-        this.boundsMax[1] = cellHeight * 0xffff;
+        // Increase max height so that objects can be added beyond the initial height
+        this.boundsMax[1] = boundsMin[1] + cellHeight * RecastConstants.SPAN_MAX_HEIGHT;
         this.cellSize = cellSize;
         this.cellHeight = cellHeight;
         this.borderSize = borderSize;
