@@ -105,8 +105,8 @@ public class MeshDataReaderWriterTest {
         for (int i = 0; i < meshData.header.bvNodeCount; i++) {
             assertEquals(meshData.bvTree[i].i, readData.bvTree[i].i);
             for (int j = 0; j < 3; j++) {
-                assertEquals(meshData.bvTree[i].bmin[j], readData.bvTree[i].bmin[j]);
-                assertEquals(meshData.bvTree[i].bmax[j], readData.bvTree[i].bmax[j]);
+                assertEquals(meshData.bvTree[i].bmin[j], readData.bvTree[i].bmin[j], 0.0f);
+                assertEquals(meshData.bvTree[i].bmax[j], readData.bvTree[i].bmax[j], 0.0f);
             }
         }
         for (int i = 0; i < meshData.header.offMeshConCount; i++) {

@@ -194,13 +194,13 @@ public class NavMeshBuilder {
                 }
 
                 // BV-tree uses cs for all dimensions
-                it.bmin[0] = clamp((int) ((bmin[0] - params.bmin[0]) * quantFactor), 0, 0xffff);
-                it.bmin[1] = clamp((int) ((bmin[1] - params.bmin[1]) * quantFactor), 0, 0xffff);
-                it.bmin[2] = clamp((int) ((bmin[2] - params.bmin[2]) * quantFactor), 0, 0xffff);
+                it.bmin[0] = clamp((int) ((bmin[0] - params.bmin[0]) * quantFactor), 0, 0x7fffffff);
+                it.bmin[1] = clamp((int) ((bmin[1] - params.bmin[1]) * quantFactor), 0, 0x7fffffff);
+                it.bmin[2] = clamp((int) ((bmin[2] - params.bmin[2]) * quantFactor), 0, 0x7fffffff);
 
-                it.bmax[0] = clamp((int) ((bmax[0] - params.bmin[0]) * quantFactor), 0, 0xffff);
-                it.bmax[1] = clamp((int) ((bmax[1] - params.bmin[1]) * quantFactor), 0, 0xffff);
-                it.bmax[2] = clamp((int) ((bmax[2] - params.bmin[2]) * quantFactor), 0, 0xffff);
+                it.bmax[0] = clamp((int) ((bmax[0] - params.bmin[0]) * quantFactor), 0, 0x7fffffff);
+                it.bmax[1] = clamp((int) ((bmax[1] - params.bmin[1]) * quantFactor), 0, 0x7fffffff);
+                it.bmax[2] = clamp((int) ((bmax[2] - params.bmin[2]) * quantFactor), 0, 0x7fffffff);
             } else {
                 int p = i * params.nvp * 2;
                 it.bmin[0] = it.bmax[0] = params.verts[params.polys[p] * 3 + 0];
