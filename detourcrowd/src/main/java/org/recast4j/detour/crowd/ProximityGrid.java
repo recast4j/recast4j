@@ -18,6 +18,8 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour.crowd;
 
+import static java.util.stream.Collectors.toList;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -66,7 +68,6 @@ public class ProximityGrid {
     private final float m_cellSize;
     private final float m_invCellSize;
     private final Map<ItemKey, List<CrowdAgent>> items;
-    int[] m_bounds = new int[4];
 
     public ProximityGrid(float m_cellSize) {
         this.m_cellSize = m_cellSize;
@@ -76,10 +77,6 @@ public class ProximityGrid {
 
     void clear() {
         items.clear();
-        m_bounds[0] = 0xffff;
-        m_bounds[1] = 0xffff;
-        m_bounds[2] = -0xffff;
-        m_bounds[3] = -0xffff;
     }
 
     void addItem(CrowdAgent agent, float minx, float miny, float maxx, float maxy) {
@@ -87,11 +84,6 @@ public class ProximityGrid {
         int iminy = (int) Math.floor(miny * m_invCellSize);
         int imaxx = (int) Math.floor(maxx * m_invCellSize);
         int imaxy = (int) Math.floor(maxy * m_invCellSize);
-
-        m_bounds[0] = Math.min(m_bounds[0], iminx);
-        m_bounds[1] = Math.min(m_bounds[1], iminy);
-        m_bounds[2] = Math.min(m_bounds[2], imaxx);
-        m_bounds[3] = Math.min(m_bounds[3], imaxy);
 
         for (int y = iminy; y <= imaxy; ++y) {
             for (int x = iminx; x <= imaxx; ++x) {
@@ -126,14 +118,9 @@ public class ProximityGrid {
         return result;
     }
 
-    public int getItemCountAt(int x, int y) {
-        ItemKey key = new ItemKey(x, y);
-        List<CrowdAgent> ids = items.get(key);
-        return ids != null ? ids.size() : 0;
-    }
-
-    public int[] getBounds() {
-        return m_bounds;
+    public List<int[]> getItemCounts() {
+        return items.entrySet().stream().filter(e -> e.getValue() != null && e.getValue().size() > 0)
+                .map(e -> new int[] { e.getKey().x, e.getKey().y, e.getValue().size() }).collect(toList());
     }
 
     public float getCellSize() {
