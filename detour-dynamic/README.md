@@ -29,3 +29,4 @@ Detour Tile Cache stores pre-processed voxel data (so-called compact heightfield
 | Memory required | More | Less |
 | Build performance | Worse | Better |
 | Build configuration | Full | Partial |
+| Additional capabilities| Yes (e.g. voxel raycast - LoS) | No |
