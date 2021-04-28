@@ -96,6 +96,7 @@ public class DynamicUpdateTool implements Tool {
     private final FloatBuffer maxSimplificationError = BufferUtils.createFloatBuffer(1).put(0, 1.3f);
     private final IntBuffer vertsPerPoly = BufferUtils.createIntBuffer(1).put(0, 6);
     private boolean buildDetailMesh = true;
+    private boolean compression = true;
     private final FloatBuffer detailSampleDist = BufferUtils.createFloatBuffer(1).put(0, 6f);
     private final FloatBuffer detailSampleMaxError = BufferUtils.createFloatBuffer(1).put(0, 1f);
     private boolean showColliders = false;
@@ -446,6 +447,8 @@ public class DynamicUpdateTool implements Tool {
                 load();
             }
             if (dynaMesh != null) {
+                nk_layout_row_dynamic(ctx, 18, 1);
+                compression = nk_check_text(ctx, "Compression", compression);
                 if (nk_button_text(ctx, "Save Voxels...")) {
                     save();
                 }
@@ -642,7 +645,7 @@ public class DynamicUpdateTool implements Tool {
         try (FileOutputStream fos = new FileOutputStream(file)) {
             VoxelFile voxelFile = VoxelFile.from(dynaMesh);
             VoxelFileWriter writer = new VoxelFileWriter();
-            writer.write(fos, voxelFile);
+            writer.write(fos, voxelFile, compression);
         } catch (Exception e) {
             e.printStackTrace();
         }

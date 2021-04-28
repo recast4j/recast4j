@@ -27,6 +27,8 @@ import org.recast4j.detour.io.IOUtils;
 
 public class VoxelFileReader {
 
+    private final LZ4VoxelTileCompressor compressor = new LZ4VoxelTileCompressor();
+
     public VoxelFile read(InputStream stream) throws IOException {
         ByteBuffer buf = IOUtils.toByteBuffer(stream);
         VoxelFile file = new VoxelFile();
@@ -40,6 +42,7 @@ public class VoxelFileReader {
         }
         file.version = buf.getInt();
         boolean isExportedFromAstar = (file.version & VoxelFile.VERSION_EXPORTER_MASK) == 0;
+        boolean compression = (file.version & VoxelFile.VERSION_COMPRESSION_MASK) == VoxelFile.VERSION_COMPRESSION_LZ4;
         file.walkableRadius = buf.getFloat();
         file.walkableHeight = buf.getFloat();
         file.walkableClimb = buf.getFloat();
@@ -82,8 +85,8 @@ public class VoxelFileReader {
             file.bounds[4] += file.bounds[1];
             file.bounds[5] += file.bounds[2];
         }
-        file.tileCount = buf.getInt();
-        for (int tile = 0; tile < file.tileCount; tile++) {
+        int tileCount = buf.getInt();
+        for (int tile = 0; tile < tileCount; tile++) {
             int tileX = buf.getInt();
             int tileZ = buf.getInt();
             int width = buf.getInt();
@@ -112,6 +115,9 @@ public class VoxelFileReader {
             int position = buf.position();
             byte[] bytes = new byte[voxelSize];
             buf.get(bytes);
+            if (compression) {
+                bytes = compressor.decompress(bytes);
+            }
             ByteBuffer data = ByteBuffer.wrap(bytes);
             data.order(buf.order());
             file.addTile(new VoxelTile(tileX, tileZ, width, depth, boundsMin, boundsMax, cellSize, cellHeight, borderSize, data));

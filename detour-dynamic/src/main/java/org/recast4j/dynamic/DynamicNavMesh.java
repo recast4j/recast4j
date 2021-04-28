@@ -38,6 +38,7 @@ import org.recast4j.detour.NavMeshDataCreateParams;
 import org.recast4j.detour.NavMeshParams;
 import org.recast4j.dynamic.collider.Collider;
 import org.recast4j.dynamic.io.VoxelFile;
+import org.recast4j.dynamic.io.VoxelTile;
 import org.recast4j.recast.Heightfield;
 import org.recast4j.recast.RecastBuilder;
 import org.recast4j.recast.RecastBuilder.RecastBuilderResult;
@@ -98,10 +99,6 @@ public class DynamicNavMesh {
 
     private Optional<Heightfield> lookupHeightfield(int x, int z) {
         return Optional.ofNullable(getTileAt(x, z)).map(t -> t.checkpoint).map(c -> c.heightfield);
-    }
-
-    public List<RecastBuilderResult> recastResults() {
-        return tiles.values().stream().map(t -> t.recastResult).collect(toList());
     }
 
     public long addCollider(Collider collider) {
@@ -223,6 +220,14 @@ public class DynamicNavMesh {
 
     private long lookupKey(long x, long z) {
         return (z << 32) | x;
+    }
+
+    public List<VoxelTile> voxelTiles() {
+        return tiles.values().stream().map(t -> t.voxelTile).collect(toList());
+    }
+
+    public List<RecastBuilderResult> recastResults() {
+        return tiles.values().stream().map(t -> t.recastResult).collect(toList());
     }
 
 }
