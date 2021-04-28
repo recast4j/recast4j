@@ -44,7 +44,6 @@ public class VoxelFileReaderTest {
             assertEquals(20f, f.maxEdgeLen, 0f);
             assertEquals(2f, f.maxSimplificationError, 0f);
             assertEquals(2f, f.minRegionArea, 0f);
-            assertEquals(1, f.tileCount);
             assertEquals(1, f.tiles.size());
             assertEquals(0.001f, f.tiles.get(0).cellHeight, 0f);
             assertEquals(810, f.tiles.get(0).width);
@@ -69,7 +68,6 @@ public class VoxelFileReaderTest {
             assertEquals(20f, f.maxEdgeLen, 0f);
             assertEquals(2f, f.maxSimplificationError, 0f);
             assertEquals(2f, f.minRegionArea, 0f);
-            assertEquals(100, f.tileCount);
             assertEquals(100, f.tiles.size());
             assertEquals(0.001f, f.tiles.get(0).cellHeight, 0f);
             assertEquals(90, f.tiles.get(0).width);

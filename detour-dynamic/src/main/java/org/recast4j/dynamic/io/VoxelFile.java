@@ -25,6 +25,7 @@ import java.util.List;
 import org.recast4j.dynamic.DynamicNavMesh;
 import org.recast4j.dynamic.DynamicNavMeshConfig;
 import org.recast4j.recast.AreaModification;
+import org.recast4j.recast.Heightfield;
 import org.recast4j.recast.RecastBuilder.RecastBuilderResult;
 import org.recast4j.recast.RecastConfig;
 import org.recast4j.recast.RecastConstants.PartitionType;
@@ -35,6 +36,8 @@ public class VoxelFile {
     public static final int MAGIC = 'V' << 24 | 'O' << 16 | 'X' << 8 | 'L';
     public static final int VERSION_EXPORTER_MASK = 0xF000;
     public static final int VERSION_COMPRESSION_MASK = 0x0F00;
+    public static final int VERSION_EXPORTER_RECAST4J = 0x1000;
+    public static final int VERSION_COMPRESSION_LZ4 = 0x0100;
     public int version;
     public PartitionType partitionType = PartitionType.WATERSHED;
     public boolean filterLowHangingObstacles = true;
@@ -58,7 +61,6 @@ public class VoxelFile {
     public int tileSizeZ;
     public float[] rotation = new float[3];
     public float[] bounds = new float[6];
-    public int tileCount;
     public final List<VoxelTile> tiles = new ArrayList<>();
 
     public void addTile(VoxelTile tile) {
@@ -99,7 +101,6 @@ public class VoxelFile {
         f.tileSizeZ = config.tileSizeZ;
         f.bounds = new float[] { Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY,
                 Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY };
-        f.tileCount = results.size();
         for (RecastBuilderResult r : results) {
             f.tiles.add(new VoxelTile(r.tileX, r.tileZ, r.getSolidHeightfield()));
             f.bounds[0] = Math.min(f.bounds[0], r.getSolidHeightfield().bmin[0]);
@@ -138,16 +139,15 @@ public class VoxelFile {
         f.tileSizeZ = config.tileSizeZ;
         f.bounds = new float[] { Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY,
                 Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY };
-        List<RecastBuilderResult> results = mesh.recastResults();
-        f.tileCount = results.size();
-        for (RecastBuilderResult r : results) {
-            f.tiles.add(new VoxelTile(r.tileX, r.tileZ, r.getSolidHeightfield()));
-            f.bounds[0] = Math.min(f.bounds[0], r.getSolidHeightfield().bmin[0]);
-            f.bounds[1] = Math.min(f.bounds[1], r.getSolidHeightfield().bmin[1]);
-            f.bounds[2] = Math.min(f.bounds[2], r.getSolidHeightfield().bmin[2]);
-            f.bounds[3] = Math.max(f.bounds[3], r.getSolidHeightfield().bmax[0]);
-            f.bounds[4] = Math.max(f.bounds[4], r.getSolidHeightfield().bmax[1]);
-            f.bounds[5] = Math.max(f.bounds[5], r.getSolidHeightfield().bmax[2]);
+        for (VoxelTile vt : mesh.voxelTiles()) {
+            Heightfield heightfield = vt.heightfield();
+            f.tiles.add(new VoxelTile(vt.tileX, vt.tileZ, heightfield));
+            f.bounds[0] = Math.min(f.bounds[0], vt.boundsMin[0]);
+            f.bounds[1] = Math.min(f.bounds[1], vt.boundsMin[1]);
+            f.bounds[2] = Math.min(f.bounds[2], vt.boundsMin[2]);
+            f.bounds[3] = Math.max(f.bounds[3], vt.boundsMax[0]);
+            f.bounds[4] = Math.max(f.bounds[4], vt.boundsMax[1]);
+            f.bounds[5] = Math.max(f.bounds[5], vt.boundsMax[2]);
         }
         return f;
     }
