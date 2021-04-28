@@ -551,9 +551,9 @@ public class NavMeshQuery {
             float maxy = clamp(qmax[1], tbmin[1], tbmax[1]) - tbmin[1];
             float maxz = clamp(qmax[2], tbmin[2], tbmax[2]) - tbmin[2];
             // Quantize
-            bmin[0] = (int) (qfac * minx) & 0xfffe;
-            bmin[1] = (int) (qfac * miny) & 0xfffe;
-            bmin[2] = (int) (qfac * minz) & 0xfffe;
+            bmin[0] = (int) (qfac * minx) & 0x7ffffffe;
+            bmin[1] = (int) (qfac * miny) & 0x7ffffffe;
+            bmin[2] = (int) (qfac * minz) & 0x7ffffffe;
             bmax[0] = (int) (qfac * maxx + 1) | 1;
             bmax[1] = (int) (qfac * maxy + 1) | 1;
             bmax[2] = (int) (qfac * maxz + 1) | 1;
