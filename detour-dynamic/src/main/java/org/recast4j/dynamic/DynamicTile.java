@@ -69,6 +69,7 @@ class DynamicTile {
         Heightfield heightfield = checkpoint != null ? checkpoint.heightfield : voxelTile.heightfield();
         colliders.forEach((id, c) -> {
             if (!rasterizedColliders.contains(id)) {
+                heightfield.bmax[1] = Math.max(heightfield.bmax[1], c.bounds()[4] + heightfield.ch * 2);
                 c.rasterize(heightfield, telemetry);
             }
         });
