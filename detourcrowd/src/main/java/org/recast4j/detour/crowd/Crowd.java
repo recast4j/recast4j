@@ -163,12 +163,15 @@ public class Crowd {
     private final PathQueue m_pathq;
     private final ObstacleAvoidanceParams[] m_obstacleQueryParams = new ObstacleAvoidanceParams[DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS];
     private final ObstacleAvoidanceQuery m_obstacleQuery;
-    private final ProximityGrid m_grid;
+    private ProximityGrid m_grid;
     private final float[] m_ext = new float[3];
     private final QueryFilter[] m_filters = new QueryFilter[DT_CROWD_MAX_QUERY_FILTER_TYPE];
     private NavMeshQuery navQuery;
+    private NavMesh navMesh;
     private final CrowdConfig config;
+    private final CrowdTelemetry telemetry = new CrowdTelemetry();
     int m_velocitySampleCount;
+
 
     public Crowd(CrowdConfig config, NavMesh nav) {
         this(config, nav, i -> new DefaultQueryFilter());
@@ -179,7 +182,6 @@ public class Crowd {
         this.config = config;
         vSet(m_ext, config.maxAgentRadius * 2.0f, config.maxAgentRadius * 1.5f, config.maxAgentRadius * 2.0f);
 
-        m_grid = new ProximityGrid(config.maxAgentRadius * 3);
         m_obstacleQuery = new ObstacleAvoidanceQuery(6, 8);
 
         for (int i = 0; i < DT_CROWD_MAX_QUERY_FILTER_TYPE; i++) {
@@ -191,16 +193,17 @@ public class Crowd {
         }
 
         // Allocate temp buffer for merging paths.
-        m_pathq = new PathQueue(nav, config.pathQueueSize, config.pathQueueKeepAlive);
+        m_pathq = new PathQueue(config);
         m_agents = new HashSet<>();
 
         // The navQuery is mostly used for local searches, no need for large node pool.
+        navMesh = nav;
         navQuery = new NavMeshQuery(nav);
     }
 
     public void setNavMesh(NavMesh nav) {
+        navMesh = nav;
         navQuery = new NavMeshQuery(nav);
-        m_pathq.setNavMesh(nav);
     }
 
     /// Sets the shared avoidance configuration for the specified index.
@@ -321,7 +324,7 @@ public class Crowd {
         // Initialize request.
         agent.targetRef = 0;
         vCopy(agent.targetPos, vel);
-        agent.targetPathqRef = PathQueue.DT_PATHQ_INVALID;
+        agent.targetPathQueryResult = null;
         agent.targetReplan = false;
         agent.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY;
 
@@ -336,7 +339,7 @@ public class Crowd {
         agent.targetRef = 0;
         vSet(agent.targetPos, 0, 0, 0);
         vSet(agent.dvel, 0, 0, 0);
-        agent.targetPathqRef = PathQueue.DT_PATHQ_INVALID;
+        agent.targetPathQueryResult = null;
         agent.targetReplan = false;
         agent.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_NONE;
         return true;
@@ -351,371 +354,10 @@ public class Crowd {
         return new ArrayList<>(m_agents);
     }
 
-    private void updateMoveRequest(Collection<CrowdAgent> agents) {
-        PriorityQueue<CrowdAgent> queue = new PriorityQueue<>(
-                (a1, a2) -> Float.compare(a2.targetReplanTime, a1.targetReplanTime));
-
-        // Fire off new requests.
-        for (CrowdAgent ag : agents) {
-            if (ag.state == CrowdAgentState.DT_CROWDAGENT_STATE_INVALID) {
-                continue;
-            }
-            if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_NONE
-                    || ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY) {
-                continue;
-            }
-
-            if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_REQUESTING) {
-                List<Long> path = ag.corridor.getPath();
-                if (path.isEmpty()) {
-                    throw new IllegalArgumentException("Empty path");
-                }
-                // Quick search towards the goal.
-                navQuery.initSlicedFindPath(path.get(0), ag.targetRef, ag.npos, ag.targetPos,
-                        m_filters[ag.params.queryFilterType], 0);
-                navQuery.updateSlicedFindPath(config.maxTargetFindPathIterationsPerAgent);
-                Result<List<Long>> pathFound;
-                if (ag.targetReplan) // && npath > 10)
-                {
-                    // Try to use existing steady path during replan if
-                    // possible.
-                    pathFound = navQuery.finalizeSlicedFindPathPartial(path);
-                } else {
-                    // Try to move towards target when goal changes.
-                    pathFound = navQuery.finalizeSlicedFindPath();
-                }
-                List<Long> reqPath = pathFound.result;
-                float[] reqPos = new float[3];
-                if (pathFound.succeeded() && reqPath.size() > 0) {
-                    // In progress or succeed.
-                    if (reqPath.get(reqPath.size() - 1) != ag.targetRef) {
-                        // Partial path, constrain target position inside the
-                        // last polygon.
-                        Result<ClosestPointOnPolyResult> cr = navQuery.closestPointOnPoly(reqPath.get(reqPath.size() - 1),
-                                ag.targetPos);
-                        if (cr.succeeded()) {
-                            reqPos = cr.result.getClosest();
-                        } else {
-                            reqPath = new ArrayList<>();
-                        }
-                    } else {
-                        vCopy(reqPos, ag.targetPos);
-                    }
-                } else {
-                    // Could not find path, start the request from current
-                    // location.
-                    vCopy(reqPos, ag.npos);
-                    reqPath = new ArrayList<>();
-                    reqPath.add(path.get(0));
-                }
-
-                ag.corridor.setCorridor(reqPos, reqPath);
-                ag.boundary.reset();
-                ag.partial = false;
-
-                if (reqPath.get(reqPath.size() - 1) == ag.targetRef) {
-                    ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_VALID;
-                    ag.targetReplanTime = 0.0f;
-                } else {
-                    // The path is longer or potentially unreachable, full plan.
-                    ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_QUEUE;
-                }
-            }
-
-            if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_QUEUE) {
-                addToPathQueue(ag, queue);
-            }
-        }
-
-        while (!queue.isEmpty()) {
-            CrowdAgent ag = queue.poll();
-            ag.targetPathqRef = m_pathq.request(ag.corridor.getLastPoly(), ag.targetRef, ag.corridor.getTarget(), ag.targetPos,
-                    m_filters[ag.params.queryFilterType]);
-            if (ag.targetPathqRef != PathQueue.DT_PATHQ_INVALID) {
-                ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_PATH;
-            }
-        }
-
-        // Update requests.
-        m_pathq.update(config.maxFindPathIterationsPerUpdate);
-
-        // Process path results.
-        for (CrowdAgent ag : agents) {
-            if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_NONE
-                    || ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY) {
-                continue;
-            }
-
-            if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_PATH) {
-                // Poll path queue.
-                Status status = m_pathq.getRequestStatus(ag.targetPathqRef);
-                if (status != null && status.isFailed()) {
-                    // Path find failed, retry if the target location is still
-                    // valid.
-                    ag.targetPathqRef = PathQueue.DT_PATHQ_INVALID;
-                    if (ag.targetRef != 0) {
-                        ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_REQUESTING;
-                    } else {
-                        ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_FAILED;
-                    }
-                    ag.targetReplanTime = 0.0f;
-                } else if (status != null && status.isSuccess()) {
-                    List<Long> path = ag.corridor.getPath();
-                    if (path.isEmpty()) {
-                        throw new IllegalArgumentException("Empty path");
-                    }
-
-                    // Apply results.
-                    float[] targetPos = ag.targetPos;
-
-                    boolean valid = true;
-                    Result<List<Long>> pathFound = m_pathq.getPathResult(ag.targetPathqRef);
-                    List<Long> res = pathFound.result;
-                    status = pathFound.status;
-                    if (status.isFailed() || res.isEmpty()) {
-                        valid = false;
-                    }
-
-                    if (status.isPartial()) {
-                        ag.partial = true;
-                    } else {
-                        ag.partial = false;
-                    }
-
-                    // Merge result and existing path.
-                    // The agent might have moved whilst the request is
-                    // being processed, so the path may have changed.
-                    // We assume that the end of the path is at the same
-                    // location
-                    // where the request was issued.
-
-                    // The last ref in the old path should be the same as
-                    // the location where the request was issued..
-                    if (valid && path.get(path.size() - 1).longValue() != res.get(0).longValue()) {
-                        valid = false;
-                    }
-
-                    if (valid) {
-                        // Put the old path infront of the old path.
-                        if (path.size() > 1) {
-                            path.remove(path.size() - 1);
-                            path.addAll(res);
-                            res = path;
-                            // Remove trackbacks
-                            for (int j = 1; j < res.size() - 1; ++j) {
-                                if (j - 1 >= 0 && j + 1 < res.size()) {
-                                    if (res.get(j - 1).longValue() == res.get(j + 1).longValue()) {
-                                        res.remove(j + 1);
-                                        res.remove(j);
-                                        j -= 2;
-                                    }
-                                }
-                            }
-                        }
-
-                        // Check for partial path.
-                        if (res.get(res.size() - 1) != ag.targetRef) {
-                            // Partial path, constrain target position inside
-                            // the last polygon.
-                            Result<ClosestPointOnPolyResult> cr = navQuery.closestPointOnPoly(res.get(res.size() - 1), targetPos);
-                            if (cr.succeeded()) {
-                                targetPos = cr.result.getClosest();
-                            } else {
-                                valid = false;
-                            }
-                        }
-                    }
-
-                    if (valid) {
-                        // Set current corridor.
-                        ag.corridor.setCorridor(targetPos, res);
-                        // Force to update boundary.
-                        ag.boundary.reset();
-                        ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_VALID;
-                    } else {
-                        // Something went wrong.
-                        ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_FAILED;
-                    }
-
-                    ag.targetReplanTime = 0.0f;
-                }
-            }
-        }
-    }
-
-    private List<CrowdNeighbour> getNeighbours(float[] pos, float height, float range, CrowdAgent skip, ProximityGrid grid) {
-
-        List<CrowdNeighbour> result = new ArrayList<>();
-        Set<CrowdAgent> proxAgents = grid.queryItems(pos[0] - range, pos[2] - range, pos[0] + range, pos[2] + range);
-
-        for (CrowdAgent ag : proxAgents) {
-
-            if (ag == skip) {
-                continue;
-            }
-
-            // Check for overlap.
-            float[] diff = vSub(pos, ag.npos);
-            if (Math.abs(diff[1]) >= (height + ag.params.height) / 2.0f) {
-                continue;
-            }
-            diff[1] = 0;
-            float distSqr = vLenSqr(diff);
-            if (distSqr > sqr(range)) {
-                continue;
-            }
-
-            result.add(new CrowdNeighbour(ag, distSqr));
-        }
-        Collections.sort(result, (o1, o2) -> Float.compare(o1.dist, o2.dist));
-        return result;
-
-    }
-
-    public void addToOptQueue(CrowdAgent newag, PriorityQueue<CrowdAgent> agents) {
-        // Insert neighbour based on greatest time.
-        agents.add(newag);
-    }
-
-    // Insert neighbour based on greatest time.
-    private void addToPathQueue(CrowdAgent newag, PriorityQueue<CrowdAgent> agents) {
-        agents.add(newag);
-    }
-
-    private void updateTopologyOptimization(Collection<CrowdAgent> agents, float dt) {
-
-        PriorityQueue<CrowdAgent> queue = new PriorityQueue<>((a1, a2) -> Float.compare(a2.topologyOptTime, a1.topologyOptTime));
-
-        for (CrowdAgent ag : agents) {
-            if (ag.state != CrowdAgentState.DT_CROWDAGENT_STATE_WALKING) {
-                continue;
-            }
-            if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_NONE
-                    || ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY) {
-                continue;
-            }
-            if ((ag.params.updateFlags & CrowdAgentParams.DT_CROWD_OPTIMIZE_TOPO) == 0) {
-                continue;
-            }
-            ag.topologyOptTime += dt;
-            if (ag.topologyOptTime >= config.topologyOptimizationTimeThreshold) {
-                addToOptQueue(ag, queue);
-            }
-        }
-
-        while (!queue.isEmpty()) {
-            CrowdAgent ag = queue.poll();
-            ag.corridor.optimizePathTopology(navQuery, m_filters[ag.params.queryFilterType]);
-            ag.topologyOptTime = 0;
-        }
-
-    }
-
-    private void checkPathValidity(Collection<CrowdAgent> agents, float dt) {
-
-        for (CrowdAgent ag : agents) {
-
-            if (ag.state != CrowdAgentState.DT_CROWDAGENT_STATE_WALKING) {
-                continue;
-            }
-
-            ag.targetReplanTime += dt;
-
-            boolean replan = false;
-
-            // First check that the current location is valid.
-            float[] agentPos = new float[3];
-            long agentRef = ag.corridor.getFirstPoly();
-            vCopy(agentPos, ag.npos);
-            if (!navQuery.isValidPolyRef(agentRef, m_filters[ag.params.queryFilterType])) {
-                // Current location is not valid, try to reposition.
-                // TODO: this can snap agents, how to handle that?
-                Result<FindNearestPolyResult> nearestPoly = navQuery.findNearestPoly(ag.npos, m_ext,
-                        m_filters[ag.params.queryFilterType]);
-                agentRef = nearestPoly.succeeded() ? nearestPoly.result.getNearestRef() : 0L;
-                if (nearestPoly.succeeded()) {
-                    vCopy(agentPos, nearestPoly.result.getNearestPos());
-                }
-
-                if (agentRef == 0) {
-                    // Could not find location in navmesh, set state to invalid.
-                    ag.corridor.reset(0, agentPos);
-                    ag.partial = false;
-                    ag.boundary.reset();
-                    ag.state = CrowdAgentState.DT_CROWDAGENT_STATE_INVALID;
-                    continue;
-                }
-
-                // Make sure the first polygon is valid, but leave other valid
-                // polygons in the path so that replanner can adjust the path
-                // better.
-                ag.corridor.fixPathStart(agentRef, agentPos);
-                // ag.corridor.trimInvalidPath(agentRef, agentPos, m_navquery,
-                // &m_filter);
-                ag.boundary.reset();
-                vCopy(ag.npos, agentPos);
-
-                replan = true;
-            }
-
-            // If the agent does not have move target or is controlled by
-            // velocity, no need to recover the target nor replan.
-            if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_NONE
-                    || ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY) {
-                continue;
-            }
-
-            // Try to recover move request position.
-            if (ag.targetState != MoveRequestState.DT_CROWDAGENT_TARGET_NONE
-                    && ag.targetState != MoveRequestState.DT_CROWDAGENT_TARGET_FAILED) {
-                if (!navQuery.isValidPolyRef(ag.targetRef, m_filters[ag.params.queryFilterType])) {
-                    // Current target is not valid, try to reposition.
-                    Result<FindNearestPolyResult> fnp = navQuery.findNearestPoly(ag.targetPos, m_ext,
-                            m_filters[ag.params.queryFilterType]);
-                    ag.targetRef = fnp.succeeded() ? fnp.result.getNearestRef() : 0L;
-                    if (fnp.succeeded()) {
-                        vCopy(ag.targetPos, fnp.result.getNearestPos());
-                    }
-                    replan = true;
-                }
-                if (ag.targetRef == 0) {
-                    // Failed to reposition target, fail moverequest.
-                    ag.corridor.reset(agentRef, agentPos);
-                    ag.partial = false;
-                    ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_NONE;
-                }
-            }
-
-            // If nearby corridor is not valid, replan.
-            if (!ag.corridor.isValid(config.checkLookAhead, navQuery, m_filters[ag.params.queryFilterType])) {
-                // Fix current path.
-                // ag.corridor.trimInvalidPath(agentRef, agentPos, m_navquery,
-                // &m_filter);
-                // ag.boundary.reset();
-                replan = true;
-            }
-
-            // If the end of the path is near and it is not the requested
-            // location, replan.
-            if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VALID) {
-                if (ag.targetReplanTime > config.targetReplanDelay && ag.corridor.getPathCount() < config.checkLookAhead
-                        && ag.corridor.getLastPoly() != ag.targetRef) {
-                    replan = true;
-                }
-            }
-
-            // Try to replan path to goal.
-            if (replan) {
-                if (ag.targetState != MoveRequestState.DT_CROWDAGENT_TARGET_NONE) {
-                    requestMoveTargetReplan(ag, ag.targetRef, ag.targetPos);
-                }
-            }
-        }
-    }
-
-    public void update(float dt, CrowdAgentDebugInfo debug) {
+    public CrowdTelemetry update(float dt, CrowdAgentDebugInfo debug) {
         m_velocitySampleCount = 0;
 
+        telemetry.start();
         CrowdAgent debugAgent = debug != null ? debug.agent : null;
 
         Collection<CrowdAgent> agents = getActiveAgents();
@@ -724,13 +366,13 @@ public class Crowd {
         checkPathValidity(agents, dt);
 
         // Update async move request and path finder.
-        updateMoveRequest(agents);
+        updateMoveRequest(agents, dt);
 
         // Optimize path topology.
         updateTopologyOptimization(agents, dt);
 
         // Register agents to proximity grid.
-        m_grid.clear();
+        m_grid = new ProximityGrid(config.maxAgentRadius * 3);
         for (CrowdAgent ag : agents) {
             float[] p = ag.npos;
             float r = ag.params.radius;
@@ -1072,6 +714,369 @@ public class Crowd {
             vSet(ag.vel, 0, 0, 0);
             vSet(ag.dvel, 0, 0, 0);
         }
+        return telemetry;
+    }
+
+    private void updateMoveRequest(Collection<CrowdAgent> agents, float dt) {
+        PriorityQueue<CrowdAgent> queue = new PriorityQueue<>(
+                (a1, a2) -> Float.compare(a2.targetReplanTime, a1.targetReplanTime));
+
+        // Fire off new requests.
+        for (CrowdAgent ag : agents) {
+            if (ag.state == CrowdAgentState.DT_CROWDAGENT_STATE_INVALID) {
+                continue;
+            }
+            if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_NONE
+                    || ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY) {
+                continue;
+            }
+
+            if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_REQUESTING) {
+                List<Long> path = ag.corridor.getPath();
+                if (path.isEmpty()) {
+                    throw new IllegalArgumentException("Empty path");
+                }
+                // Quick search towards the goal.
+                navQuery.initSlicedFindPath(path.get(0), ag.targetRef, ag.npos, ag.targetPos,
+                        m_filters[ag.params.queryFilterType], 0);
+                navQuery.updateSlicedFindPath(config.maxTargetFindPathIterationsPerAgent);
+                Result<List<Long>> pathFound;
+                if (ag.targetReplan) // && npath > 10)
+                {
+                    // Try to use existing steady path during replan if
+                    // possible.
+                    pathFound = navQuery.finalizeSlicedFindPathPartial(path);
+                } else {
+                    // Try to move towards target when goal changes.
+                    pathFound = navQuery.finalizeSlicedFindPath();
+                }
+                List<Long> reqPath = pathFound.result;
+                float[] reqPos = new float[3];
+                if (pathFound.succeeded() && reqPath.size() > 0) {
+                    // In progress or succeed.
+                    if (reqPath.get(reqPath.size() - 1) != ag.targetRef) {
+                        // Partial path, constrain target position inside the
+                        // last polygon.
+                        Result<ClosestPointOnPolyResult> cr = navQuery.closestPointOnPoly(reqPath.get(reqPath.size() - 1),
+                                ag.targetPos);
+                        if (cr.succeeded()) {
+                            reqPos = cr.result.getClosest();
+                        } else {
+                            reqPath = new ArrayList<>();
+                        }
+                    } else {
+                        vCopy(reqPos, ag.targetPos);
+                    }
+                } else {
+                    // Could not find path, start the request from current
+                    // location.
+                    vCopy(reqPos, ag.npos);
+                    reqPath = new ArrayList<>();
+                    reqPath.add(path.get(0));
+                }
+
+                ag.corridor.setCorridor(reqPos, reqPath);
+                ag.boundary.reset();
+                ag.partial = false;
+
+                if (reqPath.get(reqPath.size() - 1) == ag.targetRef) {
+                    ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_VALID;
+                    ag.targetReplanTime = 0;
+                } else {
+                    // The path is longer or potentially unreachable, full plan.
+                    ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_QUEUE;
+                }
+                ag.targetReplanWaitTime = 0;
+            }
+
+            if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_QUEUE) {
+                queue.add(ag);
+            }
+        }
+
+        while (!queue.isEmpty()) {
+            CrowdAgent ag = queue.poll();
+            ag.targetPathQueryResult = m_pathq.request(ag.corridor.getLastPoly(), ag.targetRef, ag.corridor.getTarget(),
+                    ag.targetPos, m_filters[ag.params.queryFilterType]);
+            if (ag.targetPathQueryResult != null) {
+                ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_PATH;
+            } else {
+                telemetry.recordPathQueueTime(ag.targetReplanWaitTime);
+                ag.targetReplanWaitTime += dt;
+            }
+        }
+
+        // Update requests.
+        m_pathq.update(navMesh);
+
+        // Process path results.
+        for (CrowdAgent ag : agents) {
+            if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_NONE
+                    || ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY) {
+                continue;
+            }
+
+            if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_PATH) {
+                // telemetry.recordPathWaitTime(ag.targetReplanTime);
+                // Poll path queue.
+                Status status = ag.targetPathQueryResult.status;
+                if (status != null && status.isFailed()) {
+                    // Path find failed, retry if the target location is still
+                    // valid.
+                    ag.targetPathQueryResult = null;
+                    if (ag.targetRef != 0) {
+                        ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_REQUESTING;
+                    } else {
+                        ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_FAILED;
+                    }
+                    ag.targetReplanTime = 0;
+                } else if (status != null && status.isSuccess()) {
+                    List<Long> path = ag.corridor.getPath();
+                    if (path.isEmpty()) {
+                        throw new IllegalArgumentException("Empty path");
+                    }
+
+                    // Apply results.
+                    float[] targetPos = ag.targetPos;
+
+                    boolean valid = true;
+                    List<Long> res = ag.targetPathQueryResult.path;
+                    if (status.isFailed() || res.isEmpty()) {
+                        valid = false;
+                    }
+
+                    if (status.isPartial()) {
+                        ag.partial = true;
+                    } else {
+                        ag.partial = false;
+                    }
+
+                    // Merge result and existing path.
+                    // The agent might have moved whilst the request is
+                    // being processed, so the path may have changed.
+                    // We assume that the end of the path is at the same
+                    // location
+                    // where the request was issued.
+
+                    // The last ref in the old path should be the same as
+                    // the location where the request was issued..
+                    if (valid && path.get(path.size() - 1).longValue() != res.get(0).longValue()) {
+                        valid = false;
+                    }
+
+                    if (valid) {
+                        // Put the old path infront of the old path.
+                        if (path.size() > 1) {
+                            path.remove(path.size() - 1);
+                            path.addAll(res);
+                            res = path;
+                            // Remove trackbacks
+                            for (int j = 1; j < res.size() - 1; ++j) {
+                                if (j - 1 >= 0 && j + 1 < res.size()) {
+                                    if (res.get(j - 1).longValue() == res.get(j + 1).longValue()) {
+                                        res.remove(j + 1);
+                                        res.remove(j);
+                                        j -= 2;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Check for partial path.
+                        if (res.get(res.size() - 1) != ag.targetRef) {
+                            // Partial path, constrain target position inside
+                            // the last polygon.
+                            Result<ClosestPointOnPolyResult> cr = navQuery.closestPointOnPoly(res.get(res.size() - 1), targetPos);
+                            if (cr.succeeded()) {
+                                targetPos = cr.result.getClosest();
+                            } else {
+                                valid = false;
+                            }
+                        }
+                    }
+
+                    if (valid) {
+                        // Set current corridor.
+                        ag.corridor.setCorridor(targetPos, res);
+                        // Force to update boundary.
+                        ag.boundary.reset();
+                        ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_VALID;
+                    } else {
+                        // Something went wrong.
+                        ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_FAILED;
+                    }
+
+                    ag.targetReplanTime = 0;
+                }
+                telemetry.recordPathfindingTime(ag.targetReplanWaitTime);
+                ag.targetReplanWaitTime += dt;
+            }
+        }
+    }
+
+    private List<CrowdNeighbour> getNeighbours(float[] pos, float height, float range, CrowdAgent skip, ProximityGrid grid) {
+
+        List<CrowdNeighbour> result = new ArrayList<>();
+        Set<CrowdAgent> proxAgents = grid.queryItems(pos[0] - range, pos[2] - range, pos[0] + range, pos[2] + range);
+
+        for (CrowdAgent ag : proxAgents) {
+
+            if (ag == skip) {
+                continue;
+            }
+
+            // Check for overlap.
+            float[] diff = vSub(pos, ag.npos);
+            if (Math.abs(diff[1]) >= (height + ag.params.height) / 2.0f) {
+                continue;
+            }
+            diff[1] = 0;
+            float distSqr = vLenSqr(diff);
+            if (distSqr > sqr(range)) {
+                continue;
+            }
+
+            result.add(new CrowdNeighbour(ag, distSqr));
+        }
+        Collections.sort(result, (o1, o2) -> Float.compare(o1.dist, o2.dist));
+        return result;
+
+    }
+
+    public void addToOptQueue(CrowdAgent newag, PriorityQueue<CrowdAgent> agents) {
+        // Insert neighbour based on greatest time.
+        agents.add(newag);
+    }
+
+    private void updateTopologyOptimization(Collection<CrowdAgent> agents, float dt) {
+
+        PriorityQueue<CrowdAgent> queue = new PriorityQueue<>((a1, a2) -> Float.compare(a2.topologyOptTime, a1.topologyOptTime));
+
+        for (CrowdAgent ag : agents) {
+            if (ag.state != CrowdAgentState.DT_CROWDAGENT_STATE_WALKING) {
+                continue;
+            }
+            if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_NONE
+                    || ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY) {
+                continue;
+            }
+            if ((ag.params.updateFlags & CrowdAgentParams.DT_CROWD_OPTIMIZE_TOPO) == 0) {
+                continue;
+            }
+            ag.topologyOptTime += dt;
+            if (ag.topologyOptTime >= config.topologyOptimizationTimeThreshold) {
+                addToOptQueue(ag, queue);
+            }
+        }
+
+        while (!queue.isEmpty()) {
+            CrowdAgent ag = queue.poll();
+            ag.corridor.optimizePathTopology(navQuery, m_filters[ag.params.queryFilterType]);
+            ag.topologyOptTime = 0;
+        }
+
+    }
+
+    private void checkPathValidity(Collection<CrowdAgent> agents, float dt) {
+
+        for (CrowdAgent ag : agents) {
+
+            if (ag.state != CrowdAgentState.DT_CROWDAGENT_STATE_WALKING) {
+                continue;
+            }
+
+            ag.targetReplanTime += dt;
+
+            boolean replan = false;
+
+            // First check that the current location is valid.
+            float[] agentPos = new float[3];
+            long agentRef = ag.corridor.getFirstPoly();
+            vCopy(agentPos, ag.npos);
+            if (!navQuery.isValidPolyRef(agentRef, m_filters[ag.params.queryFilterType])) {
+                // Current location is not valid, try to reposition.
+                // TODO: this can snap agents, how to handle that?
+                Result<FindNearestPolyResult> nearestPoly = navQuery.findNearestPoly(ag.npos, m_ext,
+                        m_filters[ag.params.queryFilterType]);
+                agentRef = nearestPoly.succeeded() ? nearestPoly.result.getNearestRef() : 0L;
+                if (nearestPoly.succeeded()) {
+                    vCopy(agentPos, nearestPoly.result.getNearestPos());
+                }
+
+                if (agentRef == 0) {
+                    // Could not find location in navmesh, set state to invalid.
+                    ag.corridor.reset(0, agentPos);
+                    ag.partial = false;
+                    ag.boundary.reset();
+                    ag.state = CrowdAgentState.DT_CROWDAGENT_STATE_INVALID;
+                    continue;
+                }
+
+                // Make sure the first polygon is valid, but leave other valid
+                // polygons in the path so that replanner can adjust the path
+                // better.
+                ag.corridor.fixPathStart(agentRef, agentPos);
+                // ag.corridor.trimInvalidPath(agentRef, agentPos, m_navquery,
+                // &m_filter);
+                ag.boundary.reset();
+                vCopy(ag.npos, agentPos);
+
+                replan = true;
+            }
+
+            // If the agent does not have move target or is controlled by
+            // velocity, no need to recover the target nor replan.
+            if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_NONE
+                    || ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VELOCITY) {
+                continue;
+            }
+
+            // Try to recover move request position.
+            if (ag.targetState != MoveRequestState.DT_CROWDAGENT_TARGET_NONE
+                    && ag.targetState != MoveRequestState.DT_CROWDAGENT_TARGET_FAILED) {
+                if (!navQuery.isValidPolyRef(ag.targetRef, m_filters[ag.params.queryFilterType])) {
+                    // Current target is not valid, try to reposition.
+                    Result<FindNearestPolyResult> fnp = navQuery.findNearestPoly(ag.targetPos, m_ext,
+                            m_filters[ag.params.queryFilterType]);
+                    ag.targetRef = fnp.succeeded() ? fnp.result.getNearestRef() : 0L;
+                    if (fnp.succeeded()) {
+                        vCopy(ag.targetPos, fnp.result.getNearestPos());
+                    }
+                    replan = true;
+                }
+                if (ag.targetRef == 0) {
+                    // Failed to reposition target, fail moverequest.
+                    ag.corridor.reset(agentRef, agentPos);
+                    ag.partial = false;
+                    ag.targetState = MoveRequestState.DT_CROWDAGENT_TARGET_NONE;
+                }
+            }
+
+            // If nearby corridor is not valid, replan.
+            if (!ag.corridor.isValid(config.checkLookAhead, navQuery, m_filters[ag.params.queryFilterType])) {
+                // Fix current path.
+                // ag.corridor.trimInvalidPath(agentRef, agentPos, m_navquery,
+                // &m_filter);
+                // ag.boundary.reset();
+                replan = true;
+            }
+
+            // If the end of the path is near and it is not the requested
+            // location, replan.
+            if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_VALID) {
+                if (ag.targetReplanTime > config.targetReplanDelay && ag.corridor.getPathCount() < config.checkLookAhead
+                        && ag.corridor.getLastPoly() != ag.targetRef) {
+                    replan = true;
+                }
+            }
+
+            // Try to replan path to goal.
+            if (replan) {
+                if (ag.targetState != MoveRequestState.DT_CROWDAGENT_TARGET_NONE) {
+                    requestMoveTargetReplan(ag, ag.targetRef, ag.targetPos);
+                }
+            }
+        }
     }
 
     private float tween(float t, float t0, float t1) {
@@ -1107,4 +1112,11 @@ public class Crowd {
         }
     };
 
+    public CrowdTelemetry telemetry() {
+        return telemetry;
+    }
+
+    public CrowdConfig config() {
+        return config;
+    }
 }
