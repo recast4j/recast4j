@@ -49,7 +49,7 @@ public class VoxelFileReaderTest {
             assertEquals(810, f.tiles.get(0).width);
             assertEquals(810, f.tiles.get(0).depth);
             assertArrayEquals(new float[] { -101.25f, 0f, -101.25f }, f.tiles.get(0).boundsMin, 0f);
-            assertArrayEquals(new float[] { 101.25f, 1048.5751f, 101.25f }, f.tiles.get(0).boundsMax, 0f);
+            assertArrayEquals(new float[] { 101.25f, 5.0f, 101.25f }, f.tiles.get(0).boundsMax, 0f);
 
         }
     }
@@ -73,7 +73,7 @@ public class VoxelFileReaderTest {
             assertEquals(90, f.tiles.get(0).width);
             assertEquals(90, f.tiles.get(0).depth);
             assertArrayEquals(new float[] { -101.25f, 0f, -101.25f }, f.tiles.get(0).boundsMin, 0f);
-            assertArrayEquals(new float[] { -78.75f, 1048.5751f, -78.75f }, f.tiles.get(0).boundsMax, 0f);
+            assertArrayEquals(new float[] { -78.75f, 5.0f, -78.75f }, f.tiles.get(0).boundsMax, 0f);
 
         }
     }
