@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.recast4j</groupId>
         <artifactId>parent</artifactId>
-        <version>1.4.4-SNAPSHOT</version>
+        <version>1.4.4</version>
     </parent>
     <artifactId>detour</artifactId>
     <packaging>jar</packaging>
@@ -30,14 +30,14 @@
         <dependency>
             <groupId>org.recast4j</groupId>
             <artifactId>recast</artifactId>
-            <version>1.4.4-SNAPSHOT</version>
+            <version>1.4.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.recast4j</groupId>
             <artifactId>recast</artifactId>
             <type>test-jar</type>
-            <version>1.4.4-SNAPSHOT</version>
+            <version>1.4.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
