@@ -64,13 +64,13 @@ public class CrowdProfilingTool {
     private final Supplier<CrowdAgentParams> agentParamsSupplier;
     private final IntBuffer expandDemoOptions = BufferUtils.createIntBuffer(1).put(0, 1);
     private final IntBuffer agents = BufferUtils.createIntBuffer(1).put(0, 1000);
-    private final IntBuffer randomSeed = BufferUtils.createIntBuffer(1).put(0, 128);
+    private final IntBuffer randomSeed = BufferUtils.createIntBuffer(1).put(0, 270);
     private final IntBuffer numberOfZones = BufferUtils.createIntBuffer(1).put(0, 4);
     private final FloatBuffer zoneRadius = BufferUtils.createFloatBuffer(1).put(0, 20);
     private final FloatBuffer percentMobs = BufferUtils.createFloatBuffer(1).put(0, 80);
     private final FloatBuffer percentTravellers = BufferUtils.createFloatBuffer(1).put(0, 15);
     private final IntBuffer pathQueueSize = BufferUtils.createIntBuffer(1).put(0, 32);
-    private final IntBuffer maxIterations = BufferUtils.createIntBuffer(1).put(0, 100);
+    private final IntBuffer maxIterations = BufferUtils.createIntBuffer(1).put(0, 300);
     private Crowd crowd;
     private NavMesh navMesh;
     private CrowdConfig config;
@@ -153,7 +153,7 @@ public class CrowdProfilingTool {
             nk_label(ctx, String.format("Max time to enqueue request: %.3f s", crowd.telemetry().maxPathQueueWaitTime()),
                     NK_TEXT_ALIGN_LEFT);
             nk_layout_row_dynamic(ctx, 18, 1);
-            nk_label(ctx, String.format("Max time to get find path: %.3f s", crowd.telemetry().maxPathfindingTime()),
+            nk_label(ctx, String.format("Max time to find path: %.3f s", crowd.telemetry().maxPathfindingTime()),
                     NK_TEXT_ALIGN_LEFT);
         }
     }

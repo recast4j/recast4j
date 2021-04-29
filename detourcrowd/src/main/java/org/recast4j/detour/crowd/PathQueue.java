@@ -20,8 +20,9 @@ package org.recast4j.detour.crowd;
 
 import static org.recast4j.detour.DetourCommon.vCopy;
 
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.LinkedBlockingDeque;
 
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
@@ -31,7 +32,7 @@ import org.recast4j.detour.Result;
 public class PathQueue {
 
     private final CrowdConfig config;
-    private final LinkedBlockingDeque<PathQuery> queue = new LinkedBlockingDeque<>();
+    private final Deque<PathQuery> queue = new LinkedList<>();
 
     protected PathQueue(CrowdConfig config) {
         this.config = config;
