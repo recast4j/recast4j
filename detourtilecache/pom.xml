@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.recast4j</groupId>
         <artifactId>parent</artifactId>
-        <version>1.4.4</version>
+        <version>1.4.5-SNAPSHOT</version>
     </parent>
 
     <artifactId>detour-tile-cache</artifactId>
@@ -18,12 +18,12 @@
         <dependency>
             <groupId>org.recast4j</groupId>
             <artifactId>detour</artifactId>
-            <version>1.4.4</version>
+            <version>1.4.5-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.recast4j</groupId>
             <artifactId>recast</artifactId>
-            <version>1.4.4</version>
+            <version>1.4.5-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -34,14 +34,14 @@
             <groupId>org.recast4j</groupId>
             <artifactId>recast</artifactId>
             <type>test-jar</type>
-            <version>1.4.4</version>
+            <version>1.4.5-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.recast4j</groupId>
             <artifactId>detour</artifactId>
             <type>test-jar</type>
-            <version>1.4.4</version>
+            <version>1.4.5-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
