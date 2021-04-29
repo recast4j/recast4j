@@ -56,14 +56,14 @@ import org.recast4j.detour.crowd.debug.ObstacleAvoidanceDebugData;
 public class CrowdTool implements Tool {
 
     private enum ToolMode {
-        CREATE, MOVE_TARGET, SELECT, TOGGLE_POLYS, DEMO
+        CREATE, MOVE_TARGET, SELECT, TOGGLE_POLYS, PROFILING
     }
 
     private final CrowdToolParams toolParams = new CrowdToolParams();
     private Sample sample;
     private NavMesh m_nav;
     private Crowd crowd;
-    private final CrowdDemoTool demoTool;
+    private final CrowdProfilingTool profilingTool;
     private final CrowdAgentDebugInfo m_agentDebug = new CrowdAgentDebugInfo();
 
     private static final int AGENT_MAX_TRAIL = 64;
@@ -81,7 +81,7 @@ public class CrowdTool implements Tool {
 
     public CrowdTool() {
         m_agentDebug.vod = new ObstacleAvoidanceDebugData(2048);
-        demoTool = new CrowdDemoTool(this::getAgentParams);
+        profilingTool = new CrowdProfilingTool(this::getAgentParams);
     }
 
     @Override
@@ -133,14 +133,13 @@ public class CrowdTool implements Tool {
 
             crowd.setObstacleAvoidanceParams(3, params);
 
-            demoTool.setup(sample.getSettingsUI().getAgentRadius(), m_nav);
+            profilingTool.setup(sample.getSettingsUI().getAgentRadius(), m_nav);
         }
     }
 
     @Override
     public void handleClick(float[] s, float[] p, boolean shift) {
-        if (m_mode == ToolMode.DEMO) {
-            demoTool.handleClick(s, p, shift);
+        if (m_mode == ToolMode.PROFILING) {
             return;
         }
         if (crowd == null) {
@@ -297,8 +296,8 @@ public class CrowdTool implements Tool {
 
     @Override
     public void handleRender(NavMeshRenderer renderer) {
-        if (m_mode == ToolMode.DEMO) {
-            demoTool.handleRender(renderer);
+        if (m_mode == ToolMode.PROFILING) {
+            profilingTool.handleRender(renderer);
             return;
         }
         RecastDebugDraw dd = renderer.getDebugDraw();
@@ -308,10 +307,10 @@ public class CrowdTool implements Tool {
             return;
 
         if (toolParams.m_showNodes && crowd.getPathQueue() != null) {
-            NavMeshQuery navquery = crowd.getPathQueue().getNavQuery();
-            if (navquery != null) {
-                dd.debugDrawNavMeshNodes(navquery);
-            }
+//            NavMeshQuery navquery = crowd.getPathQueue().getNavQuery();
+//            if (navquery != null) {
+//                dd.debugDrawNavMeshNodes(navquery);
+//            }
         }
         dd.depthMask(false);
 
@@ -552,7 +551,7 @@ public class CrowdTool implements Tool {
             int col = duRGBA(220, 220, 220, 192);
             if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_REQUESTING
                     || ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_QUEUE)
-                col = duLerpCol(col, duRGBA(128, 0, 255, 192), 32);
+                col = duLerpCol(col, duRGBA(128, 0, 255, 192), 48);
             else if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_WAITING_FOR_PATH)
                 col = duLerpCol(col, duRGBA(128, 0, 255, 192), 128);
             else if (ag.targetState == MoveRequestState.DT_CROWDAGENT_TARGET_FAILED)
@@ -578,8 +577,8 @@ public class CrowdTool implements Tool {
     }
 
     private void updateTick(float dt) {
-        if (m_mode == ToolMode.DEMO) {
-            crowdUpdateTime = demoTool.update(dt) / 1_000_000;
+        if (m_mode == ToolMode.PROFILING) {
+            crowdUpdateTime = profilingTool.update(dt) / 1_000_000;
             return;
         }
         if (crowd == null)
@@ -632,11 +631,11 @@ public class CrowdTool implements Tool {
             m_mode = ToolMode.TOGGLE_POLYS;
         }
         nk_layout_row_dynamic(ctx, 20, 1);
-        if (nk_option_label(ctx, "Demo", m_mode == ToolMode.DEMO)) {
-            m_mode = ToolMode.DEMO;
+        if (nk_option_label(ctx, "Profiling", m_mode == ToolMode.PROFILING)) {
+            m_mode = ToolMode.PROFILING;
         }
-        if (m_mode == ToolMode.DEMO) {
-            demoTool.layout(ctx);
+        if (m_mode == ToolMode.PROFILING) {
+            profilingTool.layout(ctx);
         }
         nk_layout_row_dynamic(ctx, 20, 1);
         if (nk_tree_state_push(ctx, 0, "Options", toolParams.m_expandOptions)) {
@@ -670,31 +669,33 @@ public class CrowdTool implements Tool {
             }
             nk_tree_state_pop(ctx);
         }
-        nk_layout_row_dynamic(ctx, 2, 1);
-        nk_spacing(ctx, 1);
-        if (nk_tree_state_push(ctx, 0, "Selected Debug Draw", toolParams.m_expandSelectedDebugDraw)) {
-            nk_layout_row_dynamic(ctx, 20, 1);
-            toolParams.m_showCorners = nk_option_text(ctx, "Show Corners", toolParams.m_showCorners);
-            nk_layout_row_dynamic(ctx, 20, 1);
-            toolParams.m_showCollisionSegments = nk_option_text(ctx, "Show Collision Segs", toolParams.m_showCollisionSegments);
-            nk_layout_row_dynamic(ctx, 20, 1);
-            toolParams.m_showPath = nk_option_text(ctx, "Show Path", toolParams.m_showPath);
-            nk_layout_row_dynamic(ctx, 20, 1);
-            toolParams.m_showVO = nk_option_text(ctx, "Show VO", toolParams.m_showVO);
-            nk_layout_row_dynamic(ctx, 20, 1);
-            toolParams.m_showOpt = nk_option_text(ctx, "Show Path Optimization", toolParams.m_showOpt);
-            nk_layout_row_dynamic(ctx, 20, 1);
-            toolParams.m_showNeis = nk_option_text(ctx, "Show Neighbours", toolParams.m_showNeis);
-            nk_tree_state_pop(ctx);
-        }
-        nk_layout_row_dynamic(ctx, 1, 1);
-        nk_spacing(ctx, 1);
-        if (nk_tree_state_push(ctx, 0, "Debug Draw", toolParams.m_expandDebugDraw)) {
-            nk_layout_row_dynamic(ctx, 20, 1);
-            toolParams.m_showGrid = nk_option_text(ctx, "Show Prox Grid", toolParams.m_showGrid);
-            nk_layout_row_dynamic(ctx, 20, 1);
-            toolParams.m_showNodes = nk_option_text(ctx, "Show Nodes", toolParams.m_showNodes);
-            nk_tree_state_pop(ctx);
+        if (m_mode != ToolMode.PROFILING) {
+            nk_layout_row_dynamic(ctx, 2, 1);
+            nk_spacing(ctx, 1);
+            if (nk_tree_state_push(ctx, 0, "Selected Debug Draw", toolParams.m_expandSelectedDebugDraw)) {
+                nk_layout_row_dynamic(ctx, 20, 1);
+                toolParams.m_showCorners = nk_option_text(ctx, "Show Corners", toolParams.m_showCorners);
+                nk_layout_row_dynamic(ctx, 20, 1);
+                toolParams.m_showCollisionSegments = nk_option_text(ctx, "Show Collision Segs", toolParams.m_showCollisionSegments);
+                nk_layout_row_dynamic(ctx, 20, 1);
+                toolParams.m_showPath = nk_option_text(ctx, "Show Path", toolParams.m_showPath);
+                nk_layout_row_dynamic(ctx, 20, 1);
+                toolParams.m_showVO = nk_option_text(ctx, "Show VO", toolParams.m_showVO);
+                nk_layout_row_dynamic(ctx, 20, 1);
+                toolParams.m_showOpt = nk_option_text(ctx, "Show Path Optimization", toolParams.m_showOpt);
+                nk_layout_row_dynamic(ctx, 20, 1);
+                toolParams.m_showNeis = nk_option_text(ctx, "Show Neighbours", toolParams.m_showNeis);
+                nk_tree_state_pop(ctx);
+            }
+            nk_layout_row_dynamic(ctx, 1, 1);
+            nk_spacing(ctx, 1);
+            if (nk_tree_state_push(ctx, 0, "Debug Draw", toolParams.m_expandDebugDraw)) {
+                nk_layout_row_dynamic(ctx, 20, 1);
+                toolParams.m_showGrid = nk_option_text(ctx, "Show Prox Grid", toolParams.m_showGrid);
+                nk_layout_row_dynamic(ctx, 20, 1);
+                toolParams.m_showNodes = nk_option_text(ctx, "Show Nodes", toolParams.m_showNodes);
+                nk_tree_state_pop(ctx);
+            }
         }
         nk_layout_row_dynamic(ctx, 2, 1);
         nk_spacing(ctx, 1);
@@ -708,6 +709,7 @@ public class CrowdTool implements Tool {
         }
 
         int updateFlags = getUpdateFlags();
+        profilingTool.updateAgentParams(updateFlags, toolParams.m_obstacleAvoidanceType.get(0), toolParams.m_separationWeight.get(0));
         for (CrowdAgent ag : crowd.getActiveAgents()) {
             CrowdAgentParams params = new CrowdAgentParams();
             params.radius = ag.params.radius;

@@ -29,42 +29,6 @@ import java.util.Set;
 
 public class ProximityGrid {
 
-    private static class ItemKey {
-
-        int x, y;
-
-        public ItemKey(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + x;
-            result = prime * result + y;
-            return result;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            ItemKey other = (ItemKey) obj;
-            if (x != other.x)
-                return false;
-            if (y != other.y)
-                return false;
-            return true;
-        }
-
-    };
-
     private final float m_cellSize;
     private final float m_invCellSize;
     private final Map<ItemKey, List<CrowdAgent>> items;
@@ -126,4 +90,40 @@ public class ProximityGrid {
     public float getCellSize() {
         return m_cellSize;
     }
+
+    private static class ItemKey {
+
+        int x, y;
+
+        public ItemKey(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + x;
+            result = prime * result + y;
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            ItemKey other = (ItemKey) obj;
+            if (x != other.x)
+                return false;
+            if (y != other.y)
+                return false;
+            return true;
+        }
+
+    };
 }

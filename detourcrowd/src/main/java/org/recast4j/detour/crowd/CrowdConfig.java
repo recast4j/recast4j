@@ -24,11 +24,7 @@ public class CrowdConfig {
     /**
      * Max number of path requests in the queue
      */
-    public final int pathQueueSize;
-    /**
-     * Number of ticks to keep a processed item in the queue
-     */
-    public final int pathQueueKeepAlive;
+    public int pathQueueSize = 32;
     /**
      * Max number of sliced path finding iterations executed per update (used to handle longer paths and replans)
      */
@@ -51,15 +47,8 @@ public class CrowdConfig {
     public float targetReplanDelay = 1.0f;
     public float collisionResolveFactor = 0.7f;
 
-
     public CrowdConfig(float maxAgentRadius) {
-        this(maxAgentRadius, 8, 2);
-    }
-
-    public CrowdConfig(float maxAgentRadius, int pathQueueSize, int pathQueueKeepAlive) {
         this.maxAgentRadius = maxAgentRadius;
-        this.pathQueueSize = pathQueueSize;
-        this.pathQueueKeepAlive = pathQueueKeepAlive;
     }
 
 }

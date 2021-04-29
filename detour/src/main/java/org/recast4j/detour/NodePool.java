@@ -53,18 +53,6 @@ public class NodePool {
         return null;
     }
 
-    Node findNode(long id, int state) {
-        List<Node> nodes = m_map.get(id);
-        if (nodes != null) {
-            for (Node node : nodes) {
-                if (node.state == state) {
-                    return node;
-                }
-            }
-        }
-        return null;
-    }
-
     Node getNode(long id, int state) {
         List<Node> nodes = m_map.get(id);
         if (nodes != null) {
@@ -97,10 +85,6 @@ public class NodePool {
 
     public Node getNodeAtIdx(int idx) {
         return idx != 0 ? m_nodes.get(idx - 1) : null;
-    }
-
-    public int getNodeCount() {
-        return m_nodes.size();
     }
 
     public Node getNode(long ref) {

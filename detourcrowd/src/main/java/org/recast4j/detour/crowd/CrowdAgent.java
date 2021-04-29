@@ -86,9 +86,10 @@ public class CrowdAgent {
     public long targetRef; /// < Target polyref of the movement request.
     public float[] targetPos = new float[3]; /// < Target position of the movement request (or velocity in case of
                                              /// DT_CROWDAGENT_TARGET_VELOCITY).
-    long targetPathqRef; /// < Path finder ref.
+    PathQueryResult targetPathQueryResult; /// < Path finder query
     boolean targetReplan; /// < Flag indicating that the current path is being replanned.
     float targetReplanTime; /// <Time since the agent's target was replanned.
+    float targetReplanWaitTime;
 
     public CrowdAgentAnimation animation;
 
@@ -182,7 +183,7 @@ public class CrowdAgent {
     void setTarget(long ref, float[] pos) {
         targetRef = ref;
         vCopy(targetPos, pos);
-        targetPathqRef = PathQueue.DT_PATHQ_INVALID;
+        targetPathQueryResult = null;
         if (targetRef != 0) {
             targetState = MoveRequestState.DT_CROWDAGENT_TARGET_REQUESTING;
         } else {
