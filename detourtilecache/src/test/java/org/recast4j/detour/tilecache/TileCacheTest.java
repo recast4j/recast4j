@@ -178,17 +178,17 @@ public class TileCacheTest extends AbstractTileCacheTest {
         boolean cCompatibility = false;
         InputGeomProvider geom = new ObjImporter().load(RecastBuilder.class.getResourceAsStream("dungeon.obj"));
         TestTileLayerBuilder layerBuilder = new TestTileLayerBuilder(geom);
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 5; i++) {
             layerBuilder.build(order, cCompatibility, 1);
             layerBuilder.build(order, cCompatibility, threads);
         }
         long t1 = System.nanoTime();
         List<byte[]> layers = null;
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 10; i++) {
             layers = layerBuilder.build(order, cCompatibility, 1);
         }
         long t2 = System.nanoTime();
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 10; i++) {
             layers = layerBuilder.build(order, cCompatibility, threads);
         }
         long t3 = System.nanoTime();

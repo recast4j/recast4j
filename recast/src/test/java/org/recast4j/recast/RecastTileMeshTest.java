@@ -98,16 +98,16 @@ public class RecastTileMeshTest {
                 m_partitionType, m_cellSize, m_cellHeight, m_agentMaxSlope, true, true, true, m_agentHeight, m_agentRadius,
                 m_agentMaxClimb, m_regionMinArea, m_regionMergeArea, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, true,
                 m_detailSampleDist, m_detailSampleMaxError, SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 5; i++) {
             build(geom, builder, cfg, 1, true);
             build(geom, builder, cfg, 4, true);
         }
         long t1 = System.nanoTime();
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 5; i++) {
             build(geom, builder, cfg, 1, false);
         }
         long t2 = System.nanoTime();
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 5; i++) {
             build(geom, builder, cfg, 4, false);
         }
         long t3 = System.nanoTime();
