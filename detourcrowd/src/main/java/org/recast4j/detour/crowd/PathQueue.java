@@ -41,7 +41,7 @@ public class PathQueue {
     protected void update(NavMesh navMesh) {
         // Update path request until there is nothing to update or up to maxIters pathfinder iterations has been
         // consumed.
-        int iterCount = config.maxFindPathIterationsPerUpdate;
+        int iterCount = config.maxFindPathIterations;
         while (iterCount > 0) {
             PathQuery q = queue.poll();
             if (q == null) {

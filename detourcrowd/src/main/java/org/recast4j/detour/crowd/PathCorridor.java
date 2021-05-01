@@ -318,15 +318,13 @@ public class PathCorridor {
      *            The filter to apply to the operation.
      *
      */
-    boolean optimizePathTopology(NavMeshQuery navquery, QueryFilter filter) {
+    boolean optimizePathTopology(NavMeshQuery navquery, QueryFilter filter, int maxIterations) {
         if (m_path.size() < 3) {
             return false;
         }
 
-        final int MAX_ITER = 32;
-
         navquery.initSlicedFindPath(m_path.get(0), m_path.get(m_path.size() - 1), m_pos, m_target, filter, 0);
-        navquery.updateSlicedFindPath(MAX_ITER);
+        navquery.updateSlicedFindPath(maxIterations);
         Result<List<Long>> fpr = navquery.finalizeSlicedFindPathPartial(m_path);
 
         if (fpr.succeeded() && fpr.result.size() > 0) {

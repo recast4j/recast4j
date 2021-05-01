@@ -18,29 +18,56 @@ freely, subject to the following restrictions:
 
 package org.recast4j.detour.crowd;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class CrowdTelemetry {
 
-    float maxPathQueueWaitTime;
-    float maxPathfindingTime;
+    private static final int TIMING_SAMPLES = 10;
+    private float maxTimeToEnqueueRequest;
+    private float maxTimeToFindPath;
+    private final Map<String, Long> executionTimings = new HashMap<>();
+    private final Map<String, List<Long>> executionTimingSamples = new HashMap<>();
 
-    public float maxPathQueueWaitTime() {
-        return maxPathQueueWaitTime;
+    public float maxTimeToEnqueueRequest() {
+        return maxTimeToEnqueueRequest;
     }
 
-    public float maxPathfindingTime() {
-        return maxPathfindingTime;
+    public float maxTimeToFindPath() {
+        return maxTimeToFindPath;
+    }
+
+    public Map<String, Long> executionTimings() {
+        return executionTimings;
     }
 
     void start() {
-        maxPathQueueWaitTime = 0;
-        maxPathfindingTime = 0;
+        maxTimeToEnqueueRequest = 0;
+        maxTimeToFindPath = 0;
+        executionTimings.clear();
     }
 
-    void recordPathQueueTime(float time) {
-        maxPathQueueWaitTime = Math.max(maxPathQueueWaitTime, time);
+    void recordMaxTimeToEnqueueRequest(float time) {
+        maxTimeToEnqueueRequest = Math.max(maxTimeToEnqueueRequest, time);
     }
 
-    void recordPathfindingTime(float time) {
-        maxPathfindingTime = Math.max(maxPathfindingTime, time);
+    void recordMaxTimeToFindPath(float time) {
+        maxTimeToFindPath = Math.max(maxTimeToFindPath, time);
+    }
+
+    void start(String name) {
+        executionTimings.put(name, System.nanoTime());
+    }
+
+    void stop(String name) {
+        long duration = System.nanoTime() - executionTimings.get(name);
+        List<Long> s = executionTimingSamples.computeIfAbsent(name, __ -> new ArrayList<>());
+        if (s.size() == TIMING_SAMPLES) {
+            s.remove(0);
+        }
+        s.add(duration);
+        executionTimings.put(name, (long) s.stream().mapToLong(l -> l).average().orElse(0));
     }
 }

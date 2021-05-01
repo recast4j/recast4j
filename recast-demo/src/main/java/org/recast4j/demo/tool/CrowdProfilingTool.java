@@ -18,6 +18,7 @@ freely, subject to the following restrictions:
 
 package org.recast4j.demo.tool;
 
+import static java.util.stream.Collectors.toList;
 import static org.lwjgl.nuklear.Nuklear.NK_TEXT_ALIGN_LEFT;
 import static org.lwjgl.nuklear.Nuklear.nk_button_text;
 import static org.lwjgl.nuklear.Nuklear.nk_label;
@@ -51,6 +52,7 @@ import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.detour.NavMeshQuery.FRand;
 import org.recast4j.detour.QueryFilter;
 import org.recast4j.detour.Result;
+import org.recast4j.detour.Tupple2;
 import org.recast4j.detour.crowd.Crowd;
 import org.recast4j.detour.crowd.CrowdAgent;
 import org.recast4j.detour.crowd.CrowdAgent.MoveRequestState;
@@ -76,6 +78,7 @@ public class CrowdProfilingTool {
     private CrowdConfig config;
     private FRand rnd;
     private final List<FindRandomPointResult> zones = new ArrayList<>();
+    private long crowdUpdateTime;
 
     public CrowdProfilingTool(Supplier<CrowdAgentParams> agentParamsSupplier) {
         this.agentParamsSupplier = agentParamsSupplier;
@@ -150,11 +153,22 @@ public class CrowdProfilingTool {
         }
         if (crowd != null) {
             nk_layout_row_dynamic(ctx, 18, 1);
-            nk_label(ctx, String.format("Max time to enqueue request: %.3f s", crowd.telemetry().maxPathQueueWaitTime()),
+            nk_label(ctx, String.format("Max time to enqueue request: %.3f s", crowd.telemetry().maxTimeToEnqueueRequest()),
                     NK_TEXT_ALIGN_LEFT);
             nk_layout_row_dynamic(ctx, 18, 1);
-            nk_label(ctx, String.format("Max time to find path: %.3f s", crowd.telemetry().maxPathfindingTime()),
+            nk_label(ctx, String.format("Max time to find path: %.3f s", crowd.telemetry().maxTimeToFindPath()),
                     NK_TEXT_ALIGN_LEFT);
+            List<Tupple2<String, Long>> timings = crowd.telemetry().executionTimings().entrySet().stream()
+                    .map(e -> new Tupple2<>(e.getKey(), e.getValue())).sorted((t1, t2) -> Long.compare(t2.second, t1.second))
+                    .collect(toList());
+            for (Tupple2<String, Long> e : timings) {
+                nk_layout_row_dynamic(ctx, 18, 1);
+                nk_label(ctx, String.format("%s: %d us", e.first, e.second / 1_000), NK_TEXT_ALIGN_LEFT);
+            }
+            nk_layout_row_dynamic(ctx, 1, 1);
+            nk_spacing(ctx, 1);
+            nk_layout_row_dynamic(ctx, 18, 1);
+            nk_label(ctx, String.format("Update Time: %d ms", crowdUpdateTime), NK_TEXT_ALIGN_LEFT);
         }
     }
 
@@ -169,9 +183,8 @@ public class CrowdProfilingTool {
     private float[] getVillagerPosition(NavMeshQuery navquery, QueryFilter filter, float[] pos) {
         if (!zones.isEmpty()) {
             int zone = (int) (rnd.frand() * zones.size());
-            Result<FindRandomPointResult> result = navquery.findRandomPointWithinCircle(
-                    zones.get(zone).getRandomRef(), zones.get(zone).getRandomPt(), zoneRadius.get(0), filter,
-                    rnd);
+            Result<FindRandomPointResult> result = navquery.findRandomPointWithinCircle(zones.get(zone).getRandomRef(),
+                    zones.get(zone).getRandomPt(), zoneRadius.get(0), filter, rnd);
             if (result.succeeded()) {
                 pos = result.result.getRandomPt();
             }
@@ -235,11 +248,11 @@ public class CrowdProfilingTool {
         crowd.setObstacleAvoidanceParams(3, params);
     }
 
-    public long update(float dt) {
+    public void update(float dt) {
         long startTime = System.nanoTime();
         if (crowd != null) {
             crowd.config().pathQueueSize = pathQueueSize.get(0);
-            crowd.config().maxFindPathIterationsPerUpdate = maxIterations.get(0);
+            crowd.config().maxFindPathIterations = maxIterations.get(0);
             crowd.update(dt, null);
         }
         long endTime = System.nanoTime();
@@ -264,7 +277,7 @@ public class CrowdProfilingTool {
                 }
             }
         }
-        return endTime - startTime;
+        crowdUpdateTime = (endTime - startTime) / 1_000_000;
     }
 
     private void moveMob(NavMeshQuery navquery, QueryFilter filter, CrowdAgent ag, AgentData agentData) {

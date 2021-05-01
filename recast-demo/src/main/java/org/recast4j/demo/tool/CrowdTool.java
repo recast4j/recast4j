@@ -578,7 +578,7 @@ public class CrowdTool implements Tool {
 
     private void updateTick(float dt) {
         if (m_mode == ToolMode.PROFILING) {
-            crowdUpdateTime = profilingTool.update(dt) / 1_000_000;
+            profilingTool.update(dt);
             return;
         }
         if (crowd == null)
@@ -696,11 +696,11 @@ public class CrowdTool implements Tool {
                 toolParams.m_showNodes = nk_option_text(ctx, "Show Nodes", toolParams.m_showNodes);
                 nk_tree_state_pop(ctx);
             }
+            nk_layout_row_dynamic(ctx, 2, 1);
+            nk_spacing(ctx, 1);
+            nk_layout_row_dynamic(ctx, 18, 1);
+            nk_label(ctx, String.format("Update Time: %d ms", crowdUpdateTime), NK_TEXT_ALIGN_LEFT);
         }
-        nk_layout_row_dynamic(ctx, 2, 1);
-        nk_spacing(ctx, 1);
-        nk_layout_row_dynamic(ctx, 18, 1);
-        nk_label(ctx, String.format("Update Time: %d ms", crowdUpdateTime), NK_TEXT_ALIGN_LEFT);
     }
 
     private void updateAgentParams() {
