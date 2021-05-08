@@ -14,7 +14,6 @@ import org.recast4j.detour.DefaultQueryFilter;
 import org.recast4j.detour.FindNearestPolyResult;
 import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.detour.QueryFilter;
-import org.recast4j.detour.SampleAreaModifications;
 import org.recast4j.dynamic.collider.Collider;
 import org.recast4j.dynamic.collider.SphereCollider;
 import org.recast4j.dynamic.io.VoxelFile;

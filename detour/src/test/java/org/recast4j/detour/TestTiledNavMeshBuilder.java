@@ -22,7 +22,6 @@ import static org.recast4j.recast.RecastVectors.copy;
 import java.util.List;
 import java.util.Optional;
 
-import org.recast4j.recast.ObjImporter;
 import org.recast4j.recast.PolyMesh;
 import org.recast4j.recast.PolyMeshDetail;
 import org.recast4j.recast.RecastBuilder;
@@ -52,9 +51,10 @@ public class TestTiledNavMeshBuilder {
     private final static int m_tileSize = 32;
 
     public TestTiledNavMeshBuilder() {
-        this(new ObjImporter().load(ObjImporter.class.getResourceAsStream("dungeon.obj")), PartitionType.WATERSHED, m_cellSize,
-                m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize, m_regionMergeSize,
-                m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist, m_detailSampleMaxError, m_tileSize);
+        this(new ObjImporter().load(TestTiledNavMeshBuilder.class.getClassLoader().getResourceAsStream("dungeon.obj")),
+                PartitionType.WATERSHED, m_cellSize, m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope,
+                m_regionMinSize, m_regionMergeSize, m_edgeMaxLen, m_edgeMaxError, m_vertsPerPoly, m_detailSampleDist,
+                m_detailSampleMaxError, m_tileSize);
     }
 
     public TestTiledNavMeshBuilder(InputGeomProvider m_geom, PartitionType m_partitionType, float m_cellSize, float m_cellHeight,

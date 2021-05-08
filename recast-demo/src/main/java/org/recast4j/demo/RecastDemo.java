@@ -287,10 +287,10 @@ public class RecastDemo {
                     if (inputGeom != null) {
                         hit = inputGeom.raycastMesh(rayStart, rayEnd);
                     }
-                    if (hit.isEmpty() && sample.getNavMesh() != null) {
+                    if (!hit.isPresent() && sample.getNavMesh() != null) {
                         hit = NavMeshRaycast.raycast(sample.getNavMesh(), rayStart, rayEnd);
                     }
-                    if (hit.isEmpty() && sample.getRecastResults() != null) {
+                    if (!hit.isPresent() && sample.getRecastResults() != null) {
                         hit = PolyMeshRaycast.raycast(sample.getRecastResults(), rayStart, rayEnd);
                     }
                     float[] rayDir = new float[] {rayEnd[0] - rayStart[0], rayEnd[1] - rayStart[1], rayEnd[2] - rayStart[2]};

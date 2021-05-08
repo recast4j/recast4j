@@ -34,13 +34,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.recast4j</groupId>
-            <artifactId>recast</artifactId>
-            <type>test-jar</type>
-            <version>1.4.5-SNAPSHOT</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>

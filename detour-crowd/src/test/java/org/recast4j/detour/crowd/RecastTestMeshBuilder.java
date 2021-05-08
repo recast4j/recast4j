@@ -15,8 +15,11 @@ freely, subject to the following restrictions:
  misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
-package org.recast4j.detour;
+package org.recast4j.detour.crowd;
 
+import org.recast4j.detour.MeshData;
+import org.recast4j.detour.NavMeshBuilder;
+import org.recast4j.detour.NavMeshDataCreateParams;
 import org.recast4j.recast.PolyMesh;
 import org.recast4j.recast.PolyMeshDetail;
 import org.recast4j.recast.RecastBuilder;

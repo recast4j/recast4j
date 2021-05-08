@@ -1,5 +1,9 @@
+target/
+build/
 .settings
 .metadata
 .idea
 .project
 .classpath
+.gradle
+*.iml

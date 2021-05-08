@@ -1,0 +1,62 @@
+plugins {
+  id 'com.github.johnrengelman.shadow' version '7.0.0'
+}
+
+ext { 
+    lwjglVersion = '3.2.0' 
+}
+
+compileJava {
+    options.encoding = 'UTF-8'
+    options.release = null
+}
+
+jar {
+    manifest {
+        attributes(
+            'Main-Class': 'org.recast4j.demo.RecastDemo'
+        )
+    }
+}
+
+dependencies {
+    implementation("org.lwjgl:lwjgl:$lwjglVersion")
+    implementation("org.lwjgl:lwjgl-glfw:$lwjglVersion")
+    implementation("org.lwjgl:lwjgl-opengl:$lwjglVersion")
+    implementation("org.lwjgl:lwjgl-stb:$lwjglVersion")
+    implementation("org.lwjgl:lwjgl-tinyfd:$lwjglVersion")
+    implementation("org.lwjgl:lwjgl-nuklear:$lwjglVersion")
+    implementation("org.lwjgl:lwjgl-stb:$lwjglVersion")
+
+    implementation("org.lwjgl:lwjgl:$lwjglVersion:natives-linux")
+    implementation("org.lwjgl:lwjgl-glfw:$lwjglVersion:natives-linux")
+    implementation("org.lwjgl:lwjgl-opengl:$lwjglVersion:natives-linux")
+    implementation("org.lwjgl:lwjgl-stb:$lwjglVersion:natives-linux")
+    implementation("org.lwjgl:lwjgl-tinyfd:$lwjglVersion:natives-linux")
+    implementation("org.lwjgl:lwjgl-nuklear:$lwjglVersion:natives-linux")
+    implementation("org.lwjgl:lwjgl-stb:$lwjglVersion:natives-linux")
+
+    implementation("org.lwjgl:lwjgl:$lwjglVersion:natives-windows")
+    implementation("org.lwjgl:lwjgl-glfw:$lwjglVersion:natives-windows")
+    implementation("org.lwjgl:lwjgl-opengl:$lwjglVersion:natives-windows")
+    implementation("org.lwjgl:lwjgl-stb:$lwjglVersion:natives-windows")
+    implementation("org.lwjgl:lwjgl-tinyfd:$lwjglVersion:natives-windows")
+    implementation("org.lwjgl:lwjgl-nuklear:$lwjglVersion:natives-windows")
+    implementation("org.lwjgl:lwjgl-stb:$lwjglVersion:natives-windows")
+
+    implementation("org.lwjgl:lwjgl:$lwjglVersion:natives-macos")
+    implementation("org.lwjgl:lwjgl-glfw:$lwjglVersion:natives-macos")
+    implementation("org.lwjgl:lwjgl-opengl:$lwjglVersion:natives-macos")
+    implementation("org.lwjgl:lwjgl-stb:$lwjglVersion:natives-macos")
+    implementation("org.lwjgl:lwjgl-tinyfd:$lwjglVersion:natives-macos")
+    implementation("org.lwjgl:lwjgl-nuklear:$lwjglVersion:natives-macos")
+    implementation("org.lwjgl:lwjgl-stb:$lwjglVersion:natives-macos")
+
+    implementation('ch.qos.logback:logback-classic:1.0.13')
+
+    implementation project(':recast')
+    implementation project(':detour')
+    implementation project(':detour-crowd')
+    implementation project(':detour-extras')
+    implementation project(':detour-dynamic')
+}
