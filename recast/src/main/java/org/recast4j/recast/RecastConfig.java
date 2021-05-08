@@ -24,55 +24,55 @@ public class RecastConfig {
     public final PartitionType partitionType;
 
     public final boolean useTiles;
-    /** The width/depth size of tile's on the xz-plane. [Limit: >= 0] [Units: vx] **/
+    /** The width/depth size of tile's on the xz-plane. [Limit: &gt;= 0] [Units: vx] **/
     public final int tileSizeX;
     public final int tileSizeZ;
 
-    /** The xz-plane cell size to use for fields. [Limit: > 0] [Units: wu] **/
+    /** The xz-plane cell size to use for fields. [Limit: &gt; 0] [Units: wu] **/
     public final float cs;
 
-    /** The y-axis cell size to use for fields. [Limit: > 0] [Units: wu] **/
+    /** The y-axis cell size to use for fields. [Limit: &gt; 0] [Units: wu] **/
     public final float ch;
 
-    /** The maximum slope that is considered walkable. [Limits: 0 <= value < 90] [Units: Degrees] **/
+    /** The maximum slope that is considered walkable. [Limits: 0 &lt;= value &lt; 90] [Units: Degrees] **/
     public final float walkableSlopeAngle;
 
     /**
-     * Minimum floor to 'ceiling' height that will still allow the floor area to be considered walkable. [Limit: >= 3]
+     * Minimum floor to 'ceiling' height that will still allow the floor area to be considered walkable. [Limit: &gt;= 3]
      * [Units: vx]
      **/
     public final int walkableHeight;
 
-    /** Maximum ledge height that is considered to still be traversable. [Limit: >=0] [Units: vx] **/
+    /** Maximum ledge height that is considered to still be traversable. [Limit: &gt;=0] [Units: vx] **/
     public final int walkableClimb;
 
     /**
-     * The distance to erode/shrink the walkable area of the heightfield away from obstructions. [Limit: >=0] [Units:
+     * The distance to erode/shrink the walkable area of the heightfield away from obstructions. [Limit: &gt;=0] [Units:
      * vx]
      **/
     public final int walkableRadius;
 
-    /** The maximum allowed length for contour edges along the border of the mesh. [Limit: >=0] [Units: vx] **/
+    /** The maximum allowed length for contour edges along the border of the mesh. [Limit: &gt;=0] [Units: vx] **/
     public final int maxEdgeLen;
 
     /**
-     * The maximum distance a simplfied contour's border edges should deviate the original raw contour. [Limit: >=0]
+     * The maximum distance a simplfied contour's border edges should deviate the original raw contour. [Limit: &gt;=0]
      * [Units: vx]
      **/
     public final float maxSimplificationError;
 
-    /** The minimum number of cells allowed to form isolated island areas. [Limit: >=0] [Units: vx] **/
+    /** The minimum number of cells allowed to form isolated island areas. [Limit: &gt;=0] [Units: vx] **/
     public final int minRegionArea;
 
     /**
      * Any regions with a span count smaller than this value will, if possible, be merged with larger regions. [Limit:
-     * >=0] [Units: vx]
+     * &gt;=0] [Units: vx]
      **/
     public final int mergeRegionArea;
 
     /**
      * The maximum number of vertices allowed for polygons generated during the contour to polygon conversion process.
-     * [Limit: >= 3]
+     * [Limit: &gt;= 3]
      **/
     public final int maxVertsPerPoly;
 
@@ -84,7 +84,7 @@ public class RecastConfig {
 
     /**
      * The maximum distance the detail mesh surface should deviate from heightfield data. (For height detail only.)
-     * [Limit: >=0] [Units: wu]
+     * [Limit: &gt;=0] [Units: wu]
      **/
     public final float detailSampleMaxError;
 
@@ -94,7 +94,7 @@ public class RecastConfig {
     public final boolean filterWalkableLowHeightSpans;
     /** Set to false to disable building detailed mesh **/
     public final boolean buildMeshDetail;
-    /** The size of the non-navigable border around the heightfield. [Limit: >=0] [Units: vx] **/
+    /** The size of the non-navigable border around the heightfield. [Limit: &gt;=0] [Units: vx] **/
     public final int borderSize;
     /** Set of original settings passed in world units */
     public final float minRegionAreaWorld;

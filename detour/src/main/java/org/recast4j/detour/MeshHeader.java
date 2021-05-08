@@ -33,45 +33,45 @@ public class MeshHeader {
     /** A version number used to detect compatibility of navigation tile states. */
     public static final int DT_NAVMESH_STATE_VERSION = 1;
 
-    /** < Tile magic number. (Used to identify the data format.) */
+    /** Tile magic number. (Used to identify the data format.) */
     public int magic;
-    /** < Tile data format version number. */
+    /** Tile data format version number. */
     public int version;
-    /** < The x-position of the tile within the dtNavMesh tile grid. (x, y, layer) */
+    /** The x-position of the tile within the dtNavMesh tile grid. (x, y, layer) */
     public int x;
-    /** < The y-position of the tile within the dtNavMesh tile grid. (x, y, layer) */
+    /** The y-position of the tile within the dtNavMesh tile grid. (x, y, layer) */
     public int y;
-    /** < The layer of the tile within the dtNavMesh tile grid. (x, y, layer) */
+    /** The layer of the tile within the dtNavMesh tile grid. (x, y, layer) */
     public int layer;
-    /** < The user defined id of the tile. */
+    /** The user defined id of the tile. */
     public int userId;
-    /** < The number of polygons in the tile. */
+    /** The number of polygons in the tile. */
     public int polyCount;
-    /** < The number of vertices in the tile. */
+    /** The number of vertices in the tile. */
     public int vertCount;
-    /** < The number of allocated links. */
+    /** The number of allocated links. */
     public int maxLinkCount;
-    /** < The number of sub-meshes in the detail mesh. */
+    /** The number of sub-meshes in the detail mesh. */
     public int detailMeshCount;
     /** The number of unique vertices in the detail mesh. (In addition to the polygon vertices.) */
     public int detailVertCount;
-    /** < The number of triangles in the detail mesh. */
+    /** The number of triangles in the detail mesh. */
     public int detailTriCount;
-    /** < The number of bounding volume nodes. (Zero if bounding volumes are disabled.) */
+    /** The number of bounding volume nodes. (Zero if bounding volumes are disabled.) */
     public int bvNodeCount;
-    /** < The number of off-mesh connections. */
+    /** The number of off-mesh connections. */
     public int offMeshConCount;
-    /** < The index of the first polygon which is an off-mesh connection. */
+    /** The index of the first polygon which is an off-mesh connection. */
     public int offMeshBase;
-    /** < The height of the agents using the tile. */
+    /** The height of the agents using the tile. */
     public float walkableHeight;
-    /** < The radius of the agents using the tile. */
+    /** The radius of the agents using the tile. */
     public float walkableRadius;
-    /** < The maximum climb height of the agents using the tile. */
+    /** The maximum climb height of the agents using the tile. */
     public float walkableClimb;
-    /** < The minimum bounds of the tile's AABB. [(x, y, z)] */
+    /** The minimum bounds of the tile's AABB. [(x, y, z)] */
     public final float[] bmin = new float[3];
-    /** < The maximum bounds of the tile's AABB. [(x, y, z)] */
+    /** The maximum bounds of the tile's AABB. [(x, y, z)] */
     public final float[] bmax = new float[3];
     /** The bounding volume quantization factor. */
     public float bvQuantFactor;

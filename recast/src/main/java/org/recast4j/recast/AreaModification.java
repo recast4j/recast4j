@@ -28,7 +28,7 @@ public class AreaModification {
      * Mask is set to all available bits, which means value is fully applied
      *
      * @param value
-     *            The area id to apply. [Limit: <= #RC_AREA_FLAGS_MASK]
+     *            The area id to apply. [Limit: &lt;= #RC_AREA_FLAGS_MASK]
      */
     public AreaModification(int value) {
         this.value = value;
@@ -38,9 +38,9 @@ public class AreaModification {
     /**
      *
      * @param value
-     *            The area id to apply. [Limit: <= #RC_AREA_FLAGS_MASK]
+     *            The area id to apply. [Limit: &lt;= #RC_AREA_FLAGS_MASK]
      * @param mask
-     *            Bitwise mask used when applying value. [Limit: <= #RC_AREA_FLAGS_MASK]
+     *            Bitwise mask used when applying value. [Limit: &lt;= #RC_AREA_FLAGS_MASK]
      */
     public AreaModification(int value, int mask) {
         this.value = value;

@@ -1,0 +1,22 @@
+rootProject.name = 'recast4j'
+
+enableFeaturePreview('VERSION_CATALOGS')
+
+dependencyResolutionManagement {
+    versionCatalogs {
+        libs {
+            alias('lz4').to('net.jpountz.lz4:lz4:1.3.0')
+            alias('junit').to('junit:junit:4.13.1')
+            alias('assertj-core').to('org.assertj:assertj-core:3.19.0')
+            alias('mockito').to('org.mockito:mockito-all:1.10.19')
+        }
+    }
+}
+
+include 'recast'
+include 'detour'
+include 'detour-crowd'
+include 'detour-tile-cache'
+include 'detour-extras'
+include 'detour-dynamic'
+include 'recast-demo'

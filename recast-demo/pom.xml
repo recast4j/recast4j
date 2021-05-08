@@ -29,9 +29,9 @@
     </developers>
     <properties>
         <lwjgl.version>3.2.0</lwjgl.version>
-        <java.version>11</java.version>
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
+         <java.version>15</java.version>
+         <maven.compiler.source>${java.version}</maven.compiler.source>
+         <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <build>
@@ -111,6 +111,16 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.0.13</version>
+        </dependency>
+        <dependency>
+            <groupId>org.recast4j</groupId>
+            <artifactId>recast</artifactId>
+            <version>1.4.5-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.recast4j</groupId>
+            <artifactId>detour</artifactId>
+            <version>1.4.5-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.recast4j</groupId>

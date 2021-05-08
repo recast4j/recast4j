@@ -1,0 +1,7 @@
+
+dependencies {
+    implementation project(':detour')
+    implementation (libs.lz4)
+
+    testImplementation project(':recast')
+}

@@ -21,9 +21,9 @@ package org.recast4j.recast;
 /** Represents a span in a heightfield. */
 public class Span {
 
-    /** The lower limit of the span. [Limit: < #smax] */
+    /** The lower limit of the span. [Limit: &lt; smax] */
     public int smin;
-    /** The upper limit of the span. [Limit: <= #RC_SPAN_MAX_HEIGHT] */
+    /** The upper limit of the span. [Limit: &lt;= SPAN_MAX_HEIGHT] */
     public int smax;
     /** The area id assigned to the span. */
     public int area;

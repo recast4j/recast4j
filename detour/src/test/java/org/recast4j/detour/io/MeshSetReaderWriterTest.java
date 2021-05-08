@@ -30,11 +30,10 @@ import org.junit.Test;
 import org.recast4j.detour.MeshData;
 import org.recast4j.detour.MeshTile;
 import org.recast4j.detour.NavMesh;
+import org.recast4j.detour.ObjImporter;
 import org.recast4j.detour.SampleAreaModifications;
 import org.recast4j.detour.TestDetourBuilder;
-import org.recast4j.recast.ObjImporter;
 import org.recast4j.recast.Recast;
-import org.recast4j.recast.RecastBuilder;
 import org.recast4j.recast.RecastBuilderConfig;
 import org.recast4j.recast.RecastConfig;
 import org.recast4j.recast.RecastConstants.PartitionType;
@@ -66,7 +65,8 @@ public class MeshSetReaderWriterTest {
     @Test
     public void test() throws IOException {
 
-        InputGeomProvider geom = new ObjImporter().load(RecastBuilder.class.getResourceAsStream("dungeon.obj"));
+        InputGeomProvider geom = new ObjImporter()
+                .load(MeshDataReaderWriterTest.class.getClassLoader().getResourceAsStream("dungeon.obj"));
 
         NavMeshSetHeader header = new NavMeshSetHeader();
         header.magic = NavMeshSetHeader.NAVMESHSET_MAGIC;

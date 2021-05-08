@@ -47,7 +47,7 @@ public class Poly {
         neis = new int[maxVertsPerPoly];
     }
 
-    /** Sets the user defined area id. [Limit: < #DT_MAX_AREAS] */
+    /** Sets the user defined area id. [Limit: &lt; {@link org.recast4j.detour.NavMesh#DT_MAX_AREAS}] */
     public void setArea(int a) {
         areaAndtype = (areaAndtype & 0xc0) | (a & 0x3f);
     }
