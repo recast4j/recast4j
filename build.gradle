@@ -59,7 +59,7 @@ subprojects {
     }
 
     jar {
-        manifest { attributes("Implementation-Version": version) }
+        manifest { attributes('Implementation-Version': archiveVersion) }
     }
     
     if (it.name != 'recast-demo') {
