@@ -3,4 +3,4 @@ dist: bionic
 jdk:
   - openjdk15
 script:
-  - ./gradlew clean build
+  - ./gradlew clean build -Pci

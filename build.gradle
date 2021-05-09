@@ -24,8 +24,10 @@ subprojects {
 
     apply plugin: 'java'
     apply plugin: 'maven-publish'
-    apply plugin: 'org.hibernate.build.maven-repo-auth'
     apply plugin: 'signing'
+    if (!project.hasProperty('ci')) {
+        apply plugin: 'org.hibernate.build.maven-repo-auth'
+    }
 
     dependencies {
         testImplementation (libs.junit)

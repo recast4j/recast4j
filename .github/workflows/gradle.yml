@@ -18,4 +18,4 @@ jobs:
           java-version: '15'
           distribution: 'adopt'
       - name: Build with Gradle
-        run: ./gradlew clean build
+        run: ./gradlew clean build -Pci
