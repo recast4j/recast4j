@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteOrder;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.junit.Test;
@@ -129,7 +130,10 @@ public class UnityAStarPathfindingImporterTest {
 
         // Save the mesh as recast file,
         MeshSetWriter writer = new MeshSetWriter();
-        FileOutputStream os = new FileOutputStream(String.format("all_tiles_navmesh_%s.bin", filePostfix));
+        String filename = String.format("all_tiles_navmesh_%s.bin", filePostfix);
+        File file = Path.of("test-output", filename).toFile();
+        file.getParentFile().mkdirs();
+        FileOutputStream os = new FileOutputStream(file);
         writer.write(os, mesh, ByteOrder.LITTLE_ENDIAN, true);
         os.close();
     }

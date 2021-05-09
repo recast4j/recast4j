@@ -21,6 +21,7 @@ import static org.recast4j.recast.RecastConstants.RC_MESH_NULL_IDX;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.nio.file.Path;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -252,7 +253,8 @@ public class RecastSoloMeshTest {
 
     private void saveObj(String filename, PolyMesh mesh) {
         try {
-            File file = new File(filename);
+            File file = Path.of("test-output", filename).toFile();
+            file.getParentFile().mkdirs();
             FileWriter fw = new FileWriter(file);
             for (int v = 0; v < mesh.nverts; v++) {
                 fw.write("v " + (mesh.bmin[0] + mesh.verts[v * 3] * mesh.cs) + " "
@@ -279,7 +281,8 @@ public class RecastSoloMeshTest {
 
     private void saveObj(String filename, PolyMeshDetail dmesh) {
         try {
-            File file = new File(filename);
+            File file = Path.of("test-output", filename).toFile();
+            file.getParentFile().mkdirs();
             FileWriter fw = new FileWriter(file);
             for (int v = 0; v < dmesh.nverts; v++) {
                 fw.write(
