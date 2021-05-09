@@ -1,4 +1,6 @@
 language: java
-dist: trusty
+dist: bionic
 jdk:
   - openjdk15
+script:
+  - ./gradlew clean build
