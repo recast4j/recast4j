@@ -9,6 +9,10 @@ buildscript {
     }
 }
 
+plugins {
+    id 'net.researchgate.release' version '2.8.1'
+}
+
 subprojects {    
 
     group = "org.recast4j"
@@ -105,3 +109,14 @@ subprojects {
     }
 
 }
+
+// https://github.com/researchgate/gradle-release/issues/144
+task build() {
+    dependsOn subprojects.build
+}
+
+task publish() {
+    dependsOn subprojects.publish
+}
+
+afterReleaseBuild.dependsOn publish
