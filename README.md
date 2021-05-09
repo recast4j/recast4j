@@ -41,7 +41,6 @@ You can find a lot of examples in tests e.g.
 - finding a path: https://github.com/ppiastucki/recast4j/blob/master/detour/src/test/java/org/recast4j/detour/FindPathTest.java#L94
 - persisting a nav mesh: https://github.com/ppiastucki/recast4j/blob/master/detour/src/test/java/org/recast4j/detour/io/MeshSetReaderWriterTest.java
 - dynamic nav mesh: https://github.com/ppiastucki/recast4j/blob/master/detour-dynamic/src/test/java/org/recast4j/dynamic/DynamicNavMeshTest.java
-### Recast Demo
 ### Java Version Enhancements
 #### recast
 - out-of-the-box support for multi-threaded builds
@@ -62,7 +61,7 @@ All the modules can be built with a single gradle command:
 ./gradlew clean build shadow
 ```
 
-Once the build is completed, the recast-demo application can be as follows:
+Once the build is completed, the recast-demo application can be run as follows:
 ```
 java -jar ./recast-demo/build/libs/recast-demo-1.5.1-SNAPSHOT-all.jar
 ```
