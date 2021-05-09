@@ -55,7 +55,20 @@ You can find a lot of examples in tests e.g.
 #### detour-dynamic
 - robust support for dynamic nav meshes combining pre-built voxels with dynamic objects which can be freely added and removed
 
-### Maven
+### Building from Source
+
+All the modules can be built with a single gradle command:
+```
+./gradlew clean build shadow
+```
+
+Once the build is completed, the recast-demo application can be as follows:
+```
+java -jar ./recast-demo/build/libs/recast-demo-1.5.1-SNAPSHOT-all.jar
+```
+
+### Binaries
+
 #### Releases
 Recast4j releases are available in Maven Central Repository.
 The project includes 4 artifacts:
@@ -63,32 +76,32 @@ The project includes 4 artifacts:
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>recast</artifactId>
-	<version>1.4.4</version>
+	<version>1.5.0</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour</artifactId>
-	<version>1.4.4</version>
+	<version>1.5.0</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour-crowd</artifactId>
-	<version>1.4.4</version>
+	<version>1.5.0</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour-tile-cache</artifactId>
-	<version>1.4.4</version>
+	<version>1.5.0</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour-extras</artifactId>
-	<version>1.4.4</version>
+	<version>1.5.0</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour-dynamic</artifactId>
-	<version>1.4.4</version>
+	<version>1.5.0</version>
 </dependency>
 ```
 
