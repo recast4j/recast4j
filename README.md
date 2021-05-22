@@ -1,8 +1,10 @@
+![Build Status](https://img.shields.io/github/workflow/status/ppiastucki/recast4j/Java%20CI/master?logo=github)
+![Repo Size](https://img.shields.io/github/repo-size/ppiastucki/recast4j.svg?colorB=lightgray)
+[![Maven Central](https://img.shields.io/maven-central/v/org.recast4j/recast.svg?label=maven%20central)](https://search.maven.org/search?q=g:org.recast4j)
+[![Travis Build](https://travis-ci.org/ppiastucki/recast4j.svg?branch=master)](https://travis-ci.org/ppiastucki/recast4j)
+
 Recast4j
 ========
-
-[![Build Status](https://travis-ci.org/ppiastucki/recast4j.svg?branch=master)](https://travis-ci.org/ppiastucki/recast4j)
-![Size](https://img.shields.io/github/repo-size/ppiastucki/recast4j.svg?label=size&colorB=lightgray)
 
 Java Port of Recast and Detour navigation mesh toolset.
 
