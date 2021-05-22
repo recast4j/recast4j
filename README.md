@@ -2,6 +2,7 @@ Recast4j
 ========
 
 [![Build Status](https://travis-ci.org/ppiastucki/recast4j.svg?branch=master)](https://travis-ci.org/ppiastucki/recast4j)
+![Size](https://img.shields.io/github/repo-size/ppiastucki/recast4j.svg?label=size&colorB=lightgray)
 
 Java Port of Recast and Detour navigation mesh toolset.
 
