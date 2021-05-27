@@ -45,12 +45,9 @@ public class TileCacheBuilder {
         int nei; // neighbour id
     };
 
-    static final int DT_LAYER_MAX_NEIS = 16;
-
     private class LayerMonotoneRegion {
         int area;
-        int[] neis = new int[DT_LAYER_MAX_NEIS];
-        int nneis;
+        List<Integer> neis = new ArrayList<>(16);
         int regId;
         int areaId;
     };
@@ -202,8 +199,8 @@ public class TileCacheBuilder {
                 if (y > 0 && isConnected(layer, idx, ymi, walkableClimb)) {
                     int rai = layer.regs[ymi];
                     if (rai != 0xff && rai != ri) {
-                        regs[ri].nneis = addUniqueLast(regs[ri].neis, regs[ri].nneis, rai);
-                        regs[rai].nneis = addUniqueLast(regs[rai].neis, regs[rai].nneis, ri);
+                        addUniqueLast(regs[ri].neis, rai);
+                        addUniqueLast(regs[rai].neis, ri);
                     }
                 }
             }
@@ -217,8 +214,7 @@ public class TileCacheBuilder {
 
             int merge = -1;
             int mergea = 0;
-            for (int j = 0; j < reg.nneis; ++j) {
-                int nei = reg.neis[j];
+            for (int nei : reg.neis) {
                 LayerMonotoneRegion regn = regs[nei];
                 if (reg.regId == regn.regId)
                     continue;
@@ -262,13 +258,11 @@ public class TileCacheBuilder {
 
     }
 
-    int addUniqueLast(int[] a, int an, int v) {
-        int n = an;
-        if (n > 0 && a[n - 1] == v)
-            return an;
-        a[an] = v;
-        an++;
-        return an;
+    void addUniqueLast(List<Integer> a, int v) {
+        int n = a.size();
+        if (n > 0 && a.get(n - 1) == v)
+            return;
+        a.add(v);
     }
 
     boolean isConnected(TileCacheLayer layer, int ia, int ib, int walkableClimb) {
@@ -285,9 +279,8 @@ public class TileCacheBuilder {
             LayerMonotoneRegion reg = regs[i];
             if (reg.regId != oldRegId)
                 continue;
-            int nnei = reg.nneis;
-            for (int j = 0; j < nnei; ++j) {
-                if (regs[reg.neis[j]].regId == newRegId)
+            for (int nei : reg.neis) {
+                if (regs[nei].regId == newRegId)
                     count++;
             }
         }
