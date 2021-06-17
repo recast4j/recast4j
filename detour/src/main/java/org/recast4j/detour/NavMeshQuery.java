@@ -58,14 +58,12 @@ public class NavMeshQuery {
 
     protected final NavMesh m_nav;
     protected final NodePool m_nodePool;
-    private final NodePool m_tinyNodePool;
     protected final NodeQueue m_openList;
     protected QueryData m_query; /// < Sliced query state.
 
     public NavMeshQuery(NavMesh nav) {
         m_nav = nav;
         m_nodePool = new NodePool();
-        m_tinyNodePool = new NodePool();
         m_openList = new NodeQueue();
     }
 
@@ -1584,9 +1582,9 @@ public class NavMeshQuery {
             return Result.invalidParam();
         }
 
-        m_tinyNodePool.clear();
+        NodePool tinyNodePool = new NodePool();
 
-        Node startNode = m_tinyNodePool.getNode(startRef);
+        Node startNode = tinyNodePool.getNode(startRef);
         startNode.pidx = 0;
         startNode.cost = 0;
         startNode.total = 0;
@@ -1678,7 +1676,7 @@ public class NavMeshQuery {
                     }
                 } else {
                     for (int k = 0; k < nneis; ++k) {
-                        Node neighbourNode = m_tinyNodePool.getNode(neis[k]);
+                        Node neighbourNode = tinyNodePool.getNode(neis[k]);
                         // Skip if already visited.
                         if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0) {
                             continue;
@@ -1695,7 +1693,7 @@ public class NavMeshQuery {
                         }
 
                         // Mark as the node as visited and push to queue.
-                        neighbourNode.pidx = m_tinyNodePool.getNodeIdx(curNode);
+                        neighbourNode.pidx = tinyNodePool.getNodeIdx(curNode);
                         neighbourNode.flags |= Node.DT_NODE_CLOSED;
                         stack.add(neighbourNode);
                     }
@@ -1709,8 +1707,8 @@ public class NavMeshQuery {
             Node prev = null;
             Node node = bestNode;
             do {
-                Node next = m_tinyNodePool.getNodeAtIdx(node.pidx);
-                node.pidx = m_tinyNodePool.getNodeIdx(prev);
+                Node next = tinyNodePool.getNodeAtIdx(node.pidx);
+                node.pidx = tinyNodePool.getNodeIdx(prev);
                 prev = node;
                 node = next;
             } while (node != null);
@@ -1719,7 +1717,7 @@ public class NavMeshQuery {
             node = prev;
             do {
                 visited.add(node.id);
-                node = m_tinyNodePool.getNodeAtIdx(node.pidx);
+                node = tinyNodePool.getNodeAtIdx(node.pidx);
             } while (node != null);
         }
         return Result.success(new MoveAlongSurfaceResult(bestPos, visited));
@@ -2504,9 +2502,9 @@ public class NavMeshQuery {
         List<Long> resultRef = new ArrayList<>();
         List<Long> resultParent = new ArrayList<>();
 
-        m_tinyNodePool.clear();
+        NodePool tinyNodePool = new NodePool();
 
-        Node startNode = m_tinyNodePool.getNode(startRef);
+        Node startNode = tinyNodePool.getNode(startRef);
         startNode.pidx = 0;
         startNode.id = startRef;
         startNode.flags = Node.DT_NODE_CLOSED;
@@ -2540,7 +2538,7 @@ public class NavMeshQuery {
                     continue;
                 }
 
-                Node neighbourNode = m_tinyNodePool.getNode(neighbourRef);
+                Node neighbourNode = tinyNodePool.getNode(neighbourRef);
                 // Skip visited.
                 if ((neighbourNode.flags & Node.DT_NODE_CLOSED) != 0) {
                     continue;
@@ -2580,7 +2578,7 @@ public class NavMeshQuery {
                 // Mark node visited, this is done before the overlap test so that
                 // we will not visit the poly again if the test fails.
                 neighbourNode.flags |= Node.DT_NODE_CLOSED;
-                neighbourNode.pidx = m_tinyNodePool.getNodeIdx(curNode);
+                neighbourNode.pidx = tinyNodePool.getNodeIdx(curNode);
 
                 // Check that the polygon does not collide with existing polygons.
 
