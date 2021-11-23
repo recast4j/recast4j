@@ -337,7 +337,7 @@ public class TileCache {
         return req;
     }
 
-    void removeObstacle(long ref) {
+    public void removeObstacle(long ref) {
         if (ref == 0) {
             return;
         }
