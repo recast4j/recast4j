@@ -43,7 +43,8 @@ public class TileNavMeshBuilder extends AbstractNavMeshBuilder {
     private final ExecutorService executor;
 
     public TileNavMeshBuilder() {
-        executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() / 2, new RecastBuilderThreadFactory());
+        executor = Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors() / 2),
+                new RecastBuilderThreadFactory());
     }
 
     public Tupple2<List<RecastBuilderResult>, NavMesh> build(DemoInputGeomProvider m_geom, PartitionType m_partitionType,

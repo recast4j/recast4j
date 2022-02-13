@@ -120,7 +120,8 @@ public class DynamicUpdateTool implements Tool {
     private float[] raycastHitPos;
 
     public DynamicUpdateTool() {
-        executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() / 2, new RecastBuilderThreadFactory());
+        executor = Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors() / 2),
+                new RecastBuilderThreadFactory());
         bridgeGeom = new ObjImporter().load(getClass().getClassLoader().getResourceAsStream("bridge.obj"));
         houseGeom = new ObjImporter().load(getClass().getClassLoader().getResourceAsStream("house.obj"));
         convexGeom = new ObjImporter().load(getClass().getClassLoader().getResourceAsStream("convex.obj"));
