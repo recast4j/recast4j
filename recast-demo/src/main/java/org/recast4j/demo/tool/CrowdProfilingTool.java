@@ -64,7 +64,8 @@ import org.recast4j.recast.RecastVectors;
 public class CrowdProfilingTool {
 
     private final Supplier<CrowdAgentParams> agentParamsSupplier;
-    private final IntBuffer expandDemoOptions = BufferUtils.createIntBuffer(1).put(0, 1);
+    private final IntBuffer expandSimOptions = BufferUtils.createIntBuffer(1).put(0, 1);
+    private final IntBuffer expandCrowdOptions = BufferUtils.createIntBuffer(1).put(0, 1);
     private final IntBuffer agents = BufferUtils.createIntBuffer(1).put(0, 1000);
     private final IntBuffer randomSeed = BufferUtils.createIntBuffer(1).put(0, 270);
     private final IntBuffer numberOfZones = BufferUtils.createIntBuffer(1).put(0, 4);
@@ -85,10 +86,9 @@ public class CrowdProfilingTool {
     }
 
     public void layout(NkContext ctx) {
-        nk_layout_row_dynamic(ctx, 2, 1);
+        nk_layout_row_dynamic(ctx, 1, 1);
         nk_spacing(ctx, 1);
-        nk_layout_row_dynamic(ctx, 20, 1);
-        if (nk_tree_state_push(ctx, 0, "Simulation Options", expandDemoOptions)) {
+        if (nk_tree_state_push(ctx, 0, "Simulation Options", expandSimOptions)) {
             nk_layout_row_dynamic(ctx, 20, 1);
             nk_property_int(ctx, "Agents", 0, agents, 10000, 1, 1);
             nk_layout_row_dynamic(ctx, 20, 1);
@@ -103,7 +103,7 @@ public class CrowdProfilingTool {
             nk_property_float(ctx, "Travellers %", 0, percentTravellers, 100, 1, 1);
             nk_tree_state_pop(ctx);
         }
-        if (nk_tree_state_push(ctx, 0, "Crowd Options", expandDemoOptions)) {
+        if (nk_tree_state_push(ctx, 0, "Crowd Options", expandCrowdOptions)) {
             nk_layout_row_dynamic(ctx, 20, 1);
             nk_property_int(ctx, "Path Queue Size", 0, pathQueueSize, 1024, 1, 1);
             nk_layout_row_dynamic(ctx, 20, 1);
@@ -403,21 +403,22 @@ public class CrowdProfilingTool {
     }
 
     public void updateAgentParams(int updateFlags, int obstacleAvoidanceType, float separationWeight) {
-        for (CrowdAgent ag : crowd.getActiveAgents()) {
-            CrowdAgentParams params = new CrowdAgentParams();
-            params.radius = ag.params.radius;
-            params.height = ag.params.height;
-            params.maxAcceleration = ag.params.maxAcceleration;
-            params.maxSpeed = ag.params.maxSpeed;
-            params.collisionQueryRange = ag.params.collisionQueryRange;
-            params.pathOptimizationRange = ag.params.pathOptimizationRange;
-            params.obstacleAvoidanceType = ag.params.obstacleAvoidanceType;
-            params.queryFilterType = ag.params.queryFilterType;
-            params.userData = ag.params.userData;
-            params.updateFlags = updateFlags;
-            params.obstacleAvoidanceType = obstacleAvoidanceType;
-            params.separationWeight = separationWeight;
-            crowd.updateAgentParameters(ag, params);
+        if (crowd != null) {
+            for (CrowdAgent ag : crowd.getActiveAgents()) {
+                CrowdAgentParams params = new CrowdAgentParams();
+                params.radius = ag.params.radius;
+                params.height = ag.params.height;
+                params.maxAcceleration = ag.params.maxAcceleration;
+                params.maxSpeed = ag.params.maxSpeed;
+                params.collisionQueryRange = ag.params.collisionQueryRange;
+                params.pathOptimizationRange = ag.params.pathOptimizationRange;
+                params.queryFilterType = ag.params.queryFilterType;
+                params.userData = ag.params.userData;
+                params.updateFlags = updateFlags;
+                params.obstacleAvoidanceType = obstacleAvoidanceType;
+                params.separationWeight = separationWeight;
+                crowd.updateAgentParameters(ag, params);
+            }
         }
     }
 }
