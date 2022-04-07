@@ -634,10 +634,8 @@ public class CrowdTool implements Tool {
         if (nk_option_label(ctx, "Profiling", m_mode == ToolMode.PROFILING)) {
             m_mode = ToolMode.PROFILING;
         }
-        if (m_mode == ToolMode.PROFILING) {
-            profilingTool.layout(ctx);
-        }
-        nk_layout_row_dynamic(ctx, 20, 1);
+        nk_layout_row_dynamic(ctx, 1, 1);
+        nk_spacing(ctx, 1);
         if (nk_tree_state_push(ctx, 0, "Options", toolParams.m_expandOptions)) {
             boolean m_optimizeVis = toolParams.m_optimizeVis;
             boolean m_optimizeTopo = toolParams.m_optimizeTopo;
@@ -669,8 +667,11 @@ public class CrowdTool implements Tool {
             }
             nk_tree_state_pop(ctx);
         }
+        if (m_mode == ToolMode.PROFILING) {
+            profilingTool.layout(ctx);
+        }
         if (m_mode != ToolMode.PROFILING) {
-            nk_layout_row_dynamic(ctx, 2, 1);
+            nk_layout_row_dynamic(ctx, 1, 1);
             nk_spacing(ctx, 1);
             if (nk_tree_state_push(ctx, 0, "Selected Debug Draw", toolParams.m_expandSelectedDebugDraw)) {
                 nk_layout_row_dynamic(ctx, 20, 1);
