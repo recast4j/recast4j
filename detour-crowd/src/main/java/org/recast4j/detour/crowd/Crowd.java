@@ -181,7 +181,7 @@ public class Crowd {
         this.config = config;
         vSet(m_ext, config.maxAgentRadius * 2.0f, config.maxAgentRadius * 1.5f, config.maxAgentRadius * 2.0f);
 
-        m_obstacleQuery = new ObstacleAvoidanceQuery(6, 8);
+        m_obstacleQuery = new ObstacleAvoidanceQuery(config.maxObstacleAvoidanceCircles, config.maxObstacleAvoidanceSegments);
 
         for (int i = 0; i < DT_CROWD_MAX_QUERY_FILTER_TYPE; i++) {
             m_filters[i] = queryFilterFactory.apply(i);
