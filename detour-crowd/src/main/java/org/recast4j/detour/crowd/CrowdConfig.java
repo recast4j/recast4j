@@ -50,6 +50,14 @@ public class CrowdConfig {
      */
     public int maxTopologyOptimizationIterations = 32;
     public float collisionResolveFactor = 0.7f;
+    /**
+     * Max number of neighbour agents to consider in obstacle avoidance processing
+     */
+    public int maxObstacleAvoidanceCircles = 6;
+    /**
+     * Max number of neighbour segments to consider in obstacle avoidance processing
+     */
+    public int maxObstacleAvoidanceSegments = 8;
 
     public CrowdConfig(float maxAgentRadius) {
         this.maxAgentRadius = maxAgentRadius;
