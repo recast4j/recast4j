@@ -125,7 +125,7 @@ public class DetourCommon {
     /// @param[in] v1 A point. [(x, y, z)]
     /// @param[in] v2 A point. [(x, y, z)]
     /// @return The distance between the two points.
-    static float vDist(float[] v1, float[] v2) {
+    public static float vDist(float[] v1, float[] v2) {
         float dx = v2[0] - v1[0];
         float dy = v2[1] - v1[1];
         float dz = v2[2] - v1[2];
@@ -209,7 +209,7 @@ public class DetourCommon {
         }
     }
 
-    static final float thr = sqr(1.0f / 16384.0f);
+    private static final float EQUAL_THRESHOLD = sqr(1.0f / 16384.0f);
 
     /// Performs a 'sloppy' colocation check of the specified points.
     /// @param[in] p0 A point. [(x, y, z)]
@@ -218,9 +218,13 @@ public class DetourCommon {
     ///
     /// Basically, this function will return true if the specified points are
     /// close enough to eachother to be considered colocated.
-    static boolean vEqual(float[] p0, float[] p1) {
+    public static boolean vEqual(float[] p0, float[] p1) {
+        return vEqual(p0, p1, EQUAL_THRESHOLD);
+    }
+
+    public static boolean vEqual(float[] p0, float[] p1, float thresholdSqr) {
         float d = vDistSqr(p0, p1);
-        return d < thr;
+        return d < thresholdSqr;
     }
 
     /// Derives the dot product of two vectors on the xz-plane. (@p u . @p v)
