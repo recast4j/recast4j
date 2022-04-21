@@ -984,8 +984,8 @@ public class NavMesh {
                 }
 
                 for (int k = 0, j = 2; k < 3; j = k++) {
-                    if ((getDetailTriEdgeFlags(tris[3], j) & DT_DETAIL_EDGE_BOUNDARY) == 0
-                            && (onlyBoundary || tris[j] < tris[k])) {
+                    if ((getDetailTriEdgeFlags(tris[ti + 3], j) & DT_DETAIL_EDGE_BOUNDARY) == 0
+                            && (onlyBoundary || tris[ti + j] < tris[ti + k])) {
                         // Only looking at boundary edges and this is internal, or
                         // this is an inner edge that we will see again or have already seen.
                         continue;
