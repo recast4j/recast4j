@@ -73,38 +73,47 @@ java -jar ./recast-demo/build/libs/recast-demo-1.5.1-SNAPSHOT-all.jar
 
 #### Releases
 Recast4j releases are available in Maven Central Repository.
-The project includes 4 artifacts:
+Maven:
 ```
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>recast</artifactId>
-	<version>1.5.0</version>
+	<version>1.5.3</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour</artifactId>
-	<version>1.5.0</version>
+	<version>1.5.3</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour-crowd</artifactId>
-	<version>1.5.0</version>
+	<version>1.5.3</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour-tile-cache</artifactId>
-	<version>1.5.0</version>
+	<version>1.5.3</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour-extras</artifactId>
-	<version>1.5.0</version>
+	<version>1.5.3</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour-dynamic</artifactId>
-	<version>1.5.0</version>
+	<version>1.5.3</version>
 </dependency>
+```
+Gradle:
+```
+implementation 'org.recast4j:recast:1.5.3'
+implementation 'org.recast4j:detour:1.5.3'
+implementation 'org.recast4j:detour-crowd:1.5.3'
+implementation 'org.recast4j:detour-tile-cache:1.5.3'
+implementation 'org.recast4j:detour-extras:1.5.3'
+implementation 'org.recast4j:detour-dynamic:1.5.3'
 ```
 
 #### Snapshots
