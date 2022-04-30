@@ -17,14 +17,14 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.offset;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class MoveAlongSurfaceTest extends AbstractDetourTest {
 
-    long[][] visited = {
+    private static final long[][] VISITED = {
             new long[] { 281474976710696L, 281474976710695L, 281474976710694L, 281474976710703L, 281474976710706L,
                     281474976710705L, 281474976710702L, 281474976710701L, 281474976710714L, 281474976710713L,
                     281474976710712L, 281474976710727L, 281474976710730L, 281474976710717L, 281474976710721L },
@@ -40,7 +40,7 @@ public class MoveAlongSurfaceTest extends AbstractDetourTest {
                     281474976710724L, 281474976710717L, 281474976710729L, 281474976710731L, 281474976710752L,
                     281474976710748L, 281474976710753L, 281474976710755L, 281474976710754L, 281474976710768L,
                     281474976710772L } };
-    float[][] position = { { 6.457663f, 10.197294f, -18.334061f }, { -1.433933f, 10.197294f, -1.359993f },
+    private static final float[][] POSITION = { { 6.457663f, 10.197294f, -18.334061f }, { -1.433933f, 10.197294f, -1.359993f },
             { 12.184784f, 9.997294f, -18.941269f }, { 0.863553f, 10.197294f, -10.310320f },
             { 18.784092f, 10.197294f, 3.054368f } };
 
@@ -52,14 +52,14 @@ public class MoveAlongSurfaceTest extends AbstractDetourTest {
             float[] startPos = startPoss[i];
             float[] endPos = endPoss[i];
             Result<MoveAlongSurfaceResult> result = query.moveAlongSurface(startRef, startPos, endPos, filter);
-            assertTrue(result.succeeded());
+            assertThat(result.succeeded()).isTrue();
             MoveAlongSurfaceResult path = result.result;
             for (int v = 0; v < 3; v++) {
-                Assert.assertEquals(position[i][v], path.getResultPos()[v], 0.01f);
+                assertThat(path.getResultPos()[v]).isEqualTo(POSITION[i][v], offset(0.01f));
             }
-            Assert.assertEquals(visited[i].length, path.getVisited().size());
-            for (int j = 0; j < position[i].length; j++) {
-                Assert.assertEquals(visited[i][j], path.getVisited().get(j).longValue());
+            assertThat(path.getVisited()).hasSize(VISITED[i].length);
+            for (int j = 0; j < POSITION[i].length; j++) {
+                assertThat(path.getVisited().get(j).longValue()).isEqualTo(VISITED[i][j]);
             }
         }
     }

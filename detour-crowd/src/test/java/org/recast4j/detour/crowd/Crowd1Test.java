@@ -18,8 +18,10 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour.crowd;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.Offset.offset;
+
+import org.junit.jupiter.api.Test;
 
 public class Crowd1Test extends AbstractCrowdTest {
 
@@ -553,12 +555,12 @@ public class Crowd1Test extends AbstractCrowdTest {
         for (int i = 0; i < EXPECTED_A1Q0TVTA.length; i++) {
             crowd.update(1 / 5f, null);
             for (CrowdAgent ag : crowd.getActiveAgents()) {
-                Assert.assertEquals(EXPECTED_A1Q0TVTA[i][0], ag.npos[0], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q0TVTA[i][1], ag.npos[1], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q0TVTA[i][2], ag.npos[2], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q0TVTA[i][3], ag.nvel[0], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q0TVTA[i][4], ag.nvel[1], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q0TVTA[i][5], ag.nvel[2], 0.001f);
+                assertThat(ag.npos[0]).isEqualTo(EXPECTED_A1Q0TVTA[i][0], offset(0.001f));
+                assertThat(ag.npos[1]).isEqualTo(EXPECTED_A1Q0TVTA[i][1], offset(0.001f));
+                assertThat(ag.npos[2]).isEqualTo(EXPECTED_A1Q0TVTA[i][2], offset(0.001f));
+                assertThat(ag.nvel[0]).isEqualTo(EXPECTED_A1Q0TVTA[i][3], offset(0.001f));
+                assertThat(ag.nvel[1]).isEqualTo(EXPECTED_A1Q0TVTA[i][4], offset(0.001f));
+                assertThat(ag.nvel[2]).isEqualTo(EXPECTED_A1Q0TVTA[i][5], offset(0.001f));
             }
         }
     }
@@ -573,12 +575,12 @@ public class Crowd1Test extends AbstractCrowdTest {
         for (int i = 0; i < EXPECTED_A1Q0TVT.length; i++) {
             crowd.update(1 / 5f, null);
             for (CrowdAgent ag : crowd.getActiveAgents()) {
-                Assert.assertEquals(EXPECTED_A1Q0TVT[i][0], ag.npos[0], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q0TVT[i][1], ag.npos[1], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q0TVT[i][2], ag.npos[2], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q0TVT[i][3], ag.nvel[0], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q0TVT[i][4], ag.nvel[1], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q0TVT[i][5], ag.nvel[2], 0.001f);
+                assertThat(ag.npos[0]).isEqualTo(EXPECTED_A1Q0TVT[i][0], offset(0.001f));
+                assertThat(ag.npos[1]).isEqualTo(EXPECTED_A1Q0TVT[i][1], offset(0.001f));
+                assertThat(ag.npos[2]).isEqualTo(EXPECTED_A1Q0TVT[i][2], offset(0.001f));
+                assertThat(ag.nvel[0]).isEqualTo(EXPECTED_A1Q0TVT[i][3], offset(0.001f));
+                assertThat(ag.nvel[1]).isEqualTo(EXPECTED_A1Q0TVT[i][4], offset(0.001f));
+                assertThat(ag.nvel[2]).isEqualTo(EXPECTED_A1Q0TVT[i][5], offset(0.001f));
             }
         }
     }
@@ -592,12 +594,12 @@ public class Crowd1Test extends AbstractCrowdTest {
         for (int i = 0; i < EXPECTED_A1Q0TV.length; i++) {
             crowd.update(1 / 5f, null);
             for (CrowdAgent ag : crowd.getActiveAgents()) {
-                Assert.assertEquals(EXPECTED_A1Q0TV[i][0], ag.npos[0], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q0TV[i][1], ag.npos[1], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q0TV[i][2], ag.npos[2], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q0TV[i][3], ag.nvel[0], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q0TV[i][4], ag.nvel[1], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q0TV[i][5], ag.nvel[2], 0.001f);
+                assertThat(ag.npos[0]).isEqualTo(EXPECTED_A1Q0TV[i][0], offset(0.001f));
+                assertThat(ag.npos[1]).isEqualTo(EXPECTED_A1Q0TV[i][1], offset(0.001f));
+                assertThat(ag.npos[2]).isEqualTo(EXPECTED_A1Q0TV[i][2], offset(0.001f));
+                assertThat(ag.nvel[0]).isEqualTo(EXPECTED_A1Q0TV[i][3], offset(0.001f));
+                assertThat(ag.nvel[1]).isEqualTo(EXPECTED_A1Q0TV[i][4], offset(0.001f));
+                assertThat(ag.nvel[2]).isEqualTo(EXPECTED_A1Q0TV[i][5], offset(0.001f));
             }
         }
     }
@@ -611,12 +613,12 @@ public class Crowd1Test extends AbstractCrowdTest {
         for (int i = 0; i < EXPECTED_A1Q0T.length; i++) {
             crowd.update(1 / 5f, null);
             for (CrowdAgent ag : crowd.getActiveAgents()) {
-                Assert.assertEquals(EXPECTED_A1Q0T[i][0], ag.npos[0], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q0T[i][1], ag.npos[1], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q0T[i][2], ag.npos[2], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q0T[i][3], ag.nvel[0], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q0T[i][4], ag.nvel[1], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q0T[i][5], ag.nvel[2], 0.001f);
+                assertThat(ag.npos[0]).isEqualTo(EXPECTED_A1Q0T[i][0], offset(0.001f));
+                assertThat(ag.npos[1]).isEqualTo(EXPECTED_A1Q0T[i][1], offset(0.001f));
+                assertThat(ag.npos[2]).isEqualTo(EXPECTED_A1Q0T[i][2], offset(0.001f));
+                assertThat(ag.nvel[0]).isEqualTo(EXPECTED_A1Q0T[i][3], offset(0.001f));
+                assertThat(ag.nvel[1]).isEqualTo(EXPECTED_A1Q0T[i][4], offset(0.001f));
+                assertThat(ag.nvel[2]).isEqualTo(EXPECTED_A1Q0T[i][5], offset(0.001f));
             }
         }
     }
@@ -631,12 +633,12 @@ public class Crowd1Test extends AbstractCrowdTest {
         for (int i = 0; i < EXPECTED_A1Q1TVTA.length; i++) {
             crowd.update(1 / 5f, null);
             for (CrowdAgent ag : crowd.getActiveAgents()) {
-                Assert.assertEquals(EXPECTED_A1Q1TVTA[i][0], ag.npos[0], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q1TVTA[i][1], ag.npos[1], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q1TVTA[i][2], ag.npos[2], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q1TVTA[i][3], ag.nvel[0], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q1TVTA[i][4], ag.nvel[1], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q1TVTA[i][5], ag.nvel[2], 0.001f);
+                assertThat(ag.npos[0]).isEqualTo(EXPECTED_A1Q1TVTA[i][0], offset(0.001f));
+                assertThat(ag.npos[1]).isEqualTo(EXPECTED_A1Q1TVTA[i][1], offset(0.001f));
+                assertThat(ag.npos[2]).isEqualTo(EXPECTED_A1Q1TVTA[i][2], offset(0.001f));
+                assertThat(ag.nvel[0]).isEqualTo(EXPECTED_A1Q1TVTA[i][3], offset(0.001f));
+                assertThat(ag.nvel[1]).isEqualTo(EXPECTED_A1Q1TVTA[i][4], offset(0.001f));
+                assertThat(ag.nvel[2]).isEqualTo(EXPECTED_A1Q1TVTA[i][5], offset(0.001f));
             }
         }
     }
@@ -651,12 +653,12 @@ public class Crowd1Test extends AbstractCrowdTest {
         for (int i = 0; i < EXPECTED_A1Q2TVTA.length; i++) {
             crowd.update(1 / 5f, null);
             for (CrowdAgent ag : crowd.getActiveAgents()) {
-                Assert.assertEquals(EXPECTED_A1Q2TVTA[i][0], ag.npos[0], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q2TVTA[i][1], ag.npos[1], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q2TVTA[i][2], ag.npos[2], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q2TVTA[i][3], ag.nvel[0], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q2TVTA[i][4], ag.nvel[1], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q2TVTA[i][5], ag.nvel[2], 0.001f);
+                assertThat(ag.npos[0]).isEqualTo(EXPECTED_A1Q2TVTA[i][0], offset(0.001f));
+                assertThat(ag.npos[1]).isEqualTo(EXPECTED_A1Q2TVTA[i][1], offset(0.001f));
+                assertThat(ag.npos[2]).isEqualTo(EXPECTED_A1Q2TVTA[i][2], offset(0.001f));
+                assertThat(ag.nvel[0]).isEqualTo(EXPECTED_A1Q2TVTA[i][3], offset(0.001f));
+                assertThat(ag.nvel[1]).isEqualTo(EXPECTED_A1Q2TVTA[i][4], offset(0.001f));
+                assertThat(ag.nvel[2]).isEqualTo(EXPECTED_A1Q2TVTA[i][5], offset(0.001f));
             }
         }
     }
@@ -671,12 +673,12 @@ public class Crowd1Test extends AbstractCrowdTest {
         for (int i = 0; i < EXPECTED_A1Q3TVTA.length; i++) {
             crowd.update(1 / 5f, null);
             for (CrowdAgent ag : crowd.getActiveAgents()) {
-                Assert.assertEquals(EXPECTED_A1Q3TVTA[i][0], ag.npos[0], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q3TVTA[i][1], ag.npos[1], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q3TVTA[i][2], ag.npos[2], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q3TVTA[i][3], ag.nvel[0], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q3TVTA[i][4], ag.nvel[1], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q3TVTA[i][5], ag.nvel[2], 0.001f);
+                assertThat(ag.npos[0]).isEqualTo(EXPECTED_A1Q3TVTA[i][0], offset(0.001f));
+                assertThat(ag.npos[1]).isEqualTo(EXPECTED_A1Q3TVTA[i][1], offset(0.001f));
+                assertThat(ag.npos[2]).isEqualTo(EXPECTED_A1Q3TVTA[i][2], offset(0.001f));
+                assertThat(ag.nvel[0]).isEqualTo(EXPECTED_A1Q3TVTA[i][3], offset(0.001f));
+                assertThat(ag.nvel[1]).isEqualTo(EXPECTED_A1Q3TVTA[i][4], offset(0.001f));
+                assertThat(ag.nvel[2]).isEqualTo(EXPECTED_A1Q3TVTA[i][5], offset(0.001f));
             }
         }
     }
@@ -692,12 +694,12 @@ public class Crowd1Test extends AbstractCrowdTest {
         for (int i = 0; i < EXPECTED_A1Q3TVTAS.length; i++) {
             crowd.update(1 / 5f, null);
             for (CrowdAgent ag : crowd.getActiveAgents()) {
-                Assert.assertEquals(EXPECTED_A1Q3TVTAS[i][0], ag.npos[0], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q3TVTAS[i][1], ag.npos[1], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q3TVTAS[i][2], ag.npos[2], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q3TVTAS[i][3], ag.nvel[0], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q3TVTAS[i][4], ag.nvel[1], 0.001f);
-                Assert.assertEquals(EXPECTED_A1Q3TVTAS[i][5], ag.nvel[2], 0.001f);
+                assertThat(ag.npos[0]).isEqualTo(EXPECTED_A1Q3TVTAS[i][0], offset(0.001f));
+                assertThat(ag.npos[1]).isEqualTo(EXPECTED_A1Q3TVTAS[i][1], offset(0.001f));
+                assertThat(ag.npos[2]).isEqualTo(EXPECTED_A1Q3TVTAS[i][2], offset(0.001f));
+                assertThat(ag.nvel[0]).isEqualTo(EXPECTED_A1Q3TVTAS[i][3], offset(0.001f));
+                assertThat(ag.nvel[1]).isEqualTo(EXPECTED_A1Q3TVTAS[i][4], offset(0.001f));
+                assertThat(ag.nvel[2]).isEqualTo(EXPECTED_A1Q3TVTAS[i][5], offset(0.001f));
             }
         }
     }

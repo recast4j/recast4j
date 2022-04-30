@@ -17,7 +17,8 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour.io;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.offset;
 import static org.recast4j.detour.DetourCommon.vCopy;
 
 import java.io.ByteArrayInputStream;
@@ -26,7 +27,7 @@ import java.io.IOException;
 import java.nio.ByteOrder;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.recast4j.detour.MeshData;
 import org.recast4j.detour.MeshTile;
 import org.recast4j.detour.NavMesh;
@@ -104,25 +105,25 @@ public class MeshSetReaderWriterTest {
         writer.write(os, mesh, ByteOrder.LITTLE_ENDIAN, true);
         ByteArrayInputStream is = new ByteArrayInputStream(os.toByteArray());
         mesh = reader.read(is, 6);
-        assertEquals(128, mesh.getMaxTiles());
-        assertEquals(0x8000, mesh.getParams().maxPolys);
-        assertEquals(9.6, mesh.getParams().tileWidth, 0.001);
+        assertThat(mesh.getMaxTiles()).isEqualTo(128);
+        assertThat(mesh.getParams().maxPolys).isEqualTo(0x8000);
+        assertThat(mesh.getParams().tileWidth).isEqualTo(9.6f, offset(0.001f));
         List<MeshTile> tiles = mesh.getTilesAt(6, 9);
-        assertEquals(1, tiles.size());
-        assertEquals(2, tiles.get(0).data.polys.length);
-        assertEquals(7 * 3, tiles.get(0).data.verts.length);
+        assertThat(tiles).hasSize(1);
+        assertThat(tiles.get(0).data.polys).hasSize(2);
+        assertThat(tiles.get(0).data.verts).hasSize(7 * 3);
         tiles = mesh.getTilesAt(2, 9);
-        assertEquals(1, tiles.size());
-        assertEquals(2, tiles.get(0).data.polys.length);
-        assertEquals(9 * 3, tiles.get(0).data.verts.length);
+        assertThat(tiles).hasSize(1);
+        assertThat(tiles.get(0).data.polys).hasSize(2);
+        assertThat(tiles.get(0).data.verts).hasSize(9 * 3);
         tiles = mesh.getTilesAt(4, 3);
-        assertEquals(1, tiles.size());
-        assertEquals(3, tiles.get(0).data.polys.length);
-        assertEquals(6 * 3, tiles.get(0).data.verts.length);
+        assertThat(tiles).hasSize(1);
+        assertThat(tiles.get(0).data.polys).hasSize(3);
+        assertThat(tiles.get(0).data.verts).hasSize(6 * 3);
         tiles = mesh.getTilesAt(2, 8);
-        assertEquals(1, tiles.size());
-        assertEquals(5, tiles.get(0).data.polys.length);
-        assertEquals(17 * 3, tiles.get(0).data.verts.length);
+        assertThat(tiles).hasSize(1);
+        assertThat(tiles.get(0).data.polys).hasSize(5);
+        assertThat(tiles.get(0).data.verts).hasSize(17 * 3);
 
     }
 }

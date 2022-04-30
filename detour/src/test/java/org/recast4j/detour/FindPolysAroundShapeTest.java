@@ -17,14 +17,14 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.offset;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class FindPolysAroundShapeTest extends AbstractDetourTest {
 
-    long[][] refs = {
+    private static final long[][] REFS = {
             { 281474976710696L, 281474976710695L, 281474976710694L, 281474976710691L, 281474976710697L,
                     281474976710693L, 281474976710692L, 281474976710703L, 281474976710706L, 281474976710699L,
                     281474976710705L, 281474976710698L, 281474976710700L, 281474976710704L },
@@ -45,7 +45,7 @@ public class FindPolysAroundShapeTest extends AbstractDetourTest {
                     281474976710720L, 281474976710752L, 281474976710748L, 281474976710753L, 281474976710755L,
                     281474976710756L, 281474976710750L, 281474976710749L, 281474976710754L, 281474976710751L,
                     281474976710768L, 281474976710772L, 281474976710773L, 281474976710771L, 281474976710769L } };
-    long[][] parentsRefs = {
+    private static final long[][] PARENT_REFS = {
             { 0L, 281474976710696L, 281474976710695L, 281474976710695L, 281474976710695L, 281474976710695L,
                     281474976710693L, 281474976710694L, 281474976710703L, 281474976710706L, 281474976710706L,
                     281474976710705L, 281474976710705L, 281474976710705L },
@@ -65,7 +65,7 @@ public class FindPolysAroundShapeTest extends AbstractDetourTest {
                     281474976710731L, 281474976710752L, 281474976710748L, 281474976710753L, 281474976710753L,
                     281474976710753L, 281474976710756L, 281474976710755L, 281474976710755L, 281474976710754L,
                     281474976710768L, 281474976710772L, 281474976710772L, 281474976710773L } };
-    float[][] costs = {
+    private static final float[][] COSTS = {
             { 0.000000f, 16.188787f, 22.561579f, 19.950766f, 19.519329f, 21.906523f, 22.806520f, 23.311579f, 25.124035f,
                     28.454576f, 26.084503f, 36.438854f, 30.526634f, 31.942192f },
             { 0.000000f, 16.618738f, 12.136283f, 20.387646f, 17.343250f, 22.037645f, 22.787645f, 27.178831f, 26.501472f,
@@ -88,17 +88,17 @@ public class FindPolysAroundShapeTest extends AbstractDetourTest {
             float[] startPos = startPoss[i];
             Result<FindPolysAroundResult> polys = query.findPolysAroundShape(startRef,
                     getQueryPoly(startPos, endPoss[i]), filter);
-            Assert.assertEquals(refs[i].length, polys.result.getRefs().size());
-            for (int v = 0; v < refs[i].length; v++) {
+            assertThat(polys.result.getRefs()).hasSize(REFS[i].length);
+            for (int v = 0; v < REFS[i].length; v++) {
                 boolean found = false;
-                for (int w = 0; w < refs[i].length; w++) {
-                    if (refs[i][v] == polys.result.getRefs().get(w).longValue()) {
-                        Assert.assertEquals(parentsRefs[i][v], polys.result.getParentRefs().get(w).longValue());
-                        Assert.assertEquals(costs[i][v], polys.result.getCosts().get(w).floatValue(), 0.01f);
+                for (int w = 0; w < REFS[i].length; w++) {
+                    if (REFS[i][v] == polys.result.getRefs().get(w).longValue()) {
+                        assertThat(polys.result.getParentRefs().get(w).longValue()).isEqualTo(PARENT_REFS[i][v]);
+                        assertThat(polys.result.getCosts().get(w).floatValue()).isEqualTo(COSTS[i][v], offset(0.01f));
                         found = true;
                     }
                 }
-                assertTrue("Ref not found " + refs[i][v], found);
+                assertThat(found).isTrue();
             }
         }
 

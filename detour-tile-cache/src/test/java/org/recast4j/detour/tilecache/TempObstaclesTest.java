@@ -18,14 +18,13 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour.tilecache;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.nio.ByteOrder;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.recast4j.detour.MeshTile;
 import org.recast4j.recast.geom.InputGeomProvider;
 
@@ -44,22 +43,22 @@ public class TempObstaclesTest extends AbstractTileCacheTest {
         }
         List<MeshTile> tiles = tc.getNavMesh().getTilesAt(1, 4);
         MeshTile tile = tiles.get(0);
-        assertEquals(16, tile.data.header.vertCount);
-        assertEquals(6, tile.data.header.polyCount);
+        assertThat(tile.data.header.vertCount).isEqualTo(16);
+        assertThat(tile.data.header.polyCount).isEqualTo(6);
         long o = tc.addObstacle(new float[] { -1.815208f, 9.998184f, -20.307983f }, 1f, 2f);
         boolean upToDate = tc.update();
-        assertTrue(upToDate);
+        assertThat(upToDate).isTrue();
         tiles = tc.getNavMesh().getTilesAt(1, 4);
         tile = tiles.get(0);
-        assertEquals(22, tile.data.header.vertCount);
-        assertEquals(11, tile.data.header.polyCount);
+        assertThat(tile.data.header.vertCount).isEqualTo(22);
+        assertThat(tile.data.header.polyCount).isEqualTo(11);
         tc.removeObstacle(o);
         upToDate = tc.update();
-        assertTrue(upToDate);
+        assertThat(upToDate).isTrue();
         tiles = tc.getNavMesh().getTilesAt(1, 4);
         tile = tiles.get(0);
-        assertEquals(16, tile.data.header.vertCount);
-        assertEquals(6, tile.data.header.polyCount);
+        assertThat(tile.data.header.vertCount).isEqualTo(16);
+        assertThat(tile.data.header.polyCount);
     }
 
     @Test
@@ -75,22 +74,22 @@ public class TempObstaclesTest extends AbstractTileCacheTest {
         }
         List<MeshTile> tiles = tc.getNavMesh().getTilesAt(1, 4);
         MeshTile tile = tiles.get(0);
-        assertEquals(16, tile.data.header.vertCount);
-        assertEquals(6, tile.data.header.polyCount);
+        assertThat(tile.data.header.vertCount).isEqualTo(16);
+        assertThat(tile.data.header.polyCount).isEqualTo(6);
         long o = tc.addBoxObstacle(new float[] { -2.315208f, 9.998184f, -20.807983f },
                 new float[] { -1.315208f, 11.998184f, -19.807983f });
         boolean upToDate = tc.update();
-        assertTrue(upToDate);
+        assertThat(upToDate).isTrue();
         tiles = tc.getNavMesh().getTilesAt(1, 4);
         tile = tiles.get(0);
-        assertEquals(22, tile.data.header.vertCount);
-        assertEquals(11, tile.data.header.polyCount);
+        assertThat(tile.data.header.vertCount).isEqualTo(22);
+        assertThat(tile.data.header.polyCount).isEqualTo(11);
         tc.removeObstacle(o);
         upToDate = tc.update();
-        assertTrue(upToDate);
+        assertThat(upToDate).isTrue();
         tiles = tc.getNavMesh().getTilesAt(1, 4);
         tile = tiles.get(0);
-        assertEquals(16, tile.data.header.vertCount);
-        assertEquals(6, tile.data.header.polyCount);
+        assertThat(tile.data.header.vertCount).isEqualTo(16);
+        assertThat(tile.data.header.polyCount).isEqualTo(6);
     }
 }

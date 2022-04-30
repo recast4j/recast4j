@@ -19,7 +19,7 @@ freely, subject to the following restrictions:
 package org.recast4j.dynamic;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -33,16 +33,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.BiFunction;
 
 import org.assertj.core.data.Offset;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.recast4j.dynamic.io.VoxelFile;
 import org.recast4j.dynamic.io.VoxelFileReader;
 import org.recast4j.recast.Heightfield;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class VoxelQueryTest {
 
     private static final int TILE_WIDTH = 100;

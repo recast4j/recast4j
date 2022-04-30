@@ -25,7 +25,7 @@ import static org.recast4j.detour.DetourCommon.vSub;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.recast4j.detour.FindNearestPolyResult;
 import org.recast4j.detour.MeshData;
 import org.recast4j.detour.NavMesh;
@@ -55,7 +55,7 @@ public class AbstractCrowdTest {
     protected Crowd crowd;
     protected List<CrowdAgent> agents;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         nmd = new RecastTestMeshBuilder().getMeshData();
         navmesh = new NavMesh(nmd, 6, 0);

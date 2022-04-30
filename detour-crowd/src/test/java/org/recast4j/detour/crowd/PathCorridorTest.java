@@ -19,25 +19,25 @@ freely, subject to the following restrictions:
 package org.recast4j.detour.crowd;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.recast4j.detour.DefaultQueryFilter;
 import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.detour.QueryFilter;
 import org.recast4j.detour.Result;
 import org.recast4j.detour.StraightPathItem;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class PathCorridorTest {
 
     private final PathCorridor corridor = new PathCorridor();
@@ -45,7 +45,7 @@ public class PathCorridorTest {
     @Mock
     private NavMeshQuery query;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         corridor.reset(0, new float[] {10,20,30});
     }

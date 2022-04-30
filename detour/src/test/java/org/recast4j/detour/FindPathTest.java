@@ -17,16 +17,18 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.offset;
+
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class FindPathTest extends AbstractDetourTest {
 
-    private final Status[] statuses = { Status.SUCCSESS, Status.PARTIAL_RESULT, Status.SUCCSESS, Status.SUCCSESS,
+    private static final Status[] STATUSES = { Status.SUCCSESS, Status.PARTIAL_RESULT, Status.SUCCSESS, Status.SUCCSESS,
             Status.SUCCSESS };
-    private final long[][] results = {
+    private static final long[][] RESULTS = {
             { 281474976710696L, 281474976710695L, 281474976710694L, 281474976710703L, 281474976710706L,
                     281474976710705L, 281474976710702L, 281474976710701L, 281474976710714L, 281474976710713L,
                     281474976710712L, 281474976710727L, 281474976710730L, 281474976710717L, 281474976710721L },
@@ -48,7 +50,7 @@ public class FindPathTest extends AbstractDetourTest {
                     281474976710748L, 281474976710753L, 281474976710755L, 281474976710754L, 281474976710768L,
                     281474976710772L } };
 
-    private final StraightPathItem[][] straightPaths = {
+    private static final StraightPathItem[][] STRAIGHT_PATHS = {
             { new StraightPathItem(new float[] { 22.606520f, 10.197294f, -45.918674f }, 1, 281474976710696L),
                     new StraightPathItem(new float[] { 3.484785f, 10.197294f, -34.241272f }, 0, 281474976710713L),
                     new StraightPathItem(new float[] { 1.984785f, 10.197294f, -31.241272f }, 0, 281474976710712L),
@@ -100,10 +102,10 @@ public class FindPathTest extends AbstractDetourTest {
             float[] startPos = startPoss[i];
             float[] endPos = endPoss[i];
             Result<List<Long>> path = query.findPath(startRef, endRef, startPos, endPos, filter);
-            Assert.assertEquals(statuses[i], path.status);
-            Assert.assertEquals(results[i].length, path.result.size());
-            for (int j = 0; j < results[i].length; j++) {
-                Assert.assertEquals(results[i][j], path.result.get(j).longValue());
+            assertThat(path.status).isEqualTo(STATUSES[i]);
+            assertThat(path.result).hasSize(RESULTS[i].length);
+            for (int j = 0; j < RESULTS[i].length; j++) {
+                assertThat(path.result.get(j).longValue()).isEqualTo(RESULTS[i][j]);
             }
         }
     }
@@ -123,10 +125,10 @@ public class FindPathTest extends AbstractDetourTest {
                 status = res.status;
             }
             Result<List<Long>> path = query.finalizeSlicedFindPath();
-            Assert.assertEquals(statuses[i], path.status);
-            Assert.assertEquals(results[i].length, path.result.size());
-            for (int j = 0; j < results[i].length; j++) {
-                Assert.assertEquals(results[i][j], path.result.get(j).longValue());
+            assertThat(path.status).isEqualTo(STATUSES[i]);
+            assertThat(path.result).hasSize(RESULTS[i].length);
+            for (int j = 0; j < RESULTS[i].length; j++) {
+                assertThat(path.result.get(j).longValue()).isEqualTo(RESULTS[i][j]);
             }
 
         }
@@ -135,7 +137,7 @@ public class FindPathTest extends AbstractDetourTest {
     @Test
     public void testFindPathStraight() {
         QueryFilter filter = new DefaultQueryFilter();
-        for (int i = 0; i < straightPaths.length; i++) {// startRefs.length; i++) {
+        for (int i = 0; i < STRAIGHT_PATHS.length; i++) {// startRefs.length; i++) {
             long startRef = startRefs[i];
             long endRef = endRefs[i];
             float[] startPos = startPoss[i];
@@ -144,13 +146,13 @@ public class FindPathTest extends AbstractDetourTest {
             Result<List<StraightPathItem>> result = query.findStraightPath(startPos, endPos, path.result,
                     Integer.MAX_VALUE, 0);
             List<StraightPathItem> straightPath = result.result;
-            Assert.assertEquals(straightPaths[i].length, straightPath.size());
-            for (int j = 0; j < straightPaths[i].length; j++) {
-                Assert.assertEquals(straightPaths[i][j].ref, straightPath.get(j).ref);
+            assertThat(straightPath).hasSize(STRAIGHT_PATHS[i].length);
+            for (int j = 0; j < STRAIGHT_PATHS[i].length; j++) {
+                assertThat(straightPath.get(j).ref).isEqualTo(STRAIGHT_PATHS[i][j].ref);
                 for (int v = 0; v < 3; v++) {
-                    Assert.assertEquals(straightPaths[i][j].pos[v], straightPath.get(j).pos[v], 0.01f);
+                    assertThat(straightPath.get(j).pos[v]).isEqualTo(STRAIGHT_PATHS[i][j].pos[v], offset(0.01f));
                 }
-                Assert.assertEquals(straightPaths[i][j].flags, straightPath.get(j).flags);
+                assertThat(straightPath.get(j).flags).isEqualTo(STRAIGHT_PATHS[i][j].flags);
             }
         }
     }

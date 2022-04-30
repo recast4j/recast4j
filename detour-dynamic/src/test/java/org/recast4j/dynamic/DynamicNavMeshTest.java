@@ -1,6 +1,6 @@
 package org.recast4j.dynamic;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,7 +9,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.recast4j.detour.DefaultQueryFilter;
 import org.recast4j.detour.FindNearestPolyResult;
 import org.recast4j.detour.NavMeshQuery;
@@ -49,7 +49,7 @@ public class DynamicNavMeshTest {
             List<Long> path = query.findPath(start.getNearestRef(), end.getNearestRef(), start.getNearestPos(),
                     end.getNearestPos(), filter, NavMeshQuery.DT_FINDPATH_ANY_ANGLE, Float.MAX_VALUE).result;
             // check path length without any obstacles
-            assertEquals(17, path.size(), 0);
+            assertThat(path).hasSize(17);
             // place obstacle
             Collider colldier = new SphereCollider(SPHERE_POS, 20, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_GROUND, 0.1f);
             long colliderId = mesh.addCollider(colldier);
@@ -65,7 +65,7 @@ public class DynamicNavMeshTest {
             path = query.findPath(start.getNearestRef(), end.getNearestRef(), start.getNearestPos(), end.getNearestPos(), filter,
                     NavMeshQuery.DT_FINDPATH_ANY_ANGLE, Float.MAX_VALUE).result;
             // check path length with obstacles
-            assertEquals(22, path.size(), 0);
+            assertThat(path).hasSize(22);
             // remove obstacle
             mesh.removeCollider(colliderId);
             // update navmesh asynchronously
@@ -80,7 +80,7 @@ public class DynamicNavMeshTest {
             path = query.findPath(start.getNearestRef(), end.getNearestRef(), start.getNearestPos(), end.getNearestPos(), filter,
                     NavMeshQuery.DT_FINDPATH_ANY_ANGLE, Float.MAX_VALUE).result;
             // path length should be back to the initial value
-            assertEquals(17, path.size(), 0);
+            assertThat(path).hasSize(17);
         }
     }
 }

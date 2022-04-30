@@ -17,10 +17,10 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.recast4j.recast.RecastConstants.RC_NULL_AREA;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class RecastTest {
 
@@ -37,18 +37,18 @@ public class RecastTest {
         {
             int areas[] = { 42 };
             Recast.clearUnwalkableTriangles(ctx, walkableSlopeAngle, verts, nv, unwalkable_tri, nt, areas);
-            assertEquals("Sets area ID of unwalkable triangle to RC_NULL_AREA", RC_NULL_AREA, areas[0]);
+            assertThat(areas[0]).isEqualTo(RC_NULL_AREA).describedAs("Sets area ID of unwalkable triangle to RC_NULL_AREA");
         }
         {
             int areas[] = { 42 };
             Recast.clearUnwalkableTriangles(ctx, walkableSlopeAngle, verts, nv, walkable_tri, nt, areas);
-            assertEquals("Does not modify walkable triangle aread ID's", 42, areas[0]);
+            assertThat(areas[0]).isEqualTo(42).describedAs("Does not modify walkable triangle aread ID's");
         }
         {
             int areas[] = { 42 };
             walkableSlopeAngle = 0;
             Recast.clearUnwalkableTriangles(ctx, walkableSlopeAngle, verts, nv, walkable_tri, nt, areas);
-            assertEquals("Slopes equal to the max slope are considered unwalkable.", RC_NULL_AREA, areas[0]);
+            assertThat(areas[0]).isEqualTo(RC_NULL_AREA).describedAs("Slopes equal to the max slope are considered unwalkable.");
         }
     }
 }

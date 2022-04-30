@@ -18,85 +18,67 @@ freely, subject to the following restrictions:
 
 package org.recast4j.dynamic.io;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collection;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
-@RunWith(Parameterized.class)
 public class VoxelFileReaderWriterTest {
 
-    private final boolean compression;
-
-    @Parameterized.Parameters
-    public static Collection<Boolean> compressionFlag() {
-        return Arrays.asList(false, true);
-    }
-
-    public VoxelFileReaderWriterTest(boolean compression) {
-        this.compression = compression;
-    }
-
-    @Test
-    public void shouldReadSingleTileFile() throws IOException {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    public void shouldReadSingleTileFile(boolean compression) throws IOException {
         try (InputStream is = getClass().getClassLoader().getResourceAsStream("test.voxels")) {
             VoxelFile f = readWriteRead(is, compression);
-            assertFalse(f.useTiles);
-            assertArrayEquals(new float[] { -100.0f, 0f, -100f, 100f, 5f, 100f }, f.bounds, 0f);
-            assertEquals(0.25f, f.cellSize, 0f);
-            assertEquals(0.5f, f.walkableRadius, 0f);
-            assertEquals(2f, f.walkableHeight, 0f);
-            assertEquals(0.5f, f.walkableClimb, 0f);
-            assertEquals(20f, f.maxEdgeLen, 0f);
-            assertEquals(2f, f.maxSimplificationError, 0f);
-            assertEquals(2f, f.minRegionArea, 0f);
-            assertEquals(12f, f.regionMergeArea, 0f);
-            assertEquals(1, f.tiles.size());
-            assertEquals(0.001f, f.tiles.get(0).cellHeight, 0f);
-            assertEquals(810, f.tiles.get(0).width);
-            assertEquals(810, f.tiles.get(0).depth);
-            assertEquals(9021024, f.tiles.get(0).spanData.length);
-            assertArrayEquals(new float[] { -101.25f, 0f, -101.25f }, f.tiles.get(0).boundsMin, 0f);
-            assertArrayEquals(new float[] { 101.25f, 5.0f, 101.25f }, f.tiles.get(0).boundsMax, 0f);
-
+            assertThat(f.useTiles).isFalse();
+            assertThat(f.bounds).containsExactly(-100.0f, 0f, -100f, 100f, 5f, 100f);
+            assertThat(f.cellSize).isEqualTo(0.25f);
+            assertThat(f.walkableRadius).isEqualTo(0.5f);
+            assertThat(f.walkableHeight).isEqualTo(2f);
+            assertThat(f.walkableClimb).isEqualTo(0.5f);
+            assertThat(f.maxEdgeLen).isEqualTo(20f);
+            assertThat(f.maxSimplificationError).isEqualTo(2f);
+            assertThat(f.minRegionArea).isEqualTo(2f);
+            assertThat(f.regionMergeArea).isEqualTo(12f);
+            assertThat(f.tiles.size()).isEqualTo(1);
+            assertThat(f.tiles.get(0).cellHeight).isEqualTo(0.001f);
+            assertThat(f.tiles.get(0).width).isEqualTo(810);
+            assertThat(f.tiles.get(0).depth).isEqualTo(810);
+            assertThat(f.tiles.get(0).spanData).hasSize(9021024);
+            assertThat(f.tiles.get(0).boundsMin).containsExactly(-101.25f, 0f, -101.25f);
+            assertThat(f.tiles.get(0).boundsMax).containsExactly(101.25f, 5.0f, 101.25f);
         }
     }
 
-    @Test
-    public void shouldReadMultiTileFile() throws IOException {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    public void shouldReadMultiTileFile(boolean compression) throws IOException {
         try (InputStream is = getClass().getClassLoader().getResourceAsStream("test_tiles.voxels")) {
             VoxelFile f = readWriteRead(is, compression);
-            assertTrue(f.useTiles);
-            assertArrayEquals(new float[] { -100.0f, 0f, -100f, 100f, 5f, 100f }, f.bounds, 0f);
-            assertEquals(0.25f, f.cellSize, 0f);
-            assertEquals(0.5f, f.walkableRadius, 0f);
-            assertEquals(2f, f.walkableHeight, 0f);
-            assertEquals(0.5f, f.walkableClimb, 0f);
-            assertEquals(20f, f.maxEdgeLen, 0f);
-            assertEquals(2f, f.maxSimplificationError, 0f);
-            assertEquals(2f, f.minRegionArea, 0f);
-            assertEquals(12f, f.regionMergeArea, 0f);
-            assertEquals(100, f.tiles.size());
-            assertEquals(0.001f, f.tiles.get(0).cellHeight, 0f);
-            assertEquals(90, f.tiles.get(0).width);
-            assertEquals(90, f.tiles.get(0).depth);
-            assertEquals(104952, f.tiles.get(0).spanData.length);
-            assertEquals(109080, f.tiles.get(5).spanData.length);
-            assertEquals(113400, f.tiles.get(18).spanData.length);
-            assertArrayEquals(new float[] { -101.25f, 0f, -101.25f }, f.tiles.get(0).boundsMin, 0f);
-            assertArrayEquals(new float[] { -78.75f, 5.0f, -78.75f }, f.tiles.get(0).boundsMax, 0f);
-
+            assertThat(f.useTiles).isTrue();
+            assertThat(f.bounds).containsExactly(-100.0f, 0f, -100f, 100f, 5f, 100f);
+            assertThat(f.cellSize).isEqualTo(0.25f);
+            assertThat(f.walkableRadius).isEqualTo(0.5f);
+            assertThat(f.walkableHeight).isEqualTo(2f);
+            assertThat(f.walkableClimb).isEqualTo(0.5f);
+            assertThat(f.maxEdgeLen).isEqualTo(20f);
+            assertThat(f.maxSimplificationError).isEqualTo(2f);
+            assertThat(f.minRegionArea).isEqualTo(2f);
+            assertThat(f.regionMergeArea).isEqualTo(12f);
+            assertThat(f.tiles.size()).isEqualTo(100);
+            assertThat(f.tiles.get(0).cellHeight).isEqualTo(0.001f);
+            assertThat(f.tiles.get(0).width).isEqualTo(90);
+            assertThat(f.tiles.get(0).depth).isEqualTo(90);
+            assertThat(f.tiles.get(0).spanData).hasSize(104952);
+            assertThat(f.tiles.get(5).spanData).hasSize(109080);
+            assertThat(f.tiles.get(18).spanData).hasSize(113400);
+            assertThat(f.tiles.get(0).boundsMin).containsExactly(-101.25f, 0f, -101.25f);
+            assertThat(f.tiles.get(0).boundsMax).containsExactly(-78.75f, 5.0f, -78.75f);
         }
     }
 

@@ -17,12 +17,13 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.Test;
 
 public class FindLocalNeighbourhoodTest extends AbstractDetourTest {
 
-    long[][] refs = { { 281474976710696L, 281474976710695L, 281474976710691L, 281474976710697L },
+    private static final long[][] REFS = { { 281474976710696L, 281474976710695L, 281474976710691L, 281474976710697L },
             { 281474976710773L, 281474976710769L, 281474976710772L },
             { 281474976710680L, 281474976710674L, 281474976710679L, 281474976710684L, 281474976710683L,
                     281474976710678L, 281474976710677L, 281474976710676L },
@@ -30,7 +31,7 @@ public class FindLocalNeighbourhoodTest extends AbstractDetourTest {
             { 281474976710733L, 281474976710735L, 281474976710736L }
 
     };
-    long[][] parentRefs = { { 0L, 281474976710696L, 281474976710695L, 281474976710695L },
+    private static final long[][] PARENT_REFS = { { 0L, 281474976710696L, 281474976710695L, 281474976710695L },
             { 0L, 281474976710773L, 281474976710773L },
             { 0L, 281474976710680L, 281474976710680L, 281474976710680L, 281474976710680L, 281474976710679L,
                     281474976710683L, 281474976710678L },
@@ -43,9 +44,9 @@ public class FindLocalNeighbourhoodTest extends AbstractDetourTest {
             float[] startPos = startPoss[i];
             Result<FindLocalNeighbourhoodResult> poly = query.findLocalNeighbourhood(startRefs[i], startPos, 3.5f,
                     filter);
-            Assert.assertEquals(refs[i].length, poly.result.getRefs().size());
-            for (int v = 0; v < refs[i].length; v++) {
-                Assert.assertEquals(refs[i][v], poly.result.getRefs().get(v).longValue());
+            assertThat(poly.result.getRefs()).hasSize(REFS[i].length);
+            for (int v = 0; v < REFS[i].length; v++) {
+                assertThat(poly.result.getRefs().get(v).longValue()).isEqualTo(REFS[i][v]);
             }
         }
 

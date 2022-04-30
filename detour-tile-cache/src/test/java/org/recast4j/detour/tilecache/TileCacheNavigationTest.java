@@ -18,13 +18,14 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour.tilecache;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.IOException;
 import java.nio.ByteOrder;
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.recast4j.detour.DefaultQueryFilter;
 import org.recast4j.detour.DefaultQueryHeuristic;
 import org.recast4j.detour.NavMesh;
@@ -51,7 +52,7 @@ public class TileCacheNavigationTest extends AbstractTileCacheTest {
     protected NavMesh navmesh;
     protected NavMeshQuery query;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
 
         boolean cCompatibility = true;
@@ -84,10 +85,10 @@ public class TileCacheNavigationTest extends AbstractTileCacheTest {
             float[] startPos = startPoss[i];
             float[] endPos = endPoss[i];
             Result<List<Long>> path = query.findPath(startRef, endRef, startPos, endPos, filter);
-            Assert.assertEquals(statuses[i], path.status);
-            Assert.assertEquals(results[i].length, path.result.size());
+            assertThat(path.status).isEqualTo(statuses[i]);
+            assertThat(path.result).hasSize(results[i].length);
             for (int j = 0; j < results[i].length; j++) {
-                Assert.assertEquals(results[i][j], path.result.get(j).longValue());
+                assertThat(path.result.get(j)).isEqualTo(path.result.get(j).longValue());
             }
         }
     }
@@ -102,10 +103,10 @@ public class TileCacheNavigationTest extends AbstractTileCacheTest {
             float[] endPos = endPoss[i];
             Result<List<Long>> path = query.findPath(startRef, endRef, startPos, endPos, filter, new DefaultQueryHeuristic(0.0f),
                     0, 0);
-            Assert.assertEquals(statuses[i], path.status);
-            Assert.assertEquals(results[i].length, path.result.size());
+            assertThat(path.status).isEqualTo(statuses[i]);
+            assertThat(path.result).hasSize(results[i].length);
             for (int j = 0; j < results[i].length; j++) {
-                Assert.assertEquals(results[i][j], path.result.get(j).longValue());
+                assertThat(path.result.get(j)).isEqualTo(path.result.get(j).longValue());
             }
         }
     }

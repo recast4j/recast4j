@@ -17,12 +17,14 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.Offset.offset;
+
+import org.junit.jupiter.api.Test;
 
 public class GetPolyWallSegmentsTest extends AbstractDetourTest {
 
-    float[][] vertices = {
+    private static final float[][] VERTICES = {
             { 22.084785f, 10.197294f, -48.341274f, 22.684784f, 10.197294f, -44.141273f, 22.684784f, 10.197294f,
                     -44.141273f, 23.884785f, 10.197294f, -48.041275f, 23.884785f, 10.197294f, -48.041275f, 22.084785f,
                     10.197294f, -48.341274f },
@@ -45,7 +47,7 @@ public class GetPolyWallSegmentsTest extends AbstractDetourTest {
                     -13.841270f, -24.115217f, 4.997294f, -12.041275f, -24.115217f, 4.997294f, -12.041275f, -22.315216f,
                     4.997294f, -11.441269f, -22.315216f, 4.997294f, -11.441269f, -17.815216f, 5.197294f, -11.441269f,
                     -17.815216f, 5.197294f, -11.441269f, -22.315216f, 6.597294f, -17.141273f } };
-    long[][] refs = { { 281474976710695L, 0L, 0L },
+    private static final long[][] REFS = { { 281474976710695L, 0L, 0L },
             { 0L, 281474976710770L, 0L, 281474976710769L, 281474976710772L, 0L },
             { 281474976710683L, 281474976710674L, 0L, 281474976710679L, 281474976710684L, 0L },
             { 281474976710750L, 281474976710748L, 0L, 0L, 281474976710755L, 281474976710756L },
@@ -57,15 +59,15 @@ public class GetPolyWallSegmentsTest extends AbstractDetourTest {
         for (int i = 0; i < startRefs.length; i++) {
             Result<GetPolyWallSegmentsResult> result = query.getPolyWallSegments(startRefs[i], true, filter);
             GetPolyWallSegmentsResult segments = result.result;
-            Assert.assertEquals(vertices[i].length, segments.getSegmentVerts().size() * 6);
-            Assert.assertEquals(refs[i].length, segments.getSegmentRefs().size());
-            for (int v = 0; v < vertices[i].length / 6; v++) {
+            assertThat(segments.getSegmentVerts()).hasSize(VERTICES[i].length / 6);
+            assertThat(segments.getSegmentRefs()).hasSize(REFS[i].length);
+            for (int v = 0; v < VERTICES[i].length / 6; v++) {
                 for (int n = 0; n < 6; n++) {
-                    Assert.assertEquals(vertices[i][v * 6 + n], segments.getSegmentVerts().get(v)[n], 0.001f);
+                    assertThat(segments.getSegmentVerts().get(v)[n]).isEqualTo(VERTICES[i][v * 6 + n], offset(0.001f));
                 }
             }
-            for (int v = 0; v < refs[i].length; v++) {
-                Assert.assertEquals(refs[i][v], segments.getSegmentRefs().get(v).longValue());
+            for (int v = 0; v < REFS[i].length; v++) {
+                assertThat(segments.getSegmentRefs().get(v)).isEqualTo(REFS[i][v]);
             }
         }
 
