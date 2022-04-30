@@ -17,51 +17,49 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class NavMeshBuilderTest {
 
     private MeshData nmd;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         nmd = new RecastTestMeshBuilder().getMeshData();
     }
 
     @Test
     public void testBVTree() {
-        assertEquals(225, nmd.verts.length / 3);
-        assertEquals(119, nmd.polys.length);
-        assertEquals(457, nmd.header.maxLinkCount);
-        assertEquals(118, nmd.detailMeshes.length);
-        assertEquals(291, nmd.detailTris.length / 4);
-        assertEquals(60, nmd.detailVerts.length / 3);
-        assertEquals(1, nmd.offMeshCons.length);
-        assertEquals(118, nmd.header.offMeshBase);
-        assertEquals(236, nmd.bvTree.length);
-        assertTrue(nmd.header.bvNodeCount <= nmd.bvTree.length);
+        assertThat(nmd.verts.length / 3).isEqualTo(225);
+        assertThat(nmd.polys.length).isEqualTo(119);
+        assertThat(nmd.header.maxLinkCount).isEqualTo(457);
+        assertThat(nmd.detailMeshes.length).isEqualTo(118);
+        assertThat(nmd.detailTris.length / 4).isEqualTo(291);
+        assertThat(nmd.detailVerts.length / 3).isEqualTo(60);
+        assertThat(nmd.offMeshCons.length).isEqualTo(1);
+        assertThat(nmd.header.offMeshBase).isEqualTo(118);
+        assertThat(nmd.bvTree.length).isEqualTo(236);
+        assertThat(nmd.bvTree.length).isGreaterThanOrEqualTo(nmd.header.bvNodeCount);
         for (int i = 0; i < nmd.header.bvNodeCount; i++) {
-            assertNotNull(nmd.bvTree[i]);
+            assertThat(nmd.bvTree[i]).isNotNull();
         }
         for (int i = 0; i < 6; i++) {
-            assertEquals(nmd.offMeshCons[0].pos[i], nmd.verts[223 * 3 + i], 0.0f);
+            assertThat(nmd.verts[223 * 3 + i]).isEqualTo(nmd.offMeshCons[0].pos[i]);
         }
-        assertEquals(0.1f, nmd.offMeshCons[0].rad, 0.0f);
-        assertEquals(118, nmd.offMeshCons[0].poly);
-        assertEquals(NavMesh.DT_OFFMESH_CON_BIDIR, nmd.offMeshCons[0].flags);
-        assertEquals(0xFF, nmd.offMeshCons[0].side);
-        assertEquals(0x4567, nmd.offMeshCons[0].userId);
-        assertEquals(2, nmd.polys[118].vertCount);
-        assertEquals(223, nmd.polys[118].verts[0]);
-        assertEquals(224, nmd.polys[118].verts[1]);
-        assertEquals(12, nmd.polys[118].flags);
-        assertEquals(2, nmd.polys[118].getArea());
-        assertEquals(Poly.DT_POLYTYPE_OFFMESH_CONNECTION, nmd.polys[118].getType());
+        assertThat(nmd.offMeshCons[0].rad).isEqualTo(0.1f);
+        assertThat(nmd.offMeshCons[0].poly).isEqualTo(118);
+        assertThat(nmd.offMeshCons[0].flags).isEqualTo(NavMesh.DT_OFFMESH_CON_BIDIR);
+        assertThat(nmd.offMeshCons[0].side).isEqualTo(0xFF);
+        assertThat(nmd.offMeshCons[0].userId).isEqualTo(0x4567);
+        assertThat(nmd.polys[118].vertCount).isEqualTo(2);
+        assertThat(nmd.polys[118].verts[0]).isEqualTo(223);
+        assertThat(nmd.polys[118].verts[1]).isEqualTo(224);
+        assertThat(nmd.polys[118].flags).isEqualTo(12);
+        assertThat(nmd.polys[118].getArea()).isEqualTo(2);
+        assertThat(nmd.polys[118].getType()).isEqualTo(Poly.DT_POLYTYPE_OFFMESH_CONNECTION);
 
     }
 }

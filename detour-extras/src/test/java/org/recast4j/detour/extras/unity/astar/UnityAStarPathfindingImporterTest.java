@@ -17,9 +17,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour.extras.unity.astar;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -28,7 +26,7 @@ import java.nio.ByteOrder;
 import java.nio.file.Path;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.recast4j.detour.BVNode;
 import org.recast4j.detour.DefaultQueryFilter;
 import org.recast4j.detour.FindNearestPolyResult;
@@ -50,8 +48,8 @@ public class UnityAStarPathfindingImporterTest {
         float[] startPos = new float[] { 8.200293f, 2.155071f, -26.176147f };
         float[] endPos = new float[] { 11.971109f, 0.000000f, 8.663261f };
         Result<List<Long>> path = findPath(mesh, startPos, endPos);
-        assertEquals(Status.SUCCSESS, path.status);
-        assertEquals(57, path.result.size());
+        assertThat(path.status).isEqualTo(Status.SUCCSESS);
+        assertThat(path.result.size()).isEqualTo(57);
         saveMesh(mesh, "v4_0_6");
     }
 
@@ -61,8 +59,8 @@ public class UnityAStarPathfindingImporterTest {
         float[] startPos = new float[] { 22.93f, -2.37f, -5.11f };
         float[] endPos = new float[] { 16.81f, -2.37f, 25.52f };
         Result<List<Long>> path = findPath(mesh, startPos, endPos);
-        assertTrue(path.status.isSuccess());
-        assertEquals(15, path.result.size());
+        assertThat(path.status.isSuccess()).isTrue();
+        assertThat(path.result.size()).isEqualTo(15);
         saveMesh(mesh, "v4_1_16");
     }
 
@@ -85,7 +83,7 @@ public class UnityAStarPathfindingImporterTest {
         data.bvTree = bvNodes;
         FindNearestPolyResult bvResult = getNearestPolys(mesh, position)[0];
 
-        assertEquals(clearResult.getNearestRef(), bvResult.getNearestRef());
+        assertThat(bvResult.getNearestRef()).isEqualTo(clearResult.getNearestRef());
     }
 
     private NavMesh loadNavMesh(String filename) throws Exception {
@@ -113,8 +111,8 @@ public class UnityAStarPathfindingImporterTest {
         for (int i = 0; i < results.length; i++) {
             float[] position = positions[i];
             Result<FindNearestPolyResult> result = query.findNearestPoly(position, extents, filter);
-            assertTrue(result.succeeded());
-            assertNotNull("Nearest start position is null!", result.result.getNearestPos());
+            assertThat(result.succeeded()).isTrue();
+            assertThat(result.result.getNearestPos()).as("Nearest start position is null!").isNotNull();
             results[i] = result.result;
         }
         return results;

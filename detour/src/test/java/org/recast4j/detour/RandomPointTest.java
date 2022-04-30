@@ -17,11 +17,11 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.recast4j.detour.DetourCommon.vDist2D;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.recast4j.detour.NavMeshQuery.FRand;
 
 public class RandomPointTest extends AbstractDetourTest {
@@ -32,7 +32,7 @@ public class RandomPointTest extends AbstractDetourTest {
         QueryFilter filter = new DefaultQueryFilter();
         for (int i = 0; i < 1000; i++) {
             Result<FindRandomPointResult> point = query.findRandomPoint(filter, f);
-            Assert.assertTrue(point.succeeded());
+            assertThat(point.succeeded()).isTrue();
             Tupple2<MeshTile, Poly> tileAndPoly = navmesh.getTileAndPolyByRef(point.result.getRandomRef()).result;
             float[] bmin = new float[2];
             float[] bmax = new float[2];
@@ -43,10 +43,10 @@ public class RandomPointTest extends AbstractDetourTest {
                 bmin[1] = j == 0 ? tileAndPoly.first.data.verts[v + 2] : Math.min(bmin[1], tileAndPoly.first.data.verts[v + 2]);
                 bmax[1] = j == 0 ? tileAndPoly.first.data.verts[v + 2] : Math.max(bmax[1], tileAndPoly.first.data.verts[v + 2]);
             }
-            Assert.assertTrue(point.result.getRandomPt()[0] >= bmin[0]);
-            Assert.assertTrue(point.result.getRandomPt()[0] <= bmax[0]);
-            Assert.assertTrue(point.result.getRandomPt()[2] >= bmin[1]);
-            Assert.assertTrue(point.result.getRandomPt()[2] <= bmax[1]);
+            assertThat(point.result.getRandomPt()[0] >= bmin[0]);
+            assertThat(point.result.getRandomPt()[0] <= bmax[0]);
+            assertThat(point.result.getRandomPt()[2] >= bmin[1]);
+            assertThat(point.result.getRandomPt()[2] <= bmax[1]);
         }
     }
 
@@ -58,7 +58,7 @@ public class RandomPointTest extends AbstractDetourTest {
         for (int i = 0; i < 1000; i++) {
             Result<FindRandomPointResult> result = query.findRandomPointAroundCircle(point.getRandomRef(), point.getRandomPt(),
                     5f, filter, f);
-            Assert.assertFalse(result.failed());
+            assertThat(result.failed()).isFalse();
             point = result.result;
             Tupple2<MeshTile, Poly> tileAndPoly = navmesh.getTileAndPolyByRef(point.getRandomRef()).result;
             float[] bmin = new float[2];
@@ -70,10 +70,10 @@ public class RandomPointTest extends AbstractDetourTest {
                 bmin[1] = j == 0 ? tileAndPoly.first.data.verts[v + 2] : Math.min(bmin[1], tileAndPoly.first.data.verts[v + 2]);
                 bmax[1] = j == 0 ? tileAndPoly.first.data.verts[v + 2] : Math.max(bmax[1], tileAndPoly.first.data.verts[v + 2]);
             }
-            Assert.assertTrue(point.getRandomPt()[0] >= bmin[0]);
-            Assert.assertTrue(point.getRandomPt()[0] <= bmax[0]);
-            Assert.assertTrue(point.getRandomPt()[2] >= bmin[1]);
-            Assert.assertTrue(point.getRandomPt()[2] <= bmax[1]);
+            assertThat(point.getRandomPt()[0] >= bmin[0]);
+            assertThat(point.getRandomPt()[0] <= bmax[0]);
+            assertThat(point.getRandomPt()[2] >= bmin[1]);
+            assertThat(point.getRandomPt()[2] <= bmax[1]);
         }
     }
 
@@ -86,7 +86,7 @@ public class RandomPointTest extends AbstractDetourTest {
         for (int i = 0; i < 1000; i++) {
             Result<FindRandomPointResult> result = query.findRandomPointWithinCircle(point.getRandomRef(), point.getRandomPt(),
                     radius, filter, f);
-            Assert.assertFalse(result.failed());
+            assertThat(result.failed()).isFalse();
             float distance = vDist2D(point.getRandomPt(), result.result.getRandomPt());
             assertTrue(distance <= radius);
             point = result.result;

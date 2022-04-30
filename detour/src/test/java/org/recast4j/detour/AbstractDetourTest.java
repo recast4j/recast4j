@@ -17,7 +17,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 public abstract class AbstractDetourTest {
 
@@ -38,7 +38,7 @@ public abstract class AbstractDetourTest {
     protected NavMeshQuery query;
     protected NavMesh navmesh;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         navmesh = createNavMesh();
         query = new NavMeshQuery(navmesh);

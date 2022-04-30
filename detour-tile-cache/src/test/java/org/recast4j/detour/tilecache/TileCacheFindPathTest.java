@@ -18,13 +18,13 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour.tilecache;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.recast4j.detour.DefaultQueryFilter;
 import org.recast4j.detour.FindNearestPolyResult;
 import org.recast4j.detour.NavMesh;
@@ -63,7 +63,7 @@ public class TileCacheFindPathTest extends AbstractTileCacheTest {
         int options = 0;
         Result<List<StraightPathItem>> pathStr = query.findStraightPath(startPos, endPos, path.result, maxStraightPath,
                 options);
-        assertEquals(8, pathStr.result.size());
+        assertThat(pathStr.result).hasSize(8);
     }
 
 }

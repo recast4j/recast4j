@@ -17,7 +17,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +25,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.recast4j.recast.RecastBuilder.RecastBuilderResult;
 import org.recast4j.recast.RecastConstants.PartitionType;
 import org.recast4j.recast.geom.InputGeomProvider;
@@ -65,28 +65,28 @@ public class RecastTileMeshTest {
                 m_detailSampleDist, m_detailSampleMaxError, SampleAreaModifications.SAMPLE_AREAMOD_GROUND);
         RecastBuilderConfig bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 7, 8);
         RecastBuilderResult rcResult = builder.build(geom, bcfg);
-        assertEquals(1, rcResult.getMesh().npolys);
-        assertEquals(5, rcResult.getMesh().nverts);
+        assertThat(rcResult.getMesh().npolys).isEqualTo(1);
+        assertThat(rcResult.getMesh().nverts).isEqualTo(5);
         bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 6, 9);
         rcResult = builder.build(geom, bcfg);
-        assertEquals(2, rcResult.getMesh().npolys);
-        assertEquals(7, rcResult.getMesh().nverts);
+        assertThat(rcResult.getMesh().npolys).isEqualTo(2);
+        assertThat(rcResult.getMesh().nverts).isEqualTo(7);
         bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 2, 9);
         rcResult = builder.build(geom, bcfg);
-        assertEquals(2, rcResult.getMesh().npolys);
-        assertEquals(9, rcResult.getMesh().nverts);
+        assertThat(rcResult.getMesh().npolys).isEqualTo(2);
+        assertThat(rcResult.getMesh().nverts).isEqualTo(9);
         bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 4, 3);
         rcResult = builder.build(geom, bcfg);
-        assertEquals(3, rcResult.getMesh().npolys);
-        assertEquals(6, rcResult.getMesh().nverts);
+        assertThat(rcResult.getMesh().npolys).isEqualTo(3);
+        assertThat(rcResult.getMesh().nverts).isEqualTo(6);
         bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 2, 8);
         rcResult = builder.build(geom, bcfg);
-        assertEquals(5, rcResult.getMesh().npolys);
-        assertEquals(17, rcResult.getMesh().nverts);
+        assertThat(rcResult.getMesh().npolys).isEqualTo(5);
+        assertThat(rcResult.getMesh().nverts).isEqualTo(17);
         bcfg = new RecastBuilderConfig(cfg, geom.getMeshBoundsMin(), geom.getMeshBoundsMax(), 0, 8);
         rcResult = builder.build(geom, bcfg);
-        assertEquals(6, rcResult.getMesh().npolys);
-        assertEquals(15, rcResult.getMesh().nverts);
+        assertThat(rcResult.getMesh().npolys).isEqualTo(6);
+        assertThat(rcResult.getMesh().nverts).isEqualTo(15);
     }
 
     @Test
@@ -120,23 +120,23 @@ public class RecastTileMeshTest {
         List<RecastBuilderResult> tiles = builder.buildTiles(geom, cfg, Optional.of(executor));
         if (validate) {
             RecastBuilderResult rcResult = getTile(tiles, 7, 8);
-            assertEquals(1, rcResult.getMesh().npolys);
-            assertEquals(5, rcResult.getMesh().nverts);
+            assertThat(rcResult.getMesh().npolys).isEqualTo(1);
+            assertThat(rcResult.getMesh().nverts).isEqualTo(5);
             rcResult = getTile(tiles, 6, 9);
-            assertEquals(2, rcResult.getMesh().npolys);
-            assertEquals(7, rcResult.getMesh().nverts);
+            assertThat(rcResult.getMesh().npolys).isEqualTo(2);
+            assertThat(rcResult.getMesh().nverts).isEqualTo(7);
             rcResult = getTile(tiles, 2, 9);
-            assertEquals(2, rcResult.getMesh().npolys);
-            assertEquals(9, rcResult.getMesh().nverts);
+            assertThat(rcResult.getMesh().npolys).isEqualTo(2);
+            assertThat(rcResult.getMesh().nverts).isEqualTo(9);
             rcResult = getTile(tiles, 4, 3);
-            assertEquals(3, rcResult.getMesh().npolys);
-            assertEquals(6, rcResult.getMesh().nverts);
+            assertThat(rcResult.getMesh().npolys).isEqualTo(3);
+            assertThat(rcResult.getMesh().nverts).isEqualTo(6);
             rcResult = getTile(tiles, 2, 8);
-            assertEquals(5, rcResult.getMesh().npolys);
-            assertEquals(17, rcResult.getMesh().nverts);
+            assertThat(rcResult.getMesh().npolys).isEqualTo(5);
+            assertThat(rcResult.getMesh().nverts).isEqualTo(17);
             rcResult = getTile(tiles, 0, 8);
-            assertEquals(6, rcResult.getMesh().npolys);
-            assertEquals(15, rcResult.getMesh().nverts);
+            assertThat(rcResult.getMesh().npolys).isEqualTo(6);
+            assertThat(rcResult.getMesh().nverts).isEqualTo(15);
         }
         executor.shutdown();
         try {

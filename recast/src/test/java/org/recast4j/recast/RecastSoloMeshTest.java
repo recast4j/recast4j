@@ -17,14 +17,14 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.recast4j.recast.RecastConstants.RC_MESH_NULL_IDX;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Path;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.recast4j.recast.RecastConstants.PartitionType;
 import org.recast4j.recast.geom.InputGeomProvider;
 import org.recast4j.recast.geom.TriMesh;
@@ -86,7 +86,7 @@ public class RecastSoloMeshTest {
     }
 
     public void testBuild(String filename, PartitionType partitionType, int expDistance, int expRegions,
-            int expContours, int expVerts, int expPolys, int expDetMeshes, int expDetVerts, int expDetTRis) {
+            int expContours, int expVerts, int expPolys, int expDetMeshes, int expDetVerts, int expDetTris) {
         m_partitionType = partitionType;
         ObjImporter importer = new ObjImporter();
         InputGeomProvider geomProvider = importer.load(getClass().getResourceAsStream(filename));
@@ -213,8 +213,8 @@ public class RecastSoloMeshTest {
             RecastRegion.buildLayerRegions(m_ctx, m_chf, cfg.minRegionArea);
         }
 
-        Assert.assertEquals("maxDistance", expDistance, m_chf.maxDistance);
-        Assert.assertEquals("Regions", expRegions, m_chf.maxRegions);
+        assertThat(m_chf.maxDistance).as("maxDistance").isEqualTo(expDistance);
+        assertThat(m_chf.maxRegions).as("Regions").isEqualTo(expRegions);
         //
         // Step 5. Trace and simplify region contours.
         //
@@ -223,15 +223,15 @@ public class RecastSoloMeshTest {
         ContourSet m_cset = RecastContour.buildContours(m_ctx, m_chf, cfg.maxSimplificationError, cfg.maxEdgeLen,
                 RecastConstants.RC_CONTOUR_TESS_WALL_EDGES);
 
-        Assert.assertEquals("Contours", expContours, m_cset.conts.size());
+        assertThat(m_cset.conts).as("Contours").hasSize(expContours);
         //
         // Step 6. Build polygons mesh from contours.
         //
 
         // Build polygon navmesh from the contours.
         PolyMesh m_pmesh = RecastMesh.buildPolyMesh(m_ctx, m_cset, cfg.maxVertsPerPoly);
-        Assert.assertEquals("Mesh Verts", expVerts, m_pmesh.nverts);
-        Assert.assertEquals("Mesh Polys", expPolys, m_pmesh.npolys);
+        assertThat(m_pmesh.nverts).as("Mesh Verts").isEqualTo(expVerts);
+        assertThat(m_pmesh.npolys).as("Mesh Polys").isEqualTo(expPolys);
 
         //
         // Step 7. Create detail mesh which allows to access approximate height
@@ -240,9 +240,9 @@ public class RecastSoloMeshTest {
 
         PolyMeshDetail m_dmesh = RecastMeshDetail.buildPolyMeshDetail(m_ctx, m_pmesh, m_chf, cfg.detailSampleDist,
                 cfg.detailSampleMaxError);
-        Assert.assertEquals("Mesh Detail Meshes", expDetMeshes, m_dmesh.nmeshes);
-        Assert.assertEquals("Mesh Detail Verts", expDetVerts, m_dmesh.nverts);
-        Assert.assertEquals("Mesh Detail Tris", expDetTRis, m_dmesh.ntris);
+        assertThat(m_dmesh.nmeshes).as("Mesh Detail Meshes").isEqualTo(expDetMeshes);
+        assertThat(m_dmesh.nverts).as("Mesh Detail Verts").isEqualTo(expDetVerts);
+        assertThat(m_dmesh.ntris).as("Mesh Detail Tris").isEqualTo(expDetTris);
         long time2 = System.nanoTime();
         System.out.println(filename + " : " + partitionType + "  " + (time2 - time) / 1000000 + " ms");
         System.out.println("           " + (time3 - time) / 1000000 + " ms");

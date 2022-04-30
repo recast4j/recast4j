@@ -30,9 +30,11 @@ subprojects {
     }
 
     dependencies {
-        testImplementation (libs.junit)
+        testImplementation (libs.junit5.api)
+        testImplementation (libs.junit5.params)
         testImplementation (libs.assertj.core)
         testImplementation (libs.mockito)
+        testRuntimeOnly (libs.junit5.engine)
     }
 
     java {
@@ -57,7 +59,7 @@ subprojects {
     }
     
     test {
-        useJUnit()
+        useJUnitPlatform()
     }
 
     jar {
