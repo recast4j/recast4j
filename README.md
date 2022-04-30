@@ -1,7 +1,6 @@
 ![Build Status](https://img.shields.io/github/workflow/status/ppiastucki/recast4j/Java%20CI/master?logo=github)
 ![Repo Size](https://img.shields.io/github/repo-size/ppiastucki/recast4j.svg?colorB=lightgray)
 [![Maven Central](https://img.shields.io/maven-central/v/org.recast4j/recast.svg?label=maven%20central)](https://search.maven.org/search?q=g:org.recast4j)
-[![Travis Build](https://travis-ci.org/ppiastucki/recast4j.svg?branch=master)](https://travis-ci.org/ppiastucki/recast4j)
 ![Languages](https://img.shields.io/github/languages/top/ppiastucki/recast4j)
 ![Dependencies](https://img.shields.io/librariesio/github/ppiastucki/recast4j)
 

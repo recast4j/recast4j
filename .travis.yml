@@ -1,6 +1,0 @@
-language: java
-dist: bionic
-jdk:
-  - openjdk15
-script:
-  - ./gradlew clean build -Pci
