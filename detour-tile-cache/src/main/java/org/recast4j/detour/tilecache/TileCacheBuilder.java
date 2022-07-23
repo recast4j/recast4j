@@ -1175,8 +1175,6 @@ public class TileCacheBuilder {
     private boolean canRemoveVertex(TileCachePolyMesh mesh, int rem) {
         // Count number of polygons to remove.
         int maxVertsPerPoly = mesh.nvp;
-        int numRemovedVerts = 0;
-        int numTouchedVerts = 0;
         int numRemainingEdges = 0;
         for (int i = 0; i < mesh.npolys; ++i) {
             int p = i * mesh.nvp * 2;
@@ -1185,13 +1183,11 @@ public class TileCacheBuilder {
             int numVerts = 0;
             for (int j = 0; j < nv; ++j) {
                 if (mesh.polys[p + j] == rem) {
-                    numTouchedVerts++;
                     numRemoved++;
                 }
                 numVerts++;
             }
             if (numRemoved != 0) {
-                numRemovedVerts += numRemoved;
                 numRemainingEdges += numVerts - (numRemoved + 1);
             }
         }
@@ -1203,11 +1199,8 @@ public class TileCacheBuilder {
         if (numRemainingEdges <= 2)
             return false;
 
-        // Check that there is enough memory for the test.
-        int maxEdges = numTouchedVerts * 2;
-
         // Find edges which share the removed vertex.
-        int[] edges = new int[maxEdges];
+        List<Integer> edges = new ArrayList<>();
         int nedges = 0;
 
         for (int i = 0; i < mesh.npolys; ++i) {
@@ -1229,18 +1222,17 @@ public class TileCacheBuilder {
                     boolean exists = false;
                     for (int m = 0; m < nedges; ++m) {
                         int e = m * 3;
-                        if (edges[e + 1] == b) {
+                        if (edges.get(e + 1) == b) {
                             // Exists, increment vertex share count.
-                            edges[e + 2]++;
+                            edges.set(e + 2, edges.get(e + 2) + 1);
                             exists = true;
                         }
                     }
                     // Add new edge.
                     if (!exists) {
-                        int e = nedges * 3;
-                        edges[e] = a;
-                        edges[e + 1] = b;
-                        edges[e + 2] = 1;
+                        edges.add(a);
+                        edges.add(b);
+                        edges.add(1);
                         nedges++;
                     }
                 }
@@ -1252,7 +1244,7 @@ public class TileCacheBuilder {
         // share the removed vertex. In that case, do not remove the vertex.
         int numOpenEdges = 0;
         for (int i = 0; i < nedges; ++i) {
-            if (edges[i * 3 + 2] < 2)
+            if (edges.get(i * 3 + 2) < 2)
                 numOpenEdges++;
         }
         if (numOpenEdges > 2)
