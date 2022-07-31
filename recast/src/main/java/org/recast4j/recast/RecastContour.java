@@ -568,17 +568,10 @@ public class RecastContour {
         @Override
         public int compare(ContourHole a, ContourHole b) {
             if (a.minx == b.minx) {
-                if (a.minz < b.minz)
-                    return -1;
-                if (a.minz > b.minz)
-                    return 1;
+                return Integer.compare(a.minz, b.minz);
             } else {
-                if (a.minx < b.minx)
-                    return -1;
-                if (a.minx > b.minx)
-                    return 1;
+                return Integer.compare(a.minx, b.minx);
             }
-            return 0;
         }
 
     }
@@ -589,11 +582,7 @@ public class RecastContour {
         public int compare(PotentialDiagonal va, PotentialDiagonal vb) {
             PotentialDiagonal a = va;
             PotentialDiagonal b = vb;
-            if (a.dist < b.dist)
-                return -1;
-            if (a.dist > b.dist)
-                return 1;
-            return 0;
+            return Integer.compare(a.dist, b.dist);
         }
     }
 

@@ -40,11 +40,7 @@ public class NavMeshBuilder {
 
         @Override
         public int compare(BVItem a, BVItem b) {
-            if (a.bmin[0] < b.bmin[0])
-                return -1;
-            if (a.bmin[0] > b.bmin[0])
-                return 1;
-            return 0;
+            return Integer.compare(a.bmin[0], b.bmin[0]);
         }
 
     }
@@ -53,11 +49,7 @@ public class NavMeshBuilder {
 
         @Override
         public int compare(BVItem a, BVItem b) {
-            if (a.bmin[1] < b.bmin[1])
-                return -1;
-            if (a.bmin[1] > b.bmin[1])
-                return 1;
-            return 0;
+            return Integer.compare(a.bmin[1], b.bmin[1]);
         }
 
     }
@@ -66,11 +58,7 @@ public class NavMeshBuilder {
 
         @Override
         public int compare(BVItem a, BVItem b) {
-            if (a.bmin[2] < b.bmin[2])
-                return -1;
-            if (a.bmin[2] > b.bmin[2])
-                return 1;
-            return 0;
+            return Integer.compare(a.bmin[2], b.bmin[2]);
         }
 
     }
