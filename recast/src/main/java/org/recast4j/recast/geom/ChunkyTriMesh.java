@@ -41,26 +41,14 @@ public class ChunkyTriMesh {
     private class CompareItemX implements Comparator<BoundsItem> {
         @Override
         public int compare(BoundsItem a, BoundsItem b) {
-            if (a.bmin[0] < b.bmin[0]) {
-                return -1;
-            }
-            if (a.bmin[0] > b.bmin[0]) {
-                return 1;
-            }
-            return 0;
+            return Float.compare(a.bmin[0], b.bmin[0]);
         }
     }
 
     private class CompareItemY implements Comparator<BoundsItem> {
         @Override
         public int compare(BoundsItem a, BoundsItem b) {
-            if (a.bmin[1] < b.bmin[1]) {
-                return -1;
-            }
-            if (a.bmin[1] > b.bmin[1]) {
-                return 1;
-            }
-            return 0;
+            return Float.compare(a.bmin[1], b.bmin[1]);
         }
     }
 

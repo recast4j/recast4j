@@ -18,7 +18,13 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
-import static org.recast4j.recast.RecastConstants.*;
+import static org.recast4j.recast.RecastConstants.RC_AREA_BORDER;
+import static org.recast4j.recast.RecastConstants.RC_BORDER_REG;
+import static org.recast4j.recast.RecastConstants.RC_BORDER_VERTEX;
+import static org.recast4j.recast.RecastConstants.RC_CONTOUR_REG_MASK;
+import static org.recast4j.recast.RecastConstants.RC_CONTOUR_TESS_AREA_EDGES;
+import static org.recast4j.recast.RecastConstants.RC_CONTOUR_TESS_WALL_EDGES;
+import static org.recast4j.recast.RecastConstants.RC_NOT_CONNECTED;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -549,17 +555,10 @@ public class RecastContour {
         @Override
         public int compare(ContourHole a, ContourHole b) {
             if (a.minx == b.minx) {
-                if (a.minz < b.minz)
-                    return -1;
-                if (a.minz > b.minz)
-                    return 1;
+                return Integer.compare(a.minz, b.minz);
             } else {
-                if (a.minx < b.minx)
-                    return -1;
-                if (a.minx > b.minx)
-                    return 1;
+                return Integer.compare(a.minx, b.minx);
             }
-            return 0;
         }
 
     }
@@ -570,11 +569,7 @@ public class RecastContour {
         public int compare(PotentialDiagonal va, PotentialDiagonal vb) {
             PotentialDiagonal a = va;
             PotentialDiagonal b = vb;
-            if (a.dist < b.dist)
-                return -1;
-            if (a.dist > b.dist)
-                return 1;
-            return 0;
+            return Integer.compare(a.dist, b.dist);
         }
     }
 
