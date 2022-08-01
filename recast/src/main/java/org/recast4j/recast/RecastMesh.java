@@ -679,9 +679,9 @@ public class RecastMesh {
 
         // Start with one vertex, keep appending connected
         // segments to the start and end of the hole.
-        pushBack(edges[0], hole, nhole);
-        pushBack(edges[2], hreg, nhreg);
-        pushBack(edges[3], harea, nharea);
+        nhole = pushBack(edges[0], hole, nhole);
+        nhreg = pushBack(edges[2], hreg, nhreg);
+        nharea = pushBack(edges[3], harea, nharea);
 
         while (nedges != 0) {
             boolean match = false;
@@ -694,9 +694,9 @@ public class RecastMesh {
                 boolean add = false;
                 if (hole[0] == eb) {
                     // The segment matches the beginning of the hole boundary.
-                    pushFront(ea, hole, nhole);
-                    pushFront(r, hreg, nhreg);
-                    pushFront(a, harea, nharea);
+                    nhole = pushFront(ea, hole, nhole);
+                    nhreg = pushFront(r, hreg, nhreg);
+                    nharea = pushFront(a, harea, nharea);
                     add = true;
                 } else if (hole[nhole - 1] == ea) {
                     // The segment matches the end of the hole boundary.
