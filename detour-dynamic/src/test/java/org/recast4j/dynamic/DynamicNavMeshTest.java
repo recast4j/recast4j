@@ -49,7 +49,7 @@ public class DynamicNavMeshTest {
             List<Long> path = query.findPath(start.getNearestRef(), end.getNearestRef(), start.getNearestPos(),
                     end.getNearestPos(), filter, NavMeshQuery.DT_FINDPATH_ANY_ANGLE, Float.MAX_VALUE).result;
             // check path length without any obstacles
-            assertThat(path).hasSize(17);
+            assertThat(path).hasSize(16);
             // place obstacle
             Collider colldier = new SphereCollider(SPHERE_POS, 20, SampleAreaModifications.SAMPLE_POLYAREA_TYPE_GROUND, 0.1f);
             long colliderId = mesh.addCollider(colldier);
@@ -65,7 +65,7 @@ public class DynamicNavMeshTest {
             path = query.findPath(start.getNearestRef(), end.getNearestRef(), start.getNearestPos(), end.getNearestPos(), filter,
                     NavMeshQuery.DT_FINDPATH_ANY_ANGLE, Float.MAX_VALUE).result;
             // check path length with obstacles
-            assertThat(path).hasSize(22);
+            assertThat(path).hasSize(19);
             // remove obstacle
             mesh.removeCollider(colliderId);
             // update navmesh asynchronously
@@ -80,7 +80,7 @@ public class DynamicNavMeshTest {
             path = query.findPath(start.getNearestRef(), end.getNearestRef(), start.getNearestPos(), end.getNearestPos(), filter,
                     NavMeshQuery.DT_FINDPATH_ANY_ANGLE, Float.MAX_VALUE).result;
             // path length should be back to the initial value
-            assertThat(path).hasSize(17);
+            assertThat(path).hasSize(16);
         }
     }
 }

@@ -18,7 +18,13 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.recast;
 
-import static org.recast4j.recast.RecastConstants.*;
+import static org.recast4j.recast.RecastConstants.RC_AREA_BORDER;
+import static org.recast4j.recast.RecastConstants.RC_BORDER_REG;
+import static org.recast4j.recast.RecastConstants.RC_BORDER_VERTEX;
+import static org.recast4j.recast.RecastConstants.RC_CONTOUR_REG_MASK;
+import static org.recast4j.recast.RecastConstants.RC_CONTOUR_TESS_AREA_EDGES;
+import static org.recast4j.recast.RecastConstants.RC_CONTOUR_TESS_WALL_EDGES;
+import static org.recast4j.recast.RecastConstants.RC_NOT_CONNECTED;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,7 +51,19 @@ public class RecastContour {
         public int vert;
     }
 
-    private static int getCornerHeight(int x, int y, int i, int dir, CompactHeightfield chf, boolean isBorderVertex) {
+    private static class CornerHeight {
+        public final int height;
+        public final boolean borderVertex;
+
+        public CornerHeight(int height, boolean borderVertex) {
+            this.height = height;
+            this.borderVertex = borderVertex;
+        }
+
+    }
+
+    private static CornerHeight getCornerHeight(int x, int y, int i, int dir, CompactHeightfield chf) {
+        boolean isBorderVertex = false;
         CompactSpan s = chf.spans[i];
         int ch = s.y;
         int dirp = (dir + 1) & 0x3;
@@ -108,7 +126,7 @@ public class RecastContour {
             }
         }
 
-        return ch;
+        return new CornerHeight(ch, isBorderVertex);
     }
 
     private static void walkContour(int x, int y, int i, CompactHeightfield chf, int[] flags, List<Integer> points) {
@@ -126,10 +144,11 @@ public class RecastContour {
         while (++iter < 40000) {
             if ((flags[i] & (1 << dir)) != 0) {
                 // Choose the edge corner
-                boolean isBorderVertex = false;
                 boolean isAreaBorder = false;
+                CornerHeight cornerHeight = getCornerHeight(x, y, i, dir, chf);
+                boolean isBorderVertex = cornerHeight.borderVertex;
                 int px = x;
-                int py = getCornerHeight(x, y, i, dir, chf, isBorderVertex);
+                int py = cornerHeight.height;
                 int pz = y;
                 switch (dir) {
                 case 0:
