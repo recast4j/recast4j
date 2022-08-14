@@ -114,6 +114,12 @@ subprojects {
 
 }
 
+release {
+    git {
+        requireBranch = 'main'
+    }
+}
+
 // https://github.com/researchgate/gradle-release/issues/144
 task build() {
     dependsOn subprojects.build
