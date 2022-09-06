@@ -6,11 +6,12 @@ dependencyResolutionManagement {
     versionCatalogs {
         libs {
             alias('lz4').to('org.lz4:lz4-java:1.8.0')
-            alias('assertj-core').to('org.assertj:assertj-core:3.22.0')
-            alias('mockito').to('org.mockito:mockito-junit-jupiter:4.5.1')
-            alias('junit5-api').to('org.junit.jupiter:junit-jupiter-api:5.8.1')
-            alias('junit5-engine').to('org.junit.jupiter:junit-jupiter-engine:5.8.1')
-            alias('junit5-params').to('org.junit.jupiter:junit-jupiter-params:5.8.1')
+            alias('assertj-core').to('org.assertj:assertj-core:3.23.1')
+            alias('mockito').to('org.mockito:mockito-junit-jupiter:4.7.0')
+            alias('junit5-api').to('org.junit.jupiter:junit-jupiter-api:5.9.0')
+            alias('junit5-engine').to('org.junit.jupiter:junit-jupiter-engine:5.9.0')
+            alias('junit5-params').to('org.junit.jupiter:junit-jupiter-params:5.9.0')
+            alias('gson').to('com.google.code.gson:gson:2.9.1')
         }
     }
 }
