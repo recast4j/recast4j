@@ -132,6 +132,9 @@ class GraphMeshDataReader extends BinaryReader {
                         + meta.cellSize * meta.tileSizeZ * (z + 1);
                 header.bvQuantFactor = 1.0f / meta.cellSize;
                 header.offMeshBase = nodeCount;
+                header.walkableClimb = meta.walkableClimb;
+                header.walkableHeight = meta.walkableHeight;
+                header.walkableRadius = meta.characterRadius;
                 tiles[tileIndex].header = header;
             }
         }
