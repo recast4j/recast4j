@@ -22,6 +22,7 @@ import static org.recast4j.detour.DetourCommon.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -633,15 +634,12 @@ public class NavMesh {
                 // Create new links
                 int va = poly.verts[j] * 3;
                 int vb = poly.verts[(j + 1) % nv] * 3;
-                Tupple3<long[], float[], Integer> connectedPolys = findConnectingPolys(tile.data.verts, va, vb, target,
-                        oppositeTile(dir), 4);
-                long[] nei = connectedPolys.first;
-                float[] neia = connectedPolys.second;
-                int nnei = connectedPolys.third;
-                for (int k = 0; k < nnei; ++k) {
+                List<Tupple3<Long,Float,Float>> connectedPolys = findConnectingPolys(tile.data.verts, va, vb, target,
+                        oppositeTile(dir));
+                for (Tupple3<Long,Float,Float> connectedPoly : connectedPolys) {
                     int idx = allocLink(tile);
                     Link link = tile.links.get(idx);
-                    link.ref = nei[k];
+                    link.ref = connectedPoly.first;
                     link.edge = j;
                     link.side = dir;
 
@@ -650,9 +648,9 @@ public class NavMesh {
 
                     // Compress portal limits to a byte value.
                     if (dir == 0 || dir == 4) {
-                        float tmin = (neia[k * 2 + 0] - tile.data.verts[va + 2])
+                        float tmin = (connectedPoly.second - tile.data.verts[va + 2])
                                 / (tile.data.verts[vb + 2] - tile.data.verts[va + 2]);
-                        float tmax = (neia[k * 2 + 1] - tile.data.verts[va + 2])
+                        float tmax = (connectedPoly.third - tile.data.verts[va + 2])
                                 / (tile.data.verts[vb + 2] - tile.data.verts[va + 2]);
                         if (tmin > tmax) {
                             float temp = tmin;
@@ -662,9 +660,9 @@ public class NavMesh {
                         link.bmin = Math.round(clamp(tmin, 0.0f, 1.0f) * 255.0f);
                         link.bmax = Math.round(clamp(tmax, 0.0f, 1.0f) * 255.0f);
                     } else if (dir == 2 || dir == 6) {
-                        float tmin = (neia[k * 2 + 0] - tile.data.verts[va])
+                        float tmin = (connectedPoly.second - tile.data.verts[va])
                                 / (tile.data.verts[vb] - tile.data.verts[va]);
-                        float tmax = (neia[k * 2 + 1] - tile.data.verts[va])
+                        float tmax = (connectedPoly.third - tile.data.verts[va])
                                 / (tile.data.verts[vb] - tile.data.verts[va]);
                         if (tmin > tmax) {
                             float temp = tmin;
@@ -753,13 +751,11 @@ public class NavMesh {
         }
     }
 
-    Tupple3<long[], float[], Integer> findConnectingPolys(float[] verts, int va, int vb, MeshTile tile, int side,
-            int maxcon) {
+    List<Tupple3<Long, Float, Float>> findConnectingPolys(float[] verts, int va, int vb, MeshTile tile, int side) {
         if (tile == null) {
-            return new Tupple3<>(null, null, 0);
+            return Collections.emptyList();
         }
-        long[] con = new long[maxcon];
-        float[] conarea = new float[maxcon * 2];
+        List<Tupple3<Long, Float, Float>> result = new ArrayList<>();
         float[] amin = new float[2];
         float[] amax = new float[2];
         calcSlabEndPoints(verts, va, vb, amin, amax, side);
@@ -769,7 +765,6 @@ public class NavMesh {
         float[] bmin = new float[2];
         float[] bmax = new float[2];
         int m = DT_EXT_LINK | side;
-        int n = 0;
         long base = getPolyRefBase(tile);
 
         for (int i = 0; i < tile.data.header.polyCount; ++i) {
@@ -796,16 +791,11 @@ public class NavMesh {
                 }
 
                 // Add return value.
-                if (n < maxcon) {
-                    conarea[n * 2 + 0] = Math.max(amin[0], bmin[0]);
-                    conarea[n * 2 + 1] = Math.min(amax[0], bmax[0]);
-                    con[n] = base | i;
-                    n++;
-                }
+                result.add(new Tupple3<>(base | i, Math.max(amin[0], bmin[0]), Math.min(amax[0], bmax[0])));
                 break;
             }
         }
-        return new Tupple3<>(con, conarea, n);
+        return result;
     }
 
     static float getSlabCoord(float[] verts, int va, int side) {
