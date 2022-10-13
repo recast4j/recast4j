@@ -171,13 +171,8 @@ public class NavMeshQuery {
         float t = frand.frand();
 
         float[] pt = randomPointInConvexPoly(verts, poly.vertCount, areas, s, t);
-        FindRandomPointResult result = new FindRandomPointResult(polyRef, pt);
-        Result<Float> pheight = getPolyHeight(polyRef, pt);
-        if (pheight.failed()) {
-            return Result.of(pheight.status, result);
-        }
-        pt[1] = pheight.result;
-        return Result.success(result);
+        ClosestPointOnPolyResult closest = closestPointOnPoly(polyRef, pt).result;
+        return Result.success(new FindRandomPointResult(polyRef, closest.getClosest()));
     }
 
     /**
@@ -377,13 +372,8 @@ public class NavMeshQuery {
 
         float[] areas = new float[randomPolyVerts.length / 3];
         float[] pt = randomPointInConvexPoly(randomPolyVerts, randomPolyVerts.length / 3, areas, s, t);
-        FindRandomPointResult result = new FindRandomPointResult(randomPolyRef, pt);
-        Result<Float> pheight = getPolyHeight(randomPolyRef, pt);
-        if (pheight.failed()) {
-            return Result.of(pheight.status, result);
-        }
-        pt[1] = pheight.result;
-        return Result.success(result);
+        ClosestPointOnPolyResult closest = closestPointOnPoly(randomPolyRef, pt).result;
+        return Result.success(new FindRandomPointResult(randomPolyRef, closest.getClosest()));
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////
