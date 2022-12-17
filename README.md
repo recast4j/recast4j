@@ -1,4 +1,4 @@
-![Build Status](https://img.shields.io/github/workflow/status/ppiastucki/recast4j/Java%20CI/master?logo=github)
+![Build Status](https://img.shields.io/github/actions/workflow/status/ppiastucki/recast4j/gradle.yml?branch=main&logo=github)
 ![Repo Size](https://img.shields.io/github/repo-size/ppiastucki/recast4j.svg?colorB=lightgray)
 [![Maven Central](https://img.shields.io/maven-central/v/org.recast4j/recast.svg?label=maven%20central)](https://search.maven.org/search?q=g:org.recast4j)
 ![Languages](https://img.shields.io/github/languages/top/ppiastucki/recast4j)
