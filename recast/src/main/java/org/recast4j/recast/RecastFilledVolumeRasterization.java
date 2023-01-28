@@ -241,10 +241,11 @@ public class RecastFilledVolumeRasterization {
     }
 
     private static float[] intersectCylinder(float[] rectangle, float[] start, float[] end, float[] axis, float radiusSqr) {
-        float[] s = rayCylinderIntersection(new float[] { clamp(start[0], rectangle[0], rectangle[2]), rectangle[4],
-                clamp(start[2], rectangle[1], rectangle[3]) }, start, axis, radiusSqr);
-        s = rayCylinderIntersection(new float[] { clamp(end[0], rectangle[0], rectangle[2]), rectangle[4],
-                clamp(end[2], rectangle[1], rectangle[3]) }, start, axis, radiusSqr);
+        float[] s = mergeIntersections(
+                rayCylinderIntersection(new float[] { clamp(start[0], rectangle[0], rectangle[2]), rectangle[4],
+                        clamp(start[2], rectangle[1], rectangle[3]) }, start, axis, radiusSqr),
+                rayCylinderIntersection(new float[] { clamp(end[0], rectangle[0], rectangle[2]), rectangle[4],
+                        clamp(end[2], rectangle[1], rectangle[3]) }, start, axis, radiusSqr));
         float axisLen2dSqr = axis[0] * axis[0] + axis[2] * axis[2];
         if (axisLen2dSqr > EPSILON) {
             s = slabsCylinderIntersection(rectangle, start, end, axis, radiusSqr, s);
@@ -448,7 +449,7 @@ public class RecastFilledVolumeRasterization {
         }
 
         // check intersection with box edges
-        for (int i = 0; i < BOX_EDGES.length; i+= 2) {
+        for (int i = 0; i < BOX_EDGES.length; i += 2) {
             int vi = BOX_EDGES[i] * 3;
             int vj = BOX_EDGES[i + 1] * 3;
             float x = vertices[vi];
@@ -605,9 +606,6 @@ public class RecastFilledVolumeRasterization {
     }
 
     private static float[] mergeIntersections(float[] s1, float[] s2) {
-        if (s1 == null && s2 == null) {
-            return null;
-        }
         if (s1 == null) {
             return s2;
         }
