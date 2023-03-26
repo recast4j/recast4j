@@ -51,15 +51,15 @@ public class RecastRasterization {
      * @param heightfield
      *            An initialized heightfield.
      * @param x
-     *            The width index where the span is to be added. [Limits: 0 <= value < Heightfield::width]
+     *            The width index where the span is to be added. [Limits: 0 &lt;= value &lt; Heightfield::width]
      * @param y
-     *            The height index where the span is to be added. [Limits: 0 <= value < Heightfield::height]
+     *            The height index where the span is to be added. [Limits: 0 &lt;= value &lt; Heightfield::height]
      * @param spanMin
-     *            The minimum height of the span. [Limit: < spanMax] [Units: vx]
+     *            The minimum height of the span. [Limit: &lt; spanMax] [Units: vx]
      * @param spanMax
-     *            The minimum height of the span. [Limit: <= RecastConstants.SPAN_MAX_HEIGHT] [Units: vx]
+     *            The minimum height of the span. [Limit: &lt;= RecastConstants.SPAN_MAX_HEIGHT] [Units: vx]
      * @param areaId
-     *            The area id of the span. [Limit: <= WALKABLE_AREA)
+     *            The area id of the span. [Limit: &lt;= WALKABLE_AREA)
      * @param flagMergeThreshold
      *            The merge theshold. [Limit: >= 0] [Units: vx]
      * @see Heightfield, Span.
@@ -352,19 +352,19 @@ public class RecastRasterization {
      * @param v2
      *            Triangle vertex 2 index
      * @param areaId
-     *            The area id of the triangle. [Limit: <= WALKABLE_AREA)
+     *            The area id of the triangle. [Limit: &lt;= WALKABLE_AREA)
      * @param flagMergeThreshold
      *            The distance where the walkable flag is favored over the non-walkable flag. [Limit: >= 0] [Units: vx]
      * @see Heightfield
      */
-    public static void rasterizeTriangle(Heightfield heightfield, float[] verts, int v0, int v1, int v2, int area,
+    public static void rasterizeTriangle(Heightfield heightfield, float[] verts, int v0, int v1, int v2, int areaId,
             int flagMergeThreshold, Telemetry ctx) {
 
         ctx.startTimer("RASTERIZE_TRIANGLES");
 
         float inverseCellSize = 1.0f / heightfield.cs;
         float inverseCellHeight = 1.0f / heightfield.ch;
-        rasterizeTri(verts, v0, v1, v2, area, heightfield, heightfield.bmin, heightfield.bmax, heightfield.cs, inverseCellSize,
+        rasterizeTri(verts, v0, v1, v2, areaId, heightfield, heightfield.bmin, heightfield.bmax, heightfield.cs, inverseCellSize,
                 inverseCellHeight, flagMergeThreshold);
 
         ctx.stopTimer("RASTERIZE_TRIANGLES");
@@ -381,7 +381,7 @@ public class RecastRasterization {
      * @param tris
      *            The triangle indices. [(vertA, vertB, vertC) * nt]
      * @param areaIds
-     *            The area id's of the triangles. [Limit: <= WALKABLE_AREA] [Size: numTris]
+     *            The area id's of the triangles. [Limit: &lte; WALKABLE_AREA] [Size: numTris]
      * @param numTris
      *            The number of triangles.
      * @param flagMergeThreshold
@@ -415,9 +415,7 @@ public class RecastRasterization {
      * @param verts
      *            The vertices. [(x, y, z) * numVerts]
      * @param areaIds
-     *            The area id's of the triangles. [Limit: <= WALKABLE_AREA] [Size: numTris]
-     * @param tris
-     *            The triangle indices. [(vertA, vertB, vertC) * nt]
+     *            The area id's of the triangles. [Limit: &lt;= WALKABLE_AREA] [Size: numTris]
      * @param numTris
      *            The number of triangles.
      * @param flagMergeThreshold
