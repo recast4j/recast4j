@@ -173,7 +173,7 @@ public class RecastFilter {
                 for (Span s = solid.spans[x + y * w]; s != null; s = s.next) {
                     int bot = (s.smax);
                     int top = s.next != null ? s.next.smin : SPAN_MAX_HEIGHT;
-                    if ((top - bot) <= walkableHeight)
+                    if ((top - bot) < walkableHeight)
                         s.area = RC_NULL_AREA;
                 }
             }
