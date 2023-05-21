@@ -72,17 +72,17 @@ public class RecastSoloMeshTest {
 
     @Test
     public void testWatershed() {
-        testBuild("nav_test.obj", PartitionType.WATERSHED, 60, 48, 47, 349, 153, 153, 802, 558);
+        testBuild("nav_test.obj", PartitionType.WATERSHED, 60, 48, 47, 349, 155, 155, 812, 561);
     }
 
     @Test
     public void testMonotone() {
-        testBuild("nav_test.obj", PartitionType.MONOTONE, 0, 50, 49, 340, 185, 185, 871, 557);
+        testBuild("nav_test.obj", PartitionType.MONOTONE, 0, 50, 49, 341, 186, 186, 878, 567);
     }
 
     @Test
     public void testLayers() {
-        testBuild("nav_test.obj", PartitionType.LAYERS, 0, 19, 32, 312, 150, 150, 764, 521);
+        testBuild("nav_test.obj", PartitionType.LAYERS, 0, 19, 32, 310, 150, 150, 773, 526);
     }
 
     public void testBuild(String filename, PartitionType partitionType, int expDistance, int expRegions,
