@@ -29,6 +29,6 @@ jobs:
         java-version: '17'
         distribution: 'adopt'
     - name: Build with Gradle
-      uses: gradle/gradle-build-action@0d13054264b0bb894ded474f08ebb30921341cee
+      uses: gradle/gradle-build-action@2.4.2
       with:
         arguments: clean build -Pci
