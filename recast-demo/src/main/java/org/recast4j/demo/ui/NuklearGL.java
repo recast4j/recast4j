@@ -19,50 +19,8 @@ package org.recast4j.demo.ui;
 
 import static org.lwjgl.glfw.GLFW.glfwGetFramebufferSize;
 import static org.lwjgl.glfw.GLFW.glfwGetWindowSize;
-import static org.lwjgl.nuklear.Nuklear.NK_FORMAT_COUNT;
-import static org.lwjgl.nuklear.Nuklear.NK_FORMAT_FLOAT;
-import static org.lwjgl.nuklear.Nuklear.NK_FORMAT_R8G8B8A8;
-import static org.lwjgl.nuklear.Nuklear.NK_UTF_INVALID;
-import static org.lwjgl.nuklear.Nuklear.NK_VERTEX_ATTRIBUTE_COUNT;
-import static org.lwjgl.nuklear.Nuklear.NK_VERTEX_COLOR;
-import static org.lwjgl.nuklear.Nuklear.NK_VERTEX_POSITION;
-import static org.lwjgl.nuklear.Nuklear.NK_VERTEX_TEXCOORD;
-import static org.lwjgl.nuklear.Nuklear.nk__draw_begin;
-import static org.lwjgl.nuklear.Nuklear.nk__draw_next;
-import static org.lwjgl.nuklear.Nuklear.nk_buffer_init;
-import static org.lwjgl.nuklear.Nuklear.nk_buffer_init_fixed;
-import static org.lwjgl.nuklear.Nuklear.nk_clear;
-import static org.lwjgl.nuklear.Nuklear.nk_convert;
-import static org.lwjgl.nuklear.Nuklear.nk_style_set_font;
-import static org.lwjgl.nuklear.Nuklear.nnk_utf_decode;
-import static org.lwjgl.opengl.GL11.GL_BLEND;
-import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
-import static org.lwjgl.opengl.GL11.GL_FLOAT;
-import static org.lwjgl.opengl.GL11.GL_LINEAR;
-import static org.lwjgl.opengl.GL11.GL_NEAREST;
-import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_RGBA;
-import static org.lwjgl.opengl.GL11.GL_RGBA8;
-import static org.lwjgl.opengl.GL11.GL_SCISSOR_TEST;
-import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_MAG_FILTER;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_MIN_FILTER;
-import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
-import static org.lwjgl.opengl.GL11.GL_TRUE;
-import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
-import static org.lwjgl.opengl.GL11.GL_UNSIGNED_SHORT;
-import static org.lwjgl.opengl.GL11.glBindTexture;
-import static org.lwjgl.opengl.GL11.glBlendFunc;
-import static org.lwjgl.opengl.GL11.glDisable;
-import static org.lwjgl.opengl.GL11.glDrawElements;
-import static org.lwjgl.opengl.GL11.glEnable;
-import static org.lwjgl.opengl.GL11.glGenTextures;
-import static org.lwjgl.opengl.GL11.glScissor;
-import static org.lwjgl.opengl.GL11.glTexImage2D;
-import static org.lwjgl.opengl.GL11.glTexParameteri;
-import static org.lwjgl.opengl.GL11.glViewport;
+import static org.lwjgl.nuklear.Nuklear.*;
+import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.GL_UNSIGNED_INT_8_8_8_8_REV;
 import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
 import static org.lwjgl.opengl.GL13.glActiveTexture;
@@ -77,25 +35,7 @@ import static org.lwjgl.opengl.GL15.glBufferData;
 import static org.lwjgl.opengl.GL15.glGenBuffers;
 import static org.lwjgl.opengl.GL15.glMapBuffer;
 import static org.lwjgl.opengl.GL15.glUnmapBuffer;
-import static org.lwjgl.opengl.GL20.GL_COMPILE_STATUS;
-import static org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER;
-import static org.lwjgl.opengl.GL20.GL_LINK_STATUS;
-import static org.lwjgl.opengl.GL20.GL_VERTEX_SHADER;
-import static org.lwjgl.opengl.GL20.glAttachShader;
-import static org.lwjgl.opengl.GL20.glCompileShader;
-import static org.lwjgl.opengl.GL20.glCreateProgram;
-import static org.lwjgl.opengl.GL20.glCreateShader;
-import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
-import static org.lwjgl.opengl.GL20.glGetAttribLocation;
-import static org.lwjgl.opengl.GL20.glGetProgrami;
-import static org.lwjgl.opengl.GL20.glGetShaderi;
-import static org.lwjgl.opengl.GL20.glGetUniformLocation;
-import static org.lwjgl.opengl.GL20.glLinkProgram;
-import static org.lwjgl.opengl.GL20.glShaderSource;
-import static org.lwjgl.opengl.GL20.glUniform1i;
-import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
-import static org.lwjgl.opengl.GL20.glUseProgram;
-import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
+import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.glBindVertexArray;
 import static org.lwjgl.opengl.GL30.glGenVertexArrays;
 import static org.lwjgl.stb.STBTruetype.stbtt_GetCodepointHMetrics;
@@ -265,7 +205,7 @@ public class NuklearGL {
 
             ByteBuffer bitmap = memAlloc(FONT_BITMAP_W * FONT_BITMAP_H);
 
-            STBTTPackContext pc = STBTTPackContext.mallocStack(stack);
+            STBTTPackContext pc = STBTTPackContext.malloc(stack);
             stbtt_PackBegin(pc, bitmap, FONT_BITMAP_W, FONT_BITMAP_H, 0, 1);
             stbtt_PackSetOversampling(pc, 1, 1);
             stbtt_PackFontRange(pc, ttf, 0, FONT_HEIGHT, 32, cdata);
@@ -329,7 +269,7 @@ public class NuklearGL {
                 FloatBuffer x = stack.floats(0.0f);
                 FloatBuffer y = stack.floats(0.0f);
 
-                STBTTAlignedQuad q = STBTTAlignedQuad.mallocStack(stack);
+                STBTTAlignedQuad q = STBTTAlignedQuad.malloc(stack);
                 // IntBuffer advance = stack.mallocInt(1);
 
                 stbtt_GetPackedQuad(cdata, FONT_BITMAP_W, FONT_BITMAP_H, codepoint - 32, x, y, q, false);
@@ -399,13 +339,13 @@ public class NuklearGL {
 
         try (MemoryStack stack = stackPush()) {
             // fill convert configuration
-            NkConvertConfig config = NkConvertConfig.callocStack(stack).vertex_layout(vertexLayout).vertex_size(20)
-                    .vertex_alignment(4).null_texture(null_texture).circle_segment_count(22).curve_segment_count(22)
+            NkConvertConfig config = NkConvertConfig.calloc(stack).vertex_layout(vertexLayout).vertex_size(20)
+                    .vertex_alignment(4).tex_null(null_texture).circle_segment_count(22).curve_segment_count(22)
                     .arc_segment_count(22).global_alpha(1f).shape_AA(AA).line_AA(AA);
 
             // setup buffers to load vertices and elements
-            NkBuffer vbuf = NkBuffer.mallocStack(stack);
-            NkBuffer ebuf = NkBuffer.mallocStack(stack);
+            NkBuffer vbuf = NkBuffer.malloc(stack);
+            NkBuffer ebuf = NkBuffer.malloc(stack);
 
             nk_buffer_init_fixed(vbuf, vertices/* , max_vertex_buffer */);
             nk_buffer_init_fixed(ebuf, elements/* , max_element_buffer */);
