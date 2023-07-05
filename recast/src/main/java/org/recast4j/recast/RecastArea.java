@@ -420,7 +420,7 @@ public class RecastArea {
             }
 
             if (bevel && cross < 0.0f) {
-                if (n + 2 >= maxOutVerts)
+                if (n + 2 > maxOutVerts)
                     return 0;
                 float d = (1.0f - (dx0 * dx1 + dy0 * dy1)) * 0.5f;
                 outVerts[n * 3 + 0] = verts[vb] + (-dlx0 + dx0 * d) * offset;
@@ -432,7 +432,7 @@ public class RecastArea {
                 outVerts[n * 3 + 2] = verts[vb + 2] + (-dly1 - dy1 * d) * offset;
                 n++;
             } else {
-                if (n + 1 >= maxOutVerts)
+                if (n + 1 > maxOutVerts)
                     return 0;
                 outVerts[n * 3 + 0] = verts[vb] - dmx * offset;
                 outVerts[n * 3 + 1] = verts[vb + 1];
