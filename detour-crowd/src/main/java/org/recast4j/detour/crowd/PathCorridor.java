@@ -80,7 +80,7 @@ public class PathCorridor {
     private final float[] m_target = new float[3];
     private List<Long> m_path;
 
-    protected List<Long> mergeCorridorStartMoved(List<Long> path, List<Long> visited) {
+    public static List<Long> mergeCorridorStartMoved(List<Long> path, List<Long> visited) {
         int furthestPath = -1;
         int furthestVisited = -1;
 

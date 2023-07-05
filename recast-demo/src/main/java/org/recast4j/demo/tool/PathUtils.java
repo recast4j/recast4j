@@ -30,6 +30,7 @@ import org.recast4j.detour.Poly;
 import org.recast4j.detour.Result;
 import org.recast4j.detour.StraightPathItem;
 import org.recast4j.detour.Tupple2;
+import org.recast4j.detour.crowd.PathCorridor;
 
 public class PathUtils {
 
@@ -96,43 +97,7 @@ public class PathUtils {
     }
 
     static List<Long> fixupCorridor(List<Long> path, List<Long> visited) {
-        int furthestPath = -1;
-        int furthestVisited = -1;
-
-        // Find furthest common polygon.
-        for (int i = path.size() - 1; i >= 0; --i) {
-            boolean found = false;
-            for (int j = visited.size() - 1; j >= 0; --j) {
-                if (path.get(i).longValue() == visited.get(j).longValue()) {
-                    furthestPath = i;
-                    furthestVisited = j;
-                    found = true;
-                }
-            }
-            if (found)
-                break;
-        }
-
-        // If no intersection found just return current path.
-        if (furthestPath == -1 || furthestVisited == -1)
-            return path;
-
-        // Concatenate paths.
-
-        // Adjust beginning of the buffer to include the visited.
-        int req = visited.size() - furthestVisited;
-        int orig = Math.min(furthestPath + 1, path.size());
-        int size = Math.max(0, path.size() - orig);
-        List<Long> fixupPath = new ArrayList<>();
-        // Store visited
-        for (int i = 0; i < req; ++i) {
-            fixupPath.add(visited.get((visited.size() - 1) - i));
-        }
-        for (int i = 0; i < size; i++) {
-            fixupPath.add(path.get(orig + i));
-        }
-
-        return fixupPath;
+        return PathCorridor.mergeCorridorStartMoved(path, visited);
     }
 
     // This function checks if the path has a small U-turn, that is,
