@@ -22,7 +22,7 @@ import static org.recast4j.detour.DetourCommon.vDist2DSqr;
 
 public interface PolygonByCircleConstraint {
 
-    float[] aply(float[] polyVerts, float[] circleCenter, float radius);
+    float[] apply(float[] polyVerts, float[] circleCenter, float radius);
 
     public static PolygonByCircleConstraint noop() {
         return new NoOpPolygonByCircleConstraint();
@@ -35,7 +35,7 @@ public interface PolygonByCircleConstraint {
     public static class NoOpPolygonByCircleConstraint implements PolygonByCircleConstraint {
 
         @Override
-        public float[] aply(float[] polyVerts, float[] circleCenter, float radius) {
+        public float[] apply(float[] polyVerts, float[] circleCenter, float radius) {
             return polyVerts;
         }
 
@@ -50,7 +50,7 @@ public interface PolygonByCircleConstraint {
         private static float[] unitCircle;
 
         @Override
-        public float[] aply(float[] verts, float[] center, float radius) {
+        public float[] apply(float[] verts, float[] center, float radius) {
             float radiusSqr = radius * radius;
             int outsideVertex = -1;
             for (int pv = 0; pv < verts.length; pv += 3) {

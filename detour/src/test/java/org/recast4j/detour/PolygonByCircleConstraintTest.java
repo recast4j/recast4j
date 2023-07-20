@@ -31,7 +31,7 @@ public class PolygonByCircleConstraintTest {
     public void shouldHandlePolygonFullyInsideCircle() {
         float[] polygon = { -2, 0, 2, 2, 0, 2, 2, 0, -2, -2, 0, -2 };
         float[] center = { 1, 0, 1 };
-        float[] constrained = constraint.aply(polygon, center, 6);
+        float[] constrained = constraint.apply(polygon, center, 6);
 
         assertThat(constrained).isEqualTo(polygon);
     }
@@ -42,7 +42,7 @@ public class PolygonByCircleConstraintTest {
         float[] polygon = { -2, 0, 2, 2, 0, 2, 2, 0, -2, -2, 0, -2 };
         float[] center = { 2, 0, 0 };
 
-        float[] constrained = constraint.aply(polygon, center, 3);
+        float[] constrained = constraint.apply(polygon, center, 3);
         assertThat(constrained).hasSize(expectedSize);
         assertThat(constrained).containsSequence(2f, 0f, 2f, 2f, 0f, -2f);
     }
@@ -52,7 +52,7 @@ public class PolygonByCircleConstraintTest {
         int expectedSize = 12 * 3;
         float[] polygon = { -4, 0, 0, -3, 0, 3, 2, 0, 3, 3, 0, -3, -2, 0, -4 };
         float[] center = { -1, 0, -1 };
-        float[] constrained = constraint.aply(polygon, center, 2);
+        float[] constrained = constraint.apply(polygon, center, 2);
 
         assertThat(constrained).hasSize(expectedSize);
 
@@ -68,7 +68,7 @@ public class PolygonByCircleConstraintTest {
         int expectedSize = 9 * 3;
         float[] polygon = { -4, 0, 0, -3, 0, 3, 2, 0, 3, 3, 0, -3, -2, 0, -4 };
         float[] center = { -2, 0, -1 };
-        float[] constrained = constraint.aply(polygon, center, 3);
+        float[] constrained = constraint.apply(polygon, center, 3);
 
         assertThat(constrained).hasSize(expectedSize);
         assertThat(constrained).containsSequence(-2f, 0f, -4f, -4f, 0f, 0f, -3.4641016f, 0.0f, 1.6076951f, -2.0f, 0.0f, 2.0f);
@@ -79,7 +79,7 @@ public class PolygonByCircleConstraintTest {
         int expectedSize = 7 * 3;
         float[] polygon = { -4, 0, 0, -3, 0, 3, 2, 0, 3, 3, 0, -3, -2, 0, -4 };
         float[] center = { 4, 0, 0 };
-        float[] constrained = constraint.aply(polygon, center, 4);
+        float[] constrained = constraint.apply(polygon, center, 4);
 
         assertThat(constrained).hasSize(expectedSize);
         assertThat(constrained).containsSequence(1.5358982f, 0f, 3f, 2f, 0f, 3f, 3f, 0f, -3f);

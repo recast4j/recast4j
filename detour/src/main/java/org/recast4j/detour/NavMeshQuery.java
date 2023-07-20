@@ -270,7 +270,7 @@ public class NavMeshQuery {
                 for (int j = 0; j < bestPoly.vertCount; ++j) {
                     System.arraycopy(bestTile.data.verts, bestPoly.verts[j] * 3, polyVerts, j * 3, 3);
                 }
-                float[] constrainedVerts = constraint.aply(polyVerts, centerPos, maxRadius);
+                float[] constrainedVerts = constraint.apply(polyVerts, centerPos, maxRadius);
                 if (constrainedVerts != null) {
                     int vertCount = constrainedVerts.length / 3;
                     for (int j = 2; j < vertCount; ++j) {
