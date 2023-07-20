@@ -61,20 +61,18 @@ public class NodePool {
                     return node;
                 }
             }
+        } else {
+            nodes = new ArrayList<>();
+            m_map.put(id, nodes);
         }
-        return create(id, state);
+        return create(id, state, nodes);
     }
 
-    protected Node create(long id, int state) {
+    private Node create(long id, int state, List<Node> nodes) {
         Node node = new Node(m_nodes.size() + 1);
         node.id = id;
         node.state = state;
         m_nodes.add(node);
-        List<Node> nodes = m_map.get(id);
-        if (nodes == null) {
-            nodes = new ArrayList<>();
-            m_map.put(id, nodes);
-        }
         nodes.add(node);
         return node;
     }
