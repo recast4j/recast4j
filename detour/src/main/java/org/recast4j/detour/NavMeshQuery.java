@@ -3016,20 +3016,20 @@ public class NavMeshQuery {
         // Reverse the path.
         Node curNode = endNode;
         do {
-            path.add(0, curNode.id);
+            path.add(curNode.id);
             Node nextNode = m_nodePool.getNodeAtIdx(curNode.pidx);
             if (curNode.shortcut != null) {
                 // remove potential duplicates from shortcut path
                 for (int i = curNode.shortcut.size() - 1; i >=0; i--) {
                     long id = curNode.shortcut.get(i);
                     if (id != curNode.id && id != nextNode.id) {
-                        path.add(0, id);
+                        path.add(id);
                     }
                 }
             }
             curNode = nextNode;
         } while (curNode != null);
-
+        Collections.reverse(path);
         return path;
     }
 
