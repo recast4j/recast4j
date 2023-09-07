@@ -189,20 +189,17 @@ public class RecastMesh {
         if (verts[a + 0] != verts[b + 0])
             return ((verts[a + 0] <= verts[c + 0]) && (verts[c + 0] <= verts[b + 0]))
                     || ((verts[a + 0] >= verts[c + 0]) && (verts[c + 0] >= verts[b + 0]));
-        else
-            return ((verts[a + 2] <= verts[c + 2]) && (verts[c + 2] <= verts[b + 2]))
-                    || ((verts[a + 2] >= verts[c + 2]) && (verts[c + 2] >= verts[b + 2]));
+        return ((verts[a + 2] <= verts[c + 2]) && (verts[c + 2] <= verts[b + 2]))
+                || ((verts[a + 2] >= verts[c + 2]) && (verts[c + 2] >= verts[b + 2]));
     }
 
     // Returns true iff segments ab and cd intersect, properly or improperly.
     static boolean intersect(int[] verts, int a, int b, int c, int d) {
         if (intersectProp(verts, a, b, c, d))
             return true;
-        else if (between(verts, a, b, c) || between(verts, a, b, d) || between(verts, c, d, a)
-                || between(verts, c, d, b))
+        if (between(verts, a, b, c) || between(verts, a, b, d) || between(verts, c, d, a) || between(verts, c, d, b))
             return true;
-        else
-            return false;
+        return false;
     }
 
     static boolean vequal(int[] verts, int a, int b) {
