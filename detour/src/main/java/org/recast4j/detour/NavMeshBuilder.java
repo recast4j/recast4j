@@ -341,7 +341,7 @@ public class NavMeshBuilder {
             }
         }
 
-        // Off-mesh connectionss are stored as polygons, adjust values.
+        // Off-mesh connections are stored as polygons, adjust values.
         int totPolyCount = params.polyCount + storedOffMeshConCount;
         int totVertCount = params.vertCount + storedOffMeshConCount * 2;
 

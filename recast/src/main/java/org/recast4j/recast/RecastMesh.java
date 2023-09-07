@@ -181,7 +181,7 @@ public class RecastMesh {
     }
 
     // Returns T iff (a,b,c) are collinear and point c lies
-    // on the closed segement ab.
+    // on the closed segment ab.
     private static boolean between(int[] verts, int a, int b, int c) {
         if (!collinear(verts, a, b, c))
             return false;
@@ -842,7 +842,7 @@ public class RecastMesh {
     /// @par
     ///
     /// @note If the mesh data is to be used to construct a Detour navigation mesh, then the upper
-    /// limit must be retricted to <= #DT_VERTS_PER_POLYGON.
+    /// limit must be restricted to <= #DT_VERTS_PER_POLYGON.
     ///
     /// @see rcAllocPolyMesh, rcContourSet, rcPolyMesh, rcConfig
     public static PolyMesh buildPolyMesh(Telemetry ctx, ContourSet cset, int nvp) {

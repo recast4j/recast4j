@@ -77,7 +77,7 @@ public class NavMeshDataCreateParams {
 
     public int userId; /// < The user defined id of the tile.
     public int tileX; /// < The tile's x-grid location within the multi-tile destination mesh. (Along the x-axis.)
-    public int tileZ; /// < The tile's y-grid location within the multi-tile desitation mesh. (Along the z-axis.)
+    public int tileZ; /// < The tile's y-grid location within the multi-tile destination mesh. (Along the z-axis.)
     public int tileLayer; /// < The tile's layer within the layered destination mesh. [Limit: >= 0] (Along the y-axis.)
     public float[] bmin; /// < The minimum bounds of the tile. [(x, y, z)] [Unit: wu]
     public float[] bmax; /// < The maximum bounds of the tile. [(x, y, z)] [Unit: wu]

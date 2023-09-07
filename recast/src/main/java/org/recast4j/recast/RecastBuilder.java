@@ -189,7 +189,7 @@ public class RecastBuilder {
         // (triangulation can handle this)
         // - overlaps may occur if you have narrow spiral corridors (i.e
         // stairs), this make triangulation to fail
-        // * generally the best choice if you precompute the nacmesh, use this
+        // * generally the best choice if you precompute the navmesh, use this
         // if you have large open areas
         // 2) Monotone partioning
         // - fastest

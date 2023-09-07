@@ -18,7 +18,14 @@ freely, subject to the following restrictions:
 
 package org.recast4j.detour;
 
-import static org.recast4j.detour.DetourCommon.*;
+import static org.recast4j.detour.DetourCommon.distancePtSegSqr2D;
+import static org.recast4j.detour.DetourCommon.sqr;
+import static org.recast4j.detour.DetourCommon.vCopy;
+import static org.recast4j.detour.DetourCommon.vDist;
+import static org.recast4j.detour.DetourCommon.vDistSqr;
+import static org.recast4j.detour.DetourCommon.vIsFinite;
+import static org.recast4j.detour.DetourCommon.vNormalize;
+import static org.recast4j.detour.DetourCommon.vSub;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,7 +90,7 @@ public class LegacyNavMeshQuery extends NavMeshQuery {
             }
 
             // Get current poly and tile.
-            // The API input has been cheked already, skip checking internal data.
+            // The API input has been checked already, skip checking internal data.
             long bestRef = bestNode.id;
             Tupple2<MeshTile, Poly> tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(bestRef);
             MeshTile bestTile = tileAndPoly.first;
@@ -111,7 +118,7 @@ public class LegacyNavMeshQuery extends NavMeshQuery {
                 }
 
                 // Get neighbour poly and tile.
-                // The API input has been cheked already, skip checking internal data.
+                // The API input has been checked already, skip checking internal data.
                 tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(neighbourRef);
                 MeshTile neighbourTile = tileAndPoly.first;
                 Poly neighbourPoly = tileAndPoly.second;
@@ -240,7 +247,7 @@ public class LegacyNavMeshQuery extends NavMeshQuery {
             }
 
             // Get current poly and tile.
-            // The API input has been cheked already, skip checking internal
+            // The API input has been checked already, skip checking internal
             // data.
             long bestRef = bestNode.id;
             Result<Tupple2<MeshTile, Poly>> tileAndPoly = m_nav.getTileAndPolyByRef(bestRef);
@@ -295,7 +302,7 @@ public class LegacyNavMeshQuery extends NavMeshQuery {
                 }
 
                 // Get neighbour poly and tile.
-                // The API input has been cheked already, skip checking internal
+                // The API input has been checked already, skip checking internal
                 // data.
                 Tupple2<MeshTile, Poly> tileAndPolyUns = m_nav.getTileAndPolyByRefUnsafe(neighbourRef);
                 MeshTile neighbourTile = tileAndPolyUns.first;
@@ -587,7 +594,7 @@ public class LegacyNavMeshQuery extends NavMeshQuery {
             bestNode.flags |= Node.DT_NODE_CLOSED;
 
             // Get poly and tile.
-            // The API input has been cheked already, skip checking internal data.
+            // The API input has been checked already, skip checking internal data.
             long bestRef = bestNode.id;
             Tupple2<MeshTile, Poly> tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(bestRef);
             MeshTile bestTile = tileAndPoly.first;

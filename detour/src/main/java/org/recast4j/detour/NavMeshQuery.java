@@ -107,7 +107,7 @@ public class NavMeshQuery {
                 continue;
             }
 
-            // Choose random tile using reservoi sampling.
+            // Choose random tile using reservoir sampling.
             float area = 1.0f; // Could be tile area too.
             tsum += area;
             float u = frand.frand();
@@ -146,7 +146,7 @@ public class NavMeshQuery {
                 polyArea += triArea2D(tile.data.verts, va, vb, vc);
             }
 
-            // Choose random polygon weighted by area, using reservoi sampling.
+            // Choose random polygon weighted by area, using reservoir sampling.
             areaSum += polyArea;
             float u = frand.frand();
             if (u * areaSum <= polyArea) {
@@ -256,7 +256,7 @@ public class NavMeshQuery {
             bestNode.flags &= ~DT_NODE_OPEN;
             bestNode.flags |= DT_NODE_CLOSED;
             // Get poly and tile.
-            // The API input has been cheked already, skip checking internal data.
+            // The API input has been checked already, skip checking internal data.
             long bestRef = bestNode.id;
             Tupple2<MeshTile, Poly> bestTilePoly = m_nav.getTileAndPolyByRefUnsafe(bestRef);
             MeshTile bestTile = bestTilePoly.first;
@@ -279,7 +279,7 @@ public class NavMeshQuery {
                         int vc = j * 3;
                         polyArea += triArea2D(constrainedVerts, va, vb, vc);
                     }
-                    // Choose random polygon weighted by area, using reservoi sampling.
+                    // Choose random polygon weighted by area, using reservoir sampling.
                     areaSum += polyArea;
                     float u = frand.frand();
                     if (u * areaSum <= polyArea) {
@@ -655,7 +655,7 @@ public class NavMeshQuery {
      * The start and end positions are used to calculate traversal costs. (The y-values impact the result.)
      *
      * @param startRef
-     *            The refrence id of the start polygon.
+     *            The reference id of the start polygon.
      * @param endRef
      *            The reference id of the end polygon.
      * @param startPos
@@ -731,7 +731,7 @@ public class NavMeshQuery {
             }
 
             // Get current poly and tile.
-            // The API input has been cheked already, skip checking internal data.
+            // The API input has been checked already, skip checking internal data.
             long bestRef = bestNode.id;
             Tupple2<MeshTile, Poly> tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(bestRef);
             MeshTile bestTile = tileAndPoly.first;
@@ -773,7 +773,7 @@ public class NavMeshQuery {
                 }
 
                 // Get neighbour poly and tile.
-                // The API input has been cheked already, skip checking internal data.
+                // The API input has been checked already, skip checking internal data.
                 tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(neighbourRef);
                 MeshTile neighbourTile = tileAndPoly.first;
                 Poly neighbourPoly = tileAndPoly.second;
@@ -1004,7 +1004,7 @@ public class NavMeshQuery {
             }
 
             // Get current poly and tile.
-            // The API input has been cheked already, skip checking internal
+            // The API input has been checked already, skip checking internal
             // data.
             long bestRef = bestNode.id;
             Result<Tupple2<MeshTile, Poly>> tileAndPoly = m_nav.getTileAndPolyByRef(bestRef);
@@ -1060,7 +1060,7 @@ public class NavMeshQuery {
                 }
 
                 // Get neighbour poly and tile.
-                // The API input has been cheked already, skip checking internal
+                // The API input has been checked already, skip checking internal
                 // data.
                 Tupple2<MeshTile, Poly> tileAndPolyUns = m_nav.getTileAndPolyByRefUnsafe(neighbourRef);
                 MeshTile neighbourTile = tileAndPolyUns.first;
@@ -1599,7 +1599,7 @@ public class NavMeshQuery {
             Node curNode = stack.pop();
 
             // Get poly and tile.
-            // The API input has been cheked already, skip checking internal data.
+            // The API input has been checked already, skip checking internal data.
             long curRef = curNode.id;
             Tupple2<MeshTile, Poly> tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(curRef);
             MeshTile curTile = tileAndPoly.first;
@@ -2182,7 +2182,7 @@ public class NavMeshQuery {
             bestNode.flags |= Node.DT_NODE_CLOSED;
 
             // Get poly and tile.
-            // The API input has been cheked already, skip checking internal data.
+            // The API input has been checked already, skip checking internal data.
             long bestRef = bestNode.id;
             Tupple2<MeshTile, Poly> tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(bestRef);
             MeshTile bestTile = tileAndPoly.first;
@@ -2350,7 +2350,7 @@ public class NavMeshQuery {
             bestNode.flags |= Node.DT_NODE_CLOSED;
 
             // Get poly and tile.
-            // The API input has been cheked already, skip checking internal data.
+            // The API input has been checked already, skip checking internal data.
             long bestRef = bestNode.id;
             Tupple2<MeshTile, Poly> tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(bestRef);
             MeshTile bestTile = tileAndPoly.first;
@@ -2514,7 +2514,7 @@ public class NavMeshQuery {
             Node curNode = stack.pop();
 
             // Get poly and tile.
-            // The API input has been cheked already, skip checking internal data.
+            // The API input has been checked already, skip checking internal data.
             long curRef = curNode.id;
             Tupple2<MeshTile, Poly> tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(curRef);
             MeshTile curTile = tileAndPoly.first;
@@ -2814,7 +2814,7 @@ public class NavMeshQuery {
             bestNode.flags |= Node.DT_NODE_CLOSED;
 
             // Get poly and tile.
-            // The API input has been cheked already, skip checking internal data.
+            // The API input has been checked already, skip checking internal data.
             long bestRef = bestNode.id;
             Tupple2<MeshTile, Poly> tileAndPoly = m_nav.getTileAndPolyByRefUnsafe(bestRef);
             MeshTile bestTile = tileAndPoly.first;

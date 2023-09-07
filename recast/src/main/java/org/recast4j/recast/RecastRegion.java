@@ -1189,7 +1189,7 @@ public class RecastRegion {
     /// re-assigned to the zero (null) region.
     ///
     /// Partitioning can result in smaller than necessary regions. @p mergeRegionArea helps
-    /// reduce unecessarily small regions.
+    /// reduce unnecessarily small regions.
     ///
     /// See the #rcConfig documentation for more information on the configuration parameters.
     ///
@@ -1345,7 +1345,7 @@ public class RecastRegion {
     /// re-assigned to the zero (null) region.
     ///
     /// Watershed partitioning can result in smaller than necessary regions, especially in diagonal corridors.
-    /// @p mergeRegionArea helps reduce unecessarily small regions.
+    /// @p mergeRegionArea helps reduce unnecessarily small regions.
     ///
     /// See the #rcConfig documentation for more information on the configuration parameters.
     ///
@@ -1450,7 +1450,7 @@ public class RecastRegion {
 
         ctx.startTimer("REGIONS_FILTER");
 
-        // Merge regions and filter out smalle regions.
+        // Merge regions and filter out small regions.
         List<Integer> overlaps = new ArrayList<>();
         chf.maxRegions = mergeAndFilterRegions(ctx, minRegionArea, mergeRegionArea, regionId, chf, srcReg, overlaps);
 

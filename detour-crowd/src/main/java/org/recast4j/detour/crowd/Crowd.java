@@ -106,7 +106,7 @@ import org.recast4j.detour.crowd.debug.ObstacleAvoidanceDebugData;
  * @var dtCrowdAgentParams::pathOptimizationRange
  * @par
  *
- * 		Only applicalbe if #updateFlags includes the #DT_CROWD_OPTIMIZE_VIS flag.
+ * 		Only applicable if #updateFlags includes the #DT_CROWD_OPTIMIZE_VIS flag.
  *
  *      This value is often based on the agent radius. E.g. radius * 30
  *
@@ -239,7 +239,7 @@ public class Crowd {
      * @param pos
      *            The requested position of the agent. [(x, y, z)]
      * @param params
-     *            The configutation of the agent.
+     *            The configuration of the agent.
      * @return The newly created agent object
      */
     public CrowdAgent addAgent(float[] pos, CrowdAgentParams params) {

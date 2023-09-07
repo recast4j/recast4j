@@ -174,16 +174,16 @@ public class RecastSoloMeshTest {
         // (triangulation can handle this)
         // - overlaps may occur if you have narrow spiral corridors (i.e
         // stairs), this make triangulation to fail
-        // * generally the best choice if you precompute the nacmesh, use this
+        // * generally the best choice if you precompute the navmesh, use this
         // if you have large open areas
-        // 2) Monotone partioning
+        // 2) Monotone partitioning
         // - fastest
         // - partitions the heightfield into regions without holes and overlaps
         // (guaranteed)
         // - creates long thin polygons, which sometimes causes paths with
         // detours
         // * use this if you want fast navmesh generation
-        // 3) Layer partitoining
+        // 3) Layer partitioning
         // - quite fast
         // - partitions the heighfield into non-overlapping regions
         // - relies on the triangulation code to cope with holes (thus slower

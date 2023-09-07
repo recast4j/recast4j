@@ -916,7 +916,7 @@ public class TileCacheBuilder {
     }
 
     // Returns T iff (a,b,c) are collinear and point c lies
-    // on the closed segement ab.
+    // on the closed segment ab.
     private boolean between(int[] verts, int a, int b, int c) {
         if (!collinear(verts, a, b, c))
             return false;

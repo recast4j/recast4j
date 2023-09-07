@@ -18,18 +18,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.detour.crowd;
 
-import static org.recast4j.detour.DetourCommon.clamp;
-import static org.recast4j.detour.DetourCommon.distancePtSegSqr2D;
-import static org.recast4j.detour.DetourCommon.sqr;
-import static org.recast4j.detour.DetourCommon.triArea2D;
-import static org.recast4j.detour.DetourCommon.vCopy;
-import static org.recast4j.detour.DetourCommon.vDist2D;
-import static org.recast4j.detour.DetourCommon.vDot2D;
-import static org.recast4j.detour.DetourCommon.vNormalize;
-import static org.recast4j.detour.DetourCommon.vPerp2D;
-import static org.recast4j.detour.DetourCommon.vScale;
-import static org.recast4j.detour.DetourCommon.vSet;
-import static org.recast4j.detour.DetourCommon.vSub;
+import static org.recast4j.detour.DetourCommon.*;
 
 import org.recast4j.detour.Tupple2;
 import org.recast4j.detour.crowd.debug.ObstacleAvoidanceDebugData;
@@ -256,7 +245,7 @@ public class ObstacleAvoidanceQuery {
         float vcpen = m_params.weightCurVel * (vDist2D(vcand, vel) * m_invVmax);
 
         // find the threshold hit time to bail out based on the early out penalty
-        // (see how the penalty is calculated below to understnad)
+        // (see how the penalty is calculated below to understand)
         float minPen = minPenalty - vpen - vcpen;
         float tThresold = (m_params.weightToi / minPen - 0.1f) * m_params.horizTime;
         if (tThresold - m_params.horizTime > -Float.MIN_VALUE)
