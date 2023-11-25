@@ -48,7 +48,7 @@ public class UnityAStarPathfindingImporter {
             int nodeCount = graphMeshData.countNodes();
             if (connections.size() != nodeCount) {
                 throw new IllegalArgumentException("Inconsistent number of nodes in data file: " + nodeCount
-                        + " and connecton files: " + connections.size());
+                        + " and connection files: " + connections.size());
             }
             // Build BV tree
             bvTreeCreator.build(graphMeshData);
