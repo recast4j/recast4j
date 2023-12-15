@@ -10,7 +10,7 @@ buildscript {
 }
 
 plugins {
-    id 'net.researchgate.release' version '2.8.1'
+    id 'net.researchgate.release' version '3.0.2'
 }
 
 subprojects {    
@@ -116,9 +116,9 @@ subprojects {
 }
 
 // https://github.com/researchgate/gradle-release/issues/144
-task build() {
-    dependsOn subprojects.build
-}
+//task build() {
+//    dependsOn subprojects.build
+//}
 
 task publish() {
     dependsOn subprojects.publish
