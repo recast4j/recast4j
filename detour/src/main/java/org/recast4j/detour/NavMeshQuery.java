@@ -620,7 +620,7 @@ public class NavMeshQuery {
         float[] bmin = vSub(center, halfExtents);
         float[] bmax = vAdd(center, halfExtents);
         queryTiles(center, halfExtents).forEach(t -> queryPolygonsInTile(t, bmin, bmax, filter, query));
-        return Status.SUCCSESS;
+        return Status.SUCCESS;
     }
 
     /**
@@ -716,7 +716,7 @@ public class NavMeshQuery {
         Node lastBestNode = startNode;
         float lastBestNodeCost = startNode.total;
 
-        Status status = Status.SUCCSESS;
+        Status status = Status.SUCCESS;
 
         while (!m_openList.isEmpty()) {
             // Remove node from open list and put it in closed list.
@@ -946,8 +946,8 @@ public class NavMeshQuery {
         }
 
         if (startRef == endRef) {
-            m_query.status = Status.SUCCSESS;
-            return Status.SUCCSESS;
+            m_query.status = Status.SUCCESS;
+            return Status.SUCCESS;
         }
 
         m_nodePool.clear();
@@ -999,7 +999,7 @@ public class NavMeshQuery {
             // Reached the goal, stop searching.
             if (bestNode.id == m_query.endRef) {
                 m_query.lastBestNode = bestNode;
-                m_query.status = Status.SUCCSESS;
+                m_query.status = Status.SUCCESS;
                 return Result.of(m_query.status, iter);
             }
 
@@ -1267,7 +1267,7 @@ public class NavMeshQuery {
             }
             // If reached end of path or there is no space to append more vertices, return.
             if (flags == DT_STRAIGHTPATH_END || straightPath.size() >= maxStraightPath) {
-                return Status.SUCCSESS;
+                return Status.SUCCESS;
             }
         }
         return Status.IN_PROGRESS;

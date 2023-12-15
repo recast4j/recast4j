@@ -26,8 +26,8 @@ import org.junit.jupiter.api.Test;
 
 public class FindPathTest extends AbstractDetourTest {
 
-    private static final Status[] STATUSES = { Status.SUCCSESS, Status.PARTIAL_RESULT, Status.SUCCSESS, Status.SUCCSESS,
-            Status.SUCCSESS };
+    private static final Status[] STATUSES = { Status.SUCCESS, Status.PARTIAL_RESULT, Status.SUCCESS, Status.SUCCESS,
+            Status.SUCCESS };
     private static final long[][] RESULTS = {
             { 281474976710696L, 281474976710695L, 281474976710694L, 281474976710703L, 281474976710706L,
                     281474976710705L, 281474976710702L, 281474976710701L, 281474976710714L, 281474976710713L,

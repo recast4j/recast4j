@@ -31,7 +31,7 @@ public enum Status {
     }
 
     public boolean isSuccess() {
-        return this == Status.SUCCSESS || this == Status.PARTIAL_RESULT;
+        return this == Status.SUCCESS || this == Status.PARTIAL_RESULT;
     }
 
     public boolean isPartial() {

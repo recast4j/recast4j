@@ -48,7 +48,7 @@ public class UnityAStarPathfindingImporterTest {
         float[] startPos = new float[] { 8.200293f, 2.155071f, -26.176147f };
         float[] endPos = new float[] { 11.971109f, 0.000000f, 8.663261f };
         Result<List<Long>> path = findPath(mesh, startPos, endPos);
-        assertThat(path.status).isEqualTo(Status.SUCCSESS);
+        assertThat(path.status).isEqualTo(Status.SUCCESS);
         assertThat(path.result.size()).isEqualTo(57);
         saveMesh(mesh, "v4_0_6");
     }

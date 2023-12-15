@@ -31,7 +31,7 @@ public class Result<T> {
     }
 
     public static <T> Result<T> success(T result) {
-        return new Result<>(result, Status.SUCCSESS, null);
+        return new Result<>(result, Status.SUCCESS, null);
     }
 
     public static <T> Result<T> failure() {

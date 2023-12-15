@@ -75,7 +75,7 @@ public class LegacyNavMeshQuery extends NavMeshQuery {
         Node lastBestNode = startNode;
         float lastBestNodeCost = startNode.total;
 
-        Status status = Status.SUCCSESS;
+        Status status = Status.SUCCESS;
 
         while (!m_openList.isEmpty()) {
             // Remove node from open list and put it in closed list.
@@ -242,7 +242,7 @@ public class LegacyNavMeshQuery extends NavMeshQuery {
             // Reached the goal, stop searching.
             if (bestNode.id == m_query.endRef) {
                 m_query.lastBestNode = bestNode;
-                m_query.status = Status.SUCCSESS;
+                m_query.status = Status.SUCCESS;
                 return Result.of(m_query.status, iter);
             }
 

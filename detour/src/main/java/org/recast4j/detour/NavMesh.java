@@ -1325,7 +1325,7 @@ public class NavMesh {
 
         // Change flags.
         poly.flags = flags;
-        return Status.SUCCSESS;
+        return Status.SUCCESS;
     }
 
     public Result<Integer> getPolyFlags(long ref) {
@@ -1373,7 +1373,7 @@ public class NavMesh {
 
         poly.setArea(area);
 
-        return Status.SUCCSESS;
+        return Status.SUCCESS;
     }
 
     public Result<Integer> getPolyArea(long ref) {

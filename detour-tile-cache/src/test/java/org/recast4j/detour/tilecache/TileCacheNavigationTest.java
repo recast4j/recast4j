@@ -41,7 +41,7 @@ public class TileCacheNavigationTest extends AbstractTileCacheTest {
     protected final long[] endRefs = { 281474986147841L };
     protected final float[][] startPoss = { { 39.447338f, 9.998177f, -0.784811f } };
     protected final float[][] endPoss = { { 19.292645f, 11.611748f, -57.750366f } };
-    private final Status[] statuses = { Status.SUCCSESS };
+    private final Status[] statuses = { Status.SUCCESS };
     private final long[][] results = { { 281475006070787L, 281475006070785L, 281475005022208L, 281475005022209L, 281475003973633L,
             281475003973634L, 281475003973632L, 281474996633604L, 281474996633605L, 281474996633603L, 281474995585027L,
             281474995585029L, 281474995585026L, 281474995585028L, 281474995585024L, 281474991390721L, 281474991390722L,
