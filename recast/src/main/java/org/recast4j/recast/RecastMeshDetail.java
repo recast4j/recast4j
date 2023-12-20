@@ -36,6 +36,7 @@ public class RecastMeshDetail {
     static int MAX_VERTS = 127;
     static int MAX_TRIS = 255; // Max tris for delaunay is 2n-2-k (n=num verts, k=num hull verts).
     static int MAX_VERTS_PER_EDGE = 32;
+    private static final int DETAIL_EDGE_BOUNDARY = 0x1;
 
     static int RC_UNSET_HEIGHT = RecastConstants.SPAN_MAX_HEIGHT;
     static int EV_UNDEF = -1;
@@ -737,6 +738,7 @@ public class RecastMeshDetail {
         // If the polygon minimum extent is small (sliver or small triangle), do not try to add internal points.
         if (minExtent < sampleDist * 2) {
             triangulateHull(nverts, verts, nhull, hull, nin, tris);
+            setTriFlags(tris, nhull, hull);
             return nverts;
         }
 
@@ -841,7 +843,37 @@ public class RecastMeshDetail {
             throw new RuntimeException(
                     "rcBuildPolyMeshDetail: Shrinking triangle count from " + ntris + " to max " + MAX_TRIS);
         }
+        setTriFlags(tris, nhull, hull);
         return nverts;
+    }
+
+    // Find edges that lie on hull and mark them as such.
+    static void setTriFlags(List<Integer> tris, int nhull, int[] hull) {
+        // Matches DT_DETAIL_EDGE_BOUNDARY
+
+        for (int i = 0; i < tris.size(); i += 4) {
+            int a = tris.get(i);
+            int b = tris.get(i + 1);
+            int c = tris.get(i + 2);
+            int flags = 0;
+            flags |= (onHull(a, b, nhull, hull) ? DETAIL_EDGE_BOUNDARY : 0) << 0;
+            flags |= (onHull(b, c, nhull, hull) ? DETAIL_EDGE_BOUNDARY : 0) << 2;
+            flags |= (onHull(c, a, nhull, hull) ? DETAIL_EDGE_BOUNDARY : 0) << 4;
+            tris.set(i + 3, flags);
+        }
+    }
+
+    static boolean onHull(int a, int b, int nhull, int[] hull) {
+        // All internal sampled points come after the hull so we can early out for those.
+        if (a >= nhull || b >= nhull)
+            return false;
+
+        for (int j = nhull - 1, i = 0; i < nhull; j = i++) {
+            if (a == hull[j] && b == hull[i])
+                return true;
+        }
+
+        return false;
     }
 
     static void seedArrayWithPolyCenter(Telemetry ctx, CompactHeightfield chf, int[] meshpoly, int poly, int npoly,
@@ -1078,27 +1110,6 @@ public class RecastMeshDetail {
         }
     }
 
-    static int getEdgeFlags(float[] verts, int va, int vb, float[] vpoly, int npoly) {
-        // The flag returned by this function matches getDetailTriEdgeFlags in Detour.
-        // Figure out if edge (va,vb) is part of the polygon boundary.
-        float thrSqr = 0.001f * 0.001f;
-        for (int i = 0, j = npoly - 1; i < npoly; j = i++) {
-            if (distancePtSeg2d(verts, va, vpoly, j * 3, i * 3) < thrSqr
-                    && distancePtSeg2d(verts, vb, vpoly, j * 3, i * 3) < thrSqr) {
-                return 1;
-            }
-        }
-        return 0;
-    }
-
-    static int getTriFlags(float[] verts, int va, int vb, int vc, float[] vpoly, int npoly) {
-        int flags = 0;
-        flags |= getEdgeFlags(verts, va, vb, vpoly, npoly) << 0;
-        flags |= getEdgeFlags(verts, vb, vc, vpoly, npoly) << 2;
-        flags |= getEdgeFlags(verts, vc, va, vpoly, npoly) << 4;
-        return flags;
-    }
-
     /// @par
     ///
     /// See the #rcConfig documentation for more information on the configuration parameters.
@@ -1256,8 +1267,7 @@ public class RecastMeshDetail {
                 dmesh.tris[dmesh.ntris * 4 + 0] = tris.get(t + 0);
                 dmesh.tris[dmesh.ntris * 4 + 1] = tris.get(t + 1);
                 dmesh.tris[dmesh.ntris * 4 + 2] = tris.get(t + 2);
-                dmesh.tris[dmesh.ntris * 4 + 3] = getTriFlags(verts, tris.get(t + 0) * 3, tris.get(t + 1) * 3,
-                        tris.get(t + 2) * 3, poly, npoly);
+                dmesh.tris[dmesh.ntris * 4 + 3] = tris.get(t + 3);
                 dmesh.ntris++;
             }
         }
