@@ -65,7 +65,7 @@ All the modules can be built with a single gradle command:
 
 Once the build is completed, the recast-demo application can be run as follows:
 ```
-java -jar ./recast-demo/build/libs/recast-demo-1.5.6-SNAPSHOT-all.jar
+java -jar ./recast-demo/build/libs/recast-demo-1.5.8-SNAPSHOT-all.jar
 ```
 
 ### Binaries
@@ -77,42 +77,42 @@ Maven:
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>recast</artifactId>
-	<version>1.5.5</version>
+	<version>1.5.7</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour</artifactId>
-	<version>1.5.5</version>
+	<version>1.5.7</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour-crowd</artifactId>
-	<version>1.5.5</version>
+	<version>1.5.7</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour-tile-cache</artifactId>
-	<version>1.5.5</version>
+	<version>1.5.7</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour-extras</artifactId>
-	<version>1.5.5</version>
+	<version>1.5.7</version>
 </dependency>
 <dependency>
 	<groupId>org.recast4j</groupId>
 	<artifactId>detour-dynamic</artifactId>
-	<version>1.5.5</version>
+	<version>1.5.7</version>
 </dependency>
 ```
 Gradle:
 ```
-implementation 'org.recast4j:recast:1.5.5'
-implementation 'org.recast4j:detour:1.5.5'
-implementation 'org.recast4j:detour-crowd:1.5.5'
-implementation 'org.recast4j:detour-tile-cache:1.5.5'
-implementation 'org.recast4j:detour-extras:1.5.5'
-implementation 'org.recast4j:detour-dynamic:1.5.5'
+implementation 'org.recast4j:recast:1.5.7'
+implementation 'org.recast4j:detour:1.5.7'
+implementation 'org.recast4j:detour-crowd:1.5.7'
+implementation 'org.recast4j:detour-tile-cache:1.5.7'
+implementation 'org.recast4j:detour-extras:1.5.7'
+implementation 'org.recast4j:detour-dynamic:1.5.7'
 ```
 
 ## License
