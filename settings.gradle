@@ -5,7 +5,7 @@ dependencyResolutionManagement {
         libs {
             library('lz4', 'org.lz4:lz4-java:1.8.0')
             library('assertj-core', 'org.assertj:assertj-core:3.25.1')
-            library('mockito', 'org.mockito:mockito-junit-jupiter:5.8.0')
+            library('mockito', 'org.mockito:mockito-junit-jupiter:5.9.0')
             library('junit5-api', 'org.junit.jupiter:junit-jupiter-api:5.10.1')
             library('junit5-engine', 'org.junit.jupiter:junit-jupiter-engine:5.10.1')
             library('junit5-params', 'org.junit.jupiter:junit-jupiter-params:5.10.1')
