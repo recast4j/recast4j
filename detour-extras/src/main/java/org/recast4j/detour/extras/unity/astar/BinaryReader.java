@@ -28,10 +28,13 @@ import org.recast4j.detour.io.IOUtils;
 abstract class BinaryReader {
 
     protected ByteBuffer toByteBuffer(ZipFile file, String filename) throws IOException {
-        ZipEntry graphReferences = file.getEntry(filename);
-        ByteBuffer buffer = IOUtils.toByteBuffer(file.getInputStream(graphReferences));
-        buffer.order(ByteOrder.LITTLE_ENDIAN);
-        return buffer;
+        ZipEntry entry = file.getEntry(filename);
+        if (entry != null) {
+            ByteBuffer buffer = IOUtils.toByteBuffer(file.getInputStream(entry));
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            return buffer;
+        }
+        return null;
     }
 
 }

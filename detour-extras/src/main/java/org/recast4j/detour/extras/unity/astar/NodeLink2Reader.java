@@ -28,7 +28,7 @@ class NodeLink2Reader extends BinaryReader {
     @SuppressWarnings("unused")
     NodeLink2[] read(ZipFile file, String filename, int[] indexToNode) throws IOException {
         ByteBuffer buffer = toByteBuffer(file, filename);
-        int linkCount = buffer.getInt();
+        int linkCount = buffer != null ? buffer.getInt() : 0;
         NodeLink2[] links = new NodeLink2[linkCount];
         for (int i = 0; i < linkCount; i++) {
             long linkID = buffer.getLong();
