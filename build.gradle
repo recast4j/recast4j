@@ -10,7 +10,8 @@ buildscript {
 }
 
 plugins {
-    id 'net.researchgate.release' version '3.0.2'
+    id "net.researchgate.release" version "3.0.2"
+    id "com.adarshr.test-logger" version "4.0.0"
 }
 
 subprojects {    
@@ -22,11 +23,13 @@ subprojects {
         mavenCentral()
     }
 
-    apply plugin: 'java'
-    apply plugin: 'maven-publish'
-    apply plugin: 'signing'
-    if (!project.hasProperty('ci')) {
-        apply plugin: 'org.hibernate.build.maven-repo-auth'
+    apply plugin: "java"
+    apply plugin: "maven-publish"
+    apply plugin: "signing"
+    apply plugin: "com.adarshr.test-logger"
+
+    if (!project.hasProperty("ci")) {
+        apply plugin: "org.hibernate.build.maven-repo-auth"
     }
 
     dependencies {
@@ -38,24 +41,24 @@ subprojects {
     }
 
     java {
-        if (!project.hasProperty('ci')) {
+        if (!project.hasProperty("ci")) {
             withSourcesJar()
             withJavadocJar()
         }
     }
 
     compileJava {
-        options.encoding = 'UTF-8'
+        options.encoding = "UTF-8"
         if (JavaVersion.current().isJava9Compatible()) {
-            options.release = 8
+            options.release = 11
         }
     }
     
     javadoc {
-        options.encoding = 'UTF-8'    
-        options.addBooleanOption('Xdoclint:none', true)
+        options.encoding = "UTF-8"    
+        options.addBooleanOption("Xdoclint:none", true)
         if (JavaVersion.current().isJava9Compatible()) {
-            options.addBooleanOption('html5', true)
+            options.addBooleanOption("html5", true)
         }
     }
     
@@ -64,35 +67,35 @@ subprojects {
     }
 
     jar {
-        manifest { attributes('Implementation-Version': archiveVersion) }
+        manifest { attributes("Implementation-Version": archiveVersion) }
     }
     
-    if (it.name != 'recast-demo') {
+    if (it.name != "recast-demo") {
 
         publishing {
             publications {
                 mavenJava(MavenPublication) {
                     from components.java
                     pom {
-                        name = 'Recast and Detour for Java'
-                        description = 'Navigation Mesh Construction and Path-finding Toolkit.'
-                        url = 'http://recast4j.org'
+                        name = "Recast and Detour for Java"
+                        description = "Navigation Mesh Construction and Path-finding Toolkit."
+                        url = "http://recast4j.org"
                         licenses {
                             license {
-                                name = 'Zlib License'
-                                url = 'https://github.com/ppiastucki/recast4j/blob/master/License.txt'
+                                name = "Zlib License"
+                                url = "https://github.com/ppiastucki/recast4j/blob/master/License.txt"
                             }
                         }
                         developers {
                             developer {
-                                name = 'Piotr Piastucki'
-                                email = 'piotr@recast4j.org'
+                                name = "Piotr Piastucki"
+                                email = "piotr@recast4j.org"
                             }
                         }
                         scm {
-                            connection = 'scm:git:https://github.com/ppiastucki/recast4j.git'
-                            developerConnection = 'scm:git:ssh://git@github.com:ppiastucki/recast4j.git'
-                            url = 'https://github.com/ppiastucki/recast4j'
+                            connection = "scm:git:https://github.com/ppiastucki/recast4j.git"
+                            developerConnection = "scm:git:ssh://git@github.com:ppiastucki/recast4j.git"
+                            url = "https://github.com/ppiastucki/recast4j"
                         }
                     }                    
                 }
@@ -100,10 +103,10 @@ subprojects {
             
             repositories {
                 maven {
-                    name = 'ossrh'
-                    def releasesRepoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
-                    def snapshotsRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
-                    url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+                    name = "ossrh"
+                    def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+                    def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+                    url = version.endsWith("SNAPSHOT") ? snapshotsRepoUrl : releasesRepoUrl
                 }
             }
         }
