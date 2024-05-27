@@ -1,6 +1,6 @@
 [versions]
 lz4 = "1.8.0"
-assertj = "3.25.3"
+assertj = "3.26.0"
 mockito = "5.11.0"
 junit = "5.10.2"
 gson = "2.10.1"
