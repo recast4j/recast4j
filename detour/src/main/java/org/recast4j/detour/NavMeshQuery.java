@@ -812,7 +812,8 @@ public class NavMeshQuery {
                     Result<RaycastHit> rayHit = raycast(parentRef, parentNode.pos, neighbourPos, filter,
                             DT_RAYCAST_USE_COSTS, grandpaRef);
                     if (rayHit.succeeded()) {
-                        foundShortCut = rayHit.result.t >= 1.0f;
+                        foundShortCut = rayHit.result.t >= 1.0f
+                                && rayHit.result.path.get(rayHit.result.path.size() - 1) == neighbourRef;
                         if (foundShortCut) {
                             shortcut = rayHit.result.path;
                             // shortcut found using raycast. Using shorter cost
@@ -1101,7 +1102,8 @@ public class NavMeshQuery {
                     Result<RaycastHit> rayHit = raycast(parentRef, parentNode.pos, neighbourPos, m_query.filter,
                             DT_RAYCAST_USE_COSTS, grandpaRef);
                     if (rayHit.succeeded()) {
-                        foundShortCut = rayHit.result.t >= 1.0f;
+                        foundShortCut = rayHit.result.t >= 1.0f
+                                && rayHit.result.path.get(rayHit.result.path.size() - 1) == neighbourRef;
                         if (foundShortCut) {
                             shortcut = rayHit.result.path;
                             // shortcut found using raycast. Using shorter cost

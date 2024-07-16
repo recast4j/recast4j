@@ -408,7 +408,7 @@ public class TestNavmeshTool implements Tool {
                     Result<RaycastHit> hit = m_navQuery.raycast(m_startRef, m_spos, m_epos, m_filter, 0, 0);
                     if (hit.succeeded()) {
                         m_polys = hit.result.path;
-                        if (hit.result.t > 1) {
+                        if (hit.result.t >= 1) {
                             // No hit
                             m_hitPos = Arrays.copyOf(m_epos, m_epos.length);
                             m_hitResult = false;
