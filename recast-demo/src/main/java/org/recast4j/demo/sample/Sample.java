@@ -26,6 +26,7 @@ import org.recast4j.demo.settings.SettingsUI;
 import org.recast4j.detour.NavMesh;
 import org.recast4j.detour.NavMeshQuery;
 import org.recast4j.recast.RecastBuilder.RecastBuilderResult;
+import org.recast4j.recast.RecastConfig;
 
 public class Sample {
 
@@ -33,6 +34,7 @@ public class Sample {
     private NavMesh navMesh;
     private NavMeshQuery navMeshQuery;
     private final SettingsUI settingsUI;
+    private RecastConfig recastConfig;
     private List<RecastBuilderResult> recastResults;
     private boolean changed;
 
@@ -52,6 +54,10 @@ public class Sample {
 
     public DemoInputGeomProvider getInputGeom() {
         return inputGeom;
+    }
+
+    public RecastConfig getRecastConfig() {
+        return recastConfig;
     }
 
     public List<RecastBuilderResult> getRecastResults() {
@@ -78,8 +84,9 @@ public class Sample {
         this.changed = changed;
     }
 
-    public void update(DemoInputGeomProvider geom, List<RecastBuilderResult> recastResults, NavMesh navMesh) {
+    public void update(DemoInputGeomProvider geom, RecastConfig recastConfig, List<RecastBuilderResult> recastResults, NavMesh navMesh) {
         inputGeom = geom;
+        this.recastConfig = recastConfig;
         this.recastResults = recastResults;
         this.navMesh = navMesh;
         setQuery(navMesh);

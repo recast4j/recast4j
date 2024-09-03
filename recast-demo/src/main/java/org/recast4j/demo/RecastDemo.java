@@ -71,11 +71,12 @@ import org.recast4j.demo.ui.MouseListener;
 import org.recast4j.demo.ui.NuklearUI;
 import org.recast4j.detour.DetourCommon;
 import org.recast4j.detour.NavMesh;
-import org.recast4j.detour.Tupple2;
+import org.recast4j.detour.Tupple3;
 import org.recast4j.detour.extras.unity.astar.UnityAStarPathfindingImporter;
 import org.recast4j.detour.io.MeshSetReader;
 import org.recast4j.recast.Recast;
 import org.recast4j.recast.RecastBuilder.RecastBuilderResult;
+import org.recast4j.recast.RecastConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -203,7 +204,7 @@ public class RecastDemo {
                             "Mesh File (*.obj)", false);
                     if (filename != null) {
                         try (InputStream stream = new FileInputStream(filename)) {
-                            sample.update(loadInputMesh(stream), null, null);
+                            sample.update(loadInputMesh(stream), null, null, null);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -250,7 +251,7 @@ public class RecastDemo {
                     int m_tileSize = settingsUI.getTileSize();
                     long t = System.nanoTime();
 
-                    Tupple2<List<RecastBuilderResult>, NavMesh> buildResult;
+                    Tupple3<RecastConfig, List<RecastBuilderResult>, NavMesh> buildResult;
                     if (settingsUI.isTiled()) {
                         buildResult = tileNavMeshBuilder.build(sample.getInputGeom(), settingsUI.getPartitioning(), m_cellSize,
                                 m_cellHeight, m_agentHeight, m_agentRadius, m_agentMaxClimb, m_agentMaxSlope, m_regionMinSize,
@@ -265,7 +266,7 @@ public class RecastDemo {
                                 m_detailSampleMaxError, settingsUI.isFilterLowHangingObstacles(), settingsUI.isFilterLedgeSpans(),
                                 settingsUI.isFilterWalkableLowHeightSpans());
                     }
-                    sample.update(sample.getInputGeom(), buildResult.first, buildResult.second);
+                    sample.update(sample.getInputGeom(), buildResult.first, buildResult.second, buildResult.third);
                     sample.setChanged(false);
                     settingsUI.setBuildTime((System.nanoTime() - t) / 1_000_000);
                     toolsUI.setSample(sample);
