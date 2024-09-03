@@ -103,12 +103,13 @@ public class VoxelFile {
                 Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY };
         for (RecastBuilderResult r : results) {
             f.tiles.add(new VoxelTile(r.tileX, r.tileZ, r.getSolidHeightfield()));
-            f.bounds[0] = Math.min(f.bounds[0], r.getSolidHeightfield().bmin[0]);
+            float pad = r.getSolidHeightfield().borderSize * r.getSolidHeightfield().cs;
+            f.bounds[0] = Math.min(f.bounds[0], r.getSolidHeightfield().bmin[0] + pad);
             f.bounds[1] = Math.min(f.bounds[1], r.getSolidHeightfield().bmin[1]);
-            f.bounds[2] = Math.min(f.bounds[2], r.getSolidHeightfield().bmin[2]);
-            f.bounds[3] = Math.max(f.bounds[3], r.getSolidHeightfield().bmax[0]);
+            f.bounds[2] = Math.min(f.bounds[2], r.getSolidHeightfield().bmin[2] + pad);
+            f.bounds[3] = Math.max(f.bounds[3], r.getSolidHeightfield().bmax[0] - pad);
             f.bounds[4] = Math.max(f.bounds[4], r.getSolidHeightfield().bmax[1]);
-            f.bounds[5] = Math.max(f.bounds[5], r.getSolidHeightfield().bmax[2]);
+            f.bounds[5] = Math.max(f.bounds[5], r.getSolidHeightfield().bmax[2] - pad);
         }
         return f;
     }
@@ -142,12 +143,13 @@ public class VoxelFile {
         for (VoxelTile vt : mesh.voxelTiles()) {
             Heightfield heightfield = vt.heightfield();
             f.tiles.add(new VoxelTile(vt.tileX, vt.tileZ, heightfield));
-            f.bounds[0] = Math.min(f.bounds[0], vt.boundsMin[0]);
+            float pad = vt.borderSize * vt.cellSize;
+            f.bounds[0] = Math.min(f.bounds[0], vt.boundsMin[0] + pad);
             f.bounds[1] = Math.min(f.bounds[1], vt.boundsMin[1]);
-            f.bounds[2] = Math.min(f.bounds[2], vt.boundsMin[2]);
-            f.bounds[3] = Math.max(f.bounds[3], vt.boundsMax[0]);
+            f.bounds[2] = Math.min(f.bounds[2], vt.boundsMin[2] + pad);
+            f.bounds[3] = Math.max(f.bounds[3], vt.boundsMax[0] - pad);
             f.bounds[4] = Math.max(f.bounds[4], vt.boundsMax[1]);
-            f.bounds[5] = Math.max(f.bounds[5], vt.boundsMax[2]);
+            f.bounds[5] = Math.max(f.bounds[5], vt.boundsMax[2] - pad);
         }
         return f;
     }

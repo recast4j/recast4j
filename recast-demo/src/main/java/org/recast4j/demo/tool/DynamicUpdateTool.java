@@ -416,7 +416,7 @@ public class DynamicUpdateTool implements Tool {
             boolean updated = dynaMesh.update(executor).get();
             if (updated) {
                 buildTime = (System.nanoTime() - t) / 1_000_000;
-                sample.update(null, dynaMesh.recastResults(), dynaMesh.navMesh());
+                sample.update(null, null, dynaMesh.recastResults(), dynaMesh.navMesh());
                 sample.setChanged(false);
             }
         } catch (InterruptedException | ExecutionException e) {
@@ -444,6 +444,11 @@ public class DynamicUpdateTool implements Tool {
         nk_spacing(ctx, 1);
         if (mode == ToolMode.BUILD) {
             nk_layout_row_dynamic(ctx, 18, 1);
+            if (sample.getRecastResults() != null && sample.getRecastConfig() != null) {
+                if (nk_button_text(ctx, "Import Voxels")) {
+                    copy();
+                }
+            }
             if (nk_button_text(ctx, "Load Voxels...")) {
                 load();
             }
@@ -597,6 +602,18 @@ public class DynamicUpdateTool implements Tool {
 
     }
 
+    private void copy() {
+        if (sample.getRecastResults() != null && sample.getRecastConfig() != null) {
+            VoxelFile voxelFile = VoxelFile.from(sample.getRecastConfig(), sample.getRecastResults());
+            dynaMesh = new DynamicNavMesh(voxelFile);
+            dynaMesh.config.keepIntermediateResults = true;
+            updateUI();
+            buildDynaMesh();
+            colliders.clear();
+        }
+
+    }
+
     private void load() {
         try (MemoryStack stack = stackPush()) {
             PointerBuffer aFilterPatterns = stack.mallocPointer(1);
@@ -662,7 +679,7 @@ public class DynamicUpdateTool implements Tool {
             e.printStackTrace();
         }
         buildTime = (System.nanoTime() - t) / 1_000_000;
-        sample.update(null, dynaMesh.recastResults(), dynaMesh.navMesh());
+        sample.update(null, null, dynaMesh.recastResults(), dynaMesh.navMesh());
     }
 
     private void configDynaMesh() {
