@@ -76,8 +76,8 @@ public class DynamicNavMesh {
         navMeshParams.orig[0] = voxelFile.bounds[0];
         navMeshParams.orig[1] = voxelFile.bounds[1];
         navMeshParams.orig[2] = voxelFile.bounds[2];
-        navMeshParams.tileWidth = voxelFile.cellSize * voxelFile.tileSizeX;
-        navMeshParams.tileHeight = voxelFile.cellSize * voxelFile.tileSizeZ;
+        navMeshParams.tileWidth = voxelFile.useTiles ? voxelFile.cellSize * voxelFile.tileSizeX : voxelFile.bounds[3] - voxelFile.bounds[0];
+        navMeshParams.tileHeight = voxelFile.useTiles ? voxelFile.cellSize * voxelFile.tileSizeZ: voxelFile.bounds[5] - voxelFile.bounds[2];
         navMeshParams.maxTiles = voxelFile.tiles.size();
         navMeshParams.maxPolys = 0x8000;
         voxelFile.tiles.forEach(t -> {
