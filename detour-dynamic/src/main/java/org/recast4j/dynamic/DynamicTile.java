@@ -54,6 +54,7 @@ class DynamicTile {
 
     boolean build(RecastBuilder builder, DynamicNavMeshConfig config, Telemetry telemetry) {
         if (dirty) {
+            dirty = false;
             Heightfield heightfield = buildHeightfield(config, telemetry);
             RecastBuilderResult r = buildRecast(builder, config, voxelTile, heightfield, telemetry);
             NavMeshDataCreateParams params = navMeshCreateParams(voxelTile.tileX, voxelTile.tileZ, voxelTile.cellSize,
@@ -160,5 +161,9 @@ class DynamicTile {
             navMesh.removeTile(id);
             id = 0;
         }
+    }
+
+    void meshData(MeshData meshData) {
+        this.meshData = meshData;
     }
 }

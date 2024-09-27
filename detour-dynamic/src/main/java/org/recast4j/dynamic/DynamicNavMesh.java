@@ -211,10 +211,10 @@ public class DynamicNavMesh {
 
     private boolean updateNavMesh() {
         if (dirty) {
+            dirty = false;
             NavMesh navMesh = new NavMesh(navMeshParams, MAX_VERTS_PER_POLY);
             tiles.values().forEach(t -> t.addTo(navMesh));
             this.navMesh = navMesh;
-            dirty = false;
             return true;
         }
         return false;
@@ -236,4 +236,14 @@ public class DynamicNavMesh {
         return tiles.values().stream().map(t -> t.recastResult).collect(toList());
     }
 
+    public void navMesh(NavMesh mesh) {
+        tiles.values().forEach(t -> {
+            var tiles = mesh.getTilesAt(t.voxelTile.tileX, t.voxelTile.tileZ);
+            if (!tiles.isEmpty()) {
+                t.meshData(tiles.get(0).data);
+            }
+        });
+        navMesh = mesh;
+        dirty = false;
+    }
 }
