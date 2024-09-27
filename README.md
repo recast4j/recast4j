@@ -1,8 +1,8 @@
-![Build Status](https://img.shields.io/github/actions/workflow/status/ppiastucki/recast4j/gradle.yml?branch=main&logo=github)
-![Repo Size](https://img.shields.io/github/repo-size/ppiastucki/recast4j.svg?colorB=lightgray)
+![Build Status](https://img.shields.io/github/actions/workflow/status/recast4j/recast4j/gradle.yml?branch=main&logo=github)
+![Repo Size](https://img.shields.io/github/repo-size/recast4j/recast4j.svg?colorB=lightgray)
 [![Maven Central](https://img.shields.io/maven-central/v/org.recast4j/recast.svg?label=maven%20central)](https://search.maven.org/search?q=g:org.recast4j)
-![Languages](https://img.shields.io/github/languages/top/ppiastucki/recast4j)
-![Dependencies](https://img.shields.io/librariesio/github/ppiastucki/recast4j)
+![Languages](https://img.shields.io/github/languages/top/recast4j/recast4j)
+![Dependencies](https://img.shields.io/librariesio/github/recast4j/recast4j)
 
 Recast4j
 ========
@@ -39,10 +39,10 @@ More information about [Recast and Detour](https://github.com/recastnavigation/r
 ### How To Use
 The API is kept as close to https://github.com/recastnavigation/recastnavigation as possible so most of the information and hints apply to recast4j too.
 You can find a lot of examples in tests e.g.
-- building a nav mesh from obj files: https://github.com/ppiastucki/recast4j/blob/master/detour/src/test/java/org/recast4j/detour/RecastTestMeshBuilder.java
-- finding a path: https://github.com/ppiastucki/recast4j/blob/master/detour/src/test/java/org/recast4j/detour/FindPathTest.java#L94
-- persisting a nav mesh: https://github.com/ppiastucki/recast4j/blob/master/detour/src/test/java/org/recast4j/detour/io/MeshSetReaderWriterTest.java
-- dynamic nav mesh: https://github.com/ppiastucki/recast4j/blob/master/detour-dynamic/src/test/java/org/recast4j/dynamic/DynamicNavMeshTest.java
+- building a nav mesh from obj files: https://github.com/recast4j/recast4j/blob/master/detour/src/test/java/org/recast4j/detour/RecastTestMeshBuilder.java
+- finding a path: https://github.com/recast4j/recast4j/blob/master/detour/src/test/java/org/recast4j/detour/FindPathTest.java#L94
+- persisting a nav mesh: https://github.com/recast4j/recast4j/blob/master/detour/src/test/java/org/recast4j/detour/io/MeshSetReaderWriterTest.java
+- dynamic nav mesh: https://github.com/recast4j/recast4j/blob/master/detour-dynamic/src/test/java/org/recast4j/dynamic/DynamicNavMeshTest.java
 ### Java Version Enhancements
 #### recast
 - out-of-the-box support for multi-threaded builds
