@@ -2,7 +2,7 @@
 lz4 = "1.8.0"
 assertj = "3.26.3"
 mockito = "5.14.2"
-junit = "5.11.2"
+junit = "5.11.3"
 gson = "2.11.0"
 
 [libraries]
