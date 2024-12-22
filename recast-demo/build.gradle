@@ -3,7 +3,7 @@ plugins {
 }
 
 ext { 
-    lwjglVersion = '3.3.4' 
+    lwjglVersion = '3.3.5' 
 }
 
 compileJava {
