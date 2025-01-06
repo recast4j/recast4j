@@ -53,7 +53,7 @@ dependencies {
     implementation("org.lwjgl:lwjgl-nuklear:$lwjglVersion:natives-macos")
     implementation("org.lwjgl:lwjgl-stb:$lwjglVersion:natives-macos")
 
-    implementation('ch.qos.logback:logback-classic:1.5.15')
+    implementation('ch.qos.logback:logback-classic:1.5.16')
 
     implementation project(':recast')
     implementation project(':detour')
