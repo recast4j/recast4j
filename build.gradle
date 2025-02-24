@@ -38,6 +38,7 @@ subprojects {
         testImplementation (libs.assertj.core)
         testImplementation (libs.mockito)
         testRuntimeOnly (libs.junit5.engine)
+        testRuntimeOnly (libs.junit5.launcher)
     }
 
     java {
