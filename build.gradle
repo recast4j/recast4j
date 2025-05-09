@@ -132,7 +132,7 @@ subprojects {
 //}
 
 task publish() {
-    dependsOn subprojects.publish
+    dependsOn subprojects.publishToMavenCentralPortal
 }
 
 afterReleaseBuild.dependsOn publish
