@@ -79,7 +79,7 @@ subprojects {
         manifest { attributes("Implementation-Version": archiveVersion) }
     }
     
-    if (it.name != "recast-demo") {
+    if (!project.hasProperty("ci") && it.name != "recast-demo") {
 
         publishing {
             publications {
