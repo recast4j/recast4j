@@ -12,6 +12,7 @@ buildscript {
 plugins {
     id "net.researchgate.release" version "3.1.0"
     id "com.adarshr.test-logger" version "4.0.0"
+    id "tech.yanand.maven-central-publish" version "1.3.0" apply false
 }
 
 subprojects {    
@@ -27,6 +28,7 @@ subprojects {
     apply plugin: "maven-publish"
     apply plugin: "signing"
     apply plugin: "com.adarshr.test-logger"
+    apply plugin: "tech.yanand.maven-central-publish"
 
     if (!project.hasProperty("ci")) {
         apply plugin: "org.hibernate.build.maven-repo-auth"
@@ -84,36 +86,41 @@ subprojects {
                         licenses {
                             license {
                                 name = "Zlib License"
-                                url = "https://github.com/ppiastucki/recast4j/blob/master/License.txt"
+                                url = "https://github.com/recast4j/recast4j/blob/master/License.txt"
                             }
                         }
                         developers {
                             developer {
+                                id = "ppiastucki"
                                 name = "Piotr Piastucki"
-                                email = "piotr@recast4j.org"
+                                url = "https://github.com/ppiastucki"
                             }
                         }
                         scm {
-                            connection = "scm:git:https://github.com/ppiastucki/recast4j.git"
-                            developerConnection = "scm:git:ssh://git@github.com:ppiastucki/recast4j.git"
-                            url = "https://github.com/ppiastucki/recast4j"
+                            connection = "scm:git:https://github.com/recast4j/recast4j.git"
+                            developerConnection = "scm:git:ssh://git@github.com:recast4j/recast4j.git"
+                            url = "https://github.com/recast4j/recast4j"
                         }
                     }                    
                 }
             }
             
-            repositories {
-                maven {
-                    name = "ossrh"
-                    def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-                    def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
-                    url = version.endsWith("SNAPSHOT") ? snapshotsRepoUrl : releasesRepoUrl
-                }
-            }
+//            repositories {
+//                maven {
+//                    name = "ossrh"
+//                    def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+//                    def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+//                    url = version.endsWith("SNAPSHOT") ? snapshotsRepoUrl : releasesRepoUrl
+//                }
+//            }
         }
 
         signing {
             sign publishing.publications.mavenJava
+        }
+        
+        mavenCentral {
+            authToken = mavenCentralToken
         }
     }
 
