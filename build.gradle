@@ -28,10 +28,16 @@ subprojects {
     apply plugin: "maven-publish"
     apply plugin: "signing"
     apply plugin: "com.adarshr.test-logger"
-    apply plugin: "tech.yanand.maven-central-publish"
 
     if (!project.hasProperty("ci")) {
         apply plugin: "org.hibernate.build.maven-repo-auth"
+    }
+
+    if (it.name != "recast-demo") {
+        apply plugin: "tech.yanand.maven-central-publish"
+    } else {
+        task publishToMavenCentralPortal() {
+        }
     }
 
     dependencies {
