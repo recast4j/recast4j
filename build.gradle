@@ -126,7 +126,7 @@ subprojects {
         }
         
         mavenCentral {
-            authToken = mavenCentralToken
+            authToken = project.findProperty('mavenCentralToken')
         }
     }
 
