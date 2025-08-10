@@ -120,8 +120,15 @@ public class UnityAStarPathfindingImporterTest {
 
     private void saveMesh(NavMesh mesh, String filePostfix) throws IOException {
         // Set the flag to RecastDemo work properly
-        for (int i = 0; i < mesh.getTileCount(); i++) {
-            for (Poly p : mesh.getTile(i).data.polys) {
+        for (int i = 0; i < mesh.getMaxTiles(); i++) {
+            MeshTile tile = mesh.getTile(i);
+            if (tile == null) {
+                continue;
+            }
+            if (tile.data == null || tile.data.polys == null) {
+                continue;
+            }
+            for (Poly p : tile.data.polys) {
                 p.flags = 1;
             }
         }
