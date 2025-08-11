@@ -65,7 +65,6 @@ public class NavMesh {
     private final MeshTile[] m_tiles; /// < List of tiles.
     /** The maximum number of vertices per navigation polygon. */
     private final int m_maxVertPerPoly;
-    private int m_tileCount;
 
     /**
      * The maximum number of tiles supported by the navigation mesh.
@@ -407,7 +406,6 @@ public class NavMesh {
                 throw new RuntimeException("Could not allocate a tile");
             }
             tile = availableTiles.poll();
-            m_tileCount++;
         } else {
             // Try to relocate the tile to specific index with same salt.
             int tileIndex = decodePolyIdTile(lastRef);
@@ -535,7 +533,6 @@ public class NavMesh {
 
         // Add to free list.
         availableTiles.addFirst(tile);
-        m_tileCount--;
         return getTileRef(tile);
     }
 
@@ -1297,10 +1294,6 @@ public class NavMesh {
 
     public int getMaxVertsPerPoly() {
         return m_maxVertPerPoly;
-    }
-
-    public int getTileCount() {
-        return m_tileCount;
     }
 
     public Status setPolyFlags(long ref, int flags) {
