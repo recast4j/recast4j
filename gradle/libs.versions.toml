@@ -1,5 +1,5 @@
 [versions]
-lz4 = "1.8.0"
+lz4 = "1.8.1"
 assertj = "3.27.6"
 mockito = "5.20.0"
 junit = "6.0.1"
