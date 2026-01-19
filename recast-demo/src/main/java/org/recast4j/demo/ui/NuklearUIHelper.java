@@ -17,18 +17,7 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.demo.ui;
 
-import static org.lwjgl.nuklear.Nuklear.NK_RGB;
-import static org.lwjgl.nuklear.Nuklear.NK_TEXT_LEFT;
-import static org.lwjgl.nuklear.Nuklear.nk_color_picker;
-import static org.lwjgl.nuklear.Nuklear.nk_combo_begin_color;
-import static org.lwjgl.nuklear.Nuklear.nk_combo_begin_label;
-import static org.lwjgl.nuklear.Nuklear.nk_combo_end;
-import static org.lwjgl.nuklear.Nuklear.nk_combo_item_label;
-import static org.lwjgl.nuklear.Nuklear.nk_layout_row_dynamic;
-import static org.lwjgl.nuklear.Nuklear.nk_option_text;
-import static org.lwjgl.nuklear.Nuklear.nk_propertyf;
-import static org.lwjgl.nuklear.Nuklear.nk_rgb_cf;
-import static org.lwjgl.nuklear.Nuklear.nk_widget_width;
+import static org.lwjgl.nuklear.Nuklear.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
 
 import java.util.function.Function;
@@ -43,8 +32,8 @@ public class NuklearUIHelper {
 
     public static void nk_color_rgb(NkContext ctx, NkColorf color) {
         try (MemoryStack stack = stackPush()) {
-            if (nk_combo_begin_color(ctx, nk_rgb_cf(color, NkColor.mallocStack(stack)),
-                    NkVec2.mallocStack(stack).set(nk_widget_width(ctx), 400))) {
+            if (nk_combo_begin_color(ctx, nk_rgb_cf(color, NkColor.malloc(stack)),
+                    NkVec2.malloc(stack).set(nk_widget_width(ctx), 400))) {
                 nk_layout_row_dynamic(ctx, 120, 1);
                 nk_color_picker(ctx, color, NK_RGB);
                 nk_layout_row_dynamic(ctx, 20, 1);
@@ -70,7 +59,7 @@ public class NuklearUIHelper {
 
     public static <T extends Enum<?>> T nk_combo(NkContext ctx, T[] values, T currentValue) {
         try (MemoryStack stack = stackPush()) {
-            if (nk_combo_begin_label(ctx, currentValue.toString(), NkVec2.mallocStack(stack).set(nk_widget_width(ctx), 200))) {
+            if (nk_combo_begin_label(ctx, currentValue.toString(), NkVec2.malloc(stack).set(nk_widget_width(ctx), 200))) {
                 nk_layout_row_dynamic(ctx, 20, 1);
                 for (T v : values) {
                     if (nk_combo_item_label(ctx, v.toString(), NK_TEXT_LEFT)) {

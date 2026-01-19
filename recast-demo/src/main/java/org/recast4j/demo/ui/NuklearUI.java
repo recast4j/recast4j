@@ -17,30 +17,8 @@ freely, subject to the following restrictions:
 */
 package org.recast4j.demo.ui;
 
-import static org.lwjgl.glfw.GLFW.GLFW_CURSOR;
-import static org.lwjgl.glfw.GLFW.GLFW_CURSOR_HIDDEN;
-import static org.lwjgl.glfw.GLFW.GLFW_CURSOR_NORMAL;
-import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_MIDDLE;
-import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_RIGHT;
-import static org.lwjgl.glfw.GLFW.glfwSetCharCallback;
-import static org.lwjgl.glfw.GLFW.glfwSetClipboardString;
-import static org.lwjgl.glfw.GLFW.glfwSetCursorPos;
-import static org.lwjgl.glfw.GLFW.glfwSetInputMode;
-import static org.lwjgl.glfw.GLFW.nglfwGetClipboardString;
-import static org.lwjgl.nuklear.Nuklear.NK_ANTI_ALIASING_ON;
-import static org.lwjgl.nuklear.Nuklear.NK_BUTTON_LEFT;
-import static org.lwjgl.nuklear.Nuklear.NK_BUTTON_MIDDLE;
-import static org.lwjgl.nuklear.Nuklear.NK_BUTTON_RIGHT;
-import static org.lwjgl.nuklear.Nuklear.nk_init;
-import static org.lwjgl.nuklear.Nuklear.nk_input_begin;
-import static org.lwjgl.nuklear.Nuklear.nk_input_button;
-import static org.lwjgl.nuklear.Nuklear.nk_input_end;
-import static org.lwjgl.nuklear.Nuklear.nk_input_motion;
-import static org.lwjgl.nuklear.Nuklear.nk_input_scroll;
-import static org.lwjgl.nuklear.Nuklear.nk_input_unicode;
-import static org.lwjgl.nuklear.Nuklear.nk_rgb;
-import static org.lwjgl.nuklear.Nuklear.nnk_strlen;
-import static org.lwjgl.nuklear.Nuklear.nnk_textedit_paste;
+import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.nuklear.Nuklear.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
 import static org.lwjgl.system.MemoryUtil.memAddress;
@@ -97,7 +75,7 @@ public class NuklearUI {
             public void scroll(double xoffset, double yoffset) {
                 if (mouseOverUI) {
                     try (MemoryStack stack = stackPush()) {
-                        NkVec2 scroll = NkVec2.mallocStack(stack).x((float) xoffset).y((float) yoffset);
+                        NkVec2 scroll = NkVec2.malloc(stack).x((float) xoffset).y((float) yoffset);
                         nk_input_scroll(ctx, scroll);
                     }
                 }

@@ -88,7 +88,7 @@ public class SettingsUI implements NuklearUIModule {
             ctx.style().option().text_normal().set(white);
             ctx.style().property().label_normal().set(white);
             ctx.style().window().background().set(background);
-            NkStyleItem styleItem = NkStyleItem.mallocStack(stack);
+            NkStyleItem styleItem = NkStyleItem.malloc(stack);
             nk_style_item_color(background, styleItem);
             ctx.style().window().fixed_background().set(styleItem);
             nk_style_item_color(white, styleItem);
@@ -101,7 +101,7 @@ public class SettingsUI implements NuklearUIModule {
             ctx.style().tab().node_maximize_button().active().set(styleItem);
         }
         try (MemoryStack stack = stackPush()) {
-            NkRect rect = NkRect.mallocStack(stack);
+            NkRect rect = NkRect.malloc(stack);
             if (nk_begin(ctx, "Properties", nk_rect(width - 255, 5, 250, height - 10, rect),
                     NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_TITLE)) {
 

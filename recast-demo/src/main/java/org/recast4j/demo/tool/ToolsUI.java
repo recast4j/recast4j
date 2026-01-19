@@ -46,7 +46,7 @@ public class ToolsUI implements NuklearUIModule {
         boolean mouseInside = false;
         nk_rgb(255, 255, 255, white);
         try (MemoryStack stack = stackPush()) {
-            NkRect rect = NkRect.mallocStack(stack);
+            NkRect rect = NkRect.malloc(stack);
             if (nk_begin(ctx, "Tools", nk_rect(5, 5, 250, height - 10, rect), NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_TITLE)) {
                 if (enabled) {
                     for (Tool tool : tools) {
