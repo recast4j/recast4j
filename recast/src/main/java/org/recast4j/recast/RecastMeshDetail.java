@@ -809,6 +809,9 @@ public class RecastMeshDetail {
                     pt[0] = samples.get(s + 0) * sampleDist + getJitterX(i) * cs * 0.1f;
                     pt[1] = samples.get(s + 1) * chf.ch;
                     pt[2] = samples.get(s + 2) * sampleDist + getJitterY(i) * cs * 0.1f;
+                    if (tris.size() == 0) {
+                        continue;
+                    }
                     float d = distToTriMesh(pt, verts, nverts, tris, tris.size() / 4);
                     if (d < 0) {
                         continue; // did not hit the mesh.
