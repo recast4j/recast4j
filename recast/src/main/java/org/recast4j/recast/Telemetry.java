@@ -39,6 +39,10 @@ public class Telemetry {
         System.err.println(string);
     }
 
+    public void debug(String string) {
+        System.out.println(string);
+    }
+
     public void print() {
         timerAccum.forEach((n, v) -> System.out.println(n + ": " + v.get() / 1000000));
     }
