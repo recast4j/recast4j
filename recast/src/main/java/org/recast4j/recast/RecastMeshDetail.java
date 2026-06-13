@@ -508,7 +508,7 @@ public class RecastMeshDetail {
         for (int i = 0; i < tris.size() / 4; ++i) {
             int t = i * 4;
             if (tris.get(t + 0) == -1 || tris.get(t + 1) == -1 || tris.get(t + 2) == -1) {
-                System.err.println("Dangling! " + tris.get(t) + " " + tris.get(t + 1) + "  " + tris.get(t + 2));
+                ctx.debug("Dangling! " + tris.get(t) + " " + tris.get(t + 1) + "  " + tris.get(t + 2));
                 // ctx.log(RC_LOG_WARNING, "delaunayHull: Removing dangling face %d [%d,%d,%d].", i, t[0],t[1],t[2]);
                 tris.set(t + 0, tris.get(tris.size() - 4));
                 tris.set(t + 1, tris.get(tris.size() - 3));
