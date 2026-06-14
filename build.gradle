@@ -4,9 +4,6 @@ buildscript {
             url "https://plugins.gradle.org/m2/"
         }
     }
-    dependencies {
-        classpath "org.hibernate.build:gradle-maven-publish-auth:3.0.4"
-    }
 }
 
 plugins {
@@ -28,10 +25,6 @@ subprojects {
     apply plugin: "maven-publish"
     apply plugin: "signing"
     apply plugin: "com.adarshr.test-logger"
-
-    if (!project.hasProperty("ci")) {
-        apply plugin: "org.hibernate.build.maven-repo-auth"
-    }
 
     if (it.name != "recast-demo") {
         apply plugin: "tech.yanand.maven-central-publish"
@@ -59,7 +52,7 @@ subprojects {
     compileJava {
         options.encoding = "UTF-8"
         if (JavaVersion.current().isJava9Compatible()) {
-            options.release = 11
+            options.release = 17
         }
     }
     
