@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-public class ChunkyTriMesh {
+public class PartitionedMesh {
 
     private static class BoundsItem {
         private final float[] bmin = new float[2];
@@ -31,7 +31,7 @@ public class ChunkyTriMesh {
         private int i;
     }
 
-    public static class ChunkyTriMeshNode {
+    public static class PartitionedMeshNode {
         private final float[] bmin = new float[2];
         private final float[] bmax = new float[2];
         private int i;
@@ -52,7 +52,7 @@ public class ChunkyTriMesh {
         }
     }
 
-    List<ChunkyTriMeshNode> nodes;
+    List<PartitionedMeshNode> nodes;
     int ntris;
     int maxTrisPerChunk;
 
@@ -85,11 +85,11 @@ public class ChunkyTriMesh {
         return y > x ? 1 : 0;
     }
 
-    private void subdivide(BoundsItem[] items, int imin, int imax, int trisPerChunk, List<ChunkyTriMeshNode> nodes,
+    private void subdivide(BoundsItem[] items, int imin, int imax, int trisPerChunk, List<PartitionedMeshNode> nodes,
             int[] inTris) {
         int inum = imax - imin;
 
-        ChunkyTriMeshNode node = new ChunkyTriMeshNode();
+        PartitionedMeshNode node = new PartitionedMeshNode();
         nodes.add(node);
 
         if (inum <= trisPerChunk) {
@@ -133,7 +133,7 @@ public class ChunkyTriMesh {
         }
     }
 
-    public ChunkyTriMesh(float[] verts, int[] tris, int ntris, int trisPerChunk) {
+    public PartitionedMesh(float[] verts, int[] tris, int ntris, int trisPerChunk) {
         int nchunks = (ntris + trisPerChunk - 1) / trisPerChunk;
 
         nodes = new ArrayList<>(nchunks);
@@ -171,7 +171,7 @@ public class ChunkyTriMesh {
 
         // Calc max tris per node.
         maxTrisPerChunk = 0;
-        for (ChunkyTriMeshNode node : nodes) {
+        for (PartitionedMeshNode node : nodes) {
             boolean isLeaf = node.i >= 0;
             if (!isLeaf) {
                 continue;
@@ -190,12 +190,12 @@ public class ChunkyTriMesh {
         return overlap;
     }
 
-    public List<ChunkyTriMeshNode> getChunksOverlappingRect(float[] bmin, float[] bmax) {
+    public List<PartitionedMeshNode> getChunksOverlappingRect(float[] bmin, float[] bmax) {
         // Traverse tree
-        List<ChunkyTriMeshNode> ids = new ArrayList<>();
+        List<PartitionedMeshNode> ids = new ArrayList<>();
         int i = 0;
         while (i < nodes.size()) {
-            ChunkyTriMeshNode node = nodes.get(i);
+            PartitionedMeshNode node = nodes.get(i);
             boolean overlap = checkOverlapRect(bmin, bmax, node.bmin, node.bmax);
             boolean isLeafNode = node.i >= 0;
 
