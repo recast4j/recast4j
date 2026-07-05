@@ -20,18 +20,18 @@ package org.recast4j.recast.geom;
 
 import java.util.List;
 
-import org.recast4j.recast.geom.ChunkyTriMesh.ChunkyTriMeshNode;
+import org.recast4j.recast.geom.PartitionedMesh.PartitionedMeshNode;
 
 public class TriMesh {
 
     private final float[] vertices;
     private final int[] faces;
-    private final ChunkyTriMesh chunkyTriMesh;
+    private final PartitionedMesh chunkyTriMesh;
 
     public TriMesh(float[] vertices, int[] faces) {
         this.vertices = vertices;
         this.faces = faces;
-        chunkyTriMesh = new ChunkyTriMesh(vertices, faces, faces.length / 3, 32);
+        chunkyTriMesh = new PartitionedMesh(vertices, faces, faces.length / 3, 32);
     }
 
     public int[] getTris() {
@@ -42,7 +42,7 @@ public class TriMesh {
         return vertices;
     }
 
-    public List<ChunkyTriMeshNode> getChunksOverlappingRect(float[] bmin, float[] bmax) {
+    public List<PartitionedMeshNode> getChunksOverlappingRect(float[] bmin, float[] bmax) {
         return chunkyTriMesh.getChunksOverlappingRect(bmin, bmax);
     }
 
