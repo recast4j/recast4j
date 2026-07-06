@@ -1,5 +1,5 @@
 /*
-recast4j copyright (c) 2021 Piotr Piastucki piotr@jtilia.org
+recast4j copyright (c) 2021-2026 Piotr Piastucki piotr@jtilia.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -77,6 +77,99 @@ public class PathCorridorTest {
         List<StraightPathItem> path = corridor.findCorners(Integer.MAX_VALUE, query, filter);
         assertThat(path).hasSize(2);
         assertThat(path).containsExactly(straightPath.get(2), straightPath.get(3));
+    }
+
+    @Test
+    public void testMergeCorridorStartMovedEmptyInput() {
+        List<Long> path = new ArrayList<>();
+        List<Long> visited = new ArrayList<>();
+        List<Long> result = PathCorridor.mergeCorridorStartMoved(path, visited);
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    public void testMergeCorridorStartMovedEmptyVisited() {
+        List<Long> path = new ArrayList<>();
+        path.add(1L);
+        List<Long> visited = new ArrayList<>();
+        List<Long> result = PathCorridor.mergeCorridorStartMoved(path, visited);
+        assertThat(result).hasSize(1).containsExactly(1L);
+    }
+
+    @Test
+    public void testMergeCorridorStartMovedEmptyPath() {
+        List<Long> path = new ArrayList<>();
+        List<Long> visited = new ArrayList<>();
+        visited.add(1L);
+        List<Long> result = PathCorridor.mergeCorridorStartMoved(path, visited);
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    public void testMergeCorridorStartMovedStripVisitedPointsFromPath() {
+        List<Long> path = new ArrayList<>();
+        path.add(1L);
+        path.add(2L);
+        List<Long> visited = new ArrayList<>();
+        visited.add(1L);
+        visited.add(2L);
+        List<Long> result = PathCorridor.mergeCorridorStartMoved(path, visited);
+        assertThat(result).hasSize(1).containsExactly(2L);
+    }
+
+    @Test
+    public void testMergeCorridorStartMovedAddVisitedPointsNotInPath() {
+        List<Long> path = new ArrayList<>();
+        path.add(1L);
+        path.add(2L);
+        List<Long> visited = new ArrayList<>();
+        visited.add(1L);
+        visited.add(2L);
+        visited.add(3L);
+        visited.add(4L);
+        List<Long> result = PathCorridor.mergeCorridorStartMoved(path, visited);
+        assertThat(result).hasSize(3).containsExactly(4L, 3L, 2L);
+    }
+
+    @Test
+    public void testMergeCorridorStartMovedAddVisitedPointsUpToCapacity() {
+        List<Long> path = new ArrayList<>();
+        path.add(1L);
+        path.add(2L);
+        List<Long> visited = new ArrayList<>();
+        visited.add(1L);
+        visited.add(2L);
+        visited.add(3L);
+        visited.add(4L);
+        visited.add(5L);
+        List<Long> result = PathCorridor.mergeCorridorStartMoved(path, visited);
+        // All visited items after the common point (2) plus the path from that point onwards
+        assertThat(result).hasSize(4).containsExactly(5L, 4L, 3L, 2L);
+    }
+
+    @Test
+    public void testMergeCorridorStartMovedNoIntersectionWithVisited() {
+        List<Long> path = new ArrayList<>();
+        path.add(1L);
+        path.add(2L);
+        List<Long> visited = new ArrayList<>();
+        visited.add(3L);
+        visited.add(4L);
+        List<Long> result = PathCorridor.mergeCorridorStartMoved(path, visited);
+        // Should return original path if there's no intersection
+        assertThat(result).hasSize(2).containsExactly(1L, 2L);
+    }
+
+    @Test
+    public void testMergeCorridorStartMovedSaveUnvisitedPathPoints() {
+        List<Long> path = new ArrayList<>();
+        path.add(1L);
+        path.add(2L);
+        List<Long> visited = new ArrayList<>();
+        visited.add(1L);
+        visited.add(3L);
+        List<Long> result = PathCorridor.mergeCorridorStartMoved(path, visited);
+        assertThat(result).hasSize(3).containsExactly(3L, 1L, 2L);
     }
 
 }
