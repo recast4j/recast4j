@@ -96,7 +96,7 @@ public class SimpleInputGeomProvider implements InputGeomProvider {
 
     @Override
     public Iterable<TriMesh> meshes() {
-        return Collections.singletonList(new TriMesh(vertices, faces));
+        return Collections.singletonList(new PartitionedMesh(vertices, faces));
     }
 
     public void calculateNormals() {

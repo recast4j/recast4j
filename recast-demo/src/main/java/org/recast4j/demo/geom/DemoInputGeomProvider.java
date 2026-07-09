@@ -31,6 +31,7 @@ import org.recast4j.recast.AreaModification;
 import org.recast4j.recast.ConvexVolume;
 import org.recast4j.recast.RecastVectors;
 import org.recast4j.recast.geom.InputGeomProvider;
+import org.recast4j.recast.geom.PartitionedMesh;
 import org.recast4j.recast.geom.TriMesh;
 
 public class DemoInputGeomProvider implements InputGeomProvider {
@@ -121,7 +122,7 @@ public class DemoInputGeomProvider implements InputGeomProvider {
 
     @Override
     public Iterable<TriMesh> meshes() {
-        return Collections.singletonList(new TriMesh(vertices, faces));
+        return Collections.singletonList(new PartitionedMesh(vertices, faces));
     }
 
     public List<DemoOffMeshConnection> getOffMeshConnections() {
