@@ -39,7 +39,7 @@ public class SingleTrimeshInputGeomProvider implements InputGeomProvider {
             RecastVectors.min(bmin, vertices, i * 3);
             RecastVectors.max(bmax, vertices, i * 3);
         }
-        meshes = Collections.singletonList(new TriMesh(vertices, faces));
+        meshes = Collections.singletonList(new PartitionedMesh(vertices, faces));
     }
 
     @Override
