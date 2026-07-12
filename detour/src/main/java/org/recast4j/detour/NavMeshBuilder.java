@@ -23,7 +23,6 @@ import static org.recast4j.detour.DetourCommon.vCopy;
 import static org.recast4j.detour.DetourCommon.vMax;
 import static org.recast4j.detour.DetourCommon.vMin;
 
-import java.util.Arrays;
 import java.util.Comparator;
 
 public class NavMeshBuilder {
@@ -134,18 +133,17 @@ public class NavMeshBuilder {
             int axis = longestAxis(node.bmax[0] - node.bmin[0], node.bmax[1] - node.bmin[1],
                     node.bmax[2] - node.bmin[2]);
 
+            int isplit = imin + inum / 2;
             if (axis == 0) {
                 // Sort along x-axis
-                Arrays.sort(items, imin, imin + inum, new CompareItemX());
+                NthElement.nthElement(items, imin, imin + isplit, imax, new CompareItemX());
             } else if (axis == 1) {
                 // Sort along y-axis
-                Arrays.sort(items, imin, imin + inum, new CompareItemY());
+                NthElement.nthElement(items, imin, imin + isplit, imax, new CompareItemY());
             } else {
                 // Sort along z-axis
-                Arrays.sort(items, imin, imin + inum, new CompareItemZ());
+                NthElement.nthElement(items, imin, imin + isplit, imax, new CompareItemZ());
             }
-
-            int isplit = imin + inum / 2;
 
             // Left
             curNode = subdivide(items, nitems, imin, isplit, curNode, nodes);
