@@ -136,13 +136,13 @@ public class NavMeshBuilder {
             int isplit = imin + inum / 2;
             if (axis == 0) {
                 // Sort along x-axis
-                NthElement.nthElement(items, imin, imin + isplit, imax, new CompareItemX());
+                NthElement.nthElement(items, imin, isplit, imax, new CompareItemX());
             } else if (axis == 1) {
                 // Sort along y-axis
-                NthElement.nthElement(items, imin, imin + isplit, imax, new CompareItemY());
+                NthElement.nthElement(items, imin, isplit, imax, new CompareItemY());
             } else {
                 // Sort along z-axis
-                NthElement.nthElement(items, imin, imin + isplit, imax, new CompareItemZ());
+                NthElement.nthElement(items, imin, isplit, imax, new CompareItemZ());
             }
 
             // Left
