@@ -1,5 +1,5 @@
 /*
-recast4j copyright (c) 2021 Piotr Piastucki piotr@jtilia.org
+recast4j copyright (c) 2021-2026 Piotr Piastucki piotr@recast4j.org
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -64,7 +64,7 @@ public interface PolygonByCircleConstraint {
                 return verts;
             }
             float[] circle = circle(center, radius);
-            float[] intersection = ConvexConvexIntersection.intersect(verts, circle);
+            float[] intersection = ConvexPolygonIntersector.intersect(verts, circle);
             if (intersection == null && pointInPolygon(center, verts, verts.length / 3)) {
                 // circle inside polygon
                 return circle;
