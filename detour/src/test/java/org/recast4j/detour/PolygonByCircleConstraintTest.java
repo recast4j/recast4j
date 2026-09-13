@@ -21,6 +21,7 @@ package org.recast4j.detour;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
+import org.assertj.core.data.Offset;
 import org.junit.jupiter.api.Test;
 
 public class PolygonByCircleConstraintTest {
@@ -71,7 +72,10 @@ public class PolygonByCircleConstraintTest {
         float[] constrained = constraint.apply(polygon, center, 3);
 
         assertThat(constrained).hasSize(expectedSize);
-        assertThat(constrained).containsSequence(-2f, 0f, -4f, -4f, 0f, 0f, -3.4641016f, 0.0f, 1.6076951f, -2.0f, 0.0f, 2.0f);
+        assertThat(constrained).containsExactly(
+                new float[] { -4.0f, 0.0f, 0.0f, -3.4641f, 0.0f, 1.6076f, -2.0f, 0.0f, 2.0f, -0.5f, 0.0f, 1.5980f, 0.5980f, 0.0f,
+                        0.4999f, 1.0f, 0.0f, -1f, 0.5980f, 0.0f, -2.5f, -0.5f, 0.0f, -3.5980f, -2.0f, 0.0f, -4.0f },
+                Offset.offset(0.0001f));
     }
 
     @Test
@@ -82,7 +86,10 @@ public class PolygonByCircleConstraintTest {
         float[] constrained = constraint.apply(polygon, center, 4);
 
         assertThat(constrained).hasSize(expectedSize);
-        assertThat(constrained).containsSequence(1.5358982f, 0f, 3f, 2f, 0f, 3f, 3f, 0f, -3f);
+
+        assertThat(constrained).containsExactly(new float[] { 0.5358f, 0.0f, -1.9999f, 0f, 0.0f, 0f, 0.5358f, 0.0f, 2.0f, 1.5358f,
+                0.0f, 3.0f, 2.0f, 0.0f, 3.0f, 3.0f, 0.0f, -3.0f, 1.7799f, 0.0f, -3.2440f }, Offset.offset(0.0001f));
+
     }
 
 }
