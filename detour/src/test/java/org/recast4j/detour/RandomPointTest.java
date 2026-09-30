@@ -94,6 +94,16 @@ public class RandomPointTest extends AbstractDetourTest {
     }
 
     @Test
+    public void testRandomWithinZeroRadiusCircle() {
+        FRand f = new FRand(1);
+        QueryFilter filter = new DefaultQueryFilter();
+        FindRandomPointResult point = query.findRandomPoint(filter, f).result;
+        Result<FindRandomPointResult> result = query.findRandomPointWithinCircle(point.getRandomRef(), point.getRandomPt(), 0f,
+                filter, f);
+        assertThat(result.succeeded()).isTrue();
+    }
+
+    @Test
     public void testPerformance() {
         FRand f = new FRand(1);
         QueryFilter filter = new DefaultQueryFilter();
