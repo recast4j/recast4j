@@ -19,6 +19,7 @@ freely, subject to the following restrictions:
 package org.recast4j.detour;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.within;
 
 import org.assertj.core.data.Offset;
@@ -91,5 +92,13 @@ public class PolygonByCircleConstraintTest {
                 0.0f, 3.0f, 2.0f, 0.0f, 3.0f, 3.0f, 0.0f, -3.0f, 1.7799f, 0.0f, -3.2440f }, Offset.offset(0.0001f));
 
     }
+
+    @Test
+    public void shouldHandleZeroRadius() {
+        float[] polygon = { -4, 0, 0, -3, 0, 3, 2, 0, 3, 3, 0, -3, -2, 0, -4 };
+        float[] center = { -1, 0, -1 };
+        assertThatNoException().isThrownBy(() -> PolygonByCircleConstraint.strict().apply(polygon, center, 0));
+    }
+
 
 }

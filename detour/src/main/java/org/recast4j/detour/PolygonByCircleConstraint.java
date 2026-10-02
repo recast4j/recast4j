@@ -47,7 +47,18 @@ public interface PolygonByCircleConstraint {
     public static class StrictPolygonByCircleConstraint implements PolygonByCircleConstraint {
 
         private static final int CIRCLE_SEGMENTS = 12;
-        private static float[] unitCircle;
+        private static final float[] UNIT_CIRCLE = createUnitCircle();
+
+        private static float[] createUnitCircle() {
+            float[] unitCircle = new float[CIRCLE_SEGMENTS * 3];
+            for (int i = 0; i < CIRCLE_SEGMENTS; i++) {
+                double a = i * Math.PI * 2 / CIRCLE_SEGMENTS;
+                unitCircle[3 * i] = (float) Math.cos(a);
+                unitCircle[3 * i + 1] = 0;
+                unitCircle[3 * i + 2] = (float) -Math.sin(a);
+            }
+            return unitCircle;
+        }
 
         @Override
         public float[] apply(float[] verts, float[] center, float radius) {
@@ -73,20 +84,11 @@ public interface PolygonByCircleConstraint {
         }
 
         private float[] circle(float[] center, float radius) {
-            if (unitCircle == null) {
-                unitCircle = new float[CIRCLE_SEGMENTS * 3];
-                for (int i = 0; i < CIRCLE_SEGMENTS; i++) {
-                    double a = i * Math.PI * 2 / CIRCLE_SEGMENTS;
-                    unitCircle[3 * i] = (float) Math.cos(a);
-                    unitCircle[3 * i + 1] = 0;
-                    unitCircle[3 * i + 2] = (float) -Math.sin(a);
-                }
-            }
             float[] circle = new float[12 * 3];
             for (int i = 0; i < CIRCLE_SEGMENTS * 3; i += 3) {
-                circle[i] = unitCircle[i] * radius + center[0];
+                circle[i] = UNIT_CIRCLE[i] * radius + center[0];
                 circle[i + 1] = center[1];
-                circle[i + 2] = unitCircle[i + 2] * radius + center[2];
+                circle[i + 2] = UNIT_CIRCLE[i + 2] * radius + center[2];
             }
             return circle;
         }
